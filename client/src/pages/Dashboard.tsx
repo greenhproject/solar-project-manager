@@ -74,7 +74,10 @@ export default function Dashboard() {
           
           {user.role === 'admin' && (
             <Link href="/projects/new">
-              <Button size="lg" className="gap-2">
+              <Button 
+                size="lg" 
+                className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple-lg hover:shadow-xl transition-all"
+              >
                 <Plus className="h-5 w-5" />
                 Nuevo Proyecto
               </Button>
@@ -190,12 +193,22 @@ export default function Dashboard() {
                   : 'Tus proyectos asignados'}
               </CardDescription>
             </div>
-            <Link href="/projects">
-              <Button variant="ghost" className="gap-2">
-                Ver Todos
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              {user.role === 'admin' && (
+                <Link href="/projects/new">
+                  <Button className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
+                    <Plus className="h-4 w-4" />
+                    Nuevo Proyecto
+                  </Button>
+                </Link>
+              )}
+              <Link href="/projects">
+                <Button variant="ghost" className="gap-2">
+                  Ver Todos
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent>
             {projectsLoading ? (

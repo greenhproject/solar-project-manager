@@ -10,7 +10,8 @@ import {
   X,
   Sun,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -28,6 +29,7 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const logout = trpc.auth.logout.useMutation();
 
@@ -88,21 +90,23 @@ export function Sidebar({ className }: SidebarProps) {
   const sidebarContent = (
     <div className="flex flex-col h-full bg-gradient-to-b from-white to-orange-50/30 border-r border-orange-100">
       {/* Header */}
-      <div className="p-6 border-b border-orange-100">
+      <div className={cn("p-6 border-b border-orange-100", isCollapsed && "p-4")}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple flex-shrink-0">
             <Sun className="h-6 w-6 text-white" />
           </div>
-          <div className="flex-1">
-            <h2 className="font-bold text-lg bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-              Solar Manager
-            </h2>
-            <p className="text-xs text-gray-500">GreenH Project</p>
-          </div>
+          {!isCollapsed && (
+            <div className="flex-1 min-w-0">
+              <h2 className="font-bold text-lg bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent truncate">
+                Solar Manager
+              </h2>
+              <p className="text-xs text-gray-500 truncate">GreenH Project</p>
+            </div>
+          )}
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="lg:hidden flex-shrink-0"
             onClick={() => setIsOpen(false)}
           >
             <X className="h-5 w-5" />
@@ -111,10 +115,10 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* User Info */}
-      {isAuthenticated && user && (
+      {isAuthenticated && user && !isCollapsed && (
         <div className="p-4 border-b border-orange-100">
           <div className="flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm border border-orange-100/50">
-            <Avatar className="h-10 w-10 border-2 border-orange-200">
+            <Avatar className="h-10 w-10 border-2 border-orange-200 flex-shrink-0">
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>
@@ -130,59 +134,82 @@ export function Sidebar({ className }: SidebarProps) {
                   ? "bg-orange-100 text-orange-700" 
                   : "bg-blue-100 text-blue-700"
               )}>
-                {user.role === "admin" ? "Administrador" : "Ingeniero"}
+                {user.role === "admin" ? "Admin" : "Ingeniero"}
               </span>
             </div>
           </div>
         </div>
       )}
 
+      {/* Collapsed User Avatar */}
+      {isAuthenticated && user && isCollapsed && (
+        <div className="p-4 border-b border-orange-100 flex justify-center">
+          <Avatar className="h-10 w-10 border-2 border-orange-200">
+            <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
+              {user.name?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      )}
+
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className={cn("flex-1 p-4 space-y-1 overflow-y-auto", isCollapsed && "p-2")}>
         {filteredMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.href || location.startsWith(item.href + "/");
           
           return (
             <Link key={item.href} href={item.href}>
-              <a
+              <div
                 onClick={() => setIsOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
+                  "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer",
                   isActive
                     ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-apple"
-                    : "text-gray-700 hover:bg-orange-50 hover:text-orange-600"
+                    : "text-gray-700 hover:bg-orange-50 hover:text-orange-600",
+                  isCollapsed && "justify-center px-2"
                 )}
+                title={isCollapsed ? item.label : undefined}
               >
                 <Icon className={cn(
-                  "h-5 w-5 transition-transform group-hover:scale-110",
+                  "h-5 w-5 transition-transform group-hover:scale-110 flex-shrink-0",
                   isActive ? "text-white" : "text-gray-500 group-hover:text-orange-500"
                 )} />
-                <span className="font-medium text-sm flex-1">{item.label}</span>
-                {isActive && (
-                  <ChevronRight className="h-4 w-4 text-white" />
+                {!isCollapsed && (
+                  <>
+                    <span className="font-medium text-sm flex-1">{item.label}</span>
+                    {isActive && (
+                      <ChevronRight className="h-4 w-4 text-white" />
+                    )}
+                  </>
                 )}
-              </a>
+              </div>
             </Link>
           );
         })}
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-orange-100 space-y-2">
+      <div className={cn("p-4 border-t border-orange-100 space-y-2", isCollapsed && "p-2")}>
         <Separator className="mb-2" />
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-gray-700 hover:text-red-600 hover:bg-red-50"
+          className={cn(
+            "w-full gap-3 text-gray-700 hover:text-red-600 hover:bg-red-50",
+            isCollapsed && "justify-center px-2"
+          )}
           onClick={handleLogout}
           disabled={logout.isPending}
+          title={isCollapsed ? "Cerrar Sesión" : undefined}
         >
-          <LogOut className="h-5 w-5" />
-          <span className="font-medium">Cerrar Sesión</span>
+          <LogOut className="h-5 w-5 flex-shrink-0" />
+          {!isCollapsed && <span className="font-medium">Cerrar Sesión</span>}
         </Button>
-        <p className="text-xs text-center text-gray-400 pt-2">
-          v1.0.0 • GreenH Project
-        </p>
+        {!isCollapsed && (
+          <p className="text-xs text-center text-gray-400 pt-2">
+            v1.0.0 • GreenH Project
+          </p>
+        )}
       </div>
     </div>
   );
@@ -199,6 +226,21 @@ export function Sidebar({ className }: SidebarProps) {
         <Menu className="h-5 w-5 text-orange-600" />
       </Button>
 
+      {/* Desktop Collapse Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hidden lg:flex fixed top-4 left-4 z-50 bg-white shadow-apple border border-orange-100"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        style={{ left: isCollapsed ? '4.5rem' : '17rem' }}
+      >
+        {isCollapsed ? (
+          <ChevronRight className="h-5 w-5 text-orange-600" />
+        ) : (
+          <ChevronLeft className="h-5 w-5 text-orange-600" />
+        )}
+      </Button>
+
       {/* Mobile Overlay */}
       {isOpen && (
         <div
@@ -209,7 +251,8 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Sidebar - Desktop */}
       <aside className={cn(
-        "hidden lg:flex lg:flex-col lg:w-72 h-screen sticky top-0",
+        "hidden lg:flex lg:flex-col h-screen sticky top-0 transition-all duration-300",
+        isCollapsed ? "lg:w-20" : "lg:w-72",
         className
       )}>
         {sidebarContent}

@@ -120,3 +120,14 @@
 - [x] Agregar más gráficos y visualizaciones
 - [x] Implementar búsqueda global en toda la aplicación
 - [x] Agregar filtros avanzados en listados
+
+
+## Correcciones Urgentes
+- [x] Corregir botón "Nuevo Proyecto" en Dashboard para que sea visible y funcional
+- [x] Mejorar navegación desde Dashboard a formulario de creación de proyectos
+- [x] Asegurar que administradores puedan crear proyectos fácilmente
+- [x] Hacer la barra lateral colapsable para ahorrar espacio en pantalla
+- [x] Mostrar solo iconos cuando la barra lateral esté colapsada
+- [x] Agregar botón de toggle para expandir/colapsar sidebar
+- [x] Corregir elementos <a> anidados en Sidebar (error de React)
+- [x] Corregir Select.Item con value vacío en NewProject.tsx

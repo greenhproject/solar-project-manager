@@ -68,7 +68,9 @@ export default function NewProject() {
         name: formData.name,
         description: formData.description || undefined,
         projectTypeId: parseInt(formData.projectTypeId),
-        assignedEngineerId: formData.assignedEngineerId ? parseInt(formData.assignedEngineerId) : undefined,
+        assignedEngineerId: formData.assignedEngineerId && formData.assignedEngineerId !== "0"
+        ? parseInt(formData.assignedEngineerId) 
+        : undefined,
         openSolarId: formData.openSolarId || undefined,
         startDate: new Date(formData.startDate),
         estimatedEndDate: new Date(formData.estimatedEndDate),
@@ -182,7 +184,7 @@ export default function NewProject() {
                         <SelectValue placeholder="Sin asignar" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sin asignar</SelectItem>
+                        <SelectItem value="0">Sin asignar</SelectItem>
                         {engineers?.map((engineer) => (
                           <SelectItem key={engineer.id} value={engineer.id.toString()}>
                             {engineer.name || engineer.email}
