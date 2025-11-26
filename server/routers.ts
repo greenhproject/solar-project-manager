@@ -5,6 +5,7 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
+import { getMonthlyMetrics, getCompletionRate, getAverageCompletionTime, getProjectDistributionByType } from "./db";
 import { generateProjectReport } from "./pdfGenerator";
 import { getOpenSolarClient, checkOpenSolarConnection } from "./openSolarIntegration";
 
@@ -630,6 +631,105 @@ Pregunta del usuario: ${input.question}
         // Convertir buffer a base64 para enviar al cliente
         const pdfBase64 = pdfBuffer.toString('base64');
         return { pdfBase64, fileName: `proyecto-${project.name.replace(/\s+/g, '-').toLowerCase()}.pdf` };
+      }),
+  }),
+
+  // ============================================
+  // MÉTRICAS AVANZADAS
+  // ============================================
+  metrics: router({
+    monthly: protectedProcedure
+      .input(z.object({ months: z.number().optional().default(12) }))
+      .query(async ({ input }) => {
+        return await getMonthlyMetrics(input.months);
+      }),
+    
+    completionRate: protectedProcedure.query(async () => {
+      return await getCompletionRate();
+    }),
+    
+    averageTime: protectedProcedure.query(async () => {
+      return await getAverageCompletionTime();
+    }),
+    
+    distribution: protectedProcedure.query(async () => {
+      return await getProjectDistributionByType();
+    }),
+  }),
+
+  // ============================================
+  // ARCHIVOS ADJUNTOS
+  // ============================================
+  attachments: router({
+    // Subir archivo adjunto
+    upload: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+        fileName: z.string(),
+        fileKey: z.string(),
+        fileUrl: z.string(),
+        fileSize: z.number(),
+        mimeType: z.string(),
+        category: z.enum(["technical", "legal", "financial", "other"]),
+        description: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+        }
+        
+        // Verificar permisos
+        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para subir archivos a este proyecto' });
+        }
+        
+        const attachmentId = await db.createProjectAttachment({
+          ...input,
+          uploadedBy: ctx.user.id,
+        });
+        
+        return { id: attachmentId, success: true };
+      }),
+    
+    // Listar archivos de un proyecto
+    list: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+        }
+        
+        // Verificar permisos
+        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para ver archivos de este proyecto' });
+        }
+        
+        return await db.getProjectAttachments(input.projectId);
+      }),
+    
+    // Eliminar archivo adjunto
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const attachment = await db.getProjectAttachmentById(input.id);
+        if (!attachment) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Archivo no encontrado' });
+        }
+        
+        const project = await db.getProjectById(attachment.projectId);
+        if (!project) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+        }
+        
+        // Verificar permisos (solo admin o quien lo subió)
+        if (ctx.user.role !== 'admin' && attachment.uploadedBy !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para eliminar este archivo' });
+        }
+        
+        await db.deleteProjectAttachment(input.id);
+        return { success: true };
       }),
   }),
 

@@ -14,6 +14,7 @@ import Reminders from "./pages/Reminders";
 import AIAssistant from "./pages/AIAssistant";
 import UserManagement from "./pages/UserManagement";
 import Settings from "./pages/Settings";
+import Analytics from "./pages/Analytics";
 
 function Router() {
   return (
@@ -57,8 +58,7 @@ function Router() {
           <AIAssistant />
         </MainLayout>
       </Route>
-      
-      <Route path="/users">
+       <Route path="/user-management">
         <MainLayout>
           <UserManagement />
         </MainLayout>
@@ -70,6 +70,11 @@ function Router() {
         </MainLayout>
       </Route>
       
+      <Route path="/analytics">
+        <MainLayout>
+          <Analytics />
+        </MainLayout>
+      </Route>   
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

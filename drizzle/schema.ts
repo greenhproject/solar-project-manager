@@ -233,3 +233,80 @@ export type InsertSyncLog = typeof syncLogs.$inferInsert;
 
 export type ProjectUpdate = typeof projectUpdates.$inferSelect;
 export type InsertProjectUpdate = typeof projectUpdates.$inferInsert;
+
+
+/**
+ * Archivos adjuntos de proyectos
+ * Almacena documentos técnicos, legales y financieros
+ */
+export const projectAttachments = mysqlTable("project_attachments", {
+  id: int("id").autoincrement().primaryKey(),
+  projectId: int("projectId").notNull(),
+  
+  // Información del archivo
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: text("fileUrl").notNull(), // S3 URL
+  fileSize: int("fileSize").notNull(), // Tamaño en bytes
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  
+  // Categorización
+  category: mysqlEnum("category", ["technical", "legal", "financial", "other"]).default("other").notNull(),
+  description: text("description"),
+  
+  // Auditoría
+  uploadedBy: int("uploadedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProjectAttachment = typeof projectAttachments.$inferSelect;
+export type InsertProjectAttachment = typeof projectAttachments.$inferInsert;
+
+/**
+ * Configuración de notificaciones de usuario
+ * Preferencias de alertas y notificaciones push
+ */
+export const notificationSettings = mysqlTable("notification_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().unique(),
+  
+  // Preferencias de notificaciones
+  enablePushNotifications: boolean("enablePushNotifications").default(true).notNull(),
+  enableMilestoneReminders: boolean("enableMilestoneReminders").default(true).notNull(),
+  enableDelayAlerts: boolean("enableDelayAlerts").default(true).notNull(),
+  enableAIAlerts: boolean("enableAIAlerts").default(true).notNull(),
+  
+  // Días de anticipación para recordatorios
+  milestoneReminderDays: int("milestoneReminderDays").default(3).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type NotificationSettings = typeof notificationSettings.$inferSelect;
+export type InsertNotificationSettings = typeof notificationSettings.$inferInsert;
+
+/**
+ * Historial de notificaciones enviadas
+ * Registro de todas las notificaciones push
+ */
+export const notificationHistory = mysqlTable("notification_history", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  
+  // Contenido de la notificación
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  type: mysqlEnum("type", ["milestone", "delay", "ai_alert", "general"]).notNull(),
+  
+  // Relación con proyecto (opcional)
+  projectId: int("projectId"),
+  
+  // Estado
+  isRead: boolean("isRead").default(false).notNull(),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+});
+
+export type NotificationHistory = typeof notificationHistory.$inferSelect;
+export type InsertNotificationHistory = typeof notificationHistory.$inferInsert;

@@ -8,6 +8,8 @@ import {
   milestones, 
   milestoneTemplates,
   reminders,
+  projectAttachments,
+  InsertProjectAttachment,
   syncLogs,
   projectUpdates,
   InsertProject,
@@ -384,4 +386,162 @@ export async function deleteUser(userId: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(users).where(eq(users.id, userId));
+}
+
+
+// ==================== MÉTRICAS AVANZADAS ====================
+
+/**
+ * Obtiene métricas mensuales de proyectos para gráficos temporales
+ */
+export async function getMonthlyMetrics(months: number = 12) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT 
+      DATE_FORMAT(createdAt, '%Y-%m') as month,
+      COUNT(*) as total,
+      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+      SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+      SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
+    FROM projects
+    WHERE createdAt >= DATE_SUB(NOW(), INTERVAL ${months} MONTH)
+    GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
+    ORDER BY month ASC
+  `);
+
+  return result as unknown as Array<{
+    month: string;
+    total: number;
+    completed: number;
+    in_progress: number;
+    cancelled: number;
+  }>;
+}
+
+/**
+ * Calcula el tiempo promedio de ejecución de proyectos completados
+ */
+export async function getAverageCompletionTime() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db.execute(sql`
+    SELECT 
+      AVG(DATEDIFF(updatedAt, startDate)) as avgDays,
+      COUNT(*) as totalCompleted
+    FROM projects
+    WHERE status = 'completed' AND startDate IS NOT NULL
+  `);
+
+  const rows = result as unknown as any[];
+  const row = rows[0];
+  return {
+    avgDays: row?.avgDays ? Math.round(row.avgDays) : 0,
+    totalCompleted: row?.totalCompleted || 0,
+  };
+}
+
+/**
+ * Obtiene distribución de proyectos por tipo
+ */
+export async function getProjectDistributionByType() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db.execute(sql`
+    SELECT 
+      pt.name as typeName,
+      pt.color as color,
+      COUNT(p.id) as count
+    FROM project_types pt
+    LEFT JOIN projects p ON p.projectTypeId = pt.id
+    WHERE pt.isActive = 1
+    GROUP BY pt.id, pt.name, pt.color
+    ORDER BY count DESC
+  `);
+
+  return result as unknown as Array<{
+    typeName: string;
+    color: string;
+    count: number;
+  }>;
+}
+
+/**
+ * Calcula tasa de completación de proyectos
+ */
+export async function getCompletionRate() {
+  const db = await getDb();
+  if (!db) return { rate: 0, completed: 0, total: 0 };
+
+  const result = await db.execute(sql`
+    SELECT 
+      COUNT(*) as total,
+      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+    FROM projects
+  `);
+
+  const rows = result as unknown as any[];
+  const row = rows[0];
+  const total = row?.total || 0;
+  const completed = row?.completed || 0;
+  const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return { rate, completed, total };
+}
+
+
+// ==================== ARCHIVOS ADJUNTOS ====================
+
+/**
+ * Crear un archivo adjunto
+ */
+export async function createProjectAttachment(data: InsertProjectAttachment) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const [result] = await db.insert(projectAttachments).values(data);
+  return result.insertId;
+}
+
+/**
+ * Obtener archivos adjuntos de un proyecto
+ */
+export async function getProjectAttachments(projectId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(projectAttachments)
+    .where(eq(projectAttachments.projectId, projectId))
+    .orderBy(desc(projectAttachments.createdAt));
+}
+
+/**
+ * Eliminar un archivo adjunto
+ */
+export async function deleteProjectAttachment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(projectAttachments).where(eq(projectAttachments.id, id));
+}
+
+/**
+ * Obtener un archivo adjunto por ID
+ */
+export async function getProjectAttachmentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(projectAttachments)
+    .where(eq(projectAttachments.id, id))
+    .limit(1);
+
+  return result[0];
 }

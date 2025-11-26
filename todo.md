@@ -131,3 +131,33 @@
 - [x] Agregar botón de toggle para expandir/colapsar sidebar
 - [x] Corregir elementos <a> anidados en Sidebar (error de React)
 - [x] Corregir Select.Item con value vacío en NewProject.tsx
+
+
+## Mejoras Avanzadas - Fase 2
+
+### Dashboard de Métricas Avanzadas
+- [x] Crear tabla de métricas mensuales en base de datos
+- [x] Implementar gráfico de línea temporal de proyectos por mes
+- [x] Agregar gráfico de tasa de completación
+- [x] Mostrar tiempo promedio de ejecución de proyectos
+- [x] Visualizar distribución de proyectos por tipo
+- [x] Agregar filtros de rango de fechas para análisis
+
+### Sistema de Archivos Adjuntos
+- [x] Crear tabla de archivos adjuntos en base de datos
+- [x] Implementar categorías de archivos (técnico, legal, financiero)
+- [ ] Desarrollar componente de carga de archivos con drag & drop
+- [x] Integrar almacenamiento en S3 para archivos
+- [ ] Mostrar lista de archivos adjuntos por proyecto
+- [x] Permitir descarga y eliminación de archivos
+- [ ] Validar tipos de archivo permitidos (PDF, imágenes, documentos)
+- [ ] Limitar tamaño máximo de archivo (10MB)
+
+### Notificaciones Push en Tiempo Real
+- [ ] Solicitar permiso de notificaciones del navegador
+- [ ] Implementar servicio de notificaciones push
+- [ ] Crear notificaciones para hitos próximos a vencer (3 días antes)
+- [ ] Alertas cuando asistente IA detecte problemas críticos
+- [ ] Notificaciones de proyectos con retraso
+- [ ] Panel de configuración de preferencias de notificaciones
+- [ ] Historial de notificaciones enviadas

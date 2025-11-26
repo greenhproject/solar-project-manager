@@ -11,7 +11,8 @@ import {
   Sun,
   Sparkles,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  BarChart3
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -55,6 +56,12 @@ export function Sidebar({ className }: SidebarProps) {
       icon: FolderKanban,
       label: "Proyectos",
       href: "/projects",
+      roles: ["admin", "engineer"],
+    },
+    {
+      icon: BarChart3,
+      label: "Análisis",
+      href: "/analytics",
       roles: ["admin", "engineer"],
     },
     {

@@ -15,6 +15,13 @@
       "when": 1764194666392,
       "tag": "0001_ancient_molecule_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1764198093642,
+      "tag": "0002_redundant_iron_fist",
+      "breakpoints": true
     }
   ]
 }
