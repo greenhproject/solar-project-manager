@@ -43,6 +43,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
+import { FileUpload } from "@/components/FileUpload";
+import { FileList } from "@/components/FileList";
 
 export default function ProjectDetail() {
   const { user, isAuthenticated } = useAuth();
@@ -340,6 +342,7 @@ export default function ProjectDetail() {
           <TabsList>
             <TabsTrigger value="milestones">Hitos</TabsTrigger>
             <TabsTrigger value="updates">Actualizaciones</TabsTrigger>
+            <TabsTrigger value="attachments">Archivos</TabsTrigger>
             <TabsTrigger value="sync">Sincronización</TabsTrigger>
           </TabsList>
 
@@ -493,6 +496,33 @@ export default function ProjectDetail() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          {/* Archivos Adjuntos */}
+          <TabsContent value="attachments" className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold mb-4">Archivos Adjuntos</h2>
+              <p className="text-gray-600 mb-6">
+                Sube y gestiona documentos relacionados con este proyecto (planos, contratos, certificaciones, etc.)
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Subir Nuevo Archivo</h3>
+                <FileUpload 
+                  projectId={projectId} 
+                  onUploadComplete={() => {
+                    // Los archivos se recargarán automáticamente gracias a tRPC
+                  }}
+                />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Archivos del Proyecto</h3>
+                <FileList projectId={projectId} />
+              </div>
+            </div>
           </TabsContent>
 
           {/* Sincronización */}

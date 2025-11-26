@@ -11,6 +11,8 @@ import {
   projectAttachments,
   InsertProjectAttachment,
   syncLogs,
+  notificationSettings,
+  notificationHistory,
   projectUpdates,
   InsertProject,
   InsertProjectType,
@@ -544,4 +546,130 @@ export async function getProjectAttachmentById(id: number) {
     .limit(1);
 
   return result[0];
+}
+
+
+// ==================== NOTIFICACIONES ====================
+
+/**
+ * Obtener hitos que vencen pronto (próximos 3 días)
+ */
+export async function getUpcomingMilestones(daysAhead: number = 3) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + daysAhead);
+
+  const results = await db
+    .select({
+      milestoneId: milestones.id,
+      milestoneName: milestones.name,
+      dueDate: milestones.dueDate,
+      projectId: projects.id,
+      projectName: projects.name,
+      assignedEngineerId: projects.assignedEngineerId,
+    })
+    .from(milestones)
+    .innerJoin(projects, eq(milestones.projectId, projects.id))
+    .where(
+      and(
+        or(
+          eq(milestones.status, "pending"),
+          eq(milestones.status, "in_progress")
+        ),
+        gte(milestones.dueDate, new Date()),
+        lte(milestones.dueDate, futureDate)
+      )
+    );
+
+  return results;
+}
+
+/**
+ * Obtener proyectos con retraso
+ */
+export async function getDelayedProjects() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const now = new Date();
+
+  const results = await db
+    .select({
+      projectId: projects.id,
+      projectName: projects.name,
+      assignedEngineerId: projects.assignedEngineerId,
+      estimatedEndDate: projects.estimatedEndDate,
+    })
+    .from(projects)
+    .where(
+      and(
+        eq(projects.status, "in_progress"),
+        lte(projects.estimatedEndDate, now)
+      )
+    );
+
+  return results;
+}
+
+/**
+ * Guardar configuración de notificaciones de usuario
+ */
+export async function saveNotificationSettings(userId: number, settings: {
+  enableMilestoneReminders: boolean;
+  enableDelayAlerts: boolean;
+  enableAIAlerts: boolean;
+  milestoneReminderDays?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .insert(notificationSettings)
+    .values({
+      userId,
+      ...settings,
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        enableMilestoneReminders: settings.enableMilestoneReminders,
+        enableDelayAlerts: settings.enableDelayAlerts,
+        enableAIAlerts: settings.enableAIAlerts,
+        ...(settings.milestoneReminderDays !== undefined && { milestoneReminderDays: settings.milestoneReminderDays }),
+      },
+    });
+}
+
+/**
+ * Obtener configuración de notificaciones de usuario
+ */
+export async function getNotificationSettings(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(notificationSettings)
+    .where(eq(notificationSettings.userId, userId))
+    .limit(1);
+
+  return result[0] || null;
+}
+
+/**
+ * Registrar notificación enviada
+ */
+export async function logNotification(data: {
+  userId: number;
+  type: "milestone" | "delay" | "ai_alert" | "general";
+  title: string;
+  message: string;
+  relatedProjectId?: number;
+  relatedMilestoneId?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(notificationHistory).values(data);
 }

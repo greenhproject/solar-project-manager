@@ -146,18 +146,27 @@
 ### Sistema de Archivos Adjuntos
 - [x] Crear tabla de archivos adjuntos en base de datos
 - [x] Implementar categorías de archivos (técnico, legal, financiero)
-- [ ] Desarrollar componente de carga de archivos con drag & drop
+- [x] Desarrollar componente de carga de archivos con drag & drop
 - [x] Integrar almacenamiento en S3 para archivos
-- [ ] Mostrar lista de archivos adjuntos por proyecto
+- [x] Mostrar lista de archivos adjuntos por proyecto
 - [x] Permitir descarga y eliminación de archivos
-- [ ] Validar tipos de archivo permitidos (PDF, imágenes, documentos)
-- [ ] Limitar tamaño máximo de archivo (10MB)
-
-### Notificaciones Push en Tiempo Real
-- [ ] Solicitar permiso de notificaciones del navegador
-- [ ] Implementar servicio de notificaciones push
+- [x] Validar tipos de archivo permitidos (PDF, imágenes, documentos)
+- [x] Limitar tamaño máximo de archivo (10MB)
+- [x] Agregar sección de archivos en página de detalle de proyecto
+- [x] Implementar vista previa de imágenes y PDFsrvicio de notificaciones push
 - [ ] Crear notificaciones para hitos próximos a vencer (3 días antes)
 - [ ] Alertas cuando asistente IA detecte problemas críticos
 - [ ] Notificaciones de proyectos con retraso
 - [ ] Panel de configuración de preferencias de notificaciones
 - [ ] Historial de notificaciones enviadas
+
+
+### Calendario de Proyectos
+- [ ] Crear página de calendario con vista mensual
+- [ ] Mostrar fechas de inicio y fin de proyectos
+- [ ] Visualizar vencimientos de hitos en el calendario
+- [ ] Permitir navegación entre meses
+- [ ] Agregar vista semanal alternativa
+- [ ] Implementar filtros por estado y tipo de proyecto
+- [ ] Hacer clic en eventos para ver detalles del proyecto
+- [ ] Integrar con librería de calendario (react-big-calendar o similar)
