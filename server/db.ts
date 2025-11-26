@@ -73,14 +73,16 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = user.lastSignedIn;
     }
     
-    // Asignar rol de admin al propietario, engineer por defecto a otros
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
+    // Asignar rol de admin al propietario y usuario maestro, engineer por defecto a otros
+    if (user.email === 'greenhproject@gmail.com' || user.openId === ENV.ownerOpenId) {
+      // Usuario maestro siempre es admin
       values.role = 'admin';
       updateSet.role = 'admin';
+    } else if (user.role !== undefined) {
+      values.role = user.role;
+      updateSet.role = user.role;
     } else {
+      // Por defecto, nuevos usuarios son ingenieros
       values.role = 'engineer';
       updateSet.role = 'engineer';
     }
@@ -364,4 +366,22 @@ export async function getProjectUpdatesByProjectId(projectId: number) {
     .from(projectUpdates)
     .where(eq(projectUpdates.projectId, projectId))
     .orderBy(desc(projectUpdates.createdAt));
+}
+
+// ============================================
+// GESTIÓN AVANZADA DE USUARIOS
+// ============================================
+
+export async function updateUserRole(userId: number, role: "admin" | "engineer") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function deleteUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(users).where(eq(users.id, userId));
 }

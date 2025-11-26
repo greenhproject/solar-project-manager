@@ -4,22 +4,73 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Dashboard from "./pages/Dashboard";
+import { MainLayout } from "./components/MainLayout";
 import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import NewProject from "./pages/NewProject";
 import ProjectDetail from "./pages/ProjectDetail";
+import Reminders from "./pages/Reminders";
+import AIAssistant from "./pages/AIAssistant";
+import UserManagement from "./pages/UserManagement";
+import Settings from "./pages/Settings";
 
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/dashboard"} component={Dashboard} />
-      <Route path={"/projects"} component={Projects} />
-      <Route path={"/projects/new"} component={NewProject} />
-      <Route path={"/projects/:id"} component={ProjectDetail} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
+      {/* Public route */}
+      <Route path="/" component={Home} />
+      
+      {/* Protected routes with MainLayout */}
+      <Route path="/dashboard">
+        <MainLayout>
+          <Dashboard />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/projects">
+        <MainLayout>
+          <Projects />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/projects/new">
+        <MainLayout>
+          <NewProject />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/projects/:id">
+        <MainLayout>
+          <ProjectDetail />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/reminders">
+        <MainLayout>
+          <Reminders />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/ai-assistant">
+        <MainLayout>
+          <AIAssistant />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/users">
+        <MainLayout>
+          <UserManagement />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/settings">
+        <MainLayout>
+          <Settings />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
   );

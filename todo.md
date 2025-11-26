@@ -90,3 +90,33 @@
 - [x] Crear guía de usuario
 - [ ] Crear checkpoint final
 - [ ] Preparar para despliegue
+
+
+## Mejoras de Interfaz y Navegación
+- [x] Implementar menú lateral deslizable (sidebar) con todas las páginas
+- [x] Agregar opción de cerrar sesión en el menú lateral
+- [x] Mejorar navegación con iconos y organización clara
+- [x] Hacer el sidebar responsive (colapsable en móvil)
+
+## Gestión Avanzada de Usuarios
+- [x] Crear página de gestión de usuarios (solo admin)
+- [x] Permitir cambiar roles de usuarios (admin/ingeniero)
+- [x] Configurar registro por defecto como "ingeniero"
+- [x] Establecer greenhproject@gmail.com como usuario maestro (admin permanente)
+- [x] Prevenir cambio de rol del usuario maestro
+- [x] Agregar funcionalidad de eliminar usuarios
+
+## Asistente de IA para Análisis de Proyectos
+- [x] Integrar LLM para análisis de flujo de proyectos
+- [x] Detectar automáticamente problemas en proyectos
+- [x] Generar sugerencias de mejora personalizadas
+- [x] Crear interfaz de chat para el asistente de IA
+- [x] Permitir consultas sobre proyectos específicos
+- [x] Analizar patrones de retrasos y cuellos de botella
+- [x] Sugerir optimizaciones de recursos y tiempos
+
+## Optimizaciones Adicionales
+- [x] Mejorar diseño visual del dashboard
+- [x] Agregar más gráficos y visualizaciones
+- [x] Implementar búsqueda global en toda la aplicación
+- [x] Agregar filtros avanzados en listados

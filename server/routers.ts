@@ -35,6 +35,48 @@ export const appRouter = router({
   // GESTIÓN DE USUARIOS
   // ============================================
   users: router({
+    // Actualizar rol de usuario
+    updateRole: adminProcedure
+      .input(z.object({ userId: z.number(), role: z.enum(["admin", "engineer"]) }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserById(input.userId);
+        if (!user) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Usuario no encontrado' });
+        }
+
+        // Proteger usuario maestro
+        if (user.email === 'greenhproject@gmail.com') {
+          throw new TRPCError({ 
+            code: 'FORBIDDEN', 
+            message: 'No se puede modificar el rol del usuario maestro' 
+          });
+        }
+
+        await db.updateUserRole(input.userId, input.role);
+        return { success: true };
+      }),
+
+    // Eliminar usuario
+    delete: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserById(input.userId);
+        if (!user) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Usuario no encontrado' });
+        }
+
+        // Proteger usuario maestro
+        if (user.email === 'greenhproject@gmail.com') {
+          throw new TRPCError({ 
+            code: 'FORBIDDEN', 
+            message: 'No se puede eliminar el usuario maestro' 
+          });
+        }
+
+        await db.deleteUser(input.userId);
+        return { success: true };
+      }),
+
     list: adminProcedure.query(async () => {
       return await db.getAllUsers();
     }),
@@ -375,6 +417,101 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await db.markReminderAsRead(input.id);
         return { success: true };
+      }),
+  }),
+
+  // ============================================
+  // ASISTENTE DE IA
+  // ============================================
+  ai: router({
+    // Analizar todos los proyectos
+    analyzeProjects: protectedProcedure.query(async ({ ctx }) => {
+      const projects = await db.getAllProjects();
+      const stats = await db.getProjectStats();
+      
+      // Preparar contexto para el LLM
+      const context = `
+Análisis de Proyectos Solares - GreenH Project
+
+Estadísticas Generales:
+- Total de proyectos: ${stats.total}
+- Proyectos activos: ${stats.active}
+- Proyectos completados: ${stats.completed}
+- Proyectos con retraso: ${stats.overdue}
+
+Proyectos:
+${projects.map(p => `
+- ${p.name} (${p.location})
+  Estado: ${p.status}
+  Estado: ${p.status}
+  Tipo: ${p.projectTypeId}
+  Ingeniero: ${p.assignedEngineerId}
+  Fecha inicio: ${p.startDate}
+  Fecha fin estimada: ${p.estimatedEndDate}
+`).join('')}
+
+Por favor, proporciona:
+1. Un análisis general del estado de los proyectos
+2. Identificación de problemas o cuellos de botella
+3. Sugerencias específicas de mejora
+4. Recomendaciones para optimizar recursos y tiempos
+5. Predicción de riesgos potenciales
+`;
+
+      const { invokeLLM } = await import("./_core/llm");
+      
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content: "Eres un asistente experto en gestión de proyectos solares. Analiza los datos proporcionados y ofrece insights valiosos, detecta problemas y sugiere mejoras concretas. Responde en español de forma profesional y estructurada."
+          },
+          {
+            role: "user",
+            content: context
+          }
+        ]
+      });
+
+      return {
+        analysis: response.choices[0]?.message?.content || "No se pudo generar el análisis"
+      };
+    }),
+
+    // Responder preguntas sobre proyectos
+    askQuestion: protectedProcedure
+      .input(z.object({ question: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const projects = await db.getAllProjects();
+        const stats = await db.getProjectStats();
+        
+        const context = `
+Contexto de Proyectos Solares:
+- Total: ${stats.total}, Activos: ${stats.active}, Completados: ${stats.completed}, Retrasados: ${stats.overdue}
+
+Proyectos: ${projects.map(p => `${p.name} (${p.status})`).join(', ')}
+
+Pregunta del usuario: ${input.question}
+`;
+
+        const { invokeLLM } = await import("./_core/llm");
+        
+        const response = await invokeLLM({
+          messages: [
+            {
+              role: "system",
+              content: "Eres un asistente experto en gestión de proyectos solares de GreenH Project. Responde preguntas de forma clara, concisa y profesional en español. Usa los datos proporcionados para dar respuestas precisas."
+            },
+            {
+              role: "user",
+              content: context
+            }
+          ]
+        });
+
+        return {
+          answer: response.choices[0]?.message?.content || "No se pudo generar una respuesta"
+        };
       }),
   }),
 
