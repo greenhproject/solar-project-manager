@@ -667,13 +667,15 @@ Pregunta del usuario: ${input.question}
         projectId: z.number(),
         fileName: z.string(),
         fileKey: z.string(),
-        fileUrl: z.string(),
+        fileData: z.string(), // base64 encoded file
         fileSize: z.number(),
         mimeType: z.string(),
         category: z.enum(["technical", "legal", "financial", "other"]),
         description: z.string().optional(),
       }))
       .mutation(async ({ input, ctx }) => {
+        const { fileData, fileKey, ...rest } = input;
+        
         const project = await db.getProjectById(input.projectId);
         if (!project) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
@@ -684,8 +686,15 @@ Pregunta del usuario: ${input.question}
           throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para subir archivos a este proyecto' });
         }
         
+        // Convertir base64 a buffer y subir a S3
+        const buffer = Buffer.from(fileData, 'base64');
+        const { storagePut } = await import('./storage');
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        
         const attachmentId = await db.createProjectAttachment({
-          ...input,
+          ...rest,
+          fileKey,
+          fileUrl: url,
           uploadedBy: ctx.user.id,
         });
         

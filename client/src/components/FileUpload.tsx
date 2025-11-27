@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { toast } from "sonner";
-import { storagePut } from "../../../server/storage";
+// Storage is handled by tRPC mutation
 import { trpc } from "@/lib/trpc";
 
 interface FileUploadProps {
@@ -85,24 +85,21 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
     setIsUploading(true);
 
     try {
-      // Leer archivo como ArrayBuffer
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      const buffer = new Uint8Array(arrayBuffer);
+      // Convertir archivo a base64 para enviar por tRPC
+      const buffer = await selectedFile.arrayBuffer();
+      const base64 = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(buffer))));
 
       // Generar nombre único para el archivo
       const timestamp = Date.now();
       const randomSuffix = Math.random().toString(36).substring(7);
       const fileKey = `project-${projectId}/attachments/${timestamp}-${randomSuffix}-${selectedFile.name}`;
 
-      // Subir a S3
-      const { url } = await storagePut(fileKey, buffer, selectedFile.type);
-
-      // Guardar metadata en base de datos
+      // El servidor manejará la subida a S3 y guardará la metadata
       await uploadMutation.mutateAsync({
         projectId,
         fileName: selectedFile.name,
         fileKey,
-        fileUrl: url,
+        fileData: base64,
         fileSize: selectedFile.size,
         mimeType: selectedFile.type,
         category,

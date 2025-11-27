@@ -170,3 +170,7 @@
 - [ ] Implementar filtros por estado y tipo de proyecto
 - [ ] Hacer clic en eventos para ver detalles del proyecto
 - [ ] Integrar con librería de calendario (react-big-calendar o similar)
+
+
+## Errores Críticos
+- [x] Corregir error "process is not defined" en env.ts que impide cargar la aplicación en el navegador
