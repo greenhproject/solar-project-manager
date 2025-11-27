@@ -174,5 +174,5 @@
 
 ## Errores Críticos
 - [x] Corregir error "process is not defined" en env.ts que impide cargar la aplicación en el navegador
-- [x] Corregir error "jsPDF is not a constructor" en generador de reportes PDF
+- [x] Corregir error "jsPDF is not a constructor" en generador de reportes PDF (corregido usando named export)
 - [x] Revisar y corregir botón sin funcionalidad en ProjectDetail.tsx línea 263

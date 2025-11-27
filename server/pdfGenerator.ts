@@ -1,4 +1,4 @@
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 import type { Project, Milestone } from '../drizzle/schema';
 
 interface ProjectReportData {
