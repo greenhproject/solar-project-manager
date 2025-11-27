@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,7 @@ export default function ProjectDetail() {
   const projectId = params?.id ? parseInt(params.id) : 0;
 
   const { data: project, isLoading, refetch } = trpc.projects.getById.useQuery({ id: projectId });
+  const [, setLocation] = useLocation();
   const { data: milestones, refetch: refetchMilestones } = trpc.milestones.getByProject.useQuery({ projectId });
   const { data: updates } = trpc.projectUpdates.getByProject.useQuery({ projectId });
   const { data: syncLogs } = trpc.sync.logs.useQuery({ projectId });
@@ -260,7 +262,11 @@ export default function ProjectDetail() {
               Generar Reporte
             </Button>
             {user.role === 'admin' && (
-              <Button variant="outline" className="gap-2">
+              <Button 
+                variant="outline" 
+                className="gap-2"
+                onClick={() => setLocation(`/projects/${projectId}/edit`)}
+              >
                 <Edit className="h-4 w-4" />
                 Editar
               </Button>
