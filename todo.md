@@ -250,3 +250,9 @@
 - [x] Crear interfaz de gestión de plantillas de hitos
 - [x] Integrar plantillas al crear nuevos proyectos
 - [x] Probar funcionalidad completa de configuración del sistema
+
+## Corrección de Error de Despliegue en Railway
+- [x] Modificar Dockerfile para no ejecutar migraciones durante build
+- [x] Configurar migraciones para ejecutarse en runtime
+- [ ] Probar despliegue en Railway
+- [ ] Verificar que el sitio de producción tenga todas las funcionalidades
