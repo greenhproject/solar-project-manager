@@ -234,4 +234,4 @@
 - [x] Crear gráficos de métricas avanzadas con Recharts
 - [x] Agregar sección de métricas avanzadas en Dashboard
 - [x] Probar todas las funcionalidades nuevas
-- [ ] Crear checkpoint con las mejoras
+- [x] Crear checkpoint con las mejoras
