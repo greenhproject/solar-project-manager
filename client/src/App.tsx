@@ -61,7 +61,13 @@ function Router() {
           <AIAssistant />
         </MainLayout>
       </Route>
-       <Route path="/user-management">
+      <Route path="/user-management">
+        <MainLayout>
+          <UserManagement />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/users">
         <MainLayout>
           <UserManagement />
         </MainLayout>
