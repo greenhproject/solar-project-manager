@@ -254,6 +254,18 @@ export async function getAllMilestoneTemplates() {
   return await db.select().from(milestoneTemplates).orderBy(asc(milestoneTemplates.projectTypeId), asc(milestoneTemplates.orderIndex));
 }
 
+export async function updateMilestoneTemplate(id: number, data: Partial<InsertMilestoneTemplate>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(milestoneTemplates).set(data).where(eq(milestoneTemplates.id, id));
+}
+
+export async function deleteMilestoneTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(milestoneTemplates).set({ isActive: false }).where(eq(milestoneTemplates.id, id));
+}
+
 // ============================================
 // GESTIÓN DE HITOS
 // ============================================

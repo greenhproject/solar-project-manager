@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings as SettingsIcon, Wrench, Bell } from "lucide-react";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { SystemConfiguration } from "@/components/SystemConfiguration";
 
 export default function Settings() {
   return (
@@ -27,18 +28,7 @@ export default function Settings() {
           <Wrench className="h-5 w-5 text-primary" />
           Sistema
         </h2>
-        <Card>
-          <CardHeader>
-            <CardTitle>Configuración del Sistema</CardTitle>
-            <CardDescription>Próximamente disponible</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Esta sección permitirá configurar tipos de proyectos, plantillas de hitos,
-              y otras opciones del sistema.
-            </p>
-          </CardContent>
-        </Card>
+        <SystemConfiguration />
       </div>
     </div>
   );

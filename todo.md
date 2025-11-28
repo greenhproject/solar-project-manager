@@ -240,3 +240,13 @@
 - [x] Corregir error 404 en ruta /users
 - [x] Verificar que todas las rutas del frontend estén correctamente configuradas
 - [x] Probar navegación completa de la aplicación
+
+## Configuración del Sistema
+- [x] Crear schema de tipos de proyectos en base de datos
+- [x] Crear schema de plantillas de hitos en base de datos
+- [x] Implementar procedimientos tRPC para tipos de proyectos
+- [x] Implementar procedimientos tRPC para plantillas de hitos
+- [x] Crear interfaz de gestión de tipos de proyectos
+- [x] Crear interfaz de gestión de plantillas de hitos
+- [x] Integrar plantillas al crear nuevos proyectos
+- [x] Probar funcionalidad completa de configuración del sistema

@@ -180,13 +180,31 @@ export const appRouter = router({
         
         const projectId = Number((result as any).insertId || 0);
         
-        // Crear actualización de proyecto
+        // Crear hitos desde plantillas
         if (projectId > 0) {
+          const templates = await db.getMilestoneTemplatesByProjectType(input.projectTypeId);
+          
+          for (const template of templates) {
+            const dueDate = new Date(input.startDate);
+            dueDate.setDate(dueDate.getDate() + (template.orderIndex * (template.estimatedDurationDays || 7)));
+            
+            await db.createMilestone({
+              projectId,
+              name: template.name,
+              description: template.description || '',
+              dueDate,
+              status: 'pending',
+              orderIndex: template.orderIndex,
+              weight: 1,
+            });
+          }
+          
+          // Crear actualización de proyecto
           await db.createProjectUpdate({
             projectId,
             updateType: 'status_change',
             title: 'Proyecto creado',
-            description: `El proyecto "${input.name}" ha sido creado`,
+            description: `El proyecto "${input.name}" ha sido creado con ${templates.length} hitos`,
             createdBy: ctx.user.id,
           });
         }
@@ -290,6 +308,28 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         return await db.createMilestoneTemplate(input);
+      }),
+    
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        description: z.string().optional(),
+        orderIndex: z.number().optional(),
+        estimatedDurationDays: z.number().optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateMilestoneTemplate(id, data);
+        return { success: true };
+      }),
+    
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteMilestoneTemplate(input.id);
+        return { success: true };
       }),
   }),
 
