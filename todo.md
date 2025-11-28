@@ -181,4 +181,16 @@
 ## Problemas de Despliegue
 - [x] Investigar por qué el sitio publicado no muestra las actualizaciones más recientes
 - [x] Verificar versión desplegada vs versión de desarrollo
-- [ ] Crear nuevo checkpoint para publicar versión actualizada
+- [x] Crear nuevo checkpoint para publicar versión actualizada
+
+
+## Subida a GitHub
+- [x] Crear documentación completa en español (README.md)
+- [x] Documentar estructura del proyecto
+- [x] Documentar variables de entorno necesarias
+- [x] Documentar proceso de instalación y despliegue
+- [ ] Inicializar repositorio Git
+- [ ] Configurar GitHub con credenciales de greenhproject
+- [ ] Crear repositorio en GitHub
+- [ ] Subir código fuente completo a GitHub
+- [ ] Verificar que el repositorio esté accesible
