@@ -215,5 +215,5 @@
 - [x] Enviar notificaciones push automáticas
 - [x] Agregar configuración de preferencias de notificaciones
 - [x] Probar todas las funcionalidades nuevas
-- [ ] Crear checkpoint con las mejoras
+- [x] Crear checkpoint con las mejoras
 - [ ] Subir cambios a GitHub
