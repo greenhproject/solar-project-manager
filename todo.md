@@ -265,3 +265,24 @@
 - [x] Mapear campos de OpenSolar a campos del formulario
 - [x] Manejar errores de API (ID inválido, proyecto no encontrado)
 - [x] Probar integración completa
+
+## Corrección de Errores de Railway
+- [x] Configurar DATABASE_URL correctamente usando referencia de servicio MySQL
+- [x] Agregar todas las variables de entorno faltantes (OAUTH_SERVER_URL, JWT_SECRET, etc.)
+- [ ] Verificar que el servicio inicie correctamente
+- [ ] Confirmar que las tablas se creen en la base de datos
+
+## Diagnóstico de Problema de Publicación en Manus
+- [ ] Verificar versión en servidor de desarrollo vs producción
+- [ ] Identificar causa raíz del problema de publicación
+- [ ] Resolver problema para que publicación funcione correctamente
+
+## Sistema de Autenticación JWT Propio
+- [x] Crear schema de usuarios con contraseñas hasheadas
+- [x] Implementar procedimientos tRPC de registro y login
+- [x] Crear middleware de autenticación dual (Manus OAuth + JWT)
+- [x] Actualizar frontend con formularios de login/registro
+- [x] Crear tests unitarios para autenticación JWT (8/8 pasando)
+- [ ] Configurar variables de entorno para Railway
+- [ ] Crear documentación de despliegue independiente
+- [ ] Desplegar en Railway y verificar funcionamiento

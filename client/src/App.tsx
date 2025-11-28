@@ -18,12 +18,16 @@ import Analytics from "./pages/Analytics";
 import GanttChart from "./pages/GanttChart";
 import CalendarView from "./pages/CalendarView";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function Router() {
   return (
     <Switch>
-      {/* Public route */}
+      {/* Public routes */}
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       
       {/* Protected routes with MainLayout */}
       <Route path="/dashboard">

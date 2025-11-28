@@ -6,9 +6,10 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, index } 
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  openId: varchar("openId", { length: 64 }).unique(), // Opcional para JWT auth
   name: text("name"),
-  email: varchar("email", { length: 320 }),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  password: varchar("password", { length: 255 }), // Hash bcrypt para JWT auth
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["admin", "engineer"]).default("engineer").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
