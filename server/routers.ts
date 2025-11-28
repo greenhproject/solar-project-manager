@@ -295,6 +295,19 @@ export const appRouter = router({
   // GESTIÓN DE HITOS
   // ============================================
   milestones: router({
+    getAll: protectedProcedure.query(async ({ ctx }) => {
+      const allMilestones = await db.getAllMilestones();
+      
+      // Si es ingeniero, filtrar solo los hitos de sus proyectos
+      if (ctx.user.role !== 'admin') {
+        const userProjects = await db.getProjectsByEngineerId(ctx.user.id);
+        const userProjectIds = userProjects.map(p => p.id);
+        return allMilestones.filter(m => userProjectIds.includes(m.projectId));
+      }
+      
+      return allMilestones;
+    }),
+    
     getByProject: protectedProcedure
       .input(z.object({ projectId: z.number() }))
       .query(async ({ input, ctx }) => {

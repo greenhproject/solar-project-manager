@@ -4,6 +4,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { Button } from "./ui/button";
+import { useNotificationMonitor } from "@/hooks/useNotificationMonitor";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -11,6 +12,9 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { isAuthenticated, loading } = useAuth();
+  
+  // Monitorear y enviar notificaciones automáticas
+  useNotificationMonitor();
 
   if (loading) {
     return (

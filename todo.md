@@ -194,3 +194,26 @@
 - [x] Crear repositorio en GitHub
 - [x] Subir código fuente completo a GitHub
 - [x] Verificar que el repositorio esté accesible
+
+
+## Nuevas Funcionalidades - Calendario, Notificaciones Push y Diagrama de Gantt
+- [x] Analizar archivo Excel de cronograma para entender estructura
+- [x] Diseñar componente de diagrama de Gantt interactivo
+- [x] Implementar visualización de tareas con barras de progreso
+- [x] Agregar colores por estado y responsable en Gantt
+- [x] Mostrar fechas de inicio y fin en el diagrama
+- [x] Implementar zoom y scroll horizontal en Gantt
+- [x] Agregar tooltips con información detallada de tareas
+- [x] Crear página de calendario con vista mensual
+- [x] Implementar vista semanal del calendario
+- [x] Mostrar proyectos y hitos en el calendario
+- [x] Agregar navegación entre meses/semanas
+- [x] Implementar filtros por estado y tipo en calendario
+- [x] Solicitar permisos de notificaciones push al usuario
+- [x] Implementar servicio worker para notificaciones
+- [x] Crear sistema de detección de hitos próximos a vencer
+- [x] Enviar notificaciones push automáticas
+- [x] Agregar configuración de preferencias de notificaciones
+- [x] Probar todas las funcionalidades nuevas
+- [ ] Crear checkpoint con las mejoras
+- [ ] Subir cambios a GitHub

@@ -12,7 +12,9 @@ import {
   Sparkles,
   ChevronRight,
   ChevronLeft,
-  BarChart3
+  BarChart3,
+  GanttChartSquare,
+  Calendar
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -62,6 +64,18 @@ export function Sidebar({ className }: SidebarProps) {
       icon: BarChart3,
       label: "Análisis",
       href: "/analytics",
+      roles: ["admin", "engineer"],
+    },
+    {
+      icon: GanttChartSquare,
+      label: "Diagrama de Gantt",
+      href: "/gantt",
+      roles: ["admin", "engineer"],
+    },
+    {
+      icon: Calendar,
+      label: "Calendario",
+      href: "/calendar",
       roles: ["admin", "engineer"],
     },
     {

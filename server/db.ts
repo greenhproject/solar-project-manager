@@ -263,6 +263,12 @@ export async function getMilestonesByProjectId(projectId: number) {
   return await db.select().from(milestones).where(eq(milestones.projectId, projectId)).orderBy(asc(milestones.orderIndex));
 }
 
+export async function getAllMilestones() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(milestones).orderBy(asc(milestones.dueDate));
+}
+
 export async function updateMilestone(id: number, data: Partial<InsertMilestone>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

@@ -15,6 +15,8 @@ import AIAssistant from "./pages/AIAssistant";
 import UserManagement from "./pages/UserManagement";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
+import GanttChart from "./pages/GanttChart";
+import CalendarView from "./pages/CalendarView";
 
 function Router() {
   return (
@@ -74,7 +76,20 @@ function Router() {
         <MainLayout>
           <Analytics />
         </MainLayout>
-      </Route>   
+      </Route>
+      
+      <Route path="/gantt">
+        <MainLayout>
+          <GanttChart />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/calendar">
+        <MainLayout>
+          <CalendarView />
+        </MainLayout>
+      </Route>
+      
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

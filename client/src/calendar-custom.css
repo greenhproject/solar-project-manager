@@ -1,0 +1,163 @@
+/* Estilos personalizados para el calendario */
+
+.rbc-calendar {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Header del calendario */
+.rbc-header {
+  padding: 12px 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1F2937;
+  background-color: #FFF7ED;
+  border-bottom: 2px solid #FF6B35;
+}
+
+/* Días del mes */
+.rbc-date-cell {
+  padding: 8px;
+  text-align: right;
+}
+
+.rbc-off-range {
+  color: #9CA3AF;
+}
+
+.rbc-today {
+  background-color: #FEF3C7;
+}
+
+/* Eventos */
+.rbc-event {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rbc-event:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.rbc-event-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.rbc-event-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botones de navegación */
+.rbc-btn-group button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #E5E7EB;
+  background-color: white;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.rbc-btn-group button:hover {
+  background-color: #F9FAFB;
+  border-color: #FF6B35;
+}
+
+.rbc-btn-group button.rbc-active {
+  background-color: #FF6B35;
+  color: white;
+  border-color: #FF6B35;
+}
+
+/* Vista de agenda */
+.rbc-agenda-view {
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-agenda-table {
+  border-spacing: 0;
+}
+
+.rbc-agenda-date-cell,
+.rbc-agenda-time-cell {
+  padding: 12px;
+  font-weight: 600;
+  color: #1F2937;
+  background-color: #F9FAFB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.rbc-agenda-event-cell {
+  padding: 12px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+/* Vista de semana y día */
+.rbc-time-view {
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-time-header {
+  border-bottom: 2px solid #FF6B35;
+}
+
+.rbc-time-content {
+  border-top: none;
+}
+
+.rbc-time-slot {
+  border-top: 1px solid #F3F4F6;
+}
+
+.rbc-current-time-indicator {
+  background-color: #FF6B35;
+  height: 2px;
+}
+
+/* Scrollbar personalizado */
+.rbc-time-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rbc-time-content::-webkit-scrollbar-track {
+  background: #F3F4F6;
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb {
+  background: #FF6B35;
+  border-radius: 4px;
+}
+
+.rbc-time-content::-webkit-scrollbar-thumb:hover {
+  background: #F7B32B;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rbc-header {
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+  
+  .rbc-event {
+    font-size: 11px;
+    padding: 2px 4px;
+  }
+  
+  .rbc-btn-group button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

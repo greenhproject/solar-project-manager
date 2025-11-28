@@ -1,0 +1,77 @@
+/* Estilos personalizados para el diagrama de Gantt */
+
+.gantt-container {
+  font-family: 'Inter', sans-serif;
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Personalizar colores del header */
+._3vJC0 {
+  background-color: #FFF7ED !important;
+  border-bottom: 2px solid #FF6B35 !important;
+  font-weight: 600 !important;
+  color: #1F2937 !important;
+}
+
+/* Personalizar grid */
+._1b4aS {
+  stroke: #F3F4F6 !important;
+}
+
+/* Personalizar barras de tareas */
+._2QjE7 {
+  rx: 4 !important;
+  ry: 4 !important;
+}
+
+/* Personalizar tooltips */
+._1xNuW {
+  background-color: #1F2937 !important;
+  border: 1px solid #374151 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Personalizar texto de tooltips */
+._2O1lW {
+  color: #F9FAFB !important;
+  font-size: 14px !important;
+}
+
+/* Hover en tareas */
+._2QjE7:hover {
+  opacity: 0.9 !important;
+  cursor: pointer !important;
+}
+
+/* Scrollbar personalizado */
+.gantt-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.gantt-container::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 4px;
+}
+
+.gantt-container::-webkit-scrollbar-thumb {
+  background: #FF6B35;
+  border-radius: 4px;
+}
+
+.gantt-container::-webkit-scrollbar-thumb:hover {
+  background: #F7B32B;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gantt-container {
+    font-size: 12px;
+  }
+  
+  ._1xNuW {
+    padding: 8px !important;
+  }
+}
