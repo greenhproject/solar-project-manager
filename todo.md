@@ -277,3 +277,12 @@
 - [x] Verificar funciones con script de test
 - [x] Crear tests unitarios para métricas (4/4 pasando)
 - [x] Verificar que las APIs devuelvan datos correctos
+
+## Bug Crítico - Login No Funciona
+- [x] Investigar por qué no deja ingresar después de autenticarse
+- [x] Revisar logs del servidor para identificar errores
+- [x] Identificar problema: campo email NOT NULL sin valor por defecto
+- [x] Hacer campo email nullable en la base de datos
+- [x] Actualizar schema de Drizzle para reflejar cambio
+- [x] Probar login completo con OAuth
+- [x] Verificar que el dashboard carga correctamente
