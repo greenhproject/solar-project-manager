@@ -446,7 +446,9 @@ export async function getMonthlyMetrics(months: number = 12) {
     ORDER BY month ASC
   `);
 
-  return result as unknown as Array<{
+  // Drizzle devuelve [[data], [metadata]], necesitamos el primer elemento
+  const rows = result as unknown as any[];
+  return rows[0] as Array<{
     month: string;
     total: number;
     completed: number;
@@ -460,7 +462,7 @@ export async function getMonthlyMetrics(months: number = 12) {
  */
 export async function getAverageCompletionTime() {
   const db = await getDb();
-  if (!db) return null;
+  if (!db) return { avgDays: 0, totalCompleted: 0 };
 
   const result = await db.execute(sql`
     SELECT 
@@ -470,12 +472,15 @@ export async function getAverageCompletionTime() {
     WHERE status = 'completed' AND startDate IS NOT NULL
   `);
 
+  // Drizzle devuelve [[data], [metadata]], necesitamos el primer elemento del primer array
   const rows = result as unknown as any[];
-  const row = rows[0];
-  return {
-    avgDays: row?.avgDays ? Math.round(row.avgDays) : 0,
-    totalCompleted: row?.totalCompleted || 0,
-  };
+  const dataRows = rows[0]; // Primer elemento es el array de datos
+  const row = dataRows[0]; // Primer fila de datos
+  
+  const avgDays = row?.avgDays ? Math.round(Number(row.avgDays)) : 0;
+  const totalCompleted = Number(row?.totalCompleted) || 0;
+  
+  return { avgDays, totalCompleted };
 }
 
 /**
@@ -497,7 +502,9 @@ export async function getProjectDistributionByType() {
     ORDER BY count DESC
   `);
 
-  return result as unknown as Array<{
+  // Drizzle devuelve [[data], [metadata]], necesitamos el primer elemento
+  const rows = result as unknown as any[];
+  return rows[0] as Array<{
     typeName: string;
     color: string;
     count: number;
@@ -518,10 +525,13 @@ export async function getCompletionRate() {
     FROM projects
   `);
 
+  // Drizzle devuelve [[data], [metadata]], necesitamos el primer elemento del primer array
   const rows = result as unknown as any[];
-  const row = rows[0];
-  const total = row?.total || 0;
-  const completed = row?.completed || 0;
+  const dataRows = rows[0]; // Primer elemento es el array de datos
+  const row = dataRows[0]; // Primer fila de datos
+  
+  const total = Number(row?.total) || 0;
+  const completed = Number(row?.completed) || 0;
   const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return { rate, completed, total };

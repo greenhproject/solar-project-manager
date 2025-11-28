@@ -264,3 +264,16 @@
 - [x] Integrar recalculación automática al actualizar hitos
 - [x] Crear script para recalcular progreso de proyectos existentes
 - [x] Verificar que el progreso se actualice correctamente (50% para 1/2 hitos)
+
+## Bug - Métricas Mostrando Valores Incorrectos
+- [x] Investigar por qué Tasa de Completación muestra 0%
+- [x] Investigar por qué Tiempo Promedio muestra 0 días
+- [x] Investigar por qué Total de Proyectos muestra NaN
+- [x] Identificar problema: Drizzle devuelve [[data], [metadata]]
+- [x] Corregir acceso a resultados en getCompletionRate
+- [x] Corregir acceso a resultados en getAverageCompletionTime
+- [x] Corregir acceso a resultados en getMonthlyMetrics
+- [x] Corregir acceso a resultados en getProjectDistributionByType
+- [x] Verificar funciones con script de test
+- [x] Crear tests unitarios para métricas (4/4 pasando)
+- [x] Verificar que las APIs devuelvan datos correctos
