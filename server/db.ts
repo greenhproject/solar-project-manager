@@ -43,9 +43,8 @@ export async function getDb() {
 // ============================================
 
 export async function upsertUser(user: InsertUser): Promise<void> {
-  // Para JWT auth, email es requerido. Para OAuth, openId es requerido.
-  if (!user.openId && !user.email) {
-    throw new Error("User openId or email is required for upsert");
+  if (!user.openId) {
+    throw new Error("User openId is required for upsert");
   }
 
   const db = await getDb();
@@ -56,8 +55,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
   try {
     const values: InsertUser = {
-      openId: user.openId ?? null,
-      email: user.email ?? "",
+      openId: user.openId,
     };
     const updateSet: Record<string, unknown> = {};
 
@@ -67,16 +65,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     const assignNullable = (field: TextField) => {
       const value = user[field];
       if (value === undefined) return;
-      // Email no puede ser null, usar string vacío
-      if (field === 'email') {
-        const emailValue = value ?? "";
-        values[field] = emailValue;
-        updateSet[field] = emailValue;
-      } else {
-        const normalized = value ?? null;
-        values[field] = normalized;
-        updateSet[field] = normalized;
-      }
+      const normalized = value ?? null;
+      values[field] = normalized;
+      updateSet[field] = normalized;
     };
 
     textFields.forEach(assignNullable);
@@ -284,6 +275,13 @@ export async function createMilestone(data: InsertMilestone) {
   if (!db) throw new Error("Database not available");
   const result = await db.insert(milestones).values(data);
   return result;
+}
+
+export async function getMilestoneById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(milestones).where(eq(milestones.id, id)).limit(1);
+  return result[0] || null;
 }
 
 export async function getMilestonesByProjectId(projectId: number) {

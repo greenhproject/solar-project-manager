@@ -257,32 +257,10 @@
 - [ ] Probar despliegue en Railway
 - [ ] Verificar que el sitio de producción tenga todas las funcionalidades
 
-## Integración con OpenSolar API
-- [x] Investigar documentación de API de OpenSolar
-- [x] Crear procedimiento tRPC para obtener datos de proyecto desde OpenSolar
-- [x] Implementar campo de ID de OpenSolar en formulario
-- [x] Agregar función de autocompletado al escribir ID
-- [x] Mapear campos de OpenSolar a campos del formulario
-- [x] Manejar errores de API (ID inválido, proyecto no encontrado)
-- [x] Probar integración completa
-
-## Corrección de Errores de Railway
-- [x] Configurar DATABASE_URL correctamente usando referencia de servicio MySQL
-- [x] Agregar todas las variables de entorno faltantes (OAUTH_SERVER_URL, JWT_SECRET, etc.)
-- [ ] Verificar que el servicio inicie correctamente
-- [ ] Confirmar que las tablas se creen en la base de datos
-
-## Diagnóstico de Problema de Publicación en Manus
-- [ ] Verificar versión en servidor de desarrollo vs producción
-- [ ] Identificar causa raíz del problema de publicación
-- [ ] Resolver problema para que publicación funcione correctamente
-
-## Sistema de Autenticación JWT Propio
-- [x] Crear schema de usuarios con contraseñas hasheadas
-- [x] Implementar procedimientos tRPC de registro y login
-- [x] Crear middleware de autenticación dual (Manus OAuth + JWT)
-- [x] Actualizar frontend con formularios de login/registro
-- [x] Crear tests unitarios para autenticación JWT (8/8 pasando)
-- [ ] Configurar variables de entorno para Railway
-- [ ] Crear documentación de despliegue independiente
-- [ ] Desplegar en Railway y verificar funcionamiento
+## Bug Crítico - Cálculo de Progreso
+- [x] Investigar por qué el progreso muestra 0% cuando hay hitos completados
+- [x] Corregir lógica de cálculo de progreso del proyecto
+- [x] Crear función recalculateProjectProgress
+- [x] Integrar recalculación automática al actualizar hitos
+- [x] Crear script para recalcular progreso de proyectos existentes
+- [x] Verificar que el progreso se actualice correctamente (50% para 1/2 hitos)

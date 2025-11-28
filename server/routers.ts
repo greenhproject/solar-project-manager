@@ -8,10 +8,7 @@ import * as db from "./db";
 import { getMonthlyMetrics, getCompletionRate, getAverageCompletionTime, getProjectDistributionByType } from "./db";
 import { generateProjectReport } from "./pdfGenerator";
 import { getOpenSolarClient, checkOpenSolarConnection } from "./openSolarIntegration";
-import { getOpenSolarProject } from "./openSolarApi";
 import { metricsRouter } from "./metricsRouters";
-import { createUserWithPassword, verifyUserCredentials, getUserById } from "./jwtDb";
-import { generateToken } from "./jwtAuth";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -35,103 +32,6 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
-    
-    // Registro con JWT
-    register: publicProcedure
-      .input(z.object({
-        email: z.string().email(),
-        password: z.string().min(6),
-        name: z.string().min(1),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        try {
-          const user = await createUserWithPassword(
-            input.email,
-            input.password,
-            input.name
-          );
-          
-          if (!user) {
-            throw new TRPCError({ 
-              code: 'INTERNAL_SERVER_ERROR',
-              message: 'Error al crear usuario' 
-            });
-          }
-          
-          // Generar token JWT
-          const token = generateToken({
-            userId: user.id,
-            email: user.email,
-            role: user.role,
-          });
-          
-          // Establecer cookie con el token
-          const cookieOptions = getSessionCookieOptions(ctx.req);
-          ctx.res.cookie(COOKIE_NAME, token, {
-            ...cookieOptions,
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
-          });
-          
-          return { 
-            success: true, 
-            user: {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-            },
-          };
-        } catch (error) {
-          if (error instanceof Error && error.message === 'User already exists') {
-            throw new TRPCError({ 
-              code: 'CONFLICT',
-              message: 'El email ya está registrado' 
-            });
-          }
-          throw error;
-        }
-      }),
-    
-    // Login con JWT
-    login: publicProcedure
-      .input(z.object({
-        email: z.string().email(),
-        password: z.string(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const user = await verifyUserCredentials(input.email, input.password);
-        
-        if (!user) {
-          throw new TRPCError({ 
-            code: 'UNAUTHORIZED',
-            message: 'Credenciales inválidas' 
-          });
-        }
-        
-        // Generar token JWT
-        const token = generateToken({
-          userId: user.id,
-          email: user.email,
-          role: user.role,
-        });
-        
-        // Establecer cookie con el token
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(COOKIE_NAME, token, {
-          ...cookieOptions,
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
-        });
-        
-        return { 
-          success: true, 
-          user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-          },
-        };
-      }),
   }),
 
   // ============================================
@@ -229,14 +129,6 @@ export const appRouter = router({
   // ============================================
   // GESTIÓN DE PROYECTOS
   // ============================================
-  openSolar: router({
-    getProject: protectedProcedure
-      .input(z.object({ projectId: z.string() }))
-      .query(async ({ input }) => {
-        return await getOpenSolarProject(input.projectId);
-      }),
-  }),
-
   projects: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       // Administradores ven todos los proyectos, ingenieros solo los asignados
@@ -527,19 +419,25 @@ export const appRouter = router({
           updateData.dependencies = dependencies.length > 0 ? JSON.stringify(dependencies) : null;
         }
         
-        // Obtener el hito y verificar permisos a través del proyecto
-        const milestone = await db.getMilestonesByProjectId(0); // Necesitamos obtener el hito primero
-        // Por simplicidad, permitimos la actualización si el usuario tiene acceso al proyecto
+        // Obtener el hito para saber su projectId
+        const milestone = await db.getMilestoneById(id);
+        if (!milestone) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Hito no encontrado' });
+        }
         
         await db.updateMilestone(id, updateData);
+        
+        // Recalcular progreso del proyecto
+        const { recalculateProjectProgress } = await import('./progressCalculator');
+        await recalculateProjectProgress(milestone.projectId);
         
         // Si se completó el hito, crear actualización
         if (data.status === 'completed') {
           await db.createProjectUpdate({
-            projectId: input.id, // Esto necesita ser corregido para obtener el projectId del milestone
+            projectId: milestone.projectId,
             updateType: 'milestone_completed',
             title: 'Hito completado',
-            description: `El hito ha sido marcado como completado`,
+            description: `El hito "${milestone.name}" ha sido marcado como completado`,
             createdBy: ctx.user.id,
           });
         }

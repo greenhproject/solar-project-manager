@@ -13,21 +13,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLocation } from "wouter";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Download } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 
 export default function NewProject() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingOpenSolar, setIsLoadingOpenSolar] = useState(false);
-  const [openSolarIdInput, setOpenSolarIdInput] = useState("");
 
   const { data: projectTypes } = trpc.projectTypes.list.useQuery();
   const { data: users } = trpc.users.list.useQuery();
   const createProject = trpc.projects.create.useMutation();
-  const utils = trpc.useUtils();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -93,43 +90,6 @@ export default function NewProject() {
   };
 
   const engineers = users?.filter(u => u.role === 'engineer');
-
-  const handleLoadFromOpenSolar = async () => {
-    if (!openSolarIdInput.trim()) {
-      toast.error("Por favor ingresa un ID de OpenSolar");
-      return;
-    }
-
-    setIsLoadingOpenSolar(true);
-
-    try {
-      const result = await utils.openSolar.getProject.fetch({ projectId: openSolarIdInput.trim() });
-
-      if (result.success && result.data) {
-        // Autocompletar campos del formulario
-        setFormData({
-          ...formData,
-          name: result.data.name || formData.name,
-          location: result.data.location || formData.location,
-          clientName: result.data.client || formData.clientName,
-          description: result.data.description || formData.description,
-          openSolarId: result.data.openSolarId || openSolarIdInput,
-          startDate: result.data.startDate 
-            ? new Date(result.data.startDate).toISOString().split('T')[0] 
-            : formData.startDate,
-        });
-
-        toast.success("Datos cargados desde OpenSolar exitosamente");
-      } else {
-        toast.error(result.error || "No se pudieron cargar los datos de OpenSolar");
-      }
-    } catch (error: any) {
-      console.error('OpenSolar error:', error);
-      toast.error("Error al conectar con OpenSolar. Verifica el ID del proyecto.");
-    } finally {
-      setIsLoadingOpenSolar(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -236,37 +196,12 @@ export default function NewProject() {
 
                   <div className="space-y-2">
                     <Label htmlFor="openSolarId">ID de OpenSolar</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="openSolarId"
-                        value={openSolarIdInput}
-                        onChange={(e) => setOpenSolarIdInput(e.target.value)}
-                        placeholder="Ingresa el ID del proyecto"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleLoadFromOpenSolar();
-                          }
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleLoadFromOpenSolar}
-                        disabled={!openSolarIdInput || isLoadingOpenSolar}
-                        className="gap-2"
-                      >
-                        {isLoadingOpenSolar ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Download className="h-4 w-4" />
-                        )}
-                        Cargar
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Ingresa el ID y presiona Cargar para autocompletar los datos desde OpenSolar
-                    </p>
+                    <Input
+                      id="openSolarId"
+                      value={formData.openSolarId}
+                      onChange={(e) => setFormData({ ...formData, openSolarId: e.target.value })}
+                      placeholder="ID del proyecto en OpenSolar"
+                    />
                   </div>
                 </div>
               </div>
