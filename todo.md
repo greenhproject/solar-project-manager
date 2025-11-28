@@ -189,8 +189,8 @@
 - [x] Documentar estructura del proyecto
 - [x] Documentar variables de entorno necesarias
 - [x] Documentar proceso de instalación y despliegue
-- [ ] Inicializar repositorio Git
-- [ ] Configurar GitHub con credenciales de greenhproject
-- [ ] Crear repositorio en GitHub
-- [ ] Subir código fuente completo a GitHub
-- [ ] Verificar que el repositorio esté accesible
+- [x] Inicializar repositorio Git
+- [x] Configurar GitHub con credenciales de greenhproject
+- [x] Crear repositorio en GitHub
+- [x] Subir código fuente completo a GitHub
+- [x] Verificar que el repositorio esté accesible
