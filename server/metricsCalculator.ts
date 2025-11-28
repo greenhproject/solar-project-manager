@@ -1,0 +1,240 @@
+/**
+ * Calculador de métricas avanzadas y análisis predictivo
+ */
+
+import * as db from "./db";
+
+export interface TeamVelocityMetric {
+  month: string;
+  milestonesCompleted: number;
+  projectsCompleted: number;
+  averageDaysPerMilestone: number;
+}
+
+export interface ProjectTypeMetric {
+  projectTypeName: string;
+  count: number;
+  averageDurationDays: number;
+  completionRate: number;
+}
+
+export interface PredictionResult {
+  projectId: number;
+  projectName: string;
+  estimatedEndDate: Date;
+  predictedEndDate: Date;
+  daysDelay: number;
+  confidence: number; // 0-100
+}
+
+/**
+ * Calcular velocidad del equipo por mes (últimos 6 meses)
+ */
+export async function calculateTeamVelocity(): Promise<TeamVelocityMetric[]> {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const allProjects = await db.getAllProjects();
+  const allMilestones = await db.getAllMilestones();
+
+  const metrics: TeamVelocityMetric[] = [];
+
+  for (let i = 5; i >= 0; i--) {
+    const monthDate = new Date();
+    monthDate.setMonth(monthDate.getMonth() - i);
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+
+    // Hitos completados en el mes
+    const completedMilestones = allMilestones.filter((m: any) => {
+      if (!m.completedDate) return false;
+      const completedDate = new Date(m.completedDate);
+      return completedDate >= monthStart && completedDate <= monthEnd;
+    });
+
+    // Proyectos completados en el mes
+    const completedProjects = allProjects.filter((p: any) => {
+      if (!p.actualEndDate) return false;
+      const endDate = new Date(p.actualEndDate);
+      return endDate >= monthStart && endDate <= monthEnd;
+    });
+
+    // Calcular promedio de días por hito
+    let totalDays = 0;
+    completedMilestones.forEach((m: any) => {
+      if (m.startDate && m.completedDate) {
+        const start = new Date(m.startDate);
+        const end = new Date(m.completedDate);
+        const days = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+        totalDays += days;
+      }
+    });
+
+    const averageDays = completedMilestones.length > 0 
+      ? Math.round(totalDays / completedMilestones.length) 
+      : 0;
+
+    metrics.push({
+      month: monthDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' }),
+      milestonesCompleted: completedMilestones.length,
+      projectsCompleted: completedProjects.length,
+      averageDaysPerMilestone: averageDays,
+    });
+  }
+
+  return metrics;
+}
+
+/**
+ * Calcular métricas por tipo de proyecto
+ */
+export async function calculateProjectTypeMetrics(): Promise<ProjectTypeMetric[]> {
+  const projects = await db.getAllProjects();
+  const projectTypes = await db.getAllProjectTypes();
+
+  const metrics: ProjectTypeMetric[] = [];
+
+  for (const type of projectTypes) {
+    const typeProjects = projects.filter((p: any) => p.projectTypeId === type.id);
+    
+    if (typeProjects.length === 0) continue;
+
+    // Calcular duración promedio
+    let totalDuration = 0;
+    let completedCount = 0;
+
+    typeProjects.forEach((p: any) => {
+      if (p.actualEndDate) {
+        const start = new Date(p.startDate);
+        const end = new Date(p.actualEndDate);
+        const days = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+        totalDuration += days;
+        completedCount++;
+      }
+    });
+
+    const averageDuration = completedCount > 0 
+      ? Math.round(totalDuration / completedCount) 
+      : type.estimatedDurationDays || 0;
+
+    const completionRate = typeProjects.length > 0
+      ? Math.round((completedCount / typeProjects.length) * 100)
+      : 0;
+
+    metrics.push({
+      projectTypeName: type.name,
+      count: typeProjects.length,
+      averageDurationDays: averageDuration,
+      completionRate,
+    });
+  }
+
+  return metrics.sort((a, b) => b.count - a.count);
+}
+
+/**
+ * Predecir fechas de finalización usando datos históricos
+ */
+export async function predictProjectCompletion(): Promise<PredictionResult[]> {
+  const activeProjects = await db.getActiveProjects();
+  const allProjects = await db.getAllProjects();
+  const predictions: PredictionResult[] = [];
+
+  for (const project of activeProjects) {
+    // Obtener proyectos completados del mismo tipo
+    const similarProjects = allProjects.filter((p: any) => 
+      p.projectTypeId === project.projectTypeId && 
+      p.status === 'completed' &&
+      p.actualEndDate
+    );
+
+    if (similarProjects.length === 0) {
+      // Sin datos históricos, usar estimación original
+      continue;
+    }
+
+    // Calcular duración promedio de proyectos similares
+    let totalDuration = 0;
+    similarProjects.forEach((p: any) => {
+      const start = new Date(p.startDate);
+      const end = new Date(p.actualEndDate!);
+      const days = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+      totalDuration += days;
+    });
+
+    const averageDuration = totalDuration / similarProjects.length;
+
+    // Calcular progreso actual del proyecto
+    const projectStart = new Date(project.startDate);
+    const now = new Date();
+    const daysElapsed = Math.ceil((now.getTime() - projectStart.getTime()) / (24 * 60 * 60 * 1000));
+
+    // Predecir fecha de finalización basada en progreso
+    const progress = project.progressPercentage || 0;
+    let predictedTotalDays: number;
+
+    if (progress > 0) {
+      // Usar progreso actual para estimar
+      predictedTotalDays = Math.round((daysElapsed / progress) * 100);
+    } else {
+      // Usar promedio histórico
+      predictedTotalDays = Math.round(averageDuration);
+    }
+
+    const predictedEndDate = new Date(projectStart);
+    predictedEndDate.setDate(predictedEndDate.getDate() + predictedTotalDays);
+
+    const estimatedEndDate = new Date(project.estimatedEndDate);
+    const daysDelay = Math.ceil((predictedEndDate.getTime() - estimatedEndDate.getTime()) / (24 * 60 * 60 * 1000));
+
+    // Calcular confianza basada en cantidad de datos históricos
+    const confidence = Math.min(100, Math.round((similarProjects.length / 5) * 100));
+
+    predictions.push({
+      projectId: project.id,
+      projectName: project.name,
+      estimatedEndDate,
+      predictedEndDate,
+      daysDelay,
+      confidence,
+    });
+  }
+
+  return predictions.sort((a, b) => b.daysDelay - a.daysDelay);
+}
+
+/**
+ * Calcular estadísticas generales del dashboard
+ */
+export async function calculateDashboardStats() {
+  const projects = await db.getAllProjects();
+  const milestones = await db.getAllMilestones();
+
+  const totalProjects = projects.length;
+  const activeProjects = projects.filter((p: any) => p.status === 'in_progress').length;
+  const completedProjects = projects.filter((p: any) => p.status === 'completed').length;
+  const delayedProjects = projects.filter((p: any) => {
+    if (p.status === 'completed' || p.status === 'cancelled') return false;
+    const endDate = new Date(p.estimatedEndDate);
+    return endDate < new Date();
+  }).length;
+
+  const totalMilestones = milestones.length;
+  const completedMilestones = milestones.filter((m: any) => m.status === 'completed').length;
+  const overdueMilestones = milestones.filter((m: any) => m.status === 'overdue').length;
+
+  const averageProgress = projects.length > 0
+    ? Math.round(projects.reduce((sum: number, p: any) => sum + (p.progressPercentage || 0), 0) / projects.length)
+    : 0;
+
+  return {
+    totalProjects,
+    activeProjects,
+    completedProjects,
+    delayedProjects,
+    totalMilestones,
+    completedMilestones,
+    overdueMilestones,
+    averageProgress,
+  };
+}

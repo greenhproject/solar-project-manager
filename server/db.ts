@@ -179,6 +179,14 @@ export async function getAllProjects() {
   return await db.select().from(projects).orderBy(desc(projects.createdAt));
 }
 
+export async function getActiveProjects() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(projects)
+    .where(eq(projects.status, 'in_progress'))
+    .orderBy(desc(projects.createdAt));
+}
+
 export async function getProjectsByEngineerId(engineerId: number) {
   const db = await getDb();
   if (!db) return [];

@@ -4,10 +4,12 @@ import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../calendar-custom.css";
 import { trpc } from "@/lib/trpc";
+import { exportCalendarToExcel } from "@/lib/excelExport";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, CalendarDays, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 
@@ -273,6 +275,23 @@ export default function CalendarView() {
             <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
               🎯 {allMilestones?.length || 0} Hitos
             </Badge>
+            <Button
+              variant="default"
+              onClick={() => {
+                if (projects && allMilestones) {
+                  const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+                  const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                  exportCalendarToExcel(projects, allMilestones, startOfMonth, endOfMonth);
+                  toast.success("Calendario exportado a Excel");
+                } else {
+                  toast.error("No hay datos para exportar");
+                }
+              }}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Exportar a Excel
+            </Button>
           </div>
         </div>
       </Card>

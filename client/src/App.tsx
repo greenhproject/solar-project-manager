@@ -17,6 +17,7 @@ import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import GanttChart from "./pages/GanttChart";
 import CalendarView from "./pages/CalendarView";
+import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 
 function Router() {
   return (
@@ -87,6 +88,12 @@ function Router() {
       <Route path="/calendar">
         <MainLayout>
           <CalendarView />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/advanced-analytics">
+        <MainLayout>
+          <AdvancedAnalytics />
         </MainLayout>
       </Route>
       

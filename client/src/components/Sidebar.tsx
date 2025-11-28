@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   BarChart3,
   GanttChartSquare,
-  Calendar
+  Calendar,
+  TrendingUp
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -64,6 +65,12 @@ export function Sidebar({ className }: SidebarProps) {
       icon: BarChart3,
       label: "Análisis",
       href: "/analytics",
+      roles: ["admin", "engineer"],
+    },
+    {
+      icon: TrendingUp,
+      label: "Análisis Avanzado",
+      href: "/advanced-analytics",
       roles: ["admin", "engineer"],
     },
     {

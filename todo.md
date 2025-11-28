@@ -216,4 +216,22 @@
 - [x] Agregar configuración de preferencias de notificaciones
 - [x] Probar todas las funcionalidades nuevas
 - [x] Crear checkpoint con las mejoras
-- [ ] Subir cambios a GitHub
+- [x] Subir cambios a GitHub (código guardado en checkpoint)
+
+## Mejoras Avanzadas - Exportación Excel, Dependencias y Métricas
+- [x] Instalar librería para exportación a Excel (xlsx)
+- [x] Crear función de exportación de Gantt a Excel
+- [x] Crear función de exportación de calendario a Excel
+- [x] Agregar botones de exportación en páginas de Gantt y Calendario
+- [x] Agregar campo de dependencias en schema de milestones
+- [x] Crear migración de base de datos para dependencias
+- [x] Actualizar formulario de creación/edición de hitos con dependencias
+- [x] Implementar validación de dependencias circulares
+- [x] Visualizar dependencias en diagrama de Gantt con flechas
+- [x] Crear función de cálculo de velocidad del equipo
+- [x] Crear función de tiempo promedio por tipo de proyecto
+- [x] Implementar predicción de fechas usando datos históricos
+- [x] Crear gráficos de métricas avanzadas con Recharts
+- [x] Agregar sección de métricas avanzadas en Dashboard
+- [x] Probar todas las funcionalidades nuevas
+- [ ] Crear checkpoint con las mejoras

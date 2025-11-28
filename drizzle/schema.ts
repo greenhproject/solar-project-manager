@@ -115,6 +115,9 @@ export const milestones = mysqlTable("milestones", {
   // Notas y observaciones
   notes: text("notes"),
   
+  // Dependencias (IDs de hitos que deben completarse antes)
+  dependencies: text("dependencies"), // JSON array de IDs: [1, 2, 3]
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({

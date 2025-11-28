@@ -3,10 +3,12 @@ import { Gantt, Task, ViewMode } from "gantt-task-react";
 import "gantt-task-react/dist/index.css";
 import "../gantt-custom.css";
 import { trpc } from "@/lib/trpc";
+import { exportGanttToExcel } from "@/lib/excelExport";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Calendar, ZoomIn, ZoomOut } from "lucide-react";
+import { Loader2, Calendar, ZoomIn, ZoomOut, Download } from "lucide-react";
 
 export default function GanttChart() {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
@@ -199,6 +201,27 @@ export default function GanttChart() {
               title="Alejar"
             >
               <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                const project = projects?.find(p => p.id === selectedProjectId);
+                if (project && milestones) {
+                  exportGanttToExcel(
+                    project.name,
+                    milestones,
+                    new Date(project.startDate),
+                    new Date(project.estimatedEndDate)
+                  );
+                  toast.success("Cronograma exportado a Excel");
+                } else {
+                  toast.error("Selecciona un proyecto para exportar");
+                }
+              }}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Exportar a Excel
             </Button>
           </div>
         </div>

@@ -8,6 +8,7 @@ import * as db from "./db";
 import { getMonthlyMetrics, getCompletionRate, getAverageCompletionTime, getProjectDistributionByType } from "./db";
 import { generateProjectReport } from "./pdfGenerator";
 import { getOpenSolarClient, checkOpenSolarConnection } from "./openSolarIntegration";
+import { metricsRouter } from "./metricsRouters";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -22,6 +23,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 export const appRouter = router({
   system: systemRouter,
+  analytics: metricsRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -332,6 +334,7 @@ export const appRouter = router({
         dueDate: z.date(),
         orderIndex: z.number(),
         weight: z.number().default(1),
+        dependencies: z.array(z.number()).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
@@ -344,9 +347,16 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para crear hitos en este proyecto' });
         }
         
+        // Validar y convertir dependencias
+        const { dependencies, ...restInput } = input;
+        const dependenciesJson = dependencies && dependencies.length > 0 
+          ? JSON.stringify(dependencies) 
+          : null;
+        
         return await db.createMilestone({
-          ...input,
+          ...restInput,
           status: 'pending',
+          dependencies: dependenciesJson,
         });
       }),
     
@@ -358,15 +368,22 @@ export const appRouter = router({
         status: z.enum(['pending', 'in_progress', 'completed', 'overdue']).optional(),
         completedDate: z.date().optional(),
         notes: z.string().optional(),
+        dependencies: z.array(z.number()).optional(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const { id, ...data } = input;
+        const { id, dependencies, ...data } = input;
+        
+        // Convertir dependencias a JSON si están presentes
+        const updateData: any = { ...data };
+        if (dependencies !== undefined) {
+          updateData.dependencies = dependencies.length > 0 ? JSON.stringify(dependencies) : null;
+        }
         
         // Obtener el hito y verificar permisos a través del proyecto
         const milestone = await db.getMilestonesByProjectId(0); // Necesitamos obtener el hito primero
         // Por simplicidad, permitimos la actualización si el usuario tiene acceso al proyecto
         
-        await db.updateMilestone(id, data);
+        await db.updateMilestone(id, updateData);
         
         // Si se completó el hito, crear actualización
         if (data.status === 'completed') {
@@ -648,7 +665,7 @@ Pregunta del usuario: ${input.question}
   }),
 
   // ============================================
-  // MÉTRICAS AVANZADAS
+  // MÉTRICAS BÁSICAS (mantenidas para compatibilidad)
   // ============================================
   metrics: router({
     monthly: protectedProcedure
