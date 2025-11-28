@@ -256,3 +256,12 @@
 - [x] Configurar migraciones para ejecutarse en runtime
 - [ ] Probar despliegue en Railway
 - [ ] Verificar que el sitio de producción tenga todas las funcionalidades
+
+## Integración con OpenSolar API
+- [x] Investigar documentación de API de OpenSolar
+- [x] Crear procedimiento tRPC para obtener datos de proyecto desde OpenSolar
+- [x] Implementar campo de ID de OpenSolar en formulario
+- [x] Agregar función de autocompletado al escribir ID
+- [x] Mapear campos de OpenSolar a campos del formulario
+- [x] Manejar errores de API (ID inválido, proyecto no encontrado)
+- [x] Probar integración completa

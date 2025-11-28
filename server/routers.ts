@@ -8,6 +8,7 @@ import * as db from "./db";
 import { getMonthlyMetrics, getCompletionRate, getAverageCompletionTime, getProjectDistributionByType } from "./db";
 import { generateProjectReport } from "./pdfGenerator";
 import { getOpenSolarClient, checkOpenSolarConnection } from "./openSolarIntegration";
+import { getOpenSolarProject } from "./openSolarApi";
 import { metricsRouter } from "./metricsRouters";
 
 // Procedimiento solo para administradores
@@ -129,6 +130,14 @@ export const appRouter = router({
   // ============================================
   // GESTIÓN DE PROYECTOS
   // ============================================
+  openSolar: router({
+    getProject: protectedProcedure
+      .input(z.object({ projectId: z.string() }))
+      .query(async ({ input }) => {
+        return await getOpenSolarProject(input.projectId);
+      }),
+  }),
+
   projects: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       // Administradores ven todos los proyectos, ingenieros solo los asignados
