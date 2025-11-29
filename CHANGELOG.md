@@ -4,6 +4,41 @@ Registro de cambios y mejoras implementadas en el proyecto.
 
 ---
 
+## [1.1.1] - 2025-11-29
+
+### 🐛 Correcciones Críticas
+
+#### Bug de Autenticación en Railway (CRÍTICO)
+- **Problema:** El login no funcionaba en producción (Railway)
+  - Los usuarios ingresaban credenciales válidas
+  - El servidor autenticaba correctamente
+  - Pero las cookies no llegaban al navegador
+  - Resultado: usuarios no podían acceder a la aplicación
+
+- **Causa raíz:** Express no confiaba en el proxy reverso de Railway
+  - Las cookies con `secure: true` no se establecían correctamente
+  - Express no detectaba que la conexión era HTTPS
+
+- **Solución implementada:**
+  - Agregado `app.set('trust proxy', 1)` en `/server/_core/index.ts`
+  - Permite a Express confiar en el primer proxy (Railway)
+  - Ahora detecta correctamente HTTPS y establece cookies seguras
+
+- **Archivos modificados:**
+  - `server/_core/index.ts`: Agregada configuración de trust proxy
+
+- **Commit:** `aa82e4d` - "fix: Corregir problema de autenticación en Railway"
+
+### 📚 Documentación
+
+- **Creado `LOGIN_FIX_REPORT.md`**
+  - Reporte detallado del problema y solución
+  - Análisis de logs de Railway
+  - Guía de verificación post-despliegue
+  - Recomendaciones para futuras mejoras
+
+---
+
 ## [1.1.0] - 2025-11-29
 
 ### ✨ Nuevas Funcionalidades
