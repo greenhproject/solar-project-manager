@@ -61,16 +61,16 @@ class JWTAuthService {
    * Verify a JWT session token
    */
   async verifyJWTSession(
-    cookieValue: string | undefined | null
+    token: string | undefined | null
   ): Promise<JWTSessionPayload | null> {
-    if (!cookieValue) {
-      console.warn("[JWT Auth] Missing session cookie");
+    if (!token) {
+      console.warn("[JWT Auth] Missing session token");
       return null;
     }
 
     try {
       const secretKey = this.getJWTSecret();
-      const { payload } = await jwtVerify(cookieValue, secretKey, {
+      const { payload } = await jwtVerify(token, secretKey, {
         algorithms: ["HS256"],
       });
       const { userId, email, name } = payload as Record<string, unknown>;
