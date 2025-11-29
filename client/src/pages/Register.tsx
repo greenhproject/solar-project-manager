@@ -23,8 +23,10 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const utils = trpc.useUtils();
+  
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Guardar el token en localStorage para autenticación híbrida
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
@@ -35,14 +37,11 @@ export default function Register() {
         description: "Redirigiendo al dashboard...",
       });
       
-      // Esperar un momento para asegurar que localStorage se sincronice
-      setTimeout(() => {
-        // Verificar que el token se guardó correctamente
-        const savedToken = localStorage.getItem('auth_token');
-        console.log('[Register] Token verificado antes de redireccionar:', savedToken ? 'OK' : 'ERROR');
-        // Recargar para obtener la sesión actualizada
-        window.location.href = "/";
-      }, 100);
+      // Invalidar queries para forzar refetch con el nuevo token
+      await utils.auth.me.invalidate();
+      
+      // Redireccionar sin recargar la página
+      setLocation("/");
     },
     onError: error => {
       toast.error("Error al crear cuenta", {

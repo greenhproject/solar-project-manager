@@ -21,8 +21,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const utils = trpc.useUtils();
+  
   const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       // Guardar el token en localStorage para autenticación híbrida
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
@@ -33,14 +35,11 @@ export default function Login() {
         description: "Has iniciado sesión correctamente",
       });
       
-      // Esperar un momento para asegurar que localStorage se sincronice
-      setTimeout(() => {
-        // Verificar que el token se guardó correctamente
-        const savedToken = localStorage.getItem('auth_token');
-        console.log('[Login] Token verificado antes de redireccionar:', savedToken ? 'OK' : 'ERROR');
-        // Recargar para obtener la sesión actualizada
-        window.location.href = "/";
-      }, 100);
+      // Invalidar queries para forzar refetch con el nuevo token
+      await utils.auth.me.invalidate();
+      
+      // Redireccionar sin recargar la página
+      setLocation("/");
     },
     onError: error => {
       toast.error("Error al iniciar sesión", {
