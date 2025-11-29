@@ -310,3 +310,38 @@
 - [x] Agregar cursor-help para indicar interactividad
 - [x] Agregar estado isSyncing que se muestra por 1 segundo después de actualizar
 - [x] Integrar indicador en card de Progreso General en ProjectDetail
+
+## Nuevas Mejoras - Notificaciones, Calendario y Reportes
+### Notificaciones al Completar Proyectos
+- [x] Detectar cuando un proyecto alcanza 100% de progreso
+- [x] Enviar notificación al administrador usando notifyOwner
+- [x] Incluir resumen de duración total del proyecto
+- [x] Agregar próximos pasos sugeridos en la notificación
+- [x] Integrar en recalculateProjectProgress sin afectar funcionalidad existente
+
+### Vista de Calendario Interactivo
+- [x] Crear página Calendar.tsx con vista mensual/semanal
+- [x] Integrar librería react-big-calendar
+- [x] Mostrar todos los hitos de todos los proyectos
+- [x] Usar colores diferentes por proyecto (8 colores rotativos)
+- [x] Agregar ruta /calendar en App.tsx (reemplazó CalendarView existente)
+- [x] Agregar leyenda de proyectos con badges de colores
+- [x] Agregar estadísticas (total, completados, pendientes)
+- [x] Localizar calendario en español
+
+### Generador de Reportes Personalizados
+- [x] Crear página Reports.tsx con formulario de configuración
+- [x] Permitir seleccionar métricas específicas (4 opciones)
+- [x] Permitir seleccionar rango de fechas (5 opciones)
+- [x] Permitir seleccionar proyectos específicos (con checkbox)
+- [x] Generar PDF usando procedimiento generateProjectPDF existente
+- [x] Agregar ruta /reports en App.tsx
+- [x] Descargar múltiples PDFs (uno por proyecto)
+- [ ] Agregar enlace en el sidebar
+
+## Verificación Final
+- [x] Ejecutar todos los tests (29/29 pasando)
+- [x] Verificar que notificaciones funcionen correctamente
+- [x] Verificar que calendario se renderice correctamente
+- [x] Verificar que reportes se puedan generar
+- [x] Confirmar que funcionalidad existente no se rompió

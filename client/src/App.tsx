@@ -16,8 +16,9 @@ import UserManagement from "./pages/UserManagement";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import GanttChart from "./pages/GanttChart";
-import CalendarView from "./pages/CalendarView";
+import CalendarPage from "./pages/Calendar";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
+import Reports from "./pages/Reports";
 
 function Router() {
   return (
@@ -93,13 +94,19 @@ function Router() {
       
       <Route path="/calendar">
         <MainLayout>
-          <CalendarView />
+          <CalendarPage />
         </MainLayout>
       </Route>
       
       <Route path="/advanced-analytics">
         <MainLayout>
           <AdvancedAnalytics />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/reports">
+        <MainLayout>
+          <Reports />
         </MainLayout>
       </Route>
       

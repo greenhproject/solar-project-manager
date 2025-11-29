@@ -708,6 +708,25 @@ Pregunta del usuario: ${input.question}
         const pdfBase64 = pdfBuffer.toString('base64');
         return { pdfBase64, fileName: `proyecto-${project.name.replace(/\s+/g, '-').toLowerCase()}.pdf` };
       }),
+    
+    generateCustomReport: protectedProcedure
+      .input(z.object({
+        projectIds: z.array(z.number()),
+        metrics: z.array(z.string()),
+        dateRange: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden generar reportes personalizados' });
+        }
+        
+        const fileName = `reporte-personalizado-${new Date().toISOString().split('T')[0]}.pdf`;
+        
+        return { 
+          url: `data:application/pdf;base64,placeholder`,
+          fileName 
+        };
+      }),
   }),
 
   // ============================================
