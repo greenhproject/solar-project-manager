@@ -550,3 +550,8 @@
 - [x] Configurar variables de entorno necesarias para Railway
 - [x] Crear páginas de Login y Register con diseño solar
 - [x] Documentar variables de entorno en RAILWAY_ENV.md
+
+## Bug Crítico - Error en Settings
+- [x] Corregir error "require is not defined" en página de Settings
+- [x] Reemplazar require() con import dinámico en routers.ts
+- [x] Verificar que logout funcione correctamente
