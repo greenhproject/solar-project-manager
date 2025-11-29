@@ -523,3 +523,18 @@
 - [x] Corregido: relatedProjectId → projectId en notification-system.test.ts
 - [ ] Errores de TypeScript persisten en LSP pero no afectan ejecución
 - [ ] Intentar checkpoint y redespliegue para verificar si build de producción funciona
+
+
+## URGENTE - Producción NO se Actualiza
+- [x] Confirmado: Usuario tiene rol "admin" en BD de producción
+- [x] Confirmado: Módulos existen en código (Settings.tsx, UserManagement.tsx)
+- [x] Confirmado: tsc --noEmit NO muestra errores reales
+- [x] Problema: Versión desplegada en producción es anterior a la actual
+- [x] Investigado: Errores son del LSP, no de compilación real
+- [x] Limpiado: node_modules/.vite, .cache, .tsbuildinfo
+- [x] Reiniciado: tsserver y servidor de desarrollo
+- [x] Verificado: tsc --noEmit NO muestra errores
+- [x] Verificado: Servidor funciona correctamente
+- [ ] Crear checkpoint limpio (ignorando errores LSP)
+- [ ] Verificar despliegue en producción con navegador
+- [ ] Si falla: Es problema de Manus, crear email solicitando devolución
