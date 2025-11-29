@@ -1034,6 +1034,69 @@ Pregunta del usuario: ${input.question}
       .mutation(async ({ input, ctx }) => {
         return await db.updateNotificationSettings(ctx.user.id, input);
       }),
+
+    // Verificar y crear notificaciones automáticas (hitos próximos y vencidos)
+    checkAndCreateAutoNotifications: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        // Solo administradores pueden ejecutar esto manualmente
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden ejecutar esta acción' });
+        }
+
+        const { getUpcomingMilestones, getOverdueMilestones, createMilestoneDueSoonNotification, createMilestoneOverdueNotification } = await import('./db');
+        
+        let upcomingCount = 0;
+        let overdueCount = 0;
+
+        try {
+          // Obtener hitos próximos a vencer (2 días)
+          const upcomingMilestones = await getUpcomingMilestones(2);
+          
+          for (const milestone of upcomingMilestones) {
+            if (milestone.assignedEngineerId) {
+              await createMilestoneDueSoonNotification(
+                milestone.assignedEngineerId,
+                milestone.id,
+                milestone.projectId,
+                milestone.name,
+                milestone.projectName,
+                new Date(milestone.dueDate)
+              );
+              upcomingCount++;
+            }
+          }
+          
+          // Obtener hitos vencidos
+          const overdueMilestones = await getOverdueMilestones();
+          
+          for (const milestone of overdueMilestones) {
+            if (milestone.assignedEngineerId) {
+              await createMilestoneOverdueNotification(
+                milestone.assignedEngineerId,
+                milestone.id,
+                milestone.projectId,
+                milestone.name,
+                milestone.projectName,
+                new Date(milestone.dueDate)
+              );
+              overdueCount++;
+            }
+          }
+          
+          return {
+            success: true,
+            upcomingCount,
+            overdueCount,
+            message: `Se crearon ${upcomingCount} notificaciones de hitos próximos y ${overdueCount} de hitos vencidos`
+          };
+        } catch (error) {
+          console.error('Error al crear notificaciones automáticas:', error);
+          throw new TRPCError({ 
+            code: 'INTERNAL_SERVER_ERROR', 
+            message: 'Error al crear notificaciones automáticas' 
+          });
+        }
+      }),
   }),
 
   // ============================================

@@ -1,55 +1,70 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 
-type Theme = "light" | "dark";
+type Theme = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
-  toggleTheme?: () => void;
-  switchable: boolean;
+  resolvedTheme: ResolvedTheme;
+  setTheme: (theme: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: React.ReactNode;
-  defaultTheme?: Theme;
-  switchable?: boolean;
 }
 
-export function ThemeProvider({
-  children,
-  defaultTheme = "light",
-  switchable = false,
-}: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
-    }
-    return defaultTheme;
-  });
+export function ThemeProvider({ children }: ThemeProviderProps) {
+  const { user } = useAuth();
+  const [theme, setThemeState] = useState<Theme>("system");
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
+  // Detectar preferencia del sistema
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-
-    if (switchable) {
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme, switchable]);
-
-  const toggleTheme = switchable
-    ? () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    
+    const updateResolvedTheme = () => {
+      let resolved: ResolvedTheme;
+      
+      if (theme === "system") {
+        resolved = mediaQuery.matches ? "dark" : "light";
+      } else {
+        resolved = theme as ResolvedTheme;
       }
-    : undefined;
+      
+      setResolvedTheme(resolved);
+      
+      // Aplicar clase al documento
+      const root = document.documentElement;
+      if (resolved === "dark") {
+        root.classList.add("dark");
+      } else {
+        root.classList.remove("dark");
+      }
+    };
+
+    updateResolvedTheme();
+
+    // Escuchar cambios en la preferencia del sistema
+    mediaQuery.addEventListener("change", updateResolvedTheme);
+    return () => mediaQuery.removeEventListener("change", updateResolvedTheme);
+  }, [theme]);
+
+  // Sincronizar con el tema del usuario desde la base de datos
+  useEffect(() => {
+    if (user?.theme) {
+      setThemeState(user.theme);
+    }
+  }, [user?.theme]);
+
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+  };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Settings as SettingsIcon, Wrench, Bell } from "lucide-react";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { SystemConfiguration } from "@/components/SystemConfiguration";
+import { AutoNotificationsManager } from "@/components/AutoNotificationsManager";
 
 export default function Settings() {
   return (
@@ -19,7 +20,10 @@ export default function Settings() {
           <Bell className="h-5 w-5 text-primary" />
           Notificaciones
         </h2>
-        <NotificationSettings />
+        <div className="space-y-6">
+          <NotificationSettings />
+          <AutoNotificationsManager />
+        </div>
       </div>
 
       {/* Configuración del Sistema */}

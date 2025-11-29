@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { User, Mail, Shield, Calendar, Upload, Camera, Bell, Settings, Lock, Key } from "lucide-react";
+import { User, Mail, Shield, Calendar, Upload, Camera, Bell, Settings, Lock, Key, Sun, Moon, Monitor } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function UserProfile() {
   const { user } = useAuth();
@@ -413,6 +414,63 @@ export default function UserProfile() {
                 </div>
               </>
             ) : null}
+          </CardContent>
+        </Card>
+
+        {/* Selector de Tema */}
+        <Card className="shadow-apple border-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Monitor className="h-5 w-5 text-indigo-500" />
+              Apariencia
+            </CardTitle>
+            <CardDescription>
+              Elige el tema de la aplicación
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="theme">Tema</Label>
+                <Select
+                  value={user.theme || "system"}
+                  onValueChange={(value: "light" | "dark" | "system") => {
+                    updateProfile.mutate({ theme: value });
+                  }}
+                >
+                  <SelectTrigger id="theme" className="bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="light">
+                      <div className="flex items-center gap-2">
+                        <Sun className="h-4 w-4" />
+                        <span>Claro</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="dark">
+                      <div className="flex items-center gap-2">
+                        <Moon className="h-4 w-4" />
+                        <span>Oscuro</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="system">
+                      <div className="flex items-center gap-2">
+                        <Monitor className="h-4 w-4" />
+                        <span>Sistema</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {user.theme === "system" 
+                    ? "El tema se ajustará automáticamente según la configuración de tu sistema" 
+                    : user.theme === "dark"
+                    ? "Tema oscuro activado"
+                    : "Tema claro activado"}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

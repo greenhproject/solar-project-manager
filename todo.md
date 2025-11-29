@@ -466,3 +466,34 @@
 - [ ] Ejecutar todos los tests (verificar que pasen)
 - [ ] Crear checkpoint final
 - [ ] Subir código actualizado a GitHub
+
+
+## Completar Selector de Tema y Notificaciones Automáticas
+### Selector de Tema en Perfil
+- [x] Agregar Select component con opciones Light/Dark/System en UserProfile.tsx
+- [x] Conectar select con mutation updateProfile para guardar preferencia
+- [x] Leer tema actual del usuario y mostrarlo en el select (user.theme || "system")
+- [x] Actualizar ThemeProvider para leer tema de user.theme
+- [x] Implementar lógica de aplicación de tema (light/dark/system)
+- [x] Aplicar tema al cargar la aplicación basado en preferencia guardada
+- [x] Manejar opción "system" detectando preferencia del navegador con matchMedia
+- [x] Agregar iconos (Sun/Moon/Monitor) en las opciones del select
+- [x] Mostrar mensaje descriptivo según tema seleccionado
+
+### Notificaciones Automáticas Periódicas
+- [x] Crear procedimiento tRPC checkAndCreateAutoNotifications (solo admin)
+- [x] Implementar lógica para detectar hitos próximos (usando getUpcomingMilestones con 2 días)
+- [x] Implementar lógica para detectar hitos vencidos (usando getOverdueMilestones)
+- [x] Crear notificaciones para cada hito detectado (con contador de resultados)
+- [x] Crear componente AutoNotificationsManager en Settings
+- [x] Agregar botón para ejecutar verificación manualmente
+- [x] Documentar cómo ejecutar el endpoint con cron o servicio externo
+- [x] Mostrar resultados de última ejecución (hitos próximos y vencidos)
+- [x] Agregar manejo de errores y mensajes de éxito
+
+### Testing y Despliegue
+- [ ] Crear tests para selector de tema
+- [ ] Crear tests para notificaciones automáticas
+- [ ] Verificar que todo funciona correctamente
+- [ ] Crear checkpoint final
+- [ ] Push a GitHub
