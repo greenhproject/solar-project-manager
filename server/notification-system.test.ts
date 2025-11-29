@@ -13,7 +13,7 @@ describe("Notification System - CRUD Operations", () => {
       type: "project_assigned",
       title: "Nuevo proyecto asignado",
       message: "Se te ha asignado un nuevo proyecto",
-      relatedProjectId: testProjectId,
+      projectId: testProjectId,
     });
 
     const notifications = await db.getUserNotifications(testUserId, 10, false);

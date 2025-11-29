@@ -511,5 +511,15 @@
 - [x] Actualizada función getOverdueMilestones para devolver formato consistente
 - [x] Todos los errores de TypeScript resueltos (0 errores)
 - [x] Servidor funcionando correctamente en desarrollo
-- [ ] Crear checkpoint y push a GitHub
-- [ ] Usuario debe hacer clic en "Publish" para desplegar la nueva versión
+- [x] Crear checkpoint y push a GitHub (f105cbfb)
+- [ ] Usuario debe hacer clic en "Publish" en el checkpoint f105cbfb para desplegar la nueva versión
+
+
+## Bug Reportado - Módulos Faltantes en Producción
+- [x] Verificado: Módulos "Gestión de Usuarios" y "Configuración" faltan en producción
+- [x] Verificado: Usuario en producción tiene rol "Ingeniero" en lugar de "Admin"
+- [x] Identificado: Errores fantasma de TypeScript (29 errores) bloquean build de producción
+- [x] Servidor de desarrollo funciona correctamente a pesar de errores de TypeScript
+- [x] Corregido: relatedProjectId → projectId en notification-system.test.ts
+- [ ] Errores de TypeScript persisten en LSP pero no afectan ejecución
+- [ ] Intentar checkpoint y redespliegue para verificar si build de producción funciona
