@@ -32,6 +32,10 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
+  // Trust proxy - Required for Railway and other reverse proxies
+  // This allows Express to correctly detect HTTPS and set secure cookies
+  app.set('trust proxy', 1);
+
   // Configure cookie parser
   app.use(cookieParser());
 
