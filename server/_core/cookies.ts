@@ -31,7 +31,7 @@ export function getSessionCookieOptions(
   const options = {
     httpOnly: true,
     path: "/",
-    sameSite: "lax" as const,
+    sameSite: isSecure ? ("none" as const) : ("lax" as const),
     secure: isSecure,
     // No establecer domain para permitir que funcione en subdominios
     domain: undefined,
