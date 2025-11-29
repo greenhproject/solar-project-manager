@@ -895,6 +895,42 @@ Pregunta del usuario: ${input.question}
     checkConnection: adminProcedure.query(async () => {
       return await checkOpenSolarConnection();
     }),
+    
+    // Obtener datos de proyecto desde OpenSolar para auto-completar formulario
+    getProjectData: adminProcedure
+      .input(z.object({ openSolarId: z.string() }))
+      .query(async ({ input }) => {
+        const client = getOpenSolarClient();
+        const result = await client.getProject(input.openSolarId);
+        
+        if (!result.success) {
+          throw new TRPCError({ 
+            code: 'INTERNAL_SERVER_ERROR', 
+            message: result.message || 'Error al obtener datos de OpenSolar' 
+          });
+        }
+        
+        // Mapear datos de OpenSolar a formato del formulario
+        const projectData = result.data;
+        
+        // Generar resumen de equipos
+        let equipmentSummary = '';
+        if (projectData.equipment || projectData.components) {
+          const equipment = projectData.equipment || projectData.components || [];
+          equipmentSummary = equipment.map((item: any) => 
+            `${item.quantity || 1}x ${item.name || item.model || 'Equipo'}`
+          ).join(', ');
+        }
+        
+        return {
+          name: projectData.name || projectData.title || '',
+          clientName: projectData.customer?.name || projectData.clientName || '',
+          clientEmail: projectData.customer?.email || projectData.clientEmail || '',
+          clientPhone: projectData.customer?.phone || projectData.clientPhone || '',
+          description: equipmentSummary || projectData.description || '',
+          location: projectData.address || projectData.location || '',
+        };
+      }),
 
     // Sincronizar proyecto desde OpenSolar
     syncProject: adminProcedure

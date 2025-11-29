@@ -587,5 +587,18 @@
 - [x] Corregir dominio y configuración de SameSite (cambiado a "lax")
 - [x] Instalar cookie-parser middleware
 - [x] Agregar cookie-parser al servidor Express
-- [ ] Pushear cambios a GitHub
+- [x] Pushear cambios a GitHub (commit 52f33e5)
 - [ ] Verificar que login funcione en Railway
+
+## Auto-Carga de Datos desde OpenSolar
+- [x] Agregar campo de entrada para ID de proyecto de OpenSolar en NewProject.tsx
+- [x] Agregar botón "Cargar desde OpenSolar" en el formulario
+- [x] Crear procedimiento tRPC para obtener datos de proyecto desde OpenSolar API
+- [x] Mapear nombre del proyecto desde OpenSolar
+- [x] Mapear nombre del cliente desde OpenSolar
+- [x] Mapear correo del cliente desde OpenSolar
+- [x] Mapear teléfono del cliente desde OpenSolar
+- [x] Generar resumen de equipos del sistema en descripción
+- [x] Implementar manejo de errores si el ID no existe
+- [x] Agregar indicador de carga mientras se obtienen los datos
+- [ ] Probar funcionalidad completa con proyecto real de OpenSolar

@@ -15,12 +15,13 @@ import {
 import { useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Download } from "lucide-react";
 
 export default function NewProject() {
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingFromOpenSolar, setIsLoadingFromOpenSolar] = useState(false);
 
   const { data: projectTypes } = trpc.projectTypes.list.useQuery();
   const { data: users } = trpc.users.list.useQuery();
@@ -90,6 +91,36 @@ export default function NewProject() {
   };
 
   const engineers = users?.filter(u => u.role === 'engineer');
+  
+  const handleLoadFromOpenSolar = async () => {
+    if (!formData.openSolarId) {
+      toast.error("Por favor ingresa un ID de OpenSolar");
+      return;
+    }
+    
+    setIsLoadingFromOpenSolar(true);
+    
+    try {
+      const data = await trpc.sync.getProjectData.query({ openSolarId: formData.openSolarId });
+      
+      // Auto-completar campos del formulario
+      setFormData(prev => ({
+        ...prev,
+        name: data.name || prev.name,
+        clientName: data.clientName || prev.clientName,
+        clientEmail: data.clientEmail || prev.clientEmail,
+        clientPhone: data.clientPhone || prev.clientPhone,
+        description: data.description || prev.description,
+        location: data.location || prev.location,
+      }));
+      
+      toast.success("Datos cargados exitosamente desde OpenSolar");
+    } catch (error: any) {
+      toast.error(error.message || "Error al cargar datos de OpenSolar");
+    } finally {
+      setIsLoadingFromOpenSolar(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -196,12 +227,32 @@ export default function NewProject() {
 
                   <div className="space-y-2">
                     <Label htmlFor="openSolarId">ID de OpenSolar</Label>
-                    <Input
-                      id="openSolarId"
-                      value={formData.openSolarId}
-                      onChange={(e) => setFormData({ ...formData, openSolarId: e.target.value })}
-                      placeholder="ID del proyecto en OpenSolar"
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        id="openSolarId"
+                        value={formData.openSolarId}
+                        onChange={(e) => setFormData({ ...formData, openSolarId: e.target.value })}
+                        placeholder="ID del proyecto en OpenSolar"
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleLoadFromOpenSolar}
+                        disabled={!formData.openSolarId || isLoadingFromOpenSolar}
+                        className="gap-2"
+                      >
+                        {isLoadingFromOpenSolar ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                        Cargar
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Ingresa el ID y haz clic en "Cargar" para auto-completar los datos del proyecto
+                    </p>
                   </div>
                 </div>
               </div>
