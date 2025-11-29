@@ -127,6 +127,14 @@ export const appRouter = router({
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
         
+        console.log("[Login Success]", {
+          userId: user.id,
+          email: user.email,
+          cookieName: JWT_COOKIE_NAME,
+          tokenLength: token.length,
+          cookieSet: true
+        });
+        
         return { success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } };
       }),
     

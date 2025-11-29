@@ -26,15 +26,25 @@ export function getSessionCookieOptions(
 ): Pick<CookieOptions, "domain" | "httpOnly" | "path" | "sameSite" | "secure"> {
   const hostname = req.hostname;
   const isSecure = isSecureRequest(req);
-  
-  // Para Railway y otros entornos de producción, usar sameSite: "lax"
-  // Para localhost, permitir "none" para desarrollo
   const isLocalhost = LOCAL_HOSTS.has(hostname) || hostname === "localhost";
   
-  return {
+  const options = {
     httpOnly: true,
     path: "/",
-    sameSite: isLocalhost ? "lax" : "lax", // Siempre lax para compatibilidad
+    sameSite: "lax" as const,
     secure: isSecure,
+    // No establecer domain para permitir que funcione en subdominios
+    domain: undefined,
   };
+  
+  // Log para debugging en producción
+  console.log("[Cookie Config]", {
+    hostname,
+    isSecure,
+    isLocalhost,
+    forwardedProto: req.headers["x-forwarded-proto"],
+    options
+  });
+  
+  return options;
 }
