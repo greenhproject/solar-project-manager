@@ -152,6 +152,7 @@ export function Sidebar({ className }: SidebarProps) {
             className="w-full flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm border border-orange-100/50 hover:shadow-md hover:border-orange-200 transition-all cursor-pointer"
           >
             <Avatar className="h-10 w-10 border-2 border-orange-200 flex-shrink-0">
+              <AvatarImage src={user.avatarUrl || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>
@@ -183,6 +184,7 @@ export function Sidebar({ className }: SidebarProps) {
             title="Ver perfil"
           >
             <Avatar className="h-10 w-10 border-2 border-orange-200">
+              <AvatarImage src={user.avatarUrl || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>

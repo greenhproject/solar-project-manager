@@ -800,6 +800,7 @@ export async function deleteNotification(id: number) {
 export async function updateUserProfile(userId: number, data: {
   name?: string;
   email?: string;
+  avatarUrl?: string;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -807,6 +808,7 @@ export async function updateUserProfile(userId: number, data: {
   const updateData: any = {};
   if (data.name !== undefined) updateData.name = data.name;
   if (data.email !== undefined) updateData.email = data.email;
+  if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
 
   await db
     .update(users)
@@ -832,4 +834,105 @@ export async function getUserByEmail(email: string) {
     .limit(1);
 
   return result[0] || null;
+}
+
+/**
+ * Obtener configuración de notificaciones de un usuario
+ */
+export async function getUserNotificationSettings(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(notificationSettings)
+    .where(eq(notificationSettings.userId, userId))
+    .limit(1);
+
+  // Si no existe, crear configuración por defecto
+  if (!result[0]) {
+    await db.insert(notificationSettings).values({
+      userId,
+      enablePushNotifications: true,
+      enableMilestoneReminders: true,
+      enableDelayAlerts: true,
+      enableAIAlerts: true,
+      milestoneReminderDays: 3,
+    });
+
+    const newResult = await db
+      .select()
+      .from(notificationSettings)
+      .where(eq(notificationSettings.userId, userId))
+      .limit(1);
+
+    return newResult[0] || null;
+  }
+
+  return result[0];
+}
+
+/**
+ * Actualizar configuración de notificaciones
+ */
+export async function updateNotificationSettings(userId: number, data: {
+  enablePushNotifications?: boolean;
+  enableMilestoneReminders?: boolean;
+  enableDelayAlerts?: boolean;
+  enableAIAlerts?: boolean;
+  milestoneReminderDays?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Asegurar que existe la configuración
+  await getUserNotificationSettings(userId);
+
+  await db
+    .update(notificationSettings)
+    .set(data)
+    .where(eq(notificationSettings.userId, userId));
+
+  return await getUserNotificationSettings(userId);
+}
+
+/**
+ * Cambiar contraseña de usuario JWT
+ */
+export async function changeUserPassword(userId: number, currentPassword: string, newPassword: string) {
+  const bcrypt = await import('bcryptjs');
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Obtener usuario
+  const user = await getUserById(userId);
+  if (!user) {
+    throw new Error("Usuario no encontrado");
+  }
+
+  // Verificar que es usuario JWT (no OAuth)
+  if (user.loginMethod !== 'jwt') {
+    throw new Error("Solo los usuarios con autenticación JWT pueden cambiar su contraseña");
+  }
+
+  // Verificar contraseña actual
+  if (!user.password) {
+    throw new Error("Usuario no tiene contraseña configurada");
+  }
+
+  const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+  if (!isValidPassword) {
+    throw new Error("La contraseña actual es incorrecta");
+  }
+
+  // Hash de la nueva contraseña
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Actualizar contraseña
+  await db
+    .update(users)
+    .set({ password: hashedPassword })
+    .where(eq(users.id, userId));
+
+  return { success: true };
 }

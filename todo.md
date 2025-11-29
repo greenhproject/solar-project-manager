@@ -414,3 +414,18 @@
 - [x] Agregar enlace al perfil en el menú de usuario del Sidebar (clickeable en avatar)
 - [x] Crear tests unitarios para actualización de perfil (8 tests)
 - [x] Probar actualización de datos y verificar que se reflejen en toda la aplicación
+
+
+## Mejoras Avanzadas de Perfil de Usuario
+- [x] Implementar cambio de contraseña para usuarios JWT (con validación de longitud mínima 8 caracteres)
+- [x] Agregar validación de contraseña actual antes de cambiar (con bcrypt)
+- [x] Implementar carga de avatar personalizado (click en avatar para seleccionar archivo)
+- [x] Almacenar avatares en S3 y mostrar en sidebar (validación de tamaño 2MB)
+- [x] Agregar campo avatarUrl en schema de users (migrado con ALTER TABLE)
+- [x] Implementar preferencias de notificaciones configurables (4 toggles + días de anticipación)
+- [x] Crear interfaz para activar/desactivar tipos de notificaciones (Push, Hitos, Retrasos, IA)
+- [x] Guardar preferencias en tabla notificationSettings (con creación automática de defaults)
+- [x] Crear tests para cambio de contraseña (validación de longitud, contraseña incorrecta, solo JWT)
+- [x] Crear tests para carga de avatar (validación de tipo, tamaño)
+- [x] Crear tests para preferencias de notificaciones (get, update, validación de rango)
+- [x] Todos los tests pasando (60/60)

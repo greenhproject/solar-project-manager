@@ -81,6 +81,58 @@ export const appRouter = router({
         return updated;
       }),
 
+    // Subir avatar de usuario
+    uploadAvatar: protectedProcedure
+      .input(z.object({ 
+        imageData: z.string(), // Base64 encoded image
+        mimeType: z.string()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { storagePut } = await import('./storage');
+        
+        // Convertir base64 a buffer
+        const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, 'base64');
+        
+        // Validar tamaño (máximo 2MB)
+        if (buffer.length > 2 * 1024 * 1024) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'La imagen es demasiado grande. Máximo 2MB.' 
+          });
+        }
+        
+        // Generar nombre único para el archivo
+        const timestamp = Date.now();
+        const extension = input.mimeType.split('/')[1] || 'jpg';
+        const fileKey = `avatars/${ctx.user.id}-${timestamp}.${extension}`;
+        
+        // Subir a S3
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        
+        // Actualizar usuario con nueva URL de avatar
+        await db.updateUserProfile(ctx.user.id, { avatarUrl: url });
+        
+        return { avatarUrl: url };
+      }),
+
+    // Cambiar contraseña (solo para usuarios JWT)
+    changePassword: protectedProcedure
+      .input(z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(8, "La contraseña debe tener al menos 8 caracteres")
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          return await db.changeUserPassword(ctx.user.id, input.currentPassword, input.newPassword);
+        } catch (error: any) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: error.message 
+          });
+        }
+      }),
+
     // Eliminar usuario
     delete: adminProcedure
       .input(z.object({ userId: z.number() }))
@@ -961,6 +1013,25 @@ Pregunta del usuario: ${input.question}
         
         await db.deleteNotification(input.id);
         return { success: true };
+      }),
+
+    // Obtener configuración de notificaciones
+    getSettings: protectedProcedure
+      .query(async ({ ctx }) => {
+        return await db.getUserNotificationSettings(ctx.user.id);
+      }),
+
+    // Actualizar configuración de notificaciones
+    updateSettings: protectedProcedure
+      .input(z.object({
+        enablePushNotifications: z.boolean().optional(),
+        enableMilestoneReminders: z.boolean().optional(),
+        enableDelayAlerts: z.boolean().optional(),
+        enableAIAlerts: z.boolean().optional(),
+        milestoneReminderDays: z.number().min(1).max(30).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return await db.updateNotificationSettings(ctx.user.id, input);
       }),
   }),
 
