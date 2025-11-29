@@ -585,5 +585,7 @@
 - [x] Investigar error "[Auth] Missing session cookie" en Railway
 - [x] Verificar configuración de cookies para producción
 - [x] Corregir dominio y configuración de SameSite (cambiado a "lax")
+- [x] Instalar cookie-parser middleware
+- [x] Agregar cookie-parser al servidor Express
 - [ ] Pushear cambios a GitHub
 - [ ] Verificar que login funcione en Railway
