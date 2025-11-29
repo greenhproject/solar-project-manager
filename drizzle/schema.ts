@@ -119,6 +119,9 @@ export const milestones = mysqlTable("milestones", {
   // Dependencias (IDs de hitos que deben completarse antes)
   dependencies: text("dependencies"), // JSON array de IDs: [1, 2, 3]
   
+  // Sincronización con Google Calendar
+  googleCalendarEventId: varchar("googleCalendarEventId", { length: 255 }),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({

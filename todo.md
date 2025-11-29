@@ -345,3 +345,16 @@
 - [x] Verificar que calendario se renderice correctamente
 - [x] Verificar que reportes se puedan generar
 - [x] Confirmar que funcionalidad existente no se rompió
+
+## Integración con Google Calendar
+- [x] Configurar acceso a Google Calendar API mediante MCP
+- [x] Verificar herramientas disponibles (5 herramientas: create, search, get, update, delete)
+- [x] Agregar campo googleCalendarEventId en schema de milestones
+- [x] Crear helper para interactuar con Google Calendar (create, update, delete)
+- [x] Implementar sincronización automática al crear hito
+- [x] Implementar sincronización automática al actualizar hito (nombre y descripción)
+- [x] Agregar recordatorios automáticos (1 día antes y 1 hora antes)
+- [x] Agregar indicador visual de sincronización en hitos (badge azul "Sincronizado")
+- [x] Crear tests de sincronización (5/5 pasando)
+- [x] Ejecutar todos los tests (34/34 pasando)
+- [x] Verificar que todo funcione correctamente

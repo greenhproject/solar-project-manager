@@ -393,11 +393,36 @@ export const appRouter = router({
           ? JSON.stringify(dependencies) 
           : null;
         
-        return await db.createMilestone({
+        const result = await db.createMilestone({
           ...restInput,
           status: 'pending',
           dependencies: dependenciesJson,
         });
+        
+        // Sincronizar con Google Calendar
+        const milestoneId = Number((result as any).insertId || 0);
+        if (milestoneId > 0) {
+          try {
+            const { createCalendarEvent, toRFC3339, createEndDate } = await import('./googleCalendar');
+            const eventId = await createCalendarEvent({
+              summary: `📅 ${project.name} - ${input.name}`,
+              description: input.description || `Hito del proyecto ${project.name}`,
+              start_time: toRFC3339(input.dueDate),
+              end_time: toRFC3339(createEndDate(input.dueDate)),
+              location: project.location || undefined,
+              reminders: [1440, 60], // 1 día antes y 1 hora antes
+            });
+            
+            if (eventId) {
+              await db.updateMilestone(milestoneId, { googleCalendarEventId: eventId });
+            }
+          } catch (error) {
+            console.error('[Milestone] Error syncing with Google Calendar:', error);
+            // No fallar la creación del hito si falla la sincronización
+          }
+        }
+        
+        return result;
       }),
     
     update: protectedProcedure
@@ -426,6 +451,28 @@ export const appRouter = router({
         }
         
         await db.updateMilestone(id, updateData);
+        
+        // Sincronizar con Google Calendar si hay cambios relevantes
+        if (milestone.googleCalendarEventId && (data.name || data.description)) {
+          try {
+            const { updateCalendarEvent } = await import('./googleCalendar');
+            const updatePayload: any = {
+              event_id: milestone.googleCalendarEventId,
+            };
+            
+            if (data.name) {
+              const project = await db.getProjectById(milestone.projectId);
+              updatePayload.summary = `📅 ${project?.name} - ${data.name}`;
+            }
+            if (data.description) {
+              updatePayload.description = data.description;
+            }
+            
+            await updateCalendarEvent(updatePayload);
+          } catch (error) {
+            console.error('[Milestone] Error syncing update with Google Calendar:', error);
+          }
+        }
         
         // Recalcular progreso del proyecto
         const { recalculateProjectProgress } = await import('./progressCalculator');

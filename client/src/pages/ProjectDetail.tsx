@@ -465,6 +465,12 @@ export default function ProjectDetail() {
                                 Completado: {format(new Date(milestone.completedDate), 'dd MMM yyyy', { locale: es })}
                               </span>
                             )}
+                            {(milestone as any).googleCalendarEventId && (
+                              <span className="flex items-center gap-1 text-blue-600" title="Sincronizado con Google Calendar">
+                                <Calendar className="h-3 w-3" />
+                                Sincronizado
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
