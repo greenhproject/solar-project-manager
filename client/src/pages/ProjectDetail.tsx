@@ -65,6 +65,7 @@ export default function ProjectDetail() {
     dueDate: "",
   });
 
+  const utils = trpc.useUtils();
   const createMilestone = trpc.milestones.create.useMutation();
   const updateMilestone = trpc.milestones.update.useMutation();
   const updateProject = trpc.projects.update.useMutation();
@@ -180,6 +181,7 @@ export default function ProjectDetail() {
       toast.success(`Hito marcado como ${newStatus === 'completed' ? 'completado' : 'pendiente'}`);
       refetchMilestones();
       refetch(); // Actualizar progreso del proyecto
+      utils.projects.list.invalidate(); // Invalidar caché de lista de proyectos
     } catch (error: any) {
       toast.error(error.message || "Error al actualizar el hito");
     }

@@ -442,7 +442,7 @@ export const appRouter = router({
           });
         }
         
-        return { success: true };
+        return { success: true, projectId: milestone.projectId };
       }),
     
     overdue: protectedProcedure.query(async ({ ctx }) => {

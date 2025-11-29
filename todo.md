@@ -294,3 +294,11 @@
 - [x] Identificar que el progreso no se había recalculado después de completar hitos
 - [x] Ejecutar script de recálculo para proyectos afectados
 - [x] Verificar que proyecto 30001 ahora muestre 100% correctamente
+
+## Bug - Barra de Progreso Visual No Se Actualiza
+- [x] Investigar código de la barra de progreso en Projects.tsx línea 146
+- [x] Verificar que el valor de progressPercentage se esté pasando correctamente
+- [x] Identificar problema: caché de tRPC no se invalida después de actualizar hitos
+- [x] Agregar utils.projects.list.invalidate() después de actualizar hitos
+- [x] Modificar procedimiento milestones.update para retornar projectId
+- [ ] Verificar que la barra se actualice correctamente en el navegador (pendiente de prueba del usuario)
