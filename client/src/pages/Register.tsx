@@ -28,14 +28,21 @@ export default function Register() {
       // Guardar el token en localStorage para autenticación híbrida
       if (data.token) {
         localStorage.setItem('auth_token', data.token);
-        console.log('[Register] Token guardado en localStorage');
+        console.log('[Register] Token guardado en localStorage:', data.token.substring(0, 20) + '...');
       }
       
       toast.success("¡Cuenta creada exitosamente!", {
         description: "Redirigiendo al dashboard...",
       });
-      // Recargar para obtener la sesión actualizada
-      window.location.href = "/";
+      
+      // Esperar un momento para asegurar que localStorage se sincronice
+      setTimeout(() => {
+        // Verificar que el token se guardó correctamente
+        const savedToken = localStorage.getItem('auth_token');
+        console.log('[Register] Token verificado antes de redireccionar:', savedToken ? 'OK' : 'ERROR');
+        // Recargar para obtener la sesión actualizada
+        window.location.href = "/";
+      }, 100);
     },
     onError: error => {
       toast.error("Error al crear cuenta", {
