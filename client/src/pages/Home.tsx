@@ -75,7 +75,7 @@ export default function Home() {
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             Coordina tus{" "}
-            <span className="bg-gradient-solar bg-clip-text text-transparent">
+            <span className="bg-gradient-solar bg-clip-text text-transparent" style={{color: '#e95d00'}}>
               Proyectos Solares
             </span>
             {" "}con Eficiencia
@@ -100,9 +100,6 @@ export default function Home() {
                 Comenzar Ahora
               </Button>
             )}
-            <Button size="lg" variant="outline" className="text-lg px-8">
-              Ver Demo
-            </Button>
           </div>
         </div>
       </section>
@@ -193,38 +190,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="container py-20">
-        <Card className="bg-gradient-solar text-white border-0 shadow-apple-lg">
-          <CardContent className="p-12 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              ¿Listo para optimizar tus proyectos solares?
-            </h2>
-            <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-              Únete a los equipos que ya están transformando la forma en que gestionan 
-              sus proyectos de energía solar
-            </p>
-            {useManusAuth ? (
-              <a href={getLoginUrl()}>
-                <Button size="lg" variant="secondary" className="gap-2 text-lg px-8">
-                  Comenzar Gratis
-                  <Sun className="h-5 w-5" />
-                </Button>
-              </a>
-            ) : (
-              <Button size="lg" variant="secondary" className="gap-2 text-lg px-8" onClick={() => setLocation("/register")}>
-                Comenzar Gratis
-                <Sun className="h-5 w-5" />
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      </section>
-
       {/* Footer */}
       <footer className="border-t py-8 mt-20">
         <div className="container text-center text-muted-foreground">
-          <p>&copy; 2025 Solar Project Manager - GreenH. Todos los derechos reservados.</p>
+          <p>&copy; 2025 Solar Project Manager - Green House Project. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
