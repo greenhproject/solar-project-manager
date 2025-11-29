@@ -797,11 +797,10 @@ export async function deleteNotification(id: number) {
 /**
  * Actualizar perfil de usuario
  */
-export async function updateUserProfile(userId: number, data: {
-  name?: string;
-  email?: string;
-  avatarUrl?: string;
-}) {
+export async function updateUserProfile(
+  userId: number,
+  data: { name?: string; email?: string; avatarUrl?: string; theme?: 'light' | 'dark' | 'system' }
+) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
@@ -809,6 +808,7 @@ export async function updateUserProfile(userId: number, data: {
   if (data.name !== undefined) updateData.name = data.name;
   if (data.email !== undefined) updateData.email = data.email;
   if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
+  if (data.theme !== undefined) updateData.theme = data.theme;
 
   await db
     .update(users)
@@ -935,4 +935,57 @@ export async function changeUserPassword(userId: number, currentPassword: string
     .where(eq(users.id, userId));
 
   return { success: true };
+}
+
+
+// ============================================
+// NOTIFICACIONES AUTOMÁTICAS
+// ============================================
+
+/**
+ * Crear notificación automática para hito próximo
+ */
+export async function createMilestoneDueSoonNotification(
+  userId: number,
+  milestoneId: number,
+  projectId: number,
+  milestoneName: string,
+  projectName: string,
+  dueDate: Date
+) {
+  const hoursUntilDue = Math.floor((dueDate.getTime() - Date.now()) / (1000 * 60 * 60));
+  
+  await db.insert(notificationHistory).values([{
+    userId,
+    type: "milestone_due_soon",
+    title: `Hito próximo a vencer: ${milestoneName}`,
+    message: `El hito "${milestoneName}" del proyecto "${projectName}" vence en ${hoursUntilDue} horas.`,
+    relatedProjectId: projectId,
+    relatedMilestoneId: milestoneId,
+    isRead: false
+  }]);
+}
+
+/**
+ * Crear notificación automática para hito vencido
+ */
+export async function createMilestoneOverdueNotification(
+  userId: number,
+  milestoneId: number,
+  projectId: number,
+  milestoneName: string,
+  projectName: string,
+  dueDate: Date
+) {
+  const hoursOverdue = Math.floor((Date.now() - dueDate.getTime()) / (1000 * 60 * 60));
+  
+  await db.insert(notificationHistory).values([{
+    userId,
+    type: "milestone_overdue",
+    title: `Hito vencido: ${milestoneName}`,
+    message: `El hito "${milestoneName}" del proyecto "${projectName}" está vencido por ${hoursOverdue} horas.`,
+    relatedProjectId: projectId,
+    relatedMilestoneId: milestoneId,
+    isRead: false
+  }]);
 }

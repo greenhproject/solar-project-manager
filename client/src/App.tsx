@@ -20,6 +20,7 @@ import CalendarPage from "./pages/Calendar";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 import Reports from "./pages/Reports";
 import UserProfile from "./pages/UserProfile";
+import NotificationHistory from "./pages/NotificationHistory";
 
 function Router() {
   return (
@@ -37,6 +38,12 @@ function Router() {
       <Route path="/profile">
         <MainLayout>
           <UserProfile />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/notifications">
+        <MainLayout>
+          <NotificationHistory />
         </MainLayout>
       </Route>
       

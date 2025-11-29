@@ -429,3 +429,40 @@
 - [x] Crear tests para carga de avatar (validación de tipo, tamaño)
 - [x] Crear tests para preferencias de notificaciones (get, update, validación de rango)
 - [x] Todos los tests pasando (60/60)
+
+
+## Mejoras Finales - Historial, Notificaciones Automáticas y Tema Personalizable
+### Historial de Notificaciones
+- [x] Crear página NotificationHistory.tsx con tabla de notificaciones
+- [x] Implementar filtros por tipo de notificación
+- [x] Implementar filtros por estado (leída/no leída)
+- [x] Agregar búsqueda de texto en notificaciones
+- [x] Agregar botón de exportación a Excel
+- [x] Agregar ruta /notifications en App.tsx
+- [x] Agregar enlace en el menú del sidebar
+- [x] Mostrar estadísticas (total, no leídas, filtradas)
+
+### Notificaciones Automáticas por Eventos
+- [x] Crear funciones de notificaciones automáticas (createMilestoneDueSoonNotification, createMilestoneOverdueNotification)
+- [x] Reutilizar funciones existentes (getUpcomingMilestones, getOverdueMilestones)
+- [x] Evitar notificaciones duplicadas (verificación en las consultas SQL)
+- [ ] Implementar trigger al actualizar hitos (pendiente de integración)
+- [ ] Implementar trigger al cambiar estado de proyecto (pendiente de integración)
+- [ ] Crear procedimiento tRPC para ejecutar verificaciones periódicas (pendiente)
+
+### Tema Oscuro/Claro Personalizable
+- [x] Agregar campo theme en tabla users (enum: 'light', 'dark', 'system')
+- [x] Aplicar migración de base de datos (ALTER TABLE)
+- [x] Actualizar función updateUserProfile para incluir theme
+- [x] Actualizar procedimiento tRPC updateProfile para incluir theme
+- [ ] Agregar toggle de tema en página de perfil (pendiente de UI)
+- [ ] Implementar lógica de aplicación de tema en ThemeProvider (pendiente)
+- [ ] Aplicar tema al cargar la aplicación (pendiente)
+
+### Testing y Despliegue
+- [ ] Crear tests para historial de notificaciones
+- [ ] Crear tests para notificaciones automáticas
+- [ ] Crear tests para cambio de tema
+- [ ] Ejecutar todos los tests (verificar que pasen)
+- [ ] Crear checkpoint final
+- [ ] Subir código actualizado a GitHub

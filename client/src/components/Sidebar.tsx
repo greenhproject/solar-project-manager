@@ -93,6 +93,12 @@ export function Sidebar({ className }: SidebarProps) {
       roles: ["admin", "engineer"],
     },
     {
+      icon: Bell,
+      label: "Notificaciones",
+      href: "/notifications",
+      roles: ["admin", "engineer"],
+    },
+    {
       icon: Sparkles,
       label: "Asistente IA",
       href: "/ai-assistant",

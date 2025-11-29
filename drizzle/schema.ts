@@ -11,6 +11,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }).unique(), // Nullable para OAuth, requerido para JWT
   password: varchar("password", { length: 255 }), // Solo para autenticación JWT
   avatarUrl: text("avatarUrl"), // URL del avatar personalizado en S3
+  theme: mysqlEnum("theme", ["light", "dark", "system"]).default("system"), // Tema preferido del usuario
   loginMethod: varchar("loginMethod", { length: 64 }), // 'oauth' o 'jwt'
   role: mysqlEnum("role", ["admin", "engineer"]).default("engineer").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

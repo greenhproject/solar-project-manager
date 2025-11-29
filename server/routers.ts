@@ -61,9 +61,10 @@ export const appRouter = router({
 
     // Actualizar perfil de usuario
     updateProfile: protectedProcedure
-      .input(z.object({ 
-        name: z.string().min(1).optional(),
-        email: z.string().email().optional()
+      .input(z.object({
+        name: z.string().min(1, "El nombre es requerido").optional(),
+        email: z.string().email("Email inválido").optional(),
+        theme: z.enum(["light", "dark", "system"]).optional()
       }))
       .mutation(async ({ input, ctx }) => {
         // Verificar que el email no esté en uso por otro usuario
