@@ -18,7 +18,7 @@ import {
   TrendingUp
 } from "lucide-react";
 import { Button } from "./ui/button";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Separator } from "./ui/separator";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
