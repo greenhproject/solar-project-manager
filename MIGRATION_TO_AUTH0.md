@@ -65,10 +65,10 @@ Este documento describe la migración del sistema de autenticación personalizad
 Agrega las siguientes variables en Railway:
 
 ```
-AUTH0_DOMAIN=dev-s1tr6aqjud8goqu.us.auth0.com
+AUTH0_DOMAIN=dev-s1tr6aqjujd8goqu.us.auth0.com
 AUTH0_AUDIENCE=https://solar-project-manager-api
 AUTH0_CLIENT_SECRET=AY0swAEsPmI6P5Z5AQJ2FnCkDCBKwIKZyeUoBH6nsCapzvmm4xRE2LV_MNEAAMAx
-VITE_AUTH0_DOMAIN=dev-s1tr6aqjud8goqu.us.auth0.com
+VITE_AUTH0_DOMAIN=dev-s1tr6aqjujd8goqu.us.auth0.com
 VITE_AUTH0_CLIENT_ID=70HeyKdFmooHu797hruq0L3Q0wva37f5
 VITE_AUTH0_AUDIENCE=https://solar-project-manager-api
 ```

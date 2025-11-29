@@ -4,7 +4,7 @@
 
 Las siguientes credenciales fueron obtenidas del dashboard de Auth0:
 
-- **Domain**: `dev-s1tr6aqjud8goqu.us.auth0.com`
+- **Domain**: `dev-s1tr6aqjujd8goqu.us.auth0.com`
 - **Client ID**: `70HeyKdFmooHu797hruq0L3Q0wva37f5`
 - **Client Secret**: `AY0swAEsPmI6P5Z5AQJ2FnCkDCBKwIKZyeUoBH6nsCapzvmm4xRE2LV_MNEAAMAx`
 - **Audience**: `https://solar-project-manager-api`
@@ -46,14 +46,14 @@ Debes configurar las siguientes variables de entorno en Railway:
 
 ### Variables del Servidor:
 ```
-AUTH0_DOMAIN=dev-s1tr6aqjud8goqu.us.auth0.com
+AUTH0_DOMAIN=dev-s1tr6aqjujd8goqu.us.auth0.com
 AUTH0_AUDIENCE=https://solar-project-manager-api
 AUTH0_CLIENT_SECRET=AY0swAEsPmI6P5Z5AQJ2FnCkDCBKwIKZyeUoBH6nsCapzvmm4xRE2LV_MNEAAMAx
 ```
 
 ### Variables del Cliente (VITE_):
 ```
-VITE_AUTH0_DOMAIN=dev-s1tr6aqjud8goqu.us.auth0.com
+VITE_AUTH0_DOMAIN=dev-s1tr6aqjujd8goqu.us.auth0.com
 VITE_AUTH0_CLIENT_ID=70HeyKdFmooHu797hruq0L3Q0wva37f5
 VITE_AUTH0_AUDIENCE=https://solar-project-manager-api
 ```
