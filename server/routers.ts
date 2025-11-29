@@ -30,8 +30,99 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      // También limpiar cookie JWT si existe
+      const { JWT_COOKIE_NAME } = require("./_core/jwtAuth");
+      ctx.res.clearCookie(JWT_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    
+    // Registro con JWT (para Railway)
+    register: publicProcedure
+      .input(z.object({
+        email: z.string().email("Email inválido"),
+        password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+        name: z.string().min(1, "El nombre es requerido")
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { createJWTUser, getUserByEmailForAuth } = await import("./jwtAuthFunctions");
+        const { jwtAuthService, JWT_COOKIE_NAME } = await import("./_core/jwtAuth");
+        
+        // Verificar si el email ya existe
+        const existingUser = await getUserByEmailForAuth(input.email);
+        if (existingUser) {
+          throw new TRPCError({ 
+            code: 'CONFLICT', 
+            message: 'Este email ya está registrado' 
+          });
+        }
+        
+        // Crear usuario
+        await createJWTUser(input);
+        
+        // Obtener usuario recién creado
+        const user = await getUserByEmailForAuth(input.email);
+        if (!user) {
+          throw new TRPCError({ 
+            code: 'INTERNAL_SERVER_ERROR', 
+            message: 'Error al crear usuario' 
+          });
+        }
+        
+        // Crear sesión JWT
+        const token = await jwtAuthService.createJWTSessionToken(
+          user.id,
+          user.email!,
+          user.name || ""
+        );
+        
+        // Establecer cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
+        
+        return { success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } };
+      }),
+    
+    // Login con JWT (para Railway)
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email("Email inválido"),
+        password: z.string().min(1, "La contraseña es requerida")
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { getUserByEmailForAuth, verifyPassword } = await import("./jwtAuthFunctions");
+        const { jwtAuthService, JWT_COOKIE_NAME } = await import("./_core/jwtAuth");
+        
+        // Buscar usuario
+        const user = await getUserByEmailForAuth(input.email);
+        if (!user || !user.password) {
+          throw new TRPCError({ 
+            code: 'UNAUTHORIZED', 
+            message: 'Email o contraseña incorrectos' 
+          });
+        }
+        
+        // Verificar contraseña
+        const isValid = await verifyPassword(input.password, user.password);
+        if (!isValid) {
+          throw new TRPCError({ 
+            code: 'UNAUTHORIZED', 
+            message: 'Email o contraseña incorrectos' 
+          });
+        }
+        
+        // Crear sesión JWT
+        const token = await jwtAuthService.createJWTSessionToken(
+          user.id,
+          user.email!,
+          user.name || ""
+        );
+        
+        // Establecer cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
+        
+        return { success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } };
+      }),
   }),
 
   // ============================================

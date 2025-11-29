@@ -21,12 +21,16 @@ import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 import Reports from "./pages/Reports";
 import UserProfile from "./pages/UserProfile";
 import NotificationHistory from "./pages/NotificationHistory";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function Router() {
   return (
     <Switch>
-      {/* Public route */}
+      {/* Public routes */}
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
       
       {/* Protected routes with MainLayout */}
       <Route path="/dashboard">

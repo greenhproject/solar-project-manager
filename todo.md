@@ -540,3 +540,13 @@
 - [x] Confirmado: Es problema de la plataforma Manus, no del código
 - [x] Creado: EMAIL_SOPORTE_MANUS.md con solicitud de devolución de créditos
 - [ ] Usuario debe enviar el email manualmente a https://help.manus.im
+
+## Adaptación para Railway (Despliegue Externo)
+- [x] Eliminar dependencia de OAuth de Manus en contexto de autenticación
+- [x] Configurar autenticación exclusivamente con JWT
+- [x] Actualizar middleware de autenticación para Railway
+- [x] Crear rutas de register y login con JWT
+- [x] Actualizar frontend para usar solo login/register JWT
+- [x] Configurar variables de entorno necesarias para Railway
+- [x] Crear páginas de Login y Register con diseño solar
+- [x] Documentar variables de entorno en RAILWAY_ENV.md
