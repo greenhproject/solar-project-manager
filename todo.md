@@ -286,3 +286,11 @@
 - [x] Actualizar schema de Drizzle para reflejar cambio
 - [x] Probar login completo con OAuth
 - [x] Verificar que el dashboard carga correctamente
+
+## Bug - Progreso Incorrecto (50% cuando debería ser 100%)
+- [x] Investigar proyecto que tiene todos los hitos completados pero muestra 50%
+- [x] Verificar lógica de cálculo de progreso en recalculateProjectProgress
+- [x] Confirmar que el cálculo automático está implementado (líneas 431-432 routers.ts)
+- [x] Identificar que el progreso no se había recalculado después de completar hitos
+- [x] Ejecutar script de recálculo para proyectos afectados
+- [x] Verificar que proyecto 30001 ahora muestre 100% correctamente
