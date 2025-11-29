@@ -22,6 +22,7 @@ import Reports from "./pages/Reports";
 import UserProfile from "./pages/UserProfile";
 import NotificationHistory from "./pages/NotificationHistory";
 import Login from "./pages/Login";
+import LoginAuth0 from "./pages/LoginAuth0";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -31,7 +32,8 @@ function Router() {
     <Switch>
       {/* Public routes */}
       <Route path="/" component={Home} />
-      <Route path="/login" component={Login} />
+      <Route path="/login" component={LoginAuth0} />
+      <Route path="/login-legacy" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
