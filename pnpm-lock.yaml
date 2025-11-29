@@ -16,6 +16,9 @@ importers:
 
   .:
     dependencies:
+      '@auth0/auth0-react':
+        specifier: ^2.9.0
+        version: 2.9.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@aws-sdk/client-s3':
         specifier: ^3.693.0
         version: 3.907.0
@@ -151,6 +154,9 @@ importers:
       express:
         specifier: ^4.21.2
         version: 4.21.2
+      express-oauth2-jwt-bearer:
+        specifier: ^1.7.1
+        version: 1.7.1
       framer-motion:
         specifier: ^12.23.22
         version: 12.23.22(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -316,6 +322,15 @@ packages:
 
   '@antfu/utils@9.3.0':
     resolution: {integrity: sha512-9hFT4RauhcUzqOE4f1+frMKLZrgNog5b06I7VmZQV1BkvwvqrbC8EBZf3L1eEL2AKb6rNKjER0sEvJiSP1FXEA==}
+
+  '@auth0/auth0-react@2.9.0':
+    resolution: {integrity: sha512-8BRMYjgE0CVQU/ndOZ5OYODdx/5FZs99D9ZI/t4pEeg3ewcGaL/Zewasm+frjeP3DKaNoFrHFX8FUTPiP9rCDQ==}
+    peerDependencies:
+      react: ^16.11.0 || ^17 || ^18 || ^19
+      react-dom: ^16.11.0 || ^17 || ^18 || ^19
+
+  '@auth0/auth0-spa-js@2.9.1':
+    resolution: {integrity: sha512-GNyypxb8ck32tUacYPHAEZ/L845kLDchqXtFZM3Gt/KcBr9C8/c1ncAhGY1UnkgUw2MctwVnBOEoqCD3oP3SPg==}
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -2498,6 +2513,9 @@ packages:
   bowser@2.12.1:
     resolution: {integrity: sha512-z4rE2Gxh7tvshQ4hluIT7XcFrgLIQaw9X3A+kTTRdovCz5PMukm/0QC/BKSYPj3omF5Qfypn9O/c5kgpmvYUCw==}
 
+  browser-tabs-lock@1.3.0:
+    resolution: {integrity: sha512-g6nHaobTiT0eMZ7jh16YpD2kcjAp+PInbiVq3M1x6KKaEIVhT4v9oURNIpZLOZ3LQbQ3XYfNhMAb/9hzNLIWrw==}
+
   browserslist@4.26.3:
     resolution: {integrity: sha512-lAUU+02RFBuCKQPj/P6NgjlbCnLBMp4UtgTx7vNHd3XSIJF87s9a5rA3aH2yw3GS9DqZAUbOtZdCCiZeVRqt0w==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
@@ -2907,6 +2925,9 @@ packages:
     resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
     engines: {node: '>=12'}
 
+  dpop@2.1.1:
+    resolution: {integrity: sha512-J0Of2JTiM4h5si0tlbPQ/lkqfZ5wAEVkKYBhkwyyANnPJfWH4VsR5uIkZ+T+OSPIwDYUg1fbd5Mmodd25HjY1w==}
+
   drizzle-kit@0.31.5:
     resolution: {integrity: sha512-+CHgPFzuoTQTt7cOYCV6MOw2w8vqEn/ap1yv4bpZOWL03u7rlVRQhUY0WYT3rHsgVTXwYQDZaSUJSQrMBUKuWg==}
     hasBin: true
@@ -3042,6 +3063,9 @@ packages:
     resolution: {integrity: sha512-aN97NXWF6AWBTahfVOIrB/NShkzi5H7F9r1s9mD3cDj4Ko5f2qhhVoYMibXF7GlLveb/D2ioWay8lxI97Ven3g==}
     engines: {node: '>=0.12'}
 
+  es-cookie@1.3.2:
+    resolution: {integrity: sha512-UTlYYhXGLOy05P/vKVT2Ui7WtC7NiRzGtJyAKKn32g5Gvcjn7KAClLPWlipCtxIus934dFg9o9jXiBL0nP+t9Q==}
+
   es-define-property@1.0.1:
     resolution: {integrity: sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==}
     engines: {node: '>= 0.4'}
@@ -3111,6 +3135,10 @@ packages:
   expect-type@1.2.2:
     resolution: {integrity: sha512-JhFGDVJ7tmDJItKhYgJCGLOWjuK9vPxiXoUFLwLDc99NlmklilbiQJwoctZtt13+xMw91MCk/REan6MWHqDjyA==}
     engines: {node: '>=12.0.0'}
+
+  express-oauth2-jwt-bearer@1.7.1:
+    resolution: {integrity: sha512-IYwLHW9bysGnASwFfXqEZ2aJzY2g4B9P36sWgeIkSqWh1SjeIc8mfoeNsBpzil/lhXNWuttPH0rWQ6norZUBIg==}
+    engines: {node: ^12.19.0 || ^14.15.0 || ^16.13.0 || ^18.12.0 || ^20.2.0 || ^22.1.0 || ^24.0.0}
 
   express@4.21.2:
     resolution: {integrity: sha512-28HqgMZAmih1Czt9ny7qr6ek2qddF4FclbMzwhCREB6OFfH+rXAnuNCwo1/wFvrtbgsQDb4kSbX9de9lFbrXnA==}
@@ -3376,6 +3404,9 @@ packages:
   jiti@2.6.1:
     resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
     hasBin: true
+
+  jose@4.15.9:
+    resolution: {integrity: sha512-1vUQX+IdDMVPj4k8kOxgUqlcK518yluMuGZwqlr44FS1ppZB/5GWh4rZG89erpOBOJjU/OBsnCVFfapsRz6nEA==}
 
   jose@6.1.0:
     resolution: {integrity: sha512-TTQJyoEoKcC1lscpVDCSsVgYzUDg/0Bt3WE//WiTPK6uOCQC2KZS4MpugbMWt/zyjkopgZoXhZuCi00gLudfUA==}
@@ -4559,6 +4590,18 @@ snapshots:
       tinyexec: 1.0.1
 
   '@antfu/utils@9.3.0': {}
+
+  '@auth0/auth0-react@2.9.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@auth0/auth0-spa-js': 2.9.1
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+
+  '@auth0/auth0-spa-js@2.9.1':
+    dependencies:
+      browser-tabs-lock: 1.3.0
+      dpop: 2.1.1
+      es-cookie: 1.3.2
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -7061,6 +7104,10 @@ snapshots:
 
   bowser@2.12.1: {}
 
+  browser-tabs-lock@1.3.0:
+    dependencies:
+      lodash: 4.17.21
+
   browserslist@4.26.3:
     dependencies:
       baseline-browser-mapping: 2.8.12
@@ -7464,6 +7511,8 @@ snapshots:
 
   dotenv@17.2.3: {}
 
+  dpop@2.1.1: {}
+
   drizzle-kit@0.31.5:
     dependencies:
       '@drizzle-team/brocli': 0.10.2
@@ -7509,6 +7558,8 @@ snapshots:
       tapable: 2.3.0
 
   entities@6.0.1: {}
+
+  es-cookie@1.3.2: {}
 
   es-define-property@1.0.1: {}
 
@@ -7633,6 +7684,10 @@ snapshots:
   eventemitter3@4.0.7: {}
 
   expect-type@1.2.2: {}
+
+  express-oauth2-jwt-bearer@1.7.1:
+    dependencies:
+      jose: 4.15.9
 
   express@4.21.2:
     dependencies:
@@ -7979,6 +8034,8 @@ snapshots:
   is-what@4.1.16: {}
 
   jiti@2.6.1: {}
+
+  jose@4.15.9: {}
 
   jose@6.1.0: {}
 
