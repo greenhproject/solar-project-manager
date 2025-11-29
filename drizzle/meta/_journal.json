@@ -5,64 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1764194570487,
-      "tag": "0000_overjoyed_reaper",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1764194666392,
-      "tag": "0001_ancient_molecule_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1764198093642,
-      "tag": "0002_redundant_iron_fist",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1764308121661,
-      "tag": "0003_curvy_zuras",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1764374187025,
-      "tag": "0004_concerned_skreet",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1764376735609,
-      "tag": "0005_large_orphan",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "5",
-      "when": 1764397695961,
-      "tag": "0006_lean_rachel_grey",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "5",
-      "when": 1764399250562,
-      "tag": "0007_classy_spacker_dave",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "5",
-      "when": 1764425330772,
-      "tag": "0008_sour_the_executioner",
+      "when": 1764430274753,
+      "tag": "0000_early_grandmaster",
       "breakpoints": true
     }
   ]

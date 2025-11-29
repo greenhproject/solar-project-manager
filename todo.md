@@ -535,6 +535,8 @@
 - [x] Reiniciado: tsserver y servidor de desarrollo
 - [x] Verificado: tsc --noEmit NO muestra errores
 - [x] Verificado: Servidor funciona correctamente
-- [ ] Crear checkpoint limpio (ignorando errores LSP)
-- [ ] Verificar despliegue en producción con navegador
-- [ ] Si falla: Es problema de Manus, crear email solicitando devolución
+- [x] Crear checkpoint limpio f32f806c (ignorando errores LSP)
+- [x] Verificado: Producción NO se actualiza con el nuevo checkpoint
+- [x] Confirmado: Es problema de la plataforma Manus, no del código
+- [x] Creado: EMAIL_SOPORTE_MANUS.md con solicitud de devolución de créditos
+- [ ] Usuario debe enviar el email manualmente a https://help.manus.im
