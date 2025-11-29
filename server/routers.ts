@@ -1056,9 +1056,9 @@ Pregunta del usuario: ${input.question}
             if (milestone.assignedEngineerId) {
               await createMilestoneDueSoonNotification(
                 milestone.assignedEngineerId,
-                milestone.id,
+                milestone.milestoneId,
                 milestone.projectId,
-                milestone.name,
+                milestone.milestoneName,
                 milestone.projectName,
                 new Date(milestone.dueDate)
               );
@@ -1073,9 +1073,9 @@ Pregunta del usuario: ${input.question}
             if (milestone.assignedEngineerId) {
               await createMilestoneOverdueNotification(
                 milestone.assignedEngineerId,
-                milestone.id,
+                milestone.milestoneId,
                 milestone.projectId,
-                milestone.name,
+                milestone.milestoneName,
                 milestone.projectName,
                 new Date(milestone.dueDate)
               );

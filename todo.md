@@ -497,3 +497,19 @@
 - [ ] Verificar que todo funciona correctamente
 - [ ] Crear checkpoint final
 - [ ] Push a GitHub
+
+
+## Bug Reportado - Producción Desactualizada (RESUELTO)
+- [x] Usuario diferente es normal (BD separadas entre dev y prod)
+- [x] 0 proyectos es normal (BD de producción vacía)
+- [x] PROBLEMA REAL: Versión desplegada en producción NO tenía las últimas mejoras (errores de TypeScript impedían build)
+- [x] Identificados 31 errores de TypeScript que bloqueaban el build de producción
+- [x] Corregidos errores en db.ts (drizzle.insert → db.insert, propiedades incorrectas)
+- [x] Corregidos errores en routers.ts (nombres de propiedades de milestones)
+- [x] Corregidos errores en NotificationHistory.tsx (relatedProjectId → projectId)
+- [x] Corregidos errores en App.tsx y ComponentShowcase.tsx (ThemeProvider)
+- [x] Actualizada función getOverdueMilestones para devolver formato consistente
+- [x] Todos los errores de TypeScript resueltos (0 errores)
+- [x] Servidor funcionando correctamente en desarrollo
+- [ ] Crear checkpoint y push a GitHub
+- [ ] Usuario debe hacer clic en "Publish" para desplegar la nueva versión

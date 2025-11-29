@@ -55,8 +55,7 @@ export default function NotificationHistory() {
       "Título": notif.title,
       "Mensaje": notif.message,
       "Leída": notif.isRead ? "Sí" : "No",
-      "Proyecto ID": notif.relatedProjectId || "-",
-      "Hito ID": notif.relatedMilestoneId || "-"
+      "Proyecto ID": notif.projectId || "-"
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);

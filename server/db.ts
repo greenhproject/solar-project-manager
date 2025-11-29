@@ -306,8 +306,18 @@ export async function getOverdueMilestones() {
   const db = await getDb();
   if (!db) return [];
   const now = new Date();
-  return await db.select()
+  
+  return await db
+    .select({
+      milestoneId: milestones.id,
+      milestoneName: milestones.name,
+      dueDate: milestones.dueDate,
+      projectId: projects.id,
+      projectName: projects.name,
+      assignedEngineerId: projects.assignedEngineerId,
+    })
     .from(milestones)
+    .innerJoin(projects, eq(milestones.projectId, projects.id))
     .where(and(
       lte(milestones.dueDate, now),
       or(
@@ -708,8 +718,7 @@ export async function logNotification(data: {
   type: "milestone_due_soon" | "milestone_overdue" | "project_completed" | "project_assigned" | "project_updated" | "milestone_reminder" | "delay" | "ai_alert" | "general";
   title: string;
   message: string;
-  relatedProjectId?: number;
-  relatedMilestoneId?: number;
+  projectId?: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -955,15 +964,17 @@ export async function createMilestoneDueSoonNotification(
 ) {
   const hoursUntilDue = Math.floor((dueDate.getTime() - Date.now()) / (1000 * 60 * 60));
   
-  await db.insert(notificationHistory).values([{
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(notificationHistory).values({
     userId,
     type: "milestone_due_soon",
     title: `Hito próximo a vencer: ${milestoneName}`,
     message: `El hito "${milestoneName}" del proyecto "${projectName}" vence en ${hoursUntilDue} horas.`,
-    relatedProjectId: projectId,
-    relatedMilestoneId: milestoneId,
+    projectId: projectId,
     isRead: false
-  }]);
+  });
 }
 
 /**
@@ -979,13 +990,15 @@ export async function createMilestoneOverdueNotification(
 ) {
   const hoursOverdue = Math.floor((Date.now() - dueDate.getTime()) / (1000 * 60 * 60));
   
-  await db.insert(notificationHistory).values([{
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.insert(notificationHistory).values({
     userId,
     type: "milestone_overdue",
     title: `Hito vencido: ${milestoneName}`,
     message: `El hito "${milestoneName}" del proyecto "${projectName}" está vencido por ${hoursOverdue} horas.`,
-    relatedProjectId: projectId,
-    relatedMilestoneId: milestoneId,
+    projectId: projectId,
     isRead: false
-  }]);
+  });
 }
