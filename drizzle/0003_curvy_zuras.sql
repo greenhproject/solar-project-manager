@@ -1,1 +1,0 @@
-ALTER TABLE `milestones` ADD `dependencies` text;

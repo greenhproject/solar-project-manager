@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE notification_history MODIFY COLUMN type ENUM('milestone_due_soon', 'milestone_overdue', 'project_completed', 'project_assigned', 'project_updated', 'milestone_reminder', 'delay', 'ai_alert', 'general') NOT NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute ALTER TABLE notification_history MODIFY COLUMN type ENUM('milestone_due_soon', 'milestone_overdue', 'project_completed', 'project_assigned', 'project_updated', 'milestone_reminder', 'delay', 'ai_alert', 'general') NOT NULL;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 882
+}

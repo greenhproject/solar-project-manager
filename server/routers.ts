@@ -885,6 +885,64 @@ Pregunta del usuario: ${input.question}
   }),
 
   // ============================================
+  // NOTIFICACIONES
+  // ============================================
+  notifications: router({
+    // Obtener notificaciones del usuario actual
+    getUserNotifications: protectedProcedure
+      .input(z.object({ 
+        limit: z.number().optional().default(50),
+        unreadOnly: z.boolean().optional().default(false)
+      }))
+      .query(async ({ input, ctx }) => {
+        return await db.getUserNotifications(ctx.user.id, input.limit, input.unreadOnly);
+      }),
+
+    // Marcar notificación como leída
+    markAsRead: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const notification = await db.getNotificationById(input.id);
+        if (!notification) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Notificación no encontrada' });
+        }
+        
+        // Verificar que la notificación pertenece al usuario
+        if (notification.userId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para modificar esta notificación' });
+        }
+        
+        await db.markNotificationAsRead(input.id);
+        return { success: true };
+      }),
+
+    // Marcar todas como leídas
+    markAllAsRead: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        await db.markAllNotificationsAsRead(ctx.user.id);
+        return { success: true };
+      }),
+
+    // Eliminar notificación
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const notification = await db.getNotificationById(input.id);
+        if (!notification) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Notificación no encontrada' });
+        }
+        
+        // Verificar que la notificación pertenece al usuario
+        if (notification.userId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para eliminar esta notificación' });
+        }
+        
+        await db.deleteNotification(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============================================
   // HISTORIAL DE ACTUALIZACIONES
   // ============================================
   projectUpdates: router({

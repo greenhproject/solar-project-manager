@@ -305,7 +305,17 @@ export const notificationHistory = mysqlTable("notification_history", {
   // Contenido de la notificación
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
-  type: mysqlEnum("type", ["milestone", "delay", "ai_alert", "general"]).notNull(),
+  type: mysqlEnum("type", [
+    "milestone_due_soon",    // Hito próximo a vencer
+    "milestone_overdue",     // Hito vencido
+    "project_completed",     // Proyecto completado
+    "project_assigned",      // Nueva asignación
+    "project_updated",       // Actualización importante
+    "milestone_reminder",    // Recordatorio de hito
+    "delay",                 // Retraso detectado
+    "ai_alert",              // Alerta de IA
+    "general"                // General
+  ]).notNull(),
   
   // Relación con proyecto (opcional)
   projectId: int("projectId"),

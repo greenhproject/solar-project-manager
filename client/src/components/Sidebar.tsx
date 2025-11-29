@@ -25,6 +25,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { NotificationBell } from "./NotificationBell";
 
 interface SidebarProps {
   className?: string;
@@ -131,6 +132,7 @@ export function Sidebar({ className }: SidebarProps) {
               <p className="text-xs text-gray-500 truncate">GreenH Project</p>
             </div>
           )}
+          {isAuthenticated && <NotificationBell />}
           <Button
             variant="ghost"
             size="icon"

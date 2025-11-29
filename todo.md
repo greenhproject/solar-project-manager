@@ -358,3 +358,42 @@
 - [x] Crear tests de sincronización (5/5 pasando)
 - [x] Ejecutar todos los tests (34/34 pasando)
 - [x] Verificar que todo funcione correctamente
+
+
+## Problema de Despliegue en Producción
+- [ ] Verificar qué checkpoint está desplegado en solarmanagerghp.manus.space
+- [ ] Identificar por qué muestra interfaz antigua (tema oscuro rojo) en lugar de la actual (tema claro naranja)
+- [ ] Confirmar que el último checkpoint (ef57573a) se publicó correctamente
+- [ ] Verificar que la base de datos de producción esté conectada correctamente
+- [ ] Corregir el problema de despliegue
+- [ ] Verificar que la versión correcta esté visible en producción
+
+
+## Sistema de Notificaciones Personalizadas
+- [ ] Diseñar tipos de notificaciones (hito vencido, proyecto completado, asignación nueva, etc.)
+- [ ] Crear schema de notificaciones en base de datos
+- [ ] Crear procedimientos tRPC para obtener y marcar notificaciones
+- [ ] Implementar lógica de generación automática de notificaciones
+- [ ] Crear componente UI de campana de notificaciones en header
+- [ ] Crear dropdown con lista de notificaciones
+- [ ] Agregar badge con contador de notificaciones no leídas
+- [ ] Integrar notificaciones con eventos del sistema (crear hito, completar proyecto, etc.)
+- [ ] Agregar opción para marcar como leída/no leída
+- [ ] Agregar opción para eliminar notificaciones
+- [ ] Crear tests de notificaciones
+- [ ] Verificar funcionamiento completo
+
+
+## Sistema de Notificaciones Personalizadas
+- [x] Actualizar schema de notificationHistory con nuevos tipos de notificación
+- [x] Crear procedimientos tRPC para gestión de notificaciones (getUserNotifications, markAsRead, markAllAsRead, delete)
+- [x] Implementar funciones de base de datos para notificaciones
+- [x] Crear componente NotificationBell con dropdown de notificaciones
+- [x] Integrar NotificationBell en el header del Sidebar
+- [x] Mostrar badge con contador de notificaciones no leídas
+- [x] Implementar formateo de fechas relativas (hace X minutos/horas/días)
+- [x] Agregar iconos contextuales por tipo de notificación
+- [x] Implementar actualización automática cada 30 segundos
+- [x] Crear tests unitarios para sistema de notificaciones (8 tests)
+- [x] Validar permisos de acceso a notificaciones por usuario
+- [x] Soportar todos los tipos de notificación (milestone_due_soon, milestone_overdue, project_completed, project_assigned, project_updated, milestone_reminder)

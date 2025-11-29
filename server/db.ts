@@ -705,7 +705,7 @@ export async function getNotificationSettings(userId: number) {
  */
 export async function logNotification(data: {
   userId: number;
-  type: "milestone" | "delay" | "ai_alert" | "general";
+  type: "milestone_due_soon" | "milestone_overdue" | "project_completed" | "project_assigned" | "project_updated" | "milestone_reminder" | "delay" | "ai_alert" | "general";
   title: string;
   message: string;
   relatedProjectId?: number;
@@ -715,4 +715,81 @@ export async function logNotification(data: {
   if (!db) throw new Error("Database not available");
 
   await db.insert(notificationHistory).values(data);
+}
+
+/**
+ * Obtener notificaciones de un usuario
+ */
+export async function getUserNotifications(userId: number, limit: number = 50, unreadOnly: boolean = false) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const conditions = [eq(notificationHistory.userId, userId)];
+  
+  if (unreadOnly) {
+    conditions.push(eq(notificationHistory.isRead, false));
+  }
+
+  const results = await db
+    .select()
+    .from(notificationHistory)
+    .where(and(...conditions))
+    .orderBy(desc(notificationHistory.sentAt))
+    .limit(limit);
+
+  return results;
+}
+
+/**
+ * Obtener una notificación por ID
+ */
+export async function getNotificationById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const results = await db
+    .select()
+    .from(notificationHistory)
+    .where(eq(notificationHistory.id, id))
+    .limit(1);
+
+  return results[0] || null;
+}
+
+/**
+ * Marcar notificación como leída
+ */
+export async function markNotificationAsRead(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(notificationHistory)
+    .set({ isRead: true })
+    .where(eq(notificationHistory.id, id));
+}
+
+/**
+ * Marcar todas las notificaciones de un usuario como leídas
+ */
+export async function markAllNotificationsAsRead(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(notificationHistory)
+    .set({ isRead: true })
+    .where(eq(notificationHistory.userId, userId));
+}
+
+/**
+ * Eliminar notificación
+ */
+export async function deleteNotification(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .delete(notificationHistory)
+    .where(eq(notificationHistory.id, id));
 }
