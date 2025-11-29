@@ -1,7 +1,13 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,7 +40,7 @@ export default function NewProject() {
     projectTypeId: "",
     assignedEngineerId: "",
     openSolarId: "",
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: new Date().toISOString().split("T")[0],
     estimatedEndDate: "",
     location: "",
     clientName: "",
@@ -42,13 +48,15 @@ export default function NewProject() {
     clientPhone: "",
   });
 
-  if (!isAuthenticated || !user || user.role !== 'admin') {
+  if (!isAuthenticated || !user || user.role !== "admin") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Acceso Denegado</CardTitle>
-            <CardDescription>Solo los administradores pueden crear proyectos</CardDescription>
+            <CardDescription>
+              Solo los administradores pueden crear proyectos
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -57,8 +65,13 @@ export default function NewProject() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.projectTypeId || !formData.startDate || !formData.estimatedEndDate) {
+
+    if (
+      !formData.name ||
+      !formData.projectTypeId ||
+      !formData.startDate ||
+      !formData.estimatedEndDate
+    ) {
       toast.error("Por favor completa todos los campos requeridos");
       return;
     }
@@ -70,9 +83,10 @@ export default function NewProject() {
         name: formData.name,
         description: formData.description || undefined,
         projectTypeId: parseInt(formData.projectTypeId),
-        assignedEngineerId: formData.assignedEngineerId && formData.assignedEngineerId !== "0"
-        ? parseInt(formData.assignedEngineerId) 
-        : undefined,
+        assignedEngineerId:
+          formData.assignedEngineerId && formData.assignedEngineerId !== "0"
+            ? parseInt(formData.assignedEngineerId)
+            : undefined,
         openSolarId: formData.openSolarId || undefined,
         startDate: new Date(formData.startDate),
         estimatedEndDate: new Date(formData.estimatedEndDate),
@@ -91,19 +105,21 @@ export default function NewProject() {
     }
   };
 
-  const engineers = users?.filter(u => u.role === 'engineer');
-  
+  const engineers = users?.filter(u => u.role === "engineer");
+
   const handleLoadFromOpenSolar = async () => {
     if (!formData.openSolarId) {
       toast.error("Por favor ingresa un ID de OpenSolar");
       return;
     }
-    
+
     setIsLoadingFromOpenSolar(true);
-    
+
     try {
-      const data = await utils.sync.getProjectData.fetch({ openSolarId: formData.openSolarId });
-      
+      const data = await utils.sync.getProjectData.fetch({
+        openSolarId: formData.openSolarId,
+      });
+
       // Auto-completar campos del formulario
       setFormData(prev => ({
         ...prev,
@@ -114,7 +130,7 @@ export default function NewProject() {
         description: data.description || prev.description,
         location: data.location || prev.location,
       }));
-      
+
       toast.success("Datos cargados exitosamente desde OpenSolar");
     } catch (error: any) {
       toast.error(error.message || "Error al cargar datos de OpenSolar");
@@ -127,7 +143,11 @@ export default function NewProject() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container py-8 max-w-4xl">
         <div className="mb-6">
-          <Button variant="ghost" onClick={() => setLocation("/projects")} className="gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setLocation("/projects")}
+            className="gap-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             Volver a Proyectos
           </Button>
@@ -140,20 +160,22 @@ export default function NewProject() {
               Completa la información del proyecto solar
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Información Básica */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Información Básica</h3>
-                
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre del Proyecto *</Label>
                     <Input
                       id="name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={e =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       placeholder="Ej: Instalación Solar Residencial"
                       required
                     />
@@ -163,13 +185,15 @@ export default function NewProject() {
                     <Label htmlFor="projectTypeId">Tipo de Proyecto *</Label>
                     <Select
                       value={formData.projectTypeId}
-                      onValueChange={(value) => setFormData({ ...formData, projectTypeId: value })}
+                      onValueChange={value =>
+                        setFormData({ ...formData, projectTypeId: value })
+                      }
                     >
                       <SelectTrigger id="projectTypeId">
                         <SelectValue placeholder="Selecciona un tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        {projectTypes?.map((type) => (
+                        {projectTypes?.map(type => (
                           <SelectItem key={type.id} value={type.id.toString()}>
                             {type.name}
                           </SelectItem>
@@ -184,7 +208,9 @@ export default function NewProject() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={e =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     placeholder="Describe los detalles del proyecto..."
                     rows={4}
                   />
@@ -195,7 +221,9 @@ export default function NewProject() {
                   <Input
                     id="location"
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    onChange={e =>
+                      setFormData({ ...formData, location: e.target.value })
+                    }
                     placeholder="Dirección o ubicación del proyecto"
                   />
                 </div>
@@ -204,21 +232,28 @@ export default function NewProject() {
               {/* Asignación */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Asignación</h3>
-                
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="assignedEngineerId">Ingeniero Asignado</Label>
+                    <Label htmlFor="assignedEngineerId">
+                      Ingeniero Asignado
+                    </Label>
                     <Select
                       value={formData.assignedEngineerId}
-                      onValueChange={(value) => setFormData({ ...formData, assignedEngineerId: value })}
+                      onValueChange={value =>
+                        setFormData({ ...formData, assignedEngineerId: value })
+                      }
                     >
                       <SelectTrigger id="assignedEngineerId">
                         <SelectValue placeholder="Sin asignar" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">Sin asignar</SelectItem>
-                        {engineers?.map((engineer) => (
-                          <SelectItem key={engineer.id} value={engineer.id.toString()}>
+                        {engineers?.map(engineer => (
+                          <SelectItem
+                            key={engineer.id}
+                            value={engineer.id.toString()}
+                          >
                             {engineer.name || engineer.email}
                           </SelectItem>
                         ))}
@@ -232,7 +267,12 @@ export default function NewProject() {
                       <Input
                         id="openSolarId"
                         value={formData.openSolarId}
-                        onChange={(e) => setFormData({ ...formData, openSolarId: e.target.value })}
+                        onChange={e =>
+                          setFormData({
+                            ...formData,
+                            openSolarId: e.target.value,
+                          })
+                        }
                         placeholder="ID del proyecto en OpenSolar"
                         className="flex-1"
                       />
@@ -240,7 +280,9 @@ export default function NewProject() {
                         type="button"
                         variant="outline"
                         onClick={handleLoadFromOpenSolar}
-                        disabled={!formData.openSolarId || isLoadingFromOpenSolar}
+                        disabled={
+                          !formData.openSolarId || isLoadingFromOpenSolar
+                        }
                         className="gap-2"
                       >
                         {isLoadingFromOpenSolar ? (
@@ -252,7 +294,8 @@ export default function NewProject() {
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Ingresa el ID y haz clic en "Cargar" para auto-completar los datos del proyecto
+                      Ingresa el ID y haz clic en "Cargar" para auto-completar
+                      los datos del proyecto
                     </p>
                   </div>
                 </div>
@@ -261,7 +304,7 @@ export default function NewProject() {
               {/* Fechas */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Cronograma</h3>
-                
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="startDate">Fecha de Inicio *</Label>
@@ -269,18 +312,27 @@ export default function NewProject() {
                       id="startDate"
                       type="date"
                       value={formData.startDate}
-                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                      onChange={e =>
+                        setFormData({ ...formData, startDate: e.target.value })
+                      }
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="estimatedEndDate">Fecha Estimada de Finalización *</Label>
+                    <Label htmlFor="estimatedEndDate">
+                      Fecha Estimada de Finalización *
+                    </Label>
                     <Input
                       id="estimatedEndDate"
                       type="date"
                       value={formData.estimatedEndDate}
-                      onChange={(e) => setFormData({ ...formData, estimatedEndDate: e.target.value })}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          estimatedEndDate: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -289,15 +341,19 @@ export default function NewProject() {
 
               {/* Información del Cliente */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Información del Cliente</h3>
-                
+                <h3 className="text-lg font-semibold">
+                  Información del Cliente
+                </h3>
+
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="clientName">Nombre del Cliente</Label>
                     <Input
                       id="clientName"
                       value={formData.clientName}
-                      onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                      onChange={e =>
+                        setFormData({ ...formData, clientName: e.target.value })
+                      }
                       placeholder="Nombre completo"
                     />
                   </div>
@@ -308,7 +364,12 @@ export default function NewProject() {
                       id="clientEmail"
                       type="email"
                       value={formData.clientEmail}
-                      onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          clientEmail: e.target.value,
+                        })
+                      }
                       placeholder="cliente@ejemplo.com"
                     />
                   </div>
@@ -320,7 +381,9 @@ export default function NewProject() {
                     id="clientPhone"
                     type="tel"
                     value={formData.clientPhone}
-                    onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
+                    onChange={e =>
+                      setFormData({ ...formData, clientPhone: e.target.value })
+                    }
                     placeholder="+1 234 567 8900"
                   />
                 </div>

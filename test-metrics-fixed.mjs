@@ -1,4 +1,9 @@
-import { getCompletionRate, getAverageCompletionTime, getMonthlyMetrics, getProjectDistributionByType } from "./server/db.ts";
+import {
+  getCompletionRate,
+  getAverageCompletionTime,
+  getMonthlyMetrics,
+  getProjectDistributionByType,
+} from "./server/db.ts";
 
 async function testMetrics() {
   console.log("\n=== Testing Completion Rate ===");

@@ -27,7 +27,7 @@ export function getSessionCookieOptions(
   const hostname = req.hostname;
   const isSecure = isSecureRequest(req);
   const isLocalhost = LOCAL_HOSTS.has(hostname) || hostname === "localhost";
-  
+
   const options = {
     httpOnly: true,
     path: "/",
@@ -36,15 +36,15 @@ export function getSessionCookieOptions(
     // No establecer domain para permitir que funcione en subdominios
     domain: undefined,
   };
-  
+
   // Log para debugging en producción
   console.log("[Cookie Config]", {
     hostname,
     isSecure,
     isLocalhost,
     forwardedProto: req.headers["x-forwarded-proto"],
-    options
+    options,
   });
-  
+
   return options;
 }

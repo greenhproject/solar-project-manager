@@ -1,29 +1,55 @@
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { TrendingUp, Clock, CheckCircle2, PieChartIcon } from "lucide-react";
 
 export default function Analytics() {
-  const { data: monthlyData, isLoading: loadingMonthly } = trpc.metrics.monthly.useQuery({ months: 12 });
-  const { data: completionRate, isLoading: loadingRate } = trpc.metrics.completionRate.useQuery();
-  const { data: averageTime, isLoading: loadingTime } = trpc.metrics.averageTime.useQuery();
-  const { data: distribution, isLoading: loadingDist } = trpc.metrics.distribution.useQuery();
+  const { data: monthlyData, isLoading: loadingMonthly } =
+    trpc.metrics.monthly.useQuery({ months: 12 });
+  const { data: completionRate, isLoading: loadingRate } =
+    trpc.metrics.completionRate.useQuery();
+  const { data: averageTime, isLoading: loadingTime } =
+    trpc.metrics.averageTime.useQuery();
+  const { data: distribution, isLoading: loadingDist } =
+    trpc.metrics.distribution.useQuery();
 
   // Preparar datos para gráfico de línea temporal
-  const timelineData = monthlyData?.map(m => ({
-    month: m.month,
-    total: Number(m.total),
-    completados: Number(m.completed),
-    enProgreso: Number(m.in_progress),
-  })) || [];
+  const timelineData =
+    monthlyData?.map(m => ({
+      month: m.month,
+      total: Number(m.total),
+      completados: Number(m.completed),
+      enProgreso: Number(m.in_progress),
+    })) || [];
 
   // Preparar datos para gráfico de distribución por tipo
-  const distributionData = distribution?.map(d => ({
-    name: d.typeName,
-    value: Number(d.count),
-    color: d.color,
-  })) || [];
+  const distributionData =
+    distribution?.map(d => ({
+      name: d.typeName,
+      value: Number(d.count),
+      color: d.color,
+    })) || [];
 
   const COLORS = distributionData.map(d => d.color);
 
@@ -32,8 +58,12 @@ export default function Analytics() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Análisis y Métricas</h1>
-          <p className="text-gray-600">Visualización avanzada del rendimiento de proyectos solares</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Análisis y Métricas
+          </h1>
+          <p className="text-gray-600">
+            Visualización avanzada del rendimiento de proyectos solares
+          </p>
         </div>
 
         {/* KPIs */}
@@ -41,7 +71,9 @@ export default function Analytics() {
           {/* Tasa de Completación */}
           <Card className="shadow-apple border-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Tasa de Completación</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Tasa de Completación
+              </CardTitle>
               <CheckCircle2 className="h-5 w-5 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -49,9 +81,12 @@ export default function Analytics() {
                 <Skeleton className="h-10 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold text-gray-900">{completionRate?.rate}%</div>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {completionRate?.rate}%
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    {completionRate?.completed} de {completionRate?.total} proyectos completados
+                    {completionRate?.completed} de {completionRate?.total}{" "}
+                    proyectos completados
                   </p>
                 </>
               )}
@@ -61,7 +96,9 @@ export default function Analytics() {
           {/* Tiempo Promedio */}
           <Card className="shadow-apple border-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Tiempo Promedio</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Tiempo Promedio
+              </CardTitle>
               <Clock className="h-5 w-5 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -69,9 +106,12 @@ export default function Analytics() {
                 <Skeleton className="h-10 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold text-gray-900">{averageTime?.avgDays} días</div>
+                  <div className="text-3xl font-bold text-gray-900">
+                    {averageTime?.avgDays} días
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Basado en {averageTime?.totalCompleted} proyectos completados
+                    Basado en {averageTime?.totalCompleted} proyectos
+                    completados
                   </p>
                 </>
               )}
@@ -81,7 +121,9 @@ export default function Analytics() {
           {/* Total de Proyectos */}
           <Card className="shadow-apple border-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">Total de Proyectos</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Total de Proyectos
+              </CardTitle>
               <TrendingUp className="h-5 w-5 text-orange-500" />
             </CardHeader>
             <CardContent>
@@ -103,7 +145,9 @@ export default function Analytics() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle>Evolución de Proyectos por Mes</CardTitle>
-            <CardDescription>Tendencia de creación y completación de proyectos</CardDescription>
+            <CardDescription>
+              Tendencia de creación y completación de proyectos
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loadingMonthly ? (
@@ -114,38 +158,38 @@ export default function Analytics() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="month" stroke="#666" />
                   <YAxis stroke="#666" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e0e0e0',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                     }}
                   />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="total" 
-                    stroke="#FF6B35" 
+                  <Line
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#FF6B35"
                     strokeWidth={2}
                     name="Total"
-                    dot={{ fill: '#FF6B35', r: 4 }}
+                    dot={{ fill: "#FF6B35", r: 4 }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="completados" 
-                    stroke="#10B981" 
+                  <Line
+                    type="monotone"
+                    dataKey="completados"
+                    stroke="#10B981"
                     strokeWidth={2}
                     name="Completados"
-                    dot={{ fill: '#10B981', r: 4 }}
+                    dot={{ fill: "#10B981", r: 4 }}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="enProgreso" 
-                    stroke="#3B82F6" 
+                  <Line
+                    type="monotone"
+                    dataKey="enProgreso"
+                    stroke="#3B82F6"
                     strokeWidth={2}
                     name="En Progreso"
-                    dot={{ fill: '#3B82F6', r: 4 }}
+                    dot={{ fill: "#3B82F6", r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -158,7 +202,9 @@ export default function Analytics() {
           <Card className="shadow-apple border-0">
             <CardHeader>
               <CardTitle>Proyectos Creados por Mes</CardTitle>
-              <CardDescription>Distribución mensual de nuevos proyectos</CardDescription>
+              <CardDescription>
+                Distribución mensual de nuevos proyectos
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {loadingMonthly ? (
@@ -169,12 +215,12 @@ export default function Analytics() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="month" stroke="#666" />
                     <YAxis stroke="#666" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                       }}
                     />
                     <Bar dataKey="total" fill="#FF6B35" radius={[8, 8, 0, 0]} />
@@ -188,7 +234,9 @@ export default function Analytics() {
           <Card className="shadow-apple border-0">
             <CardHeader>
               <CardTitle>Distribución por Tipo de Proyecto</CardTitle>
-              <CardDescription>Proporción de proyectos por categoría</CardDescription>
+              <CardDescription>
+                Proporción de proyectos por categoría
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {loadingDist ? (
@@ -201,21 +249,26 @@ export default function Analytics() {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
                       outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
                     >
                       {distributionData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e0e0e0',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "white",
+                        border: "1px solid #e0e0e0",
+                        borderRadius: "8px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                       }}
                     />
                   </PieChart>

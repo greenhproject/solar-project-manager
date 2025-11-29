@@ -1,5 +1,11 @@
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, Check, Clock, AlertCircle, Loader2 } from "lucide-react";
@@ -8,7 +14,11 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Reminders() {
-  const { data: reminders, isLoading, refetch } = trpc.reminders.list.useQuery();
+  const {
+    data: reminders,
+    isLoading,
+    refetch,
+  } = trpc.reminders.list.useQuery();
   const markAsRead = trpc.reminders.markAsRead.useMutation();
 
   const handleMarkAsRead = async (id: number) => {
@@ -59,19 +69,24 @@ export default function Reminders() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {activeReminders.map((reminder) => (
-              <Card key={reminder.id} className="border-l-4 border-l-orange-500">
+            {activeReminders.map(reminder => (
+              <Card
+                key={reminder.id}
+                className="border-l-4 border-l-orange-500"
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1">
-                      <CardTitle className="text-lg">{reminder.title}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {reminder.title}
+                      </CardTitle>
                       <CardDescription>{reminder.message}</CardDescription>
                     </div>
                     <Badge variant="secondary" className="ml-4">
                       <Clock className="h-3 w-3 mr-1" />
-                      {formatDistanceToNow(new Date(reminder.reminderDate), { 
+                      {formatDistanceToNow(new Date(reminder.reminderDate), {
                         addSuffix: true,
-                        locale: es 
+                        locale: es,
                       })}
                     </Badge>
                   </div>
@@ -80,7 +95,14 @@ export default function Reminders() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <AlertCircle className="h-4 w-4" />
-                      <span>Tipo: {reminder.type === "milestone_due" ? "Hito próximo" : reminder.type === "project_overdue" ? "Proyecto retrasado" : "Personalizado"}</span>
+                      <span>
+                        Tipo:{" "}
+                        {reminder.type === "milestone_due"
+                          ? "Hito próximo"
+                          : reminder.type === "project_overdue"
+                            ? "Proyecto retrasado"
+                            : "Personalizado"}
+                      </span>
                     </div>
                     <Button
                       size="sm"
@@ -109,12 +131,14 @@ export default function Reminders() {
           </h2>
 
           <div className="grid gap-4">
-            {readReminders.map((reminder) => (
+            {readReminders.map(reminder => (
               <Card key={reminder.id} className="opacity-60">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <CardTitle className="text-lg">{reminder.title}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {reminder.title}
+                      </CardTitle>
                       <CardDescription>{reminder.message}</CardDescription>
                     </div>
                     <Badge variant="outline" className="ml-4">

@@ -101,15 +101,15 @@ class JWTAuthService {
   async authenticateRequest(req: Request): Promise<User> {
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(JWT_COOKIE_NAME);
-    
+
     console.log("[JWT Auth] Authenticate Request", {
       hasCookieHeader: !!req.headers.cookie,
       cookieHeader: req.headers.cookie?.substring(0, 100),
       cookiesFound: cookies.size,
       hasSessionCookie: !!sessionCookie,
-      sessionCookieLength: sessionCookie?.length
+      sessionCookieLength: sessionCookie?.length,
     });
-    
+
     const session = await this.verifyJWTSession(sessionCookie);
 
     if (!session) {

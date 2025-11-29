@@ -1,4 +1,13 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, index } from "drizzle-orm/mysql-core";
+import {
+  int,
+  mysqlEnum,
+  mysqlTable,
+  text,
+  timestamp,
+  varchar,
+  boolean,
+  index,
+} from "drizzle-orm/mysql-core";
 
 /**
  * Tabla de usuarios con sistema de roles
@@ -38,44 +47,56 @@ export const projectTypes = mysqlTable("project_types", {
  * Proyectos solares
  * Núcleo del sistema de gestión
  */
-export const projects = mysqlTable("projects", {
-  id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  projectTypeId: int("projectTypeId").notNull(),
-  
-  // Ingeniero asignado
-  assignedEngineerId: int("assignedEngineerId"),
-  
-  // Integración con OpenSolar
-  openSolarId: varchar("openSolarId", { length: 255 }),
-  
-  // Fechas del proyecto
-  startDate: timestamp("startDate").notNull(),
-  estimatedEndDate: timestamp("estimatedEndDate").notNull(),
-  actualEndDate: timestamp("actualEndDate"),
-  
-  // Estado del proyecto
-  status: mysqlEnum("status", ["planning", "in_progress", "on_hold", "completed", "cancelled"]).default("planning").notNull(),
-  
-  // Progreso calculado (0-100)
-  progressPercentage: int("progressPercentage").default(0).notNull(),
-  
-  // Información adicional
-  location: varchar("location", { length: 500 }),
-  clientName: varchar("clientName", { length: 255 }),
-  clientEmail: varchar("clientEmail", { length: 320 }),
-  clientPhone: varchar("clientPhone", { length: 50 }),
-  
-  // Metadata
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  createdBy: int("createdBy").notNull(),
-}, (table) => ({
-  engineerIdx: index("engineer_idx").on(table.assignedEngineerId),
-  statusIdx: index("status_idx").on(table.status),
-  openSolarIdx: index("opensolar_idx").on(table.openSolarId),
-}));
+export const projects = mysqlTable(
+  "projects",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    projectTypeId: int("projectTypeId").notNull(),
+
+    // Ingeniero asignado
+    assignedEngineerId: int("assignedEngineerId"),
+
+    // Integración con OpenSolar
+    openSolarId: varchar("openSolarId", { length: 255 }),
+
+    // Fechas del proyecto
+    startDate: timestamp("startDate").notNull(),
+    estimatedEndDate: timestamp("estimatedEndDate").notNull(),
+    actualEndDate: timestamp("actualEndDate"),
+
+    // Estado del proyecto
+    status: mysqlEnum("status", [
+      "planning",
+      "in_progress",
+      "on_hold",
+      "completed",
+      "cancelled",
+    ])
+      .default("planning")
+      .notNull(),
+
+    // Progreso calculado (0-100)
+    progressPercentage: int("progressPercentage").default(0).notNull(),
+
+    // Información adicional
+    location: varchar("location", { length: 500 }),
+    clientName: varchar("clientName", { length: 255 }),
+    clientEmail: varchar("clientEmail", { length: 320 }),
+    clientPhone: varchar("clientPhone", { length: 50 }),
+
+    // Metadata
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+    createdBy: int("createdBy").notNull(),
+  },
+  table => ({
+    engineerIdx: index("engineer_idx").on(table.assignedEngineerId),
+    statusIdx: index("status_idx").on(table.status),
+    openSolarIdx: index("opensolar_idx").on(table.openSolarId),
+  })
+);
 
 /**
  * Plantillas de hitos reutilizables
@@ -97,126 +118,168 @@ export const milestoneTemplates = mysqlTable("milestone_templates", {
  * Hitos de proyectos
  * Seguimiento detallado de progreso por etapas
  */
-export const milestones = mysqlTable("milestones", {
-  id: int("id").autoincrement().primaryKey(),
-  projectId: int("projectId").notNull(),
-  name: varchar("name", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  // Fechas del hito
-  startDate: timestamp("startDate"),
-  dueDate: timestamp("dueDate").notNull(),
-  completedDate: timestamp("completedDate"),
-  
-  // Estado del hito
-  status: mysqlEnum("status", ["pending", "in_progress", "completed", "overdue"]).default("pending").notNull(),
-  
-  // Orden y peso para cálculo de progreso
-  orderIndex: int("orderIndex").notNull(),
-  weight: int("weight").default(1).notNull(), // Peso relativo para cálculo de progreso
-  
-  // Notas y observaciones
-  notes: text("notes"),
-  
-  // Dependencias (IDs de hitos que deben completarse antes)
-  dependencies: text("dependencies"), // JSON array de IDs: [1, 2, 3]
-  
-  // Sincronización con Google Calendar
-  googleCalendarEventId: varchar("googleCalendarEventId", { length: 255 }),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-}, (table) => ({
-  projectIdx: index("project_idx").on(table.projectId),
-  statusIdx: index("status_idx").on(table.status),
-}));
+export const milestones = mysqlTable(
+  "milestones",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    projectId: int("projectId").notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+
+    // Fechas del hito
+    startDate: timestamp("startDate"),
+    dueDate: timestamp("dueDate").notNull(),
+    completedDate: timestamp("completedDate"),
+
+    // Estado del hito
+    status: mysqlEnum("status", [
+      "pending",
+      "in_progress",
+      "completed",
+      "overdue",
+    ])
+      .default("pending")
+      .notNull(),
+
+    // Orden y peso para cálculo de progreso
+    orderIndex: int("orderIndex").notNull(),
+    weight: int("weight").default(1).notNull(), // Peso relativo para cálculo de progreso
+
+    // Notas y observaciones
+    notes: text("notes"),
+
+    // Dependencias (IDs de hitos que deben completarse antes)
+    dependencies: text("dependencies"), // JSON array de IDs: [1, 2, 3]
+
+    // Sincronización con Google Calendar
+    googleCalendarEventId: varchar("googleCalendarEventId", { length: 255 }),
+
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    projectIdx: index("project_idx").on(table.projectId),
+    statusIdx: index("status_idx").on(table.status),
+  })
+);
 
 /**
  * Recordatorios para coordinadores
  * Sistema de notificaciones para seguimiento de proyectos
  */
-export const reminders = mysqlTable("reminders", {
-  id: int("id").autoincrement().primaryKey(),
-  projectId: int("projectId").notNull(),
-  milestoneId: int("milestoneId"), // Opcional, puede ser recordatorio general
-  
-  // Usuario que recibirá el recordatorio
-  userId: int("userId").notNull(),
-  
-  // Contenido del recordatorio
-  title: varchar("title", { length: 255 }).notNull(),
-  message: text("message"),
-  
-  // Fecha y estado
-  reminderDate: timestamp("reminderDate").notNull(),
-  isRead: boolean("isRead").default(false).notNull(),
-  isSent: boolean("isSent").default(false).notNull(),
-  
-  // Tipo de recordatorio
-  type: mysqlEnum("type", ["milestone_due", "project_overdue", "custom", "sync_required"]).default("custom").notNull(),
-  
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-}, (table) => ({
-  userIdx: index("user_idx").on(table.userId),
-  dateIdx: index("date_idx").on(table.reminderDate),
-  readIdx: index("read_idx").on(table.isRead),
-}));
+export const reminders = mysqlTable(
+  "reminders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    projectId: int("projectId").notNull(),
+    milestoneId: int("milestoneId"), // Opcional, puede ser recordatorio general
+
+    // Usuario que recibirá el recordatorio
+    userId: int("userId").notNull(),
+
+    // Contenido del recordatorio
+    title: varchar("title", { length: 255 }).notNull(),
+    message: text("message"),
+
+    // Fecha y estado
+    reminderDate: timestamp("reminderDate").notNull(),
+    isRead: boolean("isRead").default(false).notNull(),
+    isSent: boolean("isSent").default(false).notNull(),
+
+    // Tipo de recordatorio
+    type: mysqlEnum("type", [
+      "milestone_due",
+      "project_overdue",
+      "custom",
+      "sync_required",
+    ])
+      .default("custom")
+      .notNull(),
+
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    userIdx: index("user_idx").on(table.userId),
+    dateIdx: index("date_idx").on(table.reminderDate),
+    readIdx: index("read_idx").on(table.isRead),
+  })
+);
 
 /**
  * Logs de sincronización con OpenSolar
  * Auditoría de integraciones con API externa
  */
-export const syncLogs = mysqlTable("sync_logs", {
-  id: int("id").autoincrement().primaryKey(),
-  projectId: int("projectId").notNull(),
-  
-  // Detalles de la sincronización
-  syncType: mysqlEnum("syncType", ["manual", "automatic", "scheduled"]).default("manual").notNull(),
-  direction: mysqlEnum("direction", ["import", "export", "bidirectional"]).default("import").notNull(),
-  
-  // Resultado
-  status: mysqlEnum("status", ["success", "partial", "failed"]).default("success").notNull(),
-  message: text("message"),
-  errorDetails: text("errorDetails"),
-  
-  // Datos sincronizados
-  dataSynced: text("dataSynced"), // JSON con detalles de lo sincronizado
-  
-  // Metadata
-  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
-  syncedBy: int("syncedBy").notNull(),
-}, (table) => ({
-  projectIdx: index("project_idx").on(table.projectId),
-  statusIdx: index("status_idx").on(table.status),
-}));
+export const syncLogs = mysqlTable(
+  "sync_logs",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    projectId: int("projectId").notNull(),
+
+    // Detalles de la sincronización
+    syncType: mysqlEnum("syncType", ["manual", "automatic", "scheduled"])
+      .default("manual")
+      .notNull(),
+    direction: mysqlEnum("direction", ["import", "export", "bidirectional"])
+      .default("import")
+      .notNull(),
+
+    // Resultado
+    status: mysqlEnum("status", ["success", "partial", "failed"])
+      .default("success")
+      .notNull(),
+    message: text("message"),
+    errorDetails: text("errorDetails"),
+
+    // Datos sincronizados
+    dataSynced: text("dataSynced"), // JSON con detalles de lo sincronizado
+
+    // Metadata
+    syncedAt: timestamp("syncedAt").defaultNow().notNull(),
+    syncedBy: int("syncedBy").notNull(),
+  },
+  table => ({
+    projectIdx: index("project_idx").on(table.projectId),
+    statusIdx: index("status_idx").on(table.status),
+  })
+);
 
 /**
  * Historial de actualizaciones de proyectos
  * Auditoría de cambios importantes
  */
-export const projectUpdates = mysqlTable("project_updates", {
-  id: int("id").autoincrement().primaryKey(),
-  projectId: int("projectId").notNull(),
-  
-  // Tipo de actualización
-  updateType: mysqlEnum("updateType", ["status_change", "milestone_completed", "assignment_change", "progress_update", "note_added"]).notNull(),
-  
-  // Contenido
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  
-  // Valores anteriores y nuevos (JSON)
-  oldValue: text("oldValue"),
-  newValue: text("newValue"),
-  
-  // Metadata
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  createdBy: int("createdBy").notNull(),
-}, (table) => ({
-  projectIdx: index("project_idx").on(table.projectId),
-  typeIdx: index("type_idx").on(table.updateType),
-}));
+export const projectUpdates = mysqlTable(
+  "project_updates",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    projectId: int("projectId").notNull(),
+
+    // Tipo de actualización
+    updateType: mysqlEnum("updateType", [
+      "status_change",
+      "milestone_completed",
+      "assignment_change",
+      "progress_update",
+      "note_added",
+    ]).notNull(),
+
+    // Contenido
+    title: varchar("title", { length: 255 }).notNull(),
+    description: text("description"),
+
+    // Valores anteriores y nuevos (JSON)
+    oldValue: text("oldValue"),
+    newValue: text("newValue"),
+
+    // Metadata
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    createdBy: int("createdBy").notNull(),
+  },
+  table => ({
+    projectIdx: index("project_idx").on(table.projectId),
+    typeIdx: index("type_idx").on(table.updateType),
+  })
+);
 
 // Tipos TypeScript exportados
 export type User = typeof users.$inferSelect;
@@ -243,7 +306,6 @@ export type InsertSyncLog = typeof syncLogs.$inferInsert;
 export type ProjectUpdate = typeof projectUpdates.$inferSelect;
 export type InsertProjectUpdate = typeof projectUpdates.$inferInsert;
 
-
 /**
  * Archivos adjuntos de proyectos
  * Almacena documentos técnicos, legales y financieros
@@ -251,18 +313,20 @@ export type InsertProjectUpdate = typeof projectUpdates.$inferInsert;
 export const projectAttachments = mysqlTable("project_attachments", {
   id: int("id").autoincrement().primaryKey(),
   projectId: int("projectId").notNull(),
-  
+
   // Información del archivo
   fileName: varchar("fileName", { length: 255 }).notNull(),
   fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
   fileUrl: text("fileUrl").notNull(), // S3 URL
   fileSize: int("fileSize").notNull(), // Tamaño en bytes
   mimeType: varchar("mimeType", { length: 100 }).notNull(),
-  
+
   // Categorización
-  category: mysqlEnum("category", ["technical", "legal", "financial", "other"]).default("other").notNull(),
+  category: mysqlEnum("category", ["technical", "legal", "financial", "other"])
+    .default("other")
+    .notNull(),
   description: text("description"),
-  
+
   // Auditoría
   uploadedBy: int("uploadedBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -279,22 +343,27 @@ export type InsertProjectAttachment = typeof projectAttachments.$inferInsert;
 export const notificationSettings = mysqlTable("notification_settings", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().unique(),
-  
+
   // Preferencias de notificaciones
-  enablePushNotifications: boolean("enablePushNotifications").default(true).notNull(),
-  enableMilestoneReminders: boolean("enableMilestoneReminders").default(true).notNull(),
+  enablePushNotifications: boolean("enablePushNotifications")
+    .default(true)
+    .notNull(),
+  enableMilestoneReminders: boolean("enableMilestoneReminders")
+    .default(true)
+    .notNull(),
   enableDelayAlerts: boolean("enableDelayAlerts").default(true).notNull(),
   enableAIAlerts: boolean("enableAIAlerts").default(true).notNull(),
-  
+
   // Días de anticipación para recordatorios
   milestoneReminderDays: int("milestoneReminderDays").default(3).notNull(),
-  
+
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type NotificationSettings = typeof notificationSettings.$inferSelect;
-export type InsertNotificationSettings = typeof notificationSettings.$inferInsert;
+export type InsertNotificationSettings =
+  typeof notificationSettings.$inferInsert;
 
 /**
  * Historial de notificaciones enviadas
@@ -303,25 +372,25 @@ export type InsertNotificationSettings = typeof notificationSettings.$inferInser
 export const notificationHistory = mysqlTable("notification_history", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
-  
+
   // Contenido de la notificación
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
   type: mysqlEnum("type", [
-    "milestone_due_soon",    // Hito próximo a vencer
-    "milestone_overdue",     // Hito vencido
-    "project_completed",     // Proyecto completado
-    "project_assigned",      // Nueva asignación
-    "project_updated",       // Actualización importante
-    "milestone_reminder",    // Recordatorio de hito
-    "delay",                 // Retraso detectado
-    "ai_alert",              // Alerta de IA
-    "general"                // General
+    "milestone_due_soon", // Hito próximo a vencer
+    "milestone_overdue", // Hito vencido
+    "project_completed", // Proyecto completado
+    "project_assigned", // Nueva asignación
+    "project_updated", // Actualización importante
+    "milestone_reminder", // Recordatorio de hito
+    "delay", // Retraso detectado
+    "ai_alert", // Alerta de IA
+    "general", // General
   ]).notNull(),
-  
+
   // Relación con proyecto (opcional)
   projectId: int("projectId"),
-  
+
   // Estado
   isRead: boolean("isRead").default(false).notNull(),
   sentAt: timestamp("sentAt").defaultNow().notNull(),

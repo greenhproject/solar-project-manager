@@ -5,36 +5,44 @@ Este documento lista todas las variables de entorno necesarias para desplegar So
 ## Variables Requeridas
 
 ### Base de Datos
+
 ```
 DATABASE_URL=mysql://user:password@host:port/database
 ```
+
 **Descripción:** URL de conexión a la base de datos MySQL/TiDB de Railway.  
 **Ejemplo:** `mysql://root:password@containers-us-west-123.railway.app:3306/railway`
 
 ### Autenticación JWT
+
 ```
 JWT_SECRET=tu_secreto_jwt_muy_seguro_aqui
 ```
+
 **Descripción:** Secreto para firmar tokens JWT. Debe ser una cadena aleatoria y segura.  
 **Ejemplo:** `jwt_secret_super_seguro_random_string_12345`  
 **Generación:** Puedes generar uno con: `openssl rand -base64 32`
 
 ### Configuración de la Aplicación
+
 ```
 NODE_ENV=production
 ```
+
 **Descripción:** Entorno de ejecución de Node.js.  
 **Valor:** `production`
 
 ```
 PORT=3000
 ```
+
 **Descripción:** Puerto en el que escucha la aplicación (Railway lo asigna automáticamente).  
 **Valor:** `3000` (Railway puede sobreescribirlo)
 
 ## Variables Opcionales (Solo para funciones avanzadas)
 
 ### OAuth de Manus (NO necesario para Railway)
+
 ```
 # ESTAS VARIABLES NO SON NECESARIAS EN RAILWAY
 # Solo se usan en el entorno de Manus
@@ -44,10 +52,12 @@ PORT=3000
 ```
 
 ### OpenSolar API (Opcional)
+
 ```
 OPENSOLAR_API_KEY=tu_api_key_de_opensolar
 OPENSOLAR_API_URL=https://api.opensolar.com
 ```
+
 **Descripción:** Credenciales para integración con OpenSolar (opcional).
 
 ## Configuración en Railway
@@ -69,6 +79,7 @@ OPENSOLAR_API_URL=https://api.opensolar.com
 ## Verificación
 
 Después del despliegue, verifica que:
+
 - ✅ La aplicación está corriendo (sin errores 500)
 - ✅ Puedes acceder a `/login` y `/register`
 - ✅ Puedes crear una cuenta nueva
@@ -78,14 +89,17 @@ Después del despliegue, verifica que:
 ## Troubleshooting
 
 ### Error: "Database not available"
+
 - Verifica que `DATABASE_URL` esté configurada correctamente
 - Asegúrate de que la base de datos MySQL esté corriendo
 
 ### Error: "Invalid JWT session cookie"
+
 - Verifica que `JWT_SECRET` esté configurada
 - Asegúrate de que sea la misma en todos los despliegues
 
 ### Error: "Table already exists"
+
 - El comando `pnpm db:push` sincroniza automáticamente el schema
 - Si hay problemas, puedes ejecutar manualmente: `pnpm drizzle-kit push`
 

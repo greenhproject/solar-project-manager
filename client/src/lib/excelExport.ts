@@ -23,24 +23,35 @@ export function exportGanttToExcel(
   ];
 
   // Agregar hitos
-  milestones.forEach((milestone) => {
-    const progress = milestone.status === "completed" ? 100 :
-                    milestone.status === "in_progress" ? 50 :
-                    milestone.status === "overdue" ? 25 : 0;
+  milestones.forEach(milestone => {
+    const progress =
+      milestone.status === "completed"
+        ? 100
+        : milestone.status === "in_progress"
+          ? 50
+          : milestone.status === "overdue"
+            ? 25
+            : 0;
 
     const startDate = new Date(milestone.dueDate);
-    const endDate = milestone.completedDate 
+    const endDate = milestone.completedDate
       ? new Date(milestone.completedDate)
       : new Date(milestone.dueDate);
-    
-    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)) || 1;
 
-    const statusText = ({
-      completed: "Completado",
-      in_progress: "En Progreso",
-      overdue: "Vencido",
-      pending: "Pendiente",
-    } as any)[milestone.status] || "Pendiente";
+    const days =
+      Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
+      ) || 1;
+
+    const statusText =
+      (
+        {
+          completed: "Completado",
+          in_progress: "En Progreso",
+          overdue: "Vencido",
+          pending: "Pendiente",
+        } as any
+      )[milestone.status] || "Pendiente";
 
     data.push([
       milestone.name,
@@ -89,19 +100,25 @@ export function exportCalendarToExcel(
   // Hoja 1: Resumen de Proyectos
   const projectData = [
     ["RESUMEN DE PROYECTOS"],
-    ["PERÍODO", `${startDate.toLocaleDateString("es-ES")} - ${endDate.toLocaleDateString("es-ES")}`],
+    [
+      "PERÍODO",
+      `${startDate.toLocaleDateString("es-ES")} - ${endDate.toLocaleDateString("es-ES")}`,
+    ],
     [],
     ["PROYECTO", "TIPO", "ESTADO", "FECHA INICIO", "FECHA FIN", "PROGRESO"],
   ];
 
-  projects.forEach((project) => {
-    const statusText = ({
-      planning: "Planificación",
-      in_progress: "En Progreso",
-      completed: "Completado",
-      on_hold: "En Espera",
-      cancelled: "Cancelado",
-    } as any)[project.status] || "Desconocido";
+  projects.forEach(project => {
+    const statusText =
+      (
+        {
+          planning: "Planificación",
+          in_progress: "En Progreso",
+          completed: "Completado",
+          on_hold: "En Espera",
+          cancelled: "Cancelado",
+        } as any
+      )[project.status] || "Desconocido";
 
     projectData.push([
       project.name,
@@ -127,26 +144,32 @@ export function exportCalendarToExcel(
   // Hoja 2: Hitos
   const milestoneData = [
     ["HITOS DEL PERÍODO"],
-    ["PERÍODO", `${startDate.toLocaleDateString("es-ES")} - ${endDate.toLocaleDateString("es-ES")}`],
+    [
+      "PERÍODO",
+      `${startDate.toLocaleDateString("es-ES")} - ${endDate.toLocaleDateString("es-ES")}`,
+    ],
     [],
     ["HITO", "PROYECTO", "ESTADO", "FECHA VENCIMIENTO", "FECHA COMPLETADO"],
   ];
 
-  milestones.forEach((milestone) => {
+  milestones.forEach(milestone => {
     const project = projects.find(p => p.id === milestone.projectId);
-    const statusText = ({
-      completed: "Completado",
-      in_progress: "En Progreso",
-      overdue: "Vencido",
-      pending: "Pendiente",
-    } as any)[milestone.status] || "Pendiente";
+    const statusText =
+      (
+        {
+          completed: "Completado",
+          in_progress: "En Progreso",
+          overdue: "Vencido",
+          pending: "Pendiente",
+        } as any
+      )[milestone.status] || "Pendiente";
 
     milestoneData.push([
       milestone.name,
       project?.name || "N/A",
       statusText,
       new Date(milestone.dueDate).toLocaleDateString("es-ES"),
-      milestone.completedDate 
+      milestone.completedDate
         ? new Date(milestone.completedDate).toLocaleDateString("es-ES")
         : "N/A",
     ]);
@@ -188,26 +211,32 @@ export function exportProjectReport(
     ["Cliente", project.clientName || "N/A"],
     ["Ubicación", project.location || "N/A"],
     ["Fecha Inicio", new Date(project.startDate).toLocaleDateString("es-ES")],
-    ["Fecha Fin Estimada", new Date(project.estimatedEndDate).toLocaleDateString("es-ES")],
+    [
+      "Fecha Fin Estimada",
+      new Date(project.estimatedEndDate).toLocaleDateString("es-ES"),
+    ],
     ["Progreso", `${project.progress || 0}%`],
     [],
     ["HITOS"],
     ["Nombre", "Estado", "Fecha Vencimiento", "Completado", "Notas"],
   ];
 
-  milestones.forEach((milestone) => {
-    const statusText = ({
-      completed: "Completado",
-      in_progress: "En Progreso",
-      overdue: "Vencido",
-      pending: "Pendiente",
-    } as any)[milestone.status] || "Pendiente";
+  milestones.forEach(milestone => {
+    const statusText =
+      (
+        {
+          completed: "Completado",
+          in_progress: "En Progreso",
+          overdue: "Vencido",
+          pending: "Pendiente",
+        } as any
+      )[milestone.status] || "Pendiente";
 
     projectInfo.push([
       milestone.name,
       statusText,
       new Date(milestone.dueDate).toLocaleDateString("es-ES"),
-      milestone.completedDate 
+      milestone.completedDate
         ? new Date(milestone.completedDate).toLocaleDateString("es-ES")
         : "N/A",
       milestone.notes || "",
@@ -215,10 +244,7 @@ export function exportProjectReport(
   });
 
   const wsProject = XLSX.utils.aoa_to_sheet(projectInfo);
-  wsProject["!cols"] = [
-    { wch: 25 },
-    { wch: 50 },
-  ];
+  wsProject["!cols"] = [{ wch: 25 }, { wch: 50 }];
   XLSX.utils.book_append_sheet(wb, wsProject, "Información");
 
   // Hoja 2: Archivos Adjuntos (si existen)
@@ -229,7 +255,7 @@ export function exportProjectReport(
       ["Nombre", "Tipo", "Fecha de Subida", "URL"],
     ];
 
-    attachments.forEach((attachment) => {
+    attachments.forEach(attachment => {
       attachmentData.push([
         attachment.fileName,
         attachment.fileType || "N/A",

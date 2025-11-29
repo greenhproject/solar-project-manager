@@ -1,5 +1,5 @@
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { exec } from "child_process";
+import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
@@ -19,29 +19,31 @@ interface UpdateCalendarEvent extends Partial<CalendarEvent> {
 /**
  * Crea un evento en Google Calendar usando MCP
  */
-export async function createCalendarEvent(event: CalendarEvent): Promise<string | null> {
+export async function createCalendarEvent(
+  event: CalendarEvent
+): Promise<string | null> {
   try {
     const input = JSON.stringify({
-      events: [event]
+      events: [event],
     });
 
     const command = `manus-mcp-cli tool call google_calendar_create_events --server google-calendar --input '${input.replace(/'/g, "'\\''")}'`;
-    
+
     const { stdout } = await execAsync(command);
-    
+
     // Parsear la respuesta para obtener el event ID
     const response = JSON.parse(stdout);
-    
+
     if (response.content && response.content[0] && response.content[0].text) {
       const result = JSON.parse(response.content[0].text);
       if (result.results && result.results[0] && result.results[0].id) {
         return result.results[0].id;
       }
     }
-    
+
     return null;
   } catch (error) {
-    console.error('[GoogleCalendar] Error creating event:', error);
+    console.error("[GoogleCalendar] Error creating event:", error);
     return null;
   }
 }
@@ -49,18 +51,20 @@ export async function createCalendarEvent(event: CalendarEvent): Promise<string 
 /**
  * Actualiza un evento en Google Calendar usando MCP
  */
-export async function updateCalendarEvent(update: UpdateCalendarEvent): Promise<boolean> {
+export async function updateCalendarEvent(
+  update: UpdateCalendarEvent
+): Promise<boolean> {
   try {
     const input = JSON.stringify({
-      events: [update]
+      events: [update],
     });
 
     const command = `manus-mcp-cli tool call google_calendar_update_events --server google-calendar --input '${input.replace(/'/g, "'\\''")}'`;
-    
+
     await execAsync(command);
     return true;
   } catch (error) {
-    console.error('[GoogleCalendar] Error updating event:', error);
+    console.error("[GoogleCalendar] Error updating event:", error);
     return false;
   }
 }
@@ -71,17 +75,19 @@ export async function updateCalendarEvent(update: UpdateCalendarEvent): Promise<
 export async function deleteCalendarEvent(eventId: string): Promise<boolean> {
   try {
     const input = JSON.stringify({
-      events: [{
-        event_id: eventId
-      }]
+      events: [
+        {
+          event_id: eventId,
+        },
+      ],
     });
 
     const command = `manus-mcp-cli tool call google_calendar_delete_events --server google-calendar --input '${input.replace(/'/g, "'\\''")}'`;
-    
+
     await execAsync(command);
     return true;
   } catch (error) {
-    console.error('[GoogleCalendar] Error deleting event:', error);
+    console.error("[GoogleCalendar] Error deleting event:", error);
     return false;
   }
 }

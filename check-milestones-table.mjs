@@ -4,11 +4,11 @@ const DATABASE_URL = process.env.DATABASE_URL;
 
 async function checkTable() {
   const connection = await mysql.createConnection(DATABASE_URL);
-  
+
   console.log("=== Estructura de la tabla milestones ===\n");
   const [columns] = await connection.execute("DESCRIBE milestones");
   console.table(columns);
-  
+
   await connection.end();
 }
 

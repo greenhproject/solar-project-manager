@@ -2,7 +2,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Sun, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import { Link, useLocation } from "wouter";
@@ -34,7 +40,7 @@ export default function ResetPassword() {
         setLocation("/login");
       }, 3000);
     },
-    onError: (err) => {
+    onError: err => {
       setError(err.message);
     },
   });
@@ -74,7 +80,7 @@ export default function ResetPassword() {
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800 text-center">
                 <p>Serás redirigido al login en 3 segundos...</p>
               </div>
-              
+
               <Link href="/login">
                 <Button className="w-full bg-gradient-solar">
                   Ir al Login Ahora
@@ -133,7 +139,7 @@ export default function ResetPassword() {
                   type="password"
                   placeholder="Mínimo 6 caracteres"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={e => setNewPassword(e.target.value)}
                   required
                   className="pl-10"
                 />
@@ -149,7 +155,7 @@ export default function ResetPassword() {
                   type="password"
                   placeholder="Repite la contraseña"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   required
                   className="pl-10"
                 />
@@ -162,12 +168,14 @@ export default function ResetPassword() {
               </div>
             )}
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-gradient-solar hover:opacity-90"
               disabled={resetPasswordMutation.isPending}
             >
-              {resetPasswordMutation.isPending ? "Actualizando..." : "Restablecer Contraseña"}
+              {resetPasswordMutation.isPending
+                ? "Actualizando..."
+                : "Restablecer Contraseña"}
             </Button>
 
             <div className="text-center">

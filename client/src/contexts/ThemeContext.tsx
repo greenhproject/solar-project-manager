@@ -24,18 +24,18 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   // Detectar preferencia del sistema
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    
+
     const updateResolvedTheme = () => {
       let resolved: ResolvedTheme;
-      
+
       if (theme === "system") {
         resolved = mediaQuery.matches ? "dark" : "light";
       } else {
         resolved = theme as ResolvedTheme;
       }
-      
+
       setResolvedTheme(resolved);
-      
+
       // Aplicar clase al documento
       const root = document.documentElement;
       if (resolved === "dark") {

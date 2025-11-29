@@ -35,50 +35,50 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
-      
+
       {/* Protected routes with MainLayout */}
       <Route path="/dashboard">
         <MainLayout>
           <Dashboard />
         </MainLayout>
       </Route>
-      
+
       <Route path="/profile">
         <MainLayout>
           <UserProfile />
         </MainLayout>
       </Route>
-      
+
       <Route path="/notifications">
         <MainLayout>
           <NotificationHistory />
         </MainLayout>
       </Route>
-      
+
       <Route path="/projects">
         <MainLayout>
           <Projects />
         </MainLayout>
       </Route>
-      
+
       <Route path="/projects/new">
         <MainLayout>
           <NewProject />
         </MainLayout>
       </Route>
-      
+
       <Route path="/projects/:id">
         <MainLayout>
           <ProjectDetail />
         </MainLayout>
       </Route>
-      
+
       <Route path="/reminders">
         <MainLayout>
           <Reminders />
         </MainLayout>
       </Route>
-      
+
       <Route path="/ai-assistant">
         <MainLayout>
           <AIAssistant />
@@ -89,49 +89,49 @@ function Router() {
           <UserManagement />
         </MainLayout>
       </Route>
-      
+
       <Route path="/users">
         <MainLayout>
           <UserManagement />
         </MainLayout>
       </Route>
-      
+
       <Route path="/settings">
         <MainLayout>
           <Settings />
         </MainLayout>
       </Route>
-      
+
       <Route path="/analytics">
         <MainLayout>
           <Analytics />
         </MainLayout>
       </Route>
-      
+
       <Route path="/gantt">
         <MainLayout>
           <GanttChart />
         </MainLayout>
       </Route>
-      
+
       <Route path="/calendar">
         <MainLayout>
           <CalendarPage />
         </MainLayout>
       </Route>
-      
+
       <Route path="/advanced-analytics">
         <MainLayout>
           <AdvancedAnalytics />
         </MainLayout>
       </Route>
-      
+
       <Route path="/reports">
         <MainLayout>
           <Reports />
         </MainLayout>
       </Route>
-      
+
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

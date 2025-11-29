@@ -14,7 +14,9 @@ export function generateResetToken(): string {
  * Create a password reset token for a user
  * Returns the token string
  */
-export async function createPasswordResetToken(userId: number): Promise<string> {
+export async function createPasswordResetToken(
+  userId: number
+): Promise<string> {
   const db = await getDb();
   const token = generateResetToken();
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now

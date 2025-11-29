@@ -6,17 +6,25 @@ import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
-import { getMonthlyMetrics, getCompletionRate, getAverageCompletionTime, getProjectDistributionByType } from "./db";
+import {
+  getMonthlyMetrics,
+  getCompletionRate,
+  getAverageCompletionTime,
+  getProjectDistributionByType,
+} from "./db";
 import { generateProjectReport } from "./pdfGenerator";
-import { getOpenSolarClient, checkOpenSolarConnection } from "./openSolarIntegration";
+import {
+  getOpenSolarClient,
+  checkOpenSolarConnection,
+} from "./openSolarIntegration";
 import { metricsRouter } from "./metricsRouters";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== 'admin') {
-    throw new TRPCError({ 
-      code: 'FORBIDDEN',
-      message: 'Solo los administradores pueden realizar esta acción' 
+  if (ctx.user.role !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Solo los administradores pueden realizar esta acción",
     });
   }
   return next({ ctx });
@@ -25,7 +33,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 export const appRouter = router({
   system: systemRouter,
   analytics: metricsRouter,
-  
+
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -35,175 +43,224 @@ export const appRouter = router({
       ctx.res.clearCookie(JWT_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
-    
+
     // Registro con JWT (para Railway)
     register: publicProcedure
-      .input(z.object({
-        email: z.string().email("Email inválido"),
-        password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-        name: z.string().min(1, "El nombre es requerido")
-      }))
+      .input(
+        z.object({
+          email: z.string().email("Email inválido"),
+          password: z
+            .string()
+            .min(6, "La contraseña debe tener al menos 6 caracteres"),
+          name: z.string().min(1, "El nombre es requerido"),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
-        const { createJWTUser, getUserByEmailForAuth } = await import("./jwtAuthFunctions");
-        const { jwtAuthService, JWT_COOKIE_NAME } = await import("./_core/jwtAuth");
-        
+        const { createJWTUser, getUserByEmailForAuth } = await import(
+          "./jwtAuthFunctions"
+        );
+        const { jwtAuthService, JWT_COOKIE_NAME } = await import(
+          "./_core/jwtAuth"
+        );
+
         // Verificar si el email ya existe
         const existingUser = await getUserByEmailForAuth(input.email);
         if (existingUser) {
-          throw new TRPCError({ 
-            code: 'CONFLICT', 
-            message: 'Este email ya está registrado' 
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "Este email ya está registrado",
           });
         }
-        
+
         // Crear usuario
         await createJWTUser(input);
-        
+
         // Obtener usuario recién creado
         const user = await getUserByEmailForAuth(input.email);
         if (!user) {
-          throw new TRPCError({ 
-            code: 'INTERNAL_SERVER_ERROR', 
-            message: 'Error al crear usuario' 
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al crear usuario",
           });
         }
-        
+
         // Crear sesión JWT
         const token = await jwtAuthService.createJWTSessionToken(
           user.id,
           user.email!,
           user.name || ""
         );
-        
+
         // Establecer cookie
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
-        
+
         // Enviar email de bienvenida (no bloqueante)
         const { sendWelcomeEmail } = await import("./_core/email");
-        sendWelcomeEmail(user.email!, user.name || "Usuario").catch(err => 
+        sendWelcomeEmail(user.email!, user.name || "Usuario").catch(err =>
           console.error("[Register] Error sending welcome email:", err)
         );
-        
-        return { success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } };
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          },
+        };
       }),
-    
+
     // Login con JWT (para Railway)
     login: publicProcedure
-      .input(z.object({
-        email: z.string().email("Email inválido"),
-        password: z.string().min(1, "La contraseña es requerida")
-      }))
+      .input(
+        z.object({
+          email: z.string().email("Email inválido"),
+          password: z.string().min(1, "La contraseña es requerida"),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
-        const { getUserByEmailForAuth, verifyPassword } = await import("./jwtAuthFunctions");
-        const { jwtAuthService, JWT_COOKIE_NAME } = await import("./_core/jwtAuth");
-        
+        const { getUserByEmailForAuth, verifyPassword } = await import(
+          "./jwtAuthFunctions"
+        );
+        const { jwtAuthService, JWT_COOKIE_NAME } = await import(
+          "./_core/jwtAuth"
+        );
+
         // Buscar usuario
         const user = await getUserByEmailForAuth(input.email);
         if (!user || !user.password) {
-          throw new TRPCError({ 
-            code: 'UNAUTHORIZED', 
-            message: 'Email o contraseña incorrectos' 
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Email o contraseña incorrectos",
           });
         }
-        
+
         // Verificar contraseña
         const isValid = await verifyPassword(input.password, user.password);
         if (!isValid) {
-          throw new TRPCError({ 
-            code: 'UNAUTHORIZED', 
-            message: 'Email o contraseña incorrectos' 
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Email o contraseña incorrectos",
           });
         }
-        
+
         // Crear sesión JWT
         const token = await jwtAuthService.createJWTSessionToken(
           user.id,
           user.email!,
           user.name || ""
         );
-        
+
         // Establecer cookie
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
-        
+
         console.log("[Login Success]", {
           userId: user.id,
           email: user.email,
           cookieName: JWT_COOKIE_NAME,
           tokenLength: token.length,
-          cookieSet: true
+          cookieSet: true,
         });
-        
-        return { success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } };
+
+        return {
+          success: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          },
+        };
       }),
-    
+
     // Solicitar recuperación de contraseña
     forgotPassword: publicProcedure
-      .input(z.object({
-        email: z.string().email("Email inválido")
-      }))
+      .input(
+        z.object({
+          email: z.string().email("Email inválido"),
+        })
+      )
       .mutation(async ({ input }) => {
         const { getUserByEmailForAuth } = await import("./jwtAuthFunctions");
-        const { createPasswordResetToken } = await import("./passwordResetFunctions");
+        const { createPasswordResetToken } = await import(
+          "./passwordResetFunctions"
+        );
         const { sendPasswordResetEmail } = await import("./_core/email");
-        
+
         // Buscar usuario
         const user = await getUserByEmailForAuth(input.email);
-        
+
         // Siempre retornar éxito para no revelar si el email existe
         if (!user) {
-          return { success: true, message: "Si el email existe, recibirás un enlace de recuperación" };
+          return {
+            success: true,
+            message: "Si el email existe, recibirás un enlace de recuperación",
+          };
         }
-        
+
         // Crear token de recuperación
         const resetToken = await createPasswordResetToken(user.id);
-        
+
         // Construir URL de reset (detectar entorno)
         const isProduction = process.env.NODE_ENV === "production";
-        const baseUrl = isProduction 
+        const baseUrl = isProduction
           ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || "localhost:3000"}`
           : "http://localhost:3000";
         const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
-        
+
         // Enviar email (no bloqueante)
         sendPasswordResetEmail(
           user.email!,
           user.name || "Usuario",
           resetToken,
           resetUrl
-        ).catch(err => console.error("[ForgotPassword] Error sending email:", err));
-        
-        return { success: true, message: "Si el email existe, recibirás un enlace de recuperación" };
+        ).catch(err =>
+          console.error("[ForgotPassword] Error sending email:", err)
+        );
+
+        return {
+          success: true,
+          message: "Si el email existe, recibirás un enlace de recuperación",
+        };
       }),
-    
+
     // Restablecer contraseña con token
     resetPassword: publicProcedure
-      .input(z.object({
-        token: z.string().min(1, "Token requerido"),
-        newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
-      }))
+      .input(
+        z.object({
+          token: z.string().min(1, "Token requerido"),
+          newPassword: z
+            .string()
+            .min(6, "La contraseña debe tener al menos 6 caracteres"),
+        })
+      )
       .mutation(async ({ input }) => {
         const { verifyResetToken } = await import("./passwordResetFunctions");
         const { hashPassword } = await import("./jwtAuthFunctions");
         const { updateUserPassword } = await import("./db");
-        
+
         // Verificar token
         const userId = await verifyResetToken(input.token);
         if (!userId) {
-          throw new TRPCError({ 
-            code: 'BAD_REQUEST', 
-            message: 'Token inválido o expirado' 
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Token inválido o expirado",
           });
         }
-        
+
         // Hash de nueva contraseña
         const hashedPassword = await hashPassword(input.newPassword);
-        
+
         // Actualizar contraseña
         await updateUserPassword(userId, hashedPassword);
-        
-        return { success: true, message: "Contraseña actualizada correctamente" };
+
+        return {
+          success: true,
+          message: "Contraseña actualizada correctamente",
+        };
       }),
   }),
 
@@ -213,18 +270,23 @@ export const appRouter = router({
   users: router({
     // Actualizar rol de usuario
     updateRole: adminProcedure
-      .input(z.object({ userId: z.number(), role: z.enum(["admin", "engineer"]) }))
+      .input(
+        z.object({ userId: z.number(), role: z.enum(["admin", "engineer"]) })
+      )
       .mutation(async ({ input }) => {
         const user = await db.getUserById(input.userId);
         if (!user) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Usuario no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Usuario no encontrado",
+          });
         }
 
         // Proteger usuario maestro
-        if (user.email === 'greenhproject@gmail.com') {
-          throw new TRPCError({ 
-            code: 'FORBIDDEN', 
-            message: 'No se puede modificar el rol del usuario maestro' 
+        if (user.email === "greenhproject@gmail.com") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No se puede modificar el rol del usuario maestro",
           });
         }
 
@@ -234,19 +296,21 @@ export const appRouter = router({
 
     // Actualizar perfil de usuario
     updateProfile: protectedProcedure
-      .input(z.object({
-        name: z.string().min(1, "El nombre es requerido").optional(),
-        email: z.string().email("Email inválido").optional(),
-        theme: z.enum(["light", "dark", "system"]).optional()
-      }))
+      .input(
+        z.object({
+          name: z.string().min(1, "El nombre es requerido").optional(),
+          email: z.string().email("Email inválido").optional(),
+          theme: z.enum(["light", "dark", "system"]).optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         // Verificar que el email no esté en uso por otro usuario
         if (input.email) {
           const existingUser = await db.getUserByEmail(input.email);
           if (existingUser && existingUser.id !== ctx.user.id) {
-            throw new TRPCError({ 
-              code: 'CONFLICT', 
-              message: 'Este email ya está en uso por otro usuario' 
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "Este email ya está en uso por otro usuario",
             });
           }
         }
@@ -257,52 +321,65 @@ export const appRouter = router({
 
     // Subir avatar de usuario
     uploadAvatar: protectedProcedure
-      .input(z.object({ 
-        imageData: z.string(), // Base64 encoded image
-        mimeType: z.string()
-      }))
+      .input(
+        z.object({
+          imageData: z.string(), // Base64 encoded image
+          mimeType: z.string(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
-        const { storagePut } = await import('./storage');
-        
+        const { storagePut } = await import("./storage");
+
         // Convertir base64 a buffer
-        const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
-        const buffer = Buffer.from(base64Data, 'base64');
-        
+        const base64Data = input.imageData.replace(
+          /^data:image\/\w+;base64,/,
+          ""
+        );
+        const buffer = Buffer.from(base64Data, "base64");
+
         // Validar tamaño (máximo 2MB)
         if (buffer.length > 2 * 1024 * 1024) {
-          throw new TRPCError({ 
-            code: 'BAD_REQUEST', 
-            message: 'La imagen es demasiado grande. Máximo 2MB.' 
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "La imagen es demasiado grande. Máximo 2MB.",
           });
         }
-        
+
         // Generar nombre único para el archivo
         const timestamp = Date.now();
-        const extension = input.mimeType.split('/')[1] || 'jpg';
+        const extension = input.mimeType.split("/")[1] || "jpg";
         const fileKey = `avatars/${ctx.user.id}-${timestamp}.${extension}`;
-        
+
         // Subir a S3
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
-        
+
         // Actualizar usuario con nueva URL de avatar
         await db.updateUserProfile(ctx.user.id, { avatarUrl: url });
-        
+
         return { avatarUrl: url };
       }),
 
     // Cambiar contraseña (solo para usuarios JWT)
     changePassword: protectedProcedure
-      .input(z.object({
-        currentPassword: z.string().min(1),
-        newPassword: z.string().min(8, "La contraseña debe tener al menos 8 caracteres")
-      }))
+      .input(
+        z.object({
+          currentPassword: z.string().min(1),
+          newPassword: z
+            .string()
+            .min(8, "La contraseña debe tener al menos 8 caracteres"),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         try {
-          return await db.changeUserPassword(ctx.user.id, input.currentPassword, input.newPassword);
+          return await db.changeUserPassword(
+            ctx.user.id,
+            input.currentPassword,
+            input.newPassword
+          );
         } catch (error: any) {
-          throw new TRPCError({ 
-            code: 'BAD_REQUEST', 
-            message: error.message 
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error.message,
           });
         }
       }),
@@ -313,14 +390,17 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         const user = await db.getUserById(input.userId);
         if (!user) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Usuario no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Usuario no encontrado",
+          });
         }
 
         // Proteger usuario maestro
-        if (user.email === 'greenhproject@gmail.com') {
-          throw new TRPCError({ 
-            code: 'FORBIDDEN', 
-            message: 'No se puede eliminar el usuario maestro' 
+        if (user.email === "greenhproject@gmail.com") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No se puede eliminar el usuario maestro",
           });
         }
 
@@ -331,7 +411,7 @@ export const appRouter = router({
     list: adminProcedure.query(async () => {
       return await db.getAllUsers();
     }),
-    
+
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
@@ -346,27 +426,31 @@ export const appRouter = router({
     list: protectedProcedure.query(async () => {
       return await db.getAllProjectTypes();
     }),
-    
+
     create: adminProcedure
-      .input(z.object({
-        name: z.string().min(1),
-        description: z.string().optional(),
-        color: z.string().default("#FF6B35"),
-        estimatedDurationDays: z.number().default(30),
-      }))
+      .input(
+        z.object({
+          name: z.string().min(1),
+          description: z.string().optional(),
+          color: z.string().default("#FF6B35"),
+          estimatedDurationDays: z.number().default(30),
+        })
+      )
       .mutation(async ({ input }) => {
         return await db.createProjectType(input);
       }),
-    
+
     update: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        name: z.string().min(1).optional(),
-        description: z.string().optional(),
-        color: z.string().optional(),
-        estimatedDurationDays: z.number().optional(),
-        isActive: z.boolean().optional(),
-      }))
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().min(1).optional(),
+          description: z.string().optional(),
+          color: z.string().optional(),
+          estimatedDurationDays: z.number().optional(),
+          isActive: z.boolean().optional(),
+        })
+      )
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
         await db.updateProjectType(id, data);
@@ -380,139 +464,174 @@ export const appRouter = router({
   projects: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       // Administradores ven todos los proyectos, ingenieros solo los asignados
-      if (ctx.user.role === 'admin') {
+      if (ctx.user.role === "admin") {
         return await db.getAllProjects();
       } else {
         return await db.getProjectsByEngineerId(ctx.user.id);
       }
     }),
-    
+
     getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.id);
-        
+
         // Verificar permisos: admin puede ver todo, ingeniero solo sus proyectos
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para ver este proyecto' });
+
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para ver este proyecto",
+          });
         }
-        
+
         return project;
       }),
-    
+
     create: adminProcedure
-      .input(z.object({
-        name: z.string().min(1),
-        description: z.string().optional(),
-        projectTypeId: z.number(),
-        assignedEngineerId: z.number().optional(),
-        openSolarId: z.string().optional(),
-        startDate: z.date(),
-        estimatedEndDate: z.date(),
-        location: z.string().optional(),
-        clientName: z.string().optional(),
-        clientEmail: z.string().optional(),
-        clientPhone: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          name: z.string().min(1),
+          description: z.string().optional(),
+          projectTypeId: z.number(),
+          assignedEngineerId: z.number().optional(),
+          openSolarId: z.string().optional(),
+          startDate: z.date(),
+          estimatedEndDate: z.date(),
+          location: z.string().optional(),
+          clientName: z.string().optional(),
+          clientEmail: z.string().optional(),
+          clientPhone: z.string().optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         const result = await db.createProject({
           ...input,
           createdBy: ctx.user.id,
-          status: 'planning',
+          status: "planning",
           progressPercentage: 0,
         });
-        
+
         const projectId = Number((result as any).insertId || 0);
-        
+
         // Crear hitos desde plantillas
         if (projectId > 0) {
-          const templates = await db.getMilestoneTemplatesByProjectType(input.projectTypeId);
-          
+          const templates = await db.getMilestoneTemplatesByProjectType(
+            input.projectTypeId
+          );
+
           for (const template of templates) {
             const dueDate = new Date(input.startDate);
-            dueDate.setDate(dueDate.getDate() + (template.orderIndex * (template.estimatedDurationDays || 7)));
-            
+            dueDate.setDate(
+              dueDate.getDate() +
+                template.orderIndex * (template.estimatedDurationDays || 7)
+            );
+
             await db.createMilestone({
               projectId,
               name: template.name,
-              description: template.description || '',
+              description: template.description || "",
               dueDate,
-              status: 'pending',
+              status: "pending",
               orderIndex: template.orderIndex,
               weight: 1,
             });
           }
-          
+
           // Crear actualización de proyecto
           await db.createProjectUpdate({
             projectId,
-            updateType: 'status_change',
-            title: 'Proyecto creado',
+            updateType: "status_change",
+            title: "Proyecto creado",
             description: `El proyecto "${input.name}" ha sido creado con ${templates.length} hitos`,
             createdBy: ctx.user.id,
           });
         }
-        
+
         return { success: true, projectId };
       }),
-    
+
     update: protectedProcedure
-      .input(z.object({
-        id: z.number(),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        assignedEngineerId: z.number().optional(),
-        status: z.enum(['planning', 'in_progress', 'on_hold', 'completed', 'cancelled']).optional(),
-        progressPercentage: z.number().min(0).max(100).optional(),
-        actualEndDate: z.date().optional(),
-        location: z.string().optional(),
-        clientName: z.string().optional(),
-        clientEmail: z.string().optional(),
-        clientPhone: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().optional(),
+          description: z.string().optional(),
+          assignedEngineerId: z.number().optional(),
+          status: z
+            .enum([
+              "planning",
+              "in_progress",
+              "on_hold",
+              "completed",
+              "cancelled",
+            ])
+            .optional(),
+          progressPercentage: z.number().min(0).max(100).optional(),
+          actualEndDate: z.date().optional(),
+          location: z.string().optional(),
+          clientName: z.string().optional(),
+          clientEmail: z.string().optional(),
+          clientPhone: z.string().optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         const { id, ...data } = input;
         const project = await db.getProjectById(id);
-        
+
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Solo admin puede actualizar, o el ingeniero asignado puede actualizar ciertos campos
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para actualizar este proyecto' });
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para actualizar este proyecto",
+          });
         }
-        
+
         // Ingenieros no pueden cambiar asignación ni ciertos campos críticos
-        if (ctx.user.role !== 'admin') {
+        if (ctx.user.role !== "admin") {
           delete data.assignedEngineerId;
         }
-        
+
         await db.updateProject(id, data);
-        
+
         // Registrar actualización si cambió el estado
         if (data.status && data.status !== project.status) {
           await db.createProjectUpdate({
             projectId: id,
-            updateType: 'status_change',
-            title: 'Estado actualizado',
+            updateType: "status_change",
+            title: "Estado actualizado",
             description: `Estado cambiado de "${project.status}" a "${data.status}"`,
             oldValue: project.status,
             newValue: data.status,
             createdBy: ctx.user.id,
           });
         }
-        
+
         return { success: true };
       }),
-    
+
     stats: protectedProcedure.query(async ({ ctx }) => {
       // Estadísticas generales solo para admin
-      if (ctx.user.role === 'admin') {
+      if (ctx.user.role === "admin") {
         return await db.getProjectStats();
       } else {
         // Para ingenieros, calcular stats de sus proyectos
@@ -520,12 +639,13 @@ export const appRouter = router({
         const now = new Date();
         return {
           total: projects.length,
-          active: projects.filter(p => p.status === 'in_progress').length,
-          completed: projects.filter(p => p.status === 'completed').length,
-          overdue: projects.filter(p => 
-            p.status !== 'completed' && 
-            p.status !== 'cancelled' && 
-            p.estimatedEndDate < now
+          active: projects.filter(p => p.status === "in_progress").length,
+          completed: projects.filter(p => p.status === "completed").length,
+          overdue: projects.filter(
+            p =>
+              p.status !== "completed" &&
+              p.status !== "cancelled" &&
+              p.estimatedEndDate < now
           ).length,
         };
       }
@@ -539,40 +659,44 @@ export const appRouter = router({
     list: protectedProcedure.query(async () => {
       return await db.getAllMilestoneTemplates();
     }),
-    
+
     getByProjectType: protectedProcedure
       .input(z.object({ projectTypeId: z.number() }))
       .query(async ({ input }) => {
         return await db.getMilestoneTemplatesByProjectType(input.projectTypeId);
       }),
-    
+
     create: adminProcedure
-      .input(z.object({
-        projectTypeId: z.number(),
-        name: z.string().min(1),
-        description: z.string().optional(),
-        orderIndex: z.number(),
-        estimatedDurationDays: z.number().default(7),
-      }))
+      .input(
+        z.object({
+          projectTypeId: z.number(),
+          name: z.string().min(1),
+          description: z.string().optional(),
+          orderIndex: z.number(),
+          estimatedDurationDays: z.number().default(7),
+        })
+      )
       .mutation(async ({ input }) => {
         return await db.createMilestoneTemplate(input);
       }),
-    
+
     update: adminProcedure
-      .input(z.object({
-        id: z.number(),
-        name: z.string().min(1).optional(),
-        description: z.string().optional(),
-        orderIndex: z.number().optional(),
-        estimatedDurationDays: z.number().optional(),
-        isActive: z.boolean().optional(),
-      }))
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().min(1).optional(),
+          description: z.string().optional(),
+          orderIndex: z.number().optional(),
+          estimatedDurationDays: z.number().optional(),
+          isActive: z.boolean().optional(),
+        })
+      )
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
         await db.updateMilestoneTemplate(id, data);
         return { success: true };
       }),
-    
+
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
@@ -587,127 +711,166 @@ export const appRouter = router({
   milestones: router({
     getAll: protectedProcedure.query(async ({ ctx }) => {
       const allMilestones = await db.getAllMilestones();
-      
+
       // Si es ingeniero, filtrar solo los hitos de sus proyectos
-      if (ctx.user.role !== 'admin') {
+      if (ctx.user.role !== "admin") {
         const userProjects = await db.getProjectsByEngineerId(ctx.user.id);
         const userProjectIds = userProjects.map(p => p.id);
         return allMilestones.filter(m => userProjectIds.includes(m.projectId));
       }
-      
+
       return allMilestones;
     }),
-    
+
     getByProject: protectedProcedure
       .input(z.object({ projectId: z.number() }))
       .query(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Verificar permisos
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para ver estos hitos' });
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para ver estos hitos",
+          });
         }
-        
+
         return await db.getMilestonesByProjectId(input.projectId);
       }),
-    
+
     create: protectedProcedure
-      .input(z.object({
-        projectId: z.number(),
-        name: z.string().min(1),
-        description: z.string().optional(),
-        dueDate: z.date(),
-        orderIndex: z.number(),
-        weight: z.number().default(1),
-        dependencies: z.array(z.number()).optional(),
-      }))
+      .input(
+        z.object({
+          projectId: z.number(),
+          name: z.string().min(1),
+          description: z.string().optional(),
+          dueDate: z.date(),
+          orderIndex: z.number(),
+          weight: z.number().default(1),
+          dependencies: z.array(z.number()).optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Solo admin o ingeniero asignado pueden crear hitos
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para crear hitos en este proyecto' });
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para crear hitos en este proyecto",
+          });
         }
-        
+
         // Validar y convertir dependencias
         const { dependencies, ...restInput } = input;
-        const dependenciesJson = dependencies && dependencies.length > 0 
-          ? JSON.stringify(dependencies) 
-          : null;
-        
+        const dependenciesJson =
+          dependencies && dependencies.length > 0
+            ? JSON.stringify(dependencies)
+            : null;
+
         const result = await db.createMilestone({
           ...restInput,
-          status: 'pending',
+          status: "pending",
           dependencies: dependenciesJson,
         });
-        
+
         // Sincronizar con Google Calendar
         const milestoneId = Number((result as any).insertId || 0);
         if (milestoneId > 0) {
           try {
-            const { createCalendarEvent, toRFC3339, createEndDate } = await import('./googleCalendar');
+            const { createCalendarEvent, toRFC3339, createEndDate } =
+              await import("./googleCalendar");
             const eventId = await createCalendarEvent({
               summary: `📅 ${project.name} - ${input.name}`,
-              description: input.description || `Hito del proyecto ${project.name}`,
+              description:
+                input.description || `Hito del proyecto ${project.name}`,
               start_time: toRFC3339(input.dueDate),
               end_time: toRFC3339(createEndDate(input.dueDate)),
               location: project.location || undefined,
               reminders: [1440, 60], // 1 día antes y 1 hora antes
             });
-            
+
             if (eventId) {
-              await db.updateMilestone(milestoneId, { googleCalendarEventId: eventId });
+              await db.updateMilestone(milestoneId, {
+                googleCalendarEventId: eventId,
+              });
             }
           } catch (error) {
-            console.error('[Milestone] Error syncing with Google Calendar:', error);
+            console.error(
+              "[Milestone] Error syncing with Google Calendar:",
+              error
+            );
             // No fallar la creación del hito si falla la sincronización
           }
         }
-        
+
         return result;
       }),
-    
+
     update: protectedProcedure
-      .input(z.object({
-        id: z.number(),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        status: z.enum(['pending', 'in_progress', 'completed', 'overdue']).optional(),
-        completedDate: z.date().optional(),
-        notes: z.string().optional(),
-        dependencies: z.array(z.number()).optional(),
-      }))
+      .input(
+        z.object({
+          id: z.number(),
+          name: z.string().optional(),
+          description: z.string().optional(),
+          status: z
+            .enum(["pending", "in_progress", "completed", "overdue"])
+            .optional(),
+          completedDate: z.date().optional(),
+          notes: z.string().optional(),
+          dependencies: z.array(z.number()).optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         const { id, dependencies, ...data } = input;
-        
+
         // Convertir dependencias a JSON si están presentes
         const updateData: any = { ...data };
         if (dependencies !== undefined) {
-          updateData.dependencies = dependencies.length > 0 ? JSON.stringify(dependencies) : null;
+          updateData.dependencies =
+            dependencies.length > 0 ? JSON.stringify(dependencies) : null;
         }
-        
+
         // Obtener el hito para saber su projectId
         const milestone = await db.getMilestoneById(id);
         if (!milestone) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Hito no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Hito no encontrado",
+          });
         }
-        
+
         await db.updateMilestone(id, updateData);
-        
+
         // Sincronizar con Google Calendar si hay cambios relevantes
-        if (milestone.googleCalendarEventId && (data.name || data.description)) {
+        if (
+          milestone.googleCalendarEventId &&
+          (data.name || data.description)
+        ) {
           try {
-            const { updateCalendarEvent } = await import('./googleCalendar');
+            const { updateCalendarEvent } = await import("./googleCalendar");
             const updatePayload: any = {
               event_id: milestone.googleCalendarEventId,
             };
-            
+
             if (data.name) {
               const project = await db.getProjectById(milestone.projectId);
               updatePayload.summary = `📅 ${project?.name} - ${data.name}`;
@@ -715,41 +878,48 @@ export const appRouter = router({
             if (data.description) {
               updatePayload.description = data.description;
             }
-            
+
             await updateCalendarEvent(updatePayload);
           } catch (error) {
-            console.error('[Milestone] Error syncing update with Google Calendar:', error);
+            console.error(
+              "[Milestone] Error syncing update with Google Calendar:",
+              error
+            );
           }
         }
-        
+
         // Recalcular progreso del proyecto
-        const { recalculateProjectProgress } = await import('./progressCalculator');
+        const { recalculateProjectProgress } = await import(
+          "./progressCalculator"
+        );
         await recalculateProjectProgress(milestone.projectId);
-        
+
         // Si se completó el hito, crear actualización
-        if (data.status === 'completed') {
+        if (data.status === "completed") {
           await db.createProjectUpdate({
             projectId: milestone.projectId,
-            updateType: 'milestone_completed',
-            title: 'Hito completado',
+            updateType: "milestone_completed",
+            title: "Hito completado",
             description: `El hito "${milestone.name}" ha sido marcado como completado`,
             createdBy: ctx.user.id,
           });
         }
-        
+
         return { success: true, projectId: milestone.projectId };
       }),
-    
+
     overdue: protectedProcedure.query(async ({ ctx }) => {
       const overdueMilestones = await db.getOverdueMilestones();
-      
+
       // Filtrar por permisos si es ingeniero
-      if (ctx.user.role !== 'admin') {
+      if (ctx.user.role !== "admin") {
         const userProjects = await db.getProjectsByEngineerId(ctx.user.id);
         const userProjectIds = userProjects.map(p => p.id);
-        return overdueMilestones.filter(m => userProjectIds.includes(m.projectId));
+        return overdueMilestones.filter(m =>
+          userProjectIds.includes(m.projectId)
+        );
       }
-      
+
       return overdueMilestones;
     }),
   }),
@@ -761,20 +931,29 @@ export const appRouter = router({
     list: protectedProcedure.query(async ({ ctx }) => {
       return await db.getRemindersByUserId(ctx.user.id);
     }),
-    
+
     unread: protectedProcedure.query(async ({ ctx }) => {
       return await db.getUnreadRemindersByUserId(ctx.user.id);
     }),
-    
+
     create: protectedProcedure
-      .input(z.object({
-        projectId: z.number(),
-        milestoneId: z.number().optional(),
-        title: z.string().min(1),
-        message: z.string().optional(),
-        reminderDate: z.date(),
-        type: z.enum(['milestone_due', 'project_overdue', 'custom', 'sync_required']).default('custom'),
-      }))
+      .input(
+        z.object({
+          projectId: z.number(),
+          milestoneId: z.number().optional(),
+          title: z.string().min(1),
+          message: z.string().optional(),
+          reminderDate: z.date(),
+          type: z
+            .enum([
+              "milestone_due",
+              "project_overdue",
+              "custom",
+              "sync_required",
+            ])
+            .default("custom"),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         return await db.createReminder({
           ...input,
@@ -783,7 +962,7 @@ export const appRouter = router({
           isSent: false,
         });
       }),
-    
+
     markAsRead: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
@@ -800,7 +979,7 @@ export const appRouter = router({
     analyzeProjects: protectedProcedure.query(async ({ ctx }) => {
       const projects = await db.getAllProjects();
       const stats = await db.getProjectStats();
-      
+
       // Preparar contexto para el LLM
       const context = `
 Análisis de Proyectos Solares - GreenH Project
@@ -812,7 +991,9 @@ Estadísticas Generales:
 - Proyectos con retraso: ${stats.overdue}
 
 Proyectos:
-${projects.map(p => `
+${projects
+  .map(
+    p => `
 - ${p.name} (${p.location})
   Estado: ${p.status}
   Estado: ${p.status}
@@ -820,7 +1001,9 @@ ${projects.map(p => `
   Ingeniero: ${p.assignedEngineerId}
   Fecha inicio: ${p.startDate}
   Fecha fin estimada: ${p.estimatedEndDate}
-`).join('')}
+`
+  )
+  .join("")}
 
 Por favor, proporciona:
 1. Un análisis general del estado de los proyectos
@@ -831,22 +1014,25 @@ Por favor, proporciona:
 `;
 
       const { invokeLLM } = await import("./_core/llm");
-      
+
       const response = await invokeLLM({
         messages: [
           {
             role: "system",
-            content: "Eres un asistente experto en gestión de proyectos solares. Analiza los datos proporcionados y ofrece insights valiosos, detecta problemas y sugiere mejoras concretas. Responde en español de forma profesional y estructurada."
+            content:
+              "Eres un asistente experto en gestión de proyectos solares. Analiza los datos proporcionados y ofrece insights valiosos, detecta problemas y sugiere mejoras concretas. Responde en español de forma profesional y estructurada.",
           },
           {
             role: "user",
-            content: context
-          }
-        ]
+            content: context,
+          },
+        ],
       });
 
       return {
-        analysis: response.choices[0]?.message?.content || "No se pudo generar el análisis"
+        analysis:
+          response.choices[0]?.message?.content ||
+          "No se pudo generar el análisis",
       };
     }),
 
@@ -856,33 +1042,36 @@ Por favor, proporciona:
       .mutation(async ({ input, ctx }) => {
         const projects = await db.getAllProjects();
         const stats = await db.getProjectStats();
-        
+
         const context = `
 Contexto de Proyectos Solares:
 - Total: ${stats.total}, Activos: ${stats.active}, Completados: ${stats.completed}, Retrasados: ${stats.overdue}
 
-Proyectos: ${projects.map(p => `${p.name} (${p.status})`).join(', ')}
+Proyectos: ${projects.map(p => `${p.name} (${p.status})`).join(", ")}
 
 Pregunta del usuario: ${input.question}
 `;
 
         const { invokeLLM } = await import("./_core/llm");
-        
+
         const response = await invokeLLM({
           messages: [
             {
               role: "system",
-              content: "Eres un asistente experto en gestión de proyectos solares de GreenH Project. Responde preguntas de forma clara, concisa y profesional en español. Usa los datos proporcionados para dar respuestas precisas."
+              content:
+                "Eres un asistente experto en gestión de proyectos solares de GreenH Project. Responde preguntas de forma clara, concisa y profesional en español. Usa los datos proporcionados para dar respuestas precisas.",
             },
             {
               role: "user",
-              content: context
-            }
-          ]
+              content: context,
+            },
+          ],
         });
 
         return {
-          answer: response.choices[0]?.message?.content || "No se pudo generar una respuesta"
+          answer:
+            response.choices[0]?.message?.content ||
+            "No se pudo generar una respuesta",
         };
       }),
   }),
@@ -895,40 +1084,47 @@ Pregunta del usuario: ${input.question}
     checkConnection: adminProcedure.query(async () => {
       return await checkOpenSolarConnection();
     }),
-    
+
     // Obtener datos de proyecto desde OpenSolar para auto-completar formulario
     getProjectData: adminProcedure
       .input(z.object({ openSolarId: z.string() }))
       .query(async ({ input }) => {
         const client = getOpenSolarClient();
         const result = await client.getProject(input.openSolarId);
-        
+
         if (!result.success) {
-          throw new TRPCError({ 
-            code: 'INTERNAL_SERVER_ERROR', 
-            message: result.message || 'Error al obtener datos de OpenSolar' 
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: result.message || "Error al obtener datos de OpenSolar",
           });
         }
-        
+
         // Mapear datos de OpenSolar a formato del formulario
         const projectData = result.data;
-        
+
         // Generar resumen de equipos
-        let equipmentSummary = '';
+        let equipmentSummary = "";
         if (projectData.equipment || projectData.components) {
-          const equipment = projectData.equipment || projectData.components || [];
-          equipmentSummary = equipment.map((item: any) => 
-            `${item.quantity || 1}x ${item.name || item.model || 'Equipo'}`
-          ).join(', ');
+          const equipment =
+            projectData.equipment || projectData.components || [];
+          equipmentSummary = equipment
+            .map(
+              (item: any) =>
+                `${item.quantity || 1}x ${item.name || item.model || "Equipo"}`
+            )
+            .join(", ");
         }
-        
+
         return {
-          name: projectData.name || projectData.title || '',
-          clientName: projectData.customer?.name || projectData.clientName || '',
-          clientEmail: projectData.customer?.email || projectData.clientEmail || '',
-          clientPhone: projectData.customer?.phone || projectData.clientPhone || '',
-          description: equipmentSummary || projectData.description || '',
-          location: projectData.address || projectData.location || '',
+          name: projectData.name || projectData.title || "",
+          clientName:
+            projectData.customer?.name || projectData.clientName || "",
+          clientEmail:
+            projectData.customer?.email || projectData.clientEmail || "",
+          clientPhone:
+            projectData.customer?.phone || projectData.clientPhone || "",
+          description: equipmentSummary || projectData.description || "",
+          location: projectData.address || projectData.location || "",
         };
       }),
 
@@ -938,33 +1134,38 @@ Pregunta del usuario: ${input.question}
       .mutation(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
 
         if (!project.openSolarId) {
-          throw new TRPCError({ 
-            code: 'BAD_REQUEST', 
-            message: 'Este proyecto no tiene un ID de OpenSolar asociado' 
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Este proyecto no tiene un ID de OpenSolar asociado",
           });
         }
 
         const client = getOpenSolarClient();
-        const result = await client.syncProjectFromOpenSolar(project.openSolarId);
+        const result = await client.syncProjectFromOpenSolar(
+          project.openSolarId
+        );
 
         // Registrar log de sincronización
         await db.createSyncLog({
           projectId: input.projectId,
           syncedBy: ctx.user.id,
-          syncType: 'manual',
-          status: result.success ? 'success' : 'failed',
+          syncType: "manual",
+          status: result.success ? "success" : "failed",
           message: result.message,
           errorDetails: result.error,
         });
 
         if (!result.success) {
-          throw new TRPCError({ 
-            code: 'INTERNAL_SERVER_ERROR', 
-            message: result.message || 'Error al sincronizar con OpenSolar' 
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: result.message || "Error al sincronizar con OpenSolar",
           });
         }
 
@@ -973,7 +1174,7 @@ Pregunta del usuario: ${input.question}
           await db.updateProject(input.projectId, result.data);
         }
 
-        return { success: true, message: 'Proyecto sincronizado exitosamente' };
+        return { success: true, message: "Proyecto sincronizado exitosamente" };
       }),
 
     // Obtener logs de sincronización
@@ -982,23 +1183,25 @@ Pregunta del usuario: ${input.question}
       .query(async ({ input }) => {
         return await db.getSyncLogsByProjectId(input.projectId);
       }),
-    
+
     recent: adminProcedure
       .input(z.object({ limit: z.number().default(10) }))
       .query(async ({ input }) => {
         return await db.getRecentSyncLogs(input.limit);
       }),
-    
+
     createLog: protectedProcedure
-      .input(z.object({
-        projectId: z.number(),
-        syncType: z.enum(['manual', 'automatic', 'scheduled']),
-        direction: z.enum(['import', 'export', 'bidirectional']),
-        status: z.enum(['success', 'partial', 'failed']),
-        message: z.string().optional(),
-        errorDetails: z.string().optional(),
-        dataSynced: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          projectId: z.number(),
+          syncType: z.enum(["manual", "automatic", "scheduled"]),
+          direction: z.enum(["import", "export", "bidirectional"]),
+          status: z.enum(["success", "partial", "failed"]),
+          message: z.string().optional(),
+          errorDetails: z.string().optional(),
+          dataSynced: z.string().optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         return await db.createSyncLog({
           ...input,
@@ -1016,46 +1219,68 @@ Pregunta del usuario: ${input.question}
       .mutation(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Verificar permisos
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para generar reportes de este proyecto' });
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para generar reportes de este proyecto",
+          });
         }
-        
+
         const milestones = await db.getMilestonesByProjectId(input.projectId);
-        const projectType = project.projectTypeId ? await db.getProjectTypeById(project.projectTypeId) : undefined;
-        const assignedEngineer = project.assignedEngineerId ? await db.getUserById(project.assignedEngineerId) : undefined;
-        
+        const projectType = project.projectTypeId
+          ? await db.getProjectTypeById(project.projectTypeId)
+          : undefined;
+        const assignedEngineer = project.assignedEngineerId
+          ? await db.getUserById(project.assignedEngineerId)
+          : undefined;
+
         const pdfBuffer = await generateProjectReport({
           project,
           milestones,
           projectType,
           assignedEngineer,
         });
-        
+
         // Convertir buffer a base64 para enviar al cliente
-        const pdfBase64 = pdfBuffer.toString('base64');
-        return { pdfBase64, fileName: `proyecto-${project.name.replace(/\s+/g, '-').toLowerCase()}.pdf` };
+        const pdfBase64 = pdfBuffer.toString("base64");
+        return {
+          pdfBase64,
+          fileName: `proyecto-${project.name.replace(/\s+/g, "-").toLowerCase()}.pdf`,
+        };
       }),
-    
+
     generateCustomReport: protectedProcedure
-      .input(z.object({
-        projectIds: z.array(z.number()),
-        metrics: z.array(z.string()),
-        dateRange: z.string(),
-      }))
+      .input(
+        z.object({
+          projectIds: z.array(z.number()),
+          metrics: z.array(z.string()),
+          dateRange: z.string(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden generar reportes personalizados' });
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message:
+              "Solo administradores pueden generar reportes personalizados",
+          });
         }
-        
-        const fileName = `reporte-personalizado-${new Date().toISOString().split('T')[0]}.pdf`;
-        
-        return { 
+
+        const fileName = `reporte-personalizado-${new Date().toISOString().split("T")[0]}.pdf`;
+
+        return {
           url: `data:application/pdf;base64,placeholder`,
-          fileName 
+          fileName,
         };
       }),
   }),
@@ -1069,15 +1294,15 @@ Pregunta del usuario: ${input.question}
       .query(async ({ input }) => {
         return await getMonthlyMetrics(input.months);
       }),
-    
+
     completionRate: protectedProcedure.query(async () => {
       return await getCompletionRate();
     }),
-    
+
     averageTime: protectedProcedure.query(async () => {
       return await getAverageCompletionTime();
     }),
-    
+
     distribution: protectedProcedure.query(async () => {
       return await getProjectDistributionByType();
     }),
@@ -1089,80 +1314,112 @@ Pregunta del usuario: ${input.question}
   attachments: router({
     // Subir archivo adjunto
     upload: protectedProcedure
-      .input(z.object({
-        projectId: z.number(),
-        fileName: z.string(),
-        fileKey: z.string(),
-        fileData: z.string(), // base64 encoded file
-        fileSize: z.number(),
-        mimeType: z.string(),
-        category: z.enum(["technical", "legal", "financial", "other"]),
-        description: z.string().optional(),
-      }))
+      .input(
+        z.object({
+          projectId: z.number(),
+          fileName: z.string(),
+          fileKey: z.string(),
+          fileData: z.string(), // base64 encoded file
+          fileSize: z.number(),
+          mimeType: z.string(),
+          category: z.enum(["technical", "legal", "financial", "other"]),
+          description: z.string().optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         const { fileData, fileKey, ...rest } = input;
-        
+
         const project = await db.getProjectById(input.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Verificar permisos
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para subir archivos a este proyecto' });
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para subir archivos a este proyecto",
+          });
         }
-        
+
         // Convertir base64 a buffer y subir a S3
-        const buffer = Buffer.from(fileData, 'base64');
-        const { storagePut } = await import('./storage');
+        const buffer = Buffer.from(fileData, "base64");
+        const { storagePut } = await import("./storage");
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
-        
+
         const attachmentId = await db.createProjectAttachment({
           ...rest,
           fileKey,
           fileUrl: url,
           uploadedBy: ctx.user.id,
         });
-        
+
         return { id: attachmentId, success: true };
       }),
-    
+
     // Listar archivos de un proyecto
     list: protectedProcedure
       .input(z.object({ projectId: z.number() }))
       .query(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Verificar permisos
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para ver archivos de este proyecto' });
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para ver archivos de este proyecto",
+          });
         }
-        
+
         return await db.getProjectAttachments(input.projectId);
       }),
-    
+
     // Eliminar archivo adjunto
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         const attachment = await db.getProjectAttachmentById(input.id);
         if (!attachment) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Archivo no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Archivo no encontrado",
+          });
         }
-        
+
         const project = await db.getProjectById(attachment.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Verificar permisos (solo admin o quien lo subió)
-        if (ctx.user.role !== 'admin' && attachment.uploadedBy !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para eliminar este archivo' });
+        if (
+          ctx.user.role !== "admin" &&
+          attachment.uploadedBy !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para eliminar este archivo",
+          });
         }
-        
+
         await db.deleteProjectAttachment(input.id);
         return { success: true };
       }),
@@ -1174,12 +1431,18 @@ Pregunta del usuario: ${input.question}
   notifications: router({
     // Obtener notificaciones del usuario actual
     getUserNotifications: protectedProcedure
-      .input(z.object({ 
-        limit: z.number().optional().default(50),
-        unreadOnly: z.boolean().optional().default(false)
-      }))
+      .input(
+        z.object({
+          limit: z.number().optional().default(50),
+          unreadOnly: z.boolean().optional().default(false),
+        })
+      )
       .query(async ({ input, ctx }) => {
-        return await db.getUserNotifications(ctx.user.id, input.limit, input.unreadOnly);
+        return await db.getUserNotifications(
+          ctx.user.id,
+          input.limit,
+          input.unreadOnly
+        );
       }),
 
     // Marcar notificación como leída
@@ -1188,24 +1451,29 @@ Pregunta del usuario: ${input.question}
       .mutation(async ({ input, ctx }) => {
         const notification = await db.getNotificationById(input.id);
         if (!notification) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Notificación no encontrada' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Notificación no encontrada",
+          });
         }
-        
+
         // Verificar que la notificación pertenece al usuario
         if (notification.userId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para modificar esta notificación' });
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para modificar esta notificación",
+          });
         }
-        
+
         await db.markNotificationAsRead(input.id);
         return { success: true };
       }),
 
     // Marcar todas como leídas
-    markAllAsRead: protectedProcedure
-      .mutation(async ({ ctx }) => {
-        await db.markAllNotificationsAsRead(ctx.user.id);
-        return { success: true };
-      }),
+    markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.markAllNotificationsAsRead(ctx.user.id);
+      return { success: true };
+    }),
 
     // Eliminar notificación
     delete: protectedProcedure
@@ -1213,54 +1481,69 @@ Pregunta del usuario: ${input.question}
       .mutation(async ({ input, ctx }) => {
         const notification = await db.getNotificationById(input.id);
         if (!notification) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Notificación no encontrada' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Notificación no encontrada",
+          });
         }
-        
+
         // Verificar que la notificación pertenece al usuario
         if (notification.userId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para eliminar esta notificación' });
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para eliminar esta notificación",
+          });
         }
-        
+
         await db.deleteNotification(input.id);
         return { success: true };
       }),
 
     // Obtener configuración de notificaciones
-    getSettings: protectedProcedure
-      .query(async ({ ctx }) => {
-        return await db.getUserNotificationSettings(ctx.user.id);
-      }),
+    getSettings: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserNotificationSettings(ctx.user.id);
+    }),
 
     // Actualizar configuración de notificaciones
     updateSettings: protectedProcedure
-      .input(z.object({
-        enablePushNotifications: z.boolean().optional(),
-        enableMilestoneReminders: z.boolean().optional(),
-        enableDelayAlerts: z.boolean().optional(),
-        enableAIAlerts: z.boolean().optional(),
-        milestoneReminderDays: z.number().min(1).max(30).optional(),
-      }))
+      .input(
+        z.object({
+          enablePushNotifications: z.boolean().optional(),
+          enableMilestoneReminders: z.boolean().optional(),
+          enableDelayAlerts: z.boolean().optional(),
+          enableAIAlerts: z.boolean().optional(),
+          milestoneReminderDays: z.number().min(1).max(30).optional(),
+        })
+      )
       .mutation(async ({ input, ctx }) => {
         return await db.updateNotificationSettings(ctx.user.id, input);
       }),
 
     // Verificar y crear notificaciones automáticas (hitos próximos y vencidos)
-    checkAndCreateAutoNotifications: protectedProcedure
-      .mutation(async ({ ctx }) => {
+    checkAndCreateAutoNotifications: protectedProcedure.mutation(
+      async ({ ctx }) => {
         // Solo administradores pueden ejecutar esto manualmente
-        if (ctx.user.role !== 'admin') {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Solo administradores pueden ejecutar esta acción' });
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Solo administradores pueden ejecutar esta acción",
+          });
         }
 
-        const { getUpcomingMilestones, getOverdueMilestones, createMilestoneDueSoonNotification, createMilestoneOverdueNotification } = await import('./db');
-        
+        const {
+          getUpcomingMilestones,
+          getOverdueMilestones,
+          createMilestoneDueSoonNotification,
+          createMilestoneOverdueNotification,
+        } = await import("./db");
+
         let upcomingCount = 0;
         let overdueCount = 0;
 
         try {
           // Obtener hitos próximos a vencer (2 días)
           const upcomingMilestones = await getUpcomingMilestones(2);
-          
+
           for (const milestone of upcomingMilestones) {
             if (milestone.assignedEngineerId) {
               await createMilestoneDueSoonNotification(
@@ -1274,10 +1557,10 @@ Pregunta del usuario: ${input.question}
               upcomingCount++;
             }
           }
-          
+
           // Obtener hitos vencidos
           const overdueMilestones = await getOverdueMilestones();
-          
+
           for (const milestone of overdueMilestones) {
             if (milestone.assignedEngineerId) {
               await createMilestoneOverdueNotification(
@@ -1291,21 +1574,22 @@ Pregunta del usuario: ${input.question}
               overdueCount++;
             }
           }
-          
+
           return {
             success: true,
             upcomingCount,
             overdueCount,
-            message: `Se crearon ${upcomingCount} notificaciones de hitos próximos y ${overdueCount} de hitos vencidos`
+            message: `Se crearon ${upcomingCount} notificaciones de hitos próximos y ${overdueCount} de hitos vencidos`,
           };
         } catch (error) {
-          console.error('Error al crear notificaciones automáticas:', error);
-          throw new TRPCError({ 
-            code: 'INTERNAL_SERVER_ERROR', 
-            message: 'Error al crear notificaciones automáticas' 
+          console.error("Error al crear notificaciones automáticas:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al crear notificaciones automáticas",
           });
         }
-      }),
+      }
+    ),
   }),
 
   // ============================================
@@ -1317,14 +1601,23 @@ Pregunta del usuario: ${input.question}
       .query(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Proyecto no encontrado' });
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
         }
-        
+
         // Verificar permisos
-        if (ctx.user.role !== 'admin' && project.assignedEngineerId !== ctx.user.id) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'No tienes permiso para ver este historial' });
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para ver este historial",
+          });
         }
-        
+
         return await db.getProjectUpdatesByProjectId(input.projectId);
       }),
   }),

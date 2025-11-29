@@ -1,11 +1,25 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, FolderKanban, ListTodo } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,15 +38,19 @@ export function SystemConfiguration() {
   // Estados para plantillas de hitos
   const [templateDialog, setTemplateDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<any>(null);
-  const [templateProjectType, setTemplateProjectType] = useState<number | null>(null);
+  const [templateProjectType, setTemplateProjectType] = useState<number | null>(
+    null
+  );
   const [templateName, setTemplateName] = useState("");
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateOrder, setTemplateOrder] = useState(1);
   const [templateDuration, setTemplateDuration] = useState(7);
 
   // Queries
-  const { data: projectTypes = [], isLoading: loadingTypes } = trpc.projectTypes.list.useQuery();
-  const { data: milestoneTemplates = [], isLoading: loadingTemplates } = trpc.milestoneTemplates.list.useQuery();
+  const { data: projectTypes = [], isLoading: loadingTypes } =
+    trpc.projectTypes.list.useQuery();
+  const { data: milestoneTemplates = [], isLoading: loadingTemplates } =
+    trpc.milestoneTemplates.list.useQuery();
 
   // Mutations para tipos de proyectos
   const createProjectType = trpc.projectTypes.create.useMutation({
@@ -42,7 +60,7 @@ export function SystemConfiguration() {
       resetProjectTypeForm();
       toast.success("Tipo de proyecto creado exitosamente");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
@@ -54,7 +72,7 @@ export function SystemConfiguration() {
       resetProjectTypeForm();
       toast.success("Tipo de proyecto actualizado exitosamente");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
@@ -67,7 +85,7 @@ export function SystemConfiguration() {
       resetTemplateForm();
       toast.success("Plantilla de hito creada exitosamente");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
@@ -79,7 +97,7 @@ export function SystemConfiguration() {
       resetTemplateForm();
       toast.success("Plantilla de hito actualizada exitosamente");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
@@ -89,7 +107,7 @@ export function SystemConfiguration() {
       utils.milestoneTemplates.list.invalidate();
       toast.success("Plantilla de hito eliminada exitosamente");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message);
     },
   });
@@ -211,10 +229,14 @@ export function SystemConfiguration() {
                 <div>
                   <CardTitle>Tipos de Proyectos</CardTitle>
                   <CardDescription>
-                    Define las categorías de proyectos solares que tu equipo gestiona
+                    Define las categorías de proyectos solares que tu equipo
+                    gestiona
                   </CardDescription>
                 </div>
-                <Dialog open={projectTypeDialog} onOpenChange={setProjectTypeDialog}>
+                <Dialog
+                  open={projectTypeDialog}
+                  onOpenChange={setProjectTypeDialog}
+                >
                   <DialogTrigger asChild>
                     <Button onClick={resetProjectTypeForm}>
                       <Plus className="w-4 h-4 mr-2" />
@@ -224,7 +246,9 @@ export function SystemConfiguration() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>
-                        {editingProjectType ? "Editar Tipo de Proyecto" : "Nuevo Tipo de Proyecto"}
+                        {editingProjectType
+                          ? "Editar Tipo de Proyecto"
+                          : "Nuevo Tipo de Proyecto"}
                       </DialogTitle>
                       <DialogDescription>
                         Define las características del tipo de proyecto
@@ -236,7 +260,7 @@ export function SystemConfiguration() {
                         <Input
                           id="pt-name"
                           value={projectTypeName}
-                          onChange={(e) => setProjectTypeName(e.target.value)}
+                          onChange={e => setProjectTypeName(e.target.value)}
                           placeholder="ej: Residencial, Comercial, Industrial"
                         />
                       </div>
@@ -245,7 +269,9 @@ export function SystemConfiguration() {
                         <Textarea
                           id="pt-description"
                           value={projectTypeDescription}
-                          onChange={(e) => setProjectTypeDescription(e.target.value)}
+                          onChange={e =>
+                            setProjectTypeDescription(e.target.value)
+                          }
                           placeholder="Describe este tipo de proyecto..."
                           rows={3}
                         />
@@ -257,23 +283,30 @@ export function SystemConfiguration() {
                             id="pt-color"
                             type="color"
                             value={projectTypeColor}
-                            onChange={(e) => setProjectTypeColor(e.target.value)}
+                            onChange={e => setProjectTypeColor(e.target.value)}
                           />
                         </div>
                         <div>
-                          <Label htmlFor="pt-duration">Duración estimada (días)</Label>
+                          <Label htmlFor="pt-duration">
+                            Duración estimada (días)
+                          </Label>
                           <Input
                             id="pt-duration"
                             type="number"
                             value={projectTypeDuration}
-                            onChange={(e) => setProjectTypeDuration(Number(e.target.value))}
+                            onChange={e =>
+                              setProjectTypeDuration(Number(e.target.value))
+                            }
                             min={1}
                           />
                         </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setProjectTypeDialog(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setProjectTypeDialog(false)}
+                      >
                         Cancelar
                       </Button>
                       <Button onClick={handleSaveProjectType}>
@@ -345,20 +378,27 @@ export function SystemConfiguration() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>
-                        {editingTemplate ? "Editar Plantilla de Hito" : "Nueva Plantilla de Hito"}
+                        {editingTemplate
+                          ? "Editar Plantilla de Hito"
+                          : "Nueva Plantilla de Hito"}
                       </DialogTitle>
                       <DialogDescription>
-                        Define un hito que se agregará automáticamente a nuevos proyectos
+                        Define un hito que se agregará automáticamente a nuevos
+                        proyectos
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="t-project-type">Tipo de Proyecto *</Label>
+                        <Label htmlFor="t-project-type">
+                          Tipo de Proyecto *
+                        </Label>
                         <select
                           id="t-project-type"
                           className="w-full p-2 border rounded-md"
                           value={templateProjectType || ""}
-                          onChange={(e) => setTemplateProjectType(Number(e.target.value))}
+                          onChange={e =>
+                            setTemplateProjectType(Number(e.target.value))
+                          }
                           disabled={!!editingTemplate}
                         >
                           <option value="">Seleccionar tipo...</option>
@@ -374,7 +414,7 @@ export function SystemConfiguration() {
                         <Input
                           id="t-name"
                           value={templateName}
-                          onChange={(e) => setTemplateName(e.target.value)}
+                          onChange={e => setTemplateName(e.target.value)}
                           placeholder="ej: Visita técnica, Instalación de paneles"
                         />
                       </div>
@@ -383,7 +423,7 @@ export function SystemConfiguration() {
                         <Textarea
                           id="t-description"
                           value={templateDescription}
-                          onChange={(e) => setTemplateDescription(e.target.value)}
+                          onChange={e => setTemplateDescription(e.target.value)}
                           placeholder="Describe este hito..."
                           rows={3}
                         />
@@ -395,7 +435,9 @@ export function SystemConfiguration() {
                             id="t-order"
                             type="number"
                             value={templateOrder}
-                            onChange={(e) => setTemplateOrder(Number(e.target.value))}
+                            onChange={e =>
+                              setTemplateOrder(Number(e.target.value))
+                            }
                             min={1}
                           />
                         </div>
@@ -405,14 +447,19 @@ export function SystemConfiguration() {
                             id="t-duration"
                             type="number"
                             value={templateDuration}
-                            onChange={(e) => setTemplateDuration(Number(e.target.value))}
+                            onChange={e =>
+                              setTemplateDuration(Number(e.target.value))
+                            }
                             min={1}
                           />
                         </div>
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline" onClick={() => setTemplateDialog(false)}>
+                      <Button
+                        variant="outline"
+                        onClick={() => setTemplateDialog(false)}
+                      >
                         Cancelar
                       </Button>
                       <Button onClick={handleSaveTemplate}>
@@ -429,7 +476,7 @@ export function SystemConfiguration() {
                   const templates = milestoneTemplates.filter(
                     (t: any) => t.projectTypeId === type.id && t.isActive
                   );
-                  
+
                   return (
                     <div key={type.id} className="border rounded-lg p-4">
                       <h4 className="font-medium mb-3 flex items-center gap-2">
@@ -451,7 +498,8 @@ export function SystemConfiguration() {
                                   {template.orderIndex}. {template.name}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  {template.description || "Sin descripción"} • {template.estimatedDurationDays} días
+                                  {template.description || "Sin descripción"} •{" "}
+                                  {template.estimatedDurationDays} días
                                 </p>
                               </div>
                               <div className="flex gap-1">
@@ -465,7 +513,9 @@ export function SystemConfiguration() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() => handleDeleteTemplate(template.id)}
+                                  onClick={() =>
+                                    handleDeleteTemplate(template.id)
+                                  }
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>

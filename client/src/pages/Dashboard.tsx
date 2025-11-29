@@ -1,19 +1,25 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Sun, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle2, 
+import {
+  Sun,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
   AlertTriangle,
   Plus,
   ArrowRight,
   Calendar,
-  Users
+  Users,
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -21,8 +27,10 @@ import { es } from "date-fns/locale";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
-  const { data: stats, isLoading: statsLoading } = trpc.projects.stats.useQuery();
-  const { data: projects, isLoading: projectsLoading } = trpc.projects.list.useQuery();
+  const { data: stats, isLoading: statsLoading } =
+    trpc.projects.stats.useQuery();
+  const { data: projects, isLoading: projectsLoading } =
+    trpc.projects.list.useQuery();
   const { data: reminders } = trpc.reminders.unread.useQuery();
 
   if (!isAuthenticated || !user) {
@@ -31,7 +39,9 @@ export default function Dashboard() {
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Acceso Restringido</CardTitle>
-            <CardDescription>Debes iniciar sesión para acceder al dashboard</CardDescription>
+            <CardDescription>
+              Debes iniciar sesión para acceder al dashboard
+            </CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -46,13 +56,19 @@ export default function Dashboard() {
       completed: { label: "Completado", variant: "default" as const },
       cancelled: { label: "Cancelado", variant: "destructive" as const },
     };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.planning;
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] ||
+      statusConfig.planning;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const isOverdue = (estimatedEndDate: Date, status: string) => {
-    return status !== 'completed' && status !== 'cancelled' && new Date(estimatedEndDate) < new Date();
+    return (
+      status !== "completed" &&
+      status !== "cancelled" &&
+      new Date(estimatedEndDate) < new Date()
+    );
   };
 
   return (
@@ -66,16 +82,18 @@ export default function Dashboard() {
             </h1>
             <p className="text-muted-foreground mt-2">
               Bienvenido, {user.name || user.email}
-              {user.role === 'admin' && (
-                <Badge variant="default" className="ml-2">Administrador</Badge>
+              {user.role === "admin" && (
+                <Badge variant="default" className="ml-2">
+                  Administrador
+                </Badge>
               )}
             </p>
           </div>
-          
-          {user.role === 'admin' && (
+
+          {user.role === "admin" && (
             <Link href="/projects/new">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple-lg hover:shadow-xl transition-all"
               >
                 <Plus className="h-5 w-5" />
@@ -114,7 +132,9 @@ export default function Dashboard() {
               {statsLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <div className="text-3xl font-bold text-blue-500">{stats?.active || 0}</div>
+                <div className="text-3xl font-bold text-blue-500">
+                  {stats?.active || 0}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -130,7 +150,9 @@ export default function Dashboard() {
               {statsLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <div className="text-3xl font-bold text-green-500">{stats?.completed || 0}</div>
+                <div className="text-3xl font-bold text-green-500">
+                  {stats?.completed || 0}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -146,7 +168,9 @@ export default function Dashboard() {
               {statsLoading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <div className="text-3xl font-bold text-destructive">{stats?.overdue || 0}</div>
+                <div className="text-3xl font-bold text-destructive">
+                  {stats?.overdue || 0}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -163,16 +187,24 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {reminders.slice(0, 3).map((reminder) => (
-                  <div key={reminder.id} className="flex items-start gap-3 p-3 rounded-lg bg-background">
+                {reminders.slice(0, 3).map(reminder => (
+                  <div
+                    key={reminder.id}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-background"
+                  >
                     <Calendar className="h-4 w-4 text-primary mt-1" />
                     <div className="flex-1">
                       <p className="font-medium">{reminder.title}</p>
                       {reminder.message && (
-                        <p className="text-sm text-muted-foreground">{reminder.message}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {reminder.message}
+                        </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(reminder.reminderDate), { addSuffix: true, locale: es })}
+                        {formatDistanceToNow(new Date(reminder.reminderDate), {
+                          addSuffix: true,
+                          locale: es,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -188,13 +220,13 @@ export default function Dashboard() {
             <div>
               <CardTitle>Proyectos Recientes</CardTitle>
               <CardDescription>
-                {user.role === 'admin' 
-                  ? 'Todos los proyectos del sistema' 
-                  : 'Tus proyectos asignados'}
+                {user.role === "admin"
+                  ? "Todos los proyectos del sistema"
+                  : "Tus proyectos asignados"}
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              {user.role === 'admin' && (
+              {user.role === "admin" && (
                 <Link href="/projects/new">
                   <Button className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
                     <Plus className="h-4 w-4" />
@@ -213,7 +245,7 @@ export default function Dashboard() {
           <CardContent>
             {projectsLoading ? (
               <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
+                {[1, 2, 3].map(i => (
                   <div key={i} className="flex items-center gap-4">
                     <Skeleton className="h-12 w-12 rounded-full" />
                     <div className="flex-1 space-y-2">
@@ -225,7 +257,7 @@ export default function Dashboard() {
               </div>
             ) : projects && projects.length > 0 ? (
               <div className="space-y-4">
-                {projects.slice(0, 5).map((project) => (
+                {projects.slice(0, 5).map(project => (
                   <Link key={project.id} href={`/projects/${project.id}`}>
                     <div className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer">
                       <div className="flex-shrink-0">
@@ -233,19 +265,24 @@ export default function Dashboard() {
                           <Sun className="h-6 w-6 text-white" />
                         </div>
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold truncate">{project.name}</h3>
+                          <h3 className="font-semibold truncate">
+                            {project.name}
+                          </h3>
                           {getStatusBadge(project.status)}
-                          {isOverdue(project.estimatedEndDate, project.status) && (
+                          {isOverdue(
+                            project.estimatedEndDate,
+                            project.status
+                          ) && (
                             <Badge variant="destructive" className="gap-1">
                               <AlertTriangle className="h-3 w-3" />
                               Retrasado
                             </Badge>
                           )}
                         </div>
-                        
+
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           {project.location && (
                             <span className="truncate">{project.location}</span>
@@ -257,17 +294,23 @@ export default function Dashboard() {
                             </span>
                           )}
                         </div>
-                        
+
                         {/* Barra de progreso */}
                         <div className="mt-2">
                           <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-muted-foreground">Progreso</span>
-                            <span className="font-medium">{project.progressPercentage}%</span>
+                            <span className="text-muted-foreground">
+                              Progreso
+                            </span>
+                            <span className="font-medium">
+                              {project.progressPercentage}%
+                            </span>
                           </div>
                           <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div 
+                            <div
                               className="h-full bg-gradient-solar transition-all"
-                              style={{ width: `${project.progressPercentage}%` }}
+                              style={{
+                                width: `${project.progressPercentage}%`,
+                              }}
                             />
                           </div>
                         </div>
@@ -279,8 +322,10 @@ export default function Dashboard() {
             ) : (
               <div className="text-center py-12">
                 <Sun className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No hay proyectos disponibles</p>
-                {user.role === 'admin' && (
+                <p className="text-muted-foreground">
+                  No hay proyectos disponibles
+                </p>
+                {user.role === "admin" && (
                   <Link href="/projects/new">
                     <Button className="mt-4">Crear Primer Proyecto</Button>
                   </Link>

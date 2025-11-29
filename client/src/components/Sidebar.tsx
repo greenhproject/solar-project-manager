@@ -1,9 +1,9 @@
 import { Link, useLocation } from "wouter";
-import { 
-  LayoutDashboard, 
-  FolderKanban, 
-  Users, 
-  Bell, 
+import {
+  LayoutDashboard,
+  FolderKanban,
+  Users,
+  Bell,
   Settings,
   LogOut,
   Menu,
@@ -15,7 +15,7 @@ import {
   BarChart3,
   GanttChartSquare,
   Calendar,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -118,14 +118,16 @@ export function Sidebar({ className }: SidebarProps) {
     },
   ];
 
-  const filteredMenuItems = menuItems.filter((item) =>
+  const filteredMenuItems = menuItems.filter(item =>
     user?.role ? item.roles.includes(user.role) : false
   );
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-gradient-to-b from-white to-orange-50/30 border-r border-orange-100">
       {/* Header */}
-      <div className={cn("p-6 border-b border-orange-100", isCollapsed && "p-4")}>
+      <div
+        className={cn("p-6 border-b border-orange-100", isCollapsed && "p-4")}
+      >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple flex-shrink-0">
             <Sun className="h-6 w-6 text-white" />
@@ -168,12 +170,14 @@ export function Sidebar({ className }: SidebarProps) {
                 {user.name || "Usuario"}
               </p>
               <p className="text-xs text-gray-500 truncate">{user.email}</p>
-              <span className={cn(
-                "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium",
-                user.role === "admin" 
-                  ? "bg-orange-100 text-orange-700" 
-                  : "bg-blue-100 text-blue-700"
-              )}>
+              <span
+                className={cn(
+                  "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium",
+                  user.role === "admin"
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-blue-100 text-blue-700"
+                )}
+              >
                 {user.role === "admin" ? "Admin" : "Ingeniero"}
               </span>
             </div>
@@ -200,11 +204,17 @@ export function Sidebar({ className }: SidebarProps) {
       )}
 
       {/* Navigation */}
-      <nav className={cn("flex-1 p-4 space-y-1 overflow-y-auto", isCollapsed && "p-2")}>
-        {filteredMenuItems.map((item) => {
+      <nav
+        className={cn(
+          "flex-1 p-4 space-y-1 overflow-y-auto",
+          isCollapsed && "p-2"
+        )}
+      >
+        {filteredMenuItems.map(item => {
           const Icon = item.icon;
-          const isActive = location === item.href || location.startsWith(item.href + "/");
-          
+          const isActive =
+            location === item.href || location.startsWith(item.href + "/");
+
           return (
             <Link key={item.href} href={item.href}>
               <div
@@ -218,13 +228,19 @@ export function Sidebar({ className }: SidebarProps) {
                 )}
                 title={isCollapsed ? item.label : undefined}
               >
-                <Icon className={cn(
-                  "h-5 w-5 transition-transform group-hover:scale-110 flex-shrink-0",
-                  isActive ? "text-white" : "text-gray-500 group-hover:text-orange-500"
-                )} />
+                <Icon
+                  className={cn(
+                    "h-5 w-5 transition-transform group-hover:scale-110 flex-shrink-0",
+                    isActive
+                      ? "text-white"
+                      : "text-gray-500 group-hover:text-orange-500"
+                  )}
+                />
                 {!isCollapsed && (
                   <>
-                    <span className="font-medium text-sm flex-1">{item.label}</span>
+                    <span className="font-medium text-sm flex-1">
+                      {item.label}
+                    </span>
                     {isActive && (
                       <ChevronRight className="h-4 w-4 text-white" />
                     )}
@@ -237,7 +253,12 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className={cn("p-4 border-t border-orange-100 space-y-2", isCollapsed && "p-2")}>
+      <div
+        className={cn(
+          "p-4 border-t border-orange-100 space-y-2",
+          isCollapsed && "p-2"
+        )}
+      >
         <Separator className="mb-2" />
         <Button
           variant="ghost"
@@ -279,7 +300,7 @@ export function Sidebar({ className }: SidebarProps) {
         size="icon"
         className="hidden lg:flex fixed top-4 left-4 z-50 bg-white shadow-apple border border-orange-100"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        style={{ left: isCollapsed ? '4.5rem' : '17rem' }}
+        style={{ left: isCollapsed ? "4.5rem" : "17rem" }}
       >
         {isCollapsed ? (
           <ChevronRight className="h-5 w-5 text-orange-600" />
@@ -297,19 +318,23 @@ export function Sidebar({ className }: SidebarProps) {
       )}
 
       {/* Sidebar - Desktop */}
-      <aside className={cn(
-        "hidden lg:flex lg:flex-col h-screen sticky top-0 transition-all duration-300",
-        isCollapsed ? "lg:w-20" : "lg:w-72",
-        className
-      )}>
+      <aside
+        className={cn(
+          "hidden lg:flex lg:flex-col h-screen sticky top-0 transition-all duration-300",
+          isCollapsed ? "lg:w-20" : "lg:w-72",
+          className
+        )}
+      >
         {sidebarContent}
       </aside>
 
       {/* Sidebar - Mobile */}
-      <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 lg:hidden",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 lg:hidden",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         {sidebarContent}
       </aside>
     </>

@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Settings as SettingsIcon, Wrench, Bell } from "lucide-react";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { SystemConfiguration } from "@/components/SystemConfiguration";

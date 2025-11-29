@@ -80,9 +80,9 @@ describe("Gestión de Usuarios", () => {
     const ctx = createAdminContext();
     const caller = appRouter.createCaller(ctx);
 
-    await expect(
-      caller.users.delete({ userId: 1 })
-    ).rejects.toThrow("No se puede eliminar el usuario maestro");
+    await expect(caller.users.delete({ userId: 1 })).rejects.toThrow(
+      "No se puede eliminar el usuario maestro"
+    );
   });
 });
 
@@ -90,7 +90,7 @@ describe("Asistente de IA", () => {
   it("tiene procedimiento de análisis disponible", () => {
     const ctx = createAdminContext();
     const caller = appRouter.createCaller(ctx);
-    
+
     // Verificar que el procedimiento existe
     expect(caller.ai.analyzeProjects).toBeDefined();
   });

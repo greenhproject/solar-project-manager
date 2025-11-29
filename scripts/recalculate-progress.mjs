@@ -16,7 +16,7 @@ if (!DATABASE_URL) {
 
 async function recalculateProgress() {
   let connection;
-  
+
   try {
     console.log("🔌 Conectando a la base de datos...");
     connection = await mysql.createConnection(DATABASE_URL);
@@ -30,7 +30,7 @@ async function recalculateProgress() {
 
     for (const project of projects) {
       console.log(`\n🔍 Proyecto: ${project.name} (ID: ${project.id})`);
-      
+
       // Obtener hitos del proyecto
       const [milestones] = await connection.execute(
         "SELECT id, name, status FROM milestones WHERE projectId = ?",
@@ -49,7 +49,7 @@ async function recalculateProgress() {
       }
 
       // Contar completados
-      const completed = milestones.filter(m => m.status === 'completed').length;
+      const completed = milestones.filter(m => m.status === "completed").length;
       const progress = Math.round((completed / milestones.length) * 100);
 
       console.log(`   ✅ Hitos completados: ${completed}/${milestones.length}`);
@@ -65,7 +65,6 @@ async function recalculateProgress() {
     }
 
     console.log("\n\n✅ Recálculo completado exitosamente!");
-
   } catch (error) {
     console.error("❌ Error:", error.message);
     process.exit(1);

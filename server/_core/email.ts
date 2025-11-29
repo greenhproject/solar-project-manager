@@ -18,7 +18,7 @@ const DEFAULT_FROM = "Solar PM <noreply@resend.dev>"; // Cambiar a tu dominio ve
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
-  
+
   if (!apiKey) {
     console.warn("[Email] RESEND_API_KEY not configured, skipping email send");
     return false;
@@ -28,7 +28,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     const response = await fetch(RESEND_API_URL, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -56,7 +56,10 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 /**
  * Send welcome email to new user
  */
-export async function sendWelcomeEmail(email: string, name: string): Promise<boolean> {
+export async function sendWelcomeEmail(
+  email: string,
+  name: string
+): Promise<boolean> {
   const html = `
     <!DOCTYPE html>
     <html>

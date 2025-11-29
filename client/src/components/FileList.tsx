@@ -1,4 +1,11 @@
-import { FileText, Image as ImageIcon, File, Download, Trash2, Calendar } from "lucide-react";
+import {
+  FileText,
+  Image as ImageIcon,
+  File,
+  Download,
+  Trash2,
+  Calendar,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -31,13 +38,15 @@ const categoryLabels = {
 
 export function FileList({ projectId }: FileListProps) {
   const utils = trpc.useUtils();
-  const { data: attachments, isLoading } = trpc.attachments.list.useQuery({ projectId });
+  const { data: attachments, isLoading } = trpc.attachments.list.useQuery({
+    projectId,
+  });
   const deleteMutation = trpc.attachments.delete.useMutation({
     onSuccess: () => {
       utils.attachments.list.invalidate({ projectId });
       toast.success("Archivo eliminado exitosamente");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || "Error al eliminar el archivo");
     },
   });
@@ -75,7 +84,7 @@ export function FileList({ projectId }: FileListProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
         ))}
       </div>
@@ -87,18 +96,24 @@ export function FileList({ projectId }: FileListProps) {
       <Card className="p-8 text-center">
         <File className="h-12 w-12 mx-auto mb-3 text-gray-300" />
         <p className="text-gray-500">No hay archivos adjuntos</p>
-        <p className="text-sm text-gray-400 mt-1">Sube documentos, imágenes o PDFs relacionados con este proyecto</p>
+        <p className="text-sm text-gray-400 mt-1">
+          Sube documentos, imágenes o PDFs relacionados con este proyecto
+        </p>
       </Card>
     );
   }
 
   return (
     <div className="space-y-3">
-      {attachments.map((attachment) => {
-        const categoryInfo = categoryLabels[attachment.category as keyof typeof categoryLabels];
-        
+      {attachments.map(attachment => {
+        const categoryInfo =
+          categoryLabels[attachment.category as keyof typeof categoryLabels];
+
         return (
-          <Card key={attachment.id} className="p-4 hover:shadow-md transition-shadow">
+          <Card
+            key={attachment.id}
+            className="p-4 hover:shadow-md transition-shadow"
+          >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3 flex-1">
                 <div className="mt-1">{getFileIcon(attachment.mimeType)}</div>
@@ -107,17 +122,23 @@ export function FileList({ projectId }: FileListProps) {
                     <h4 className="text-sm font-medium text-gray-900 truncate">
                       {attachment.fileName}
                     </h4>
-                    <Badge className={categoryInfo.color}>{categoryInfo.label}</Badge>
+                    <Badge className={categoryInfo.color}>
+                      {categoryInfo.label}
+                    </Badge>
                   </div>
                   {attachment.description && (
-                    <p className="text-xs text-gray-600 mb-2">{attachment.description}</p>
+                    <p className="text-xs text-gray-600 mb-2">
+                      {attachment.description}
+                    </p>
                   )}
                   <div className="flex items-center space-x-4 text-xs text-gray-500">
                     <span>{formatFileSize(attachment.fileSize)}</span>
                     <span className="flex items-center space-x-1">
                       <Calendar className="h-3 w-3" />
                       <span>
-                        {format(new Date(attachment.createdAt), "d MMM yyyy", { locale: es })}
+                        {format(new Date(attachment.createdAt), "d MMM yyyy", {
+                          locale: es,
+                        })}
                       </span>
                     </span>
                   </div>
@@ -128,7 +149,9 @@ export function FileList({ projectId }: FileListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDownload(attachment.fileUrl, attachment.fileName)}
+                  onClick={() =>
+                    handleDownload(attachment.fileUrl, attachment.fileName)
+                  }
                   title="Descargar"
                 >
                   <Download className="h-4 w-4" />
@@ -144,7 +167,8 @@ export function FileList({ projectId }: FileListProps) {
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta acción no se puede deshacer. El archivo "{attachment.fileName}" será eliminado permanentemente.
+                        Esta acción no se puede deshacer. El archivo "
+                        {attachment.fileName}" será eliminado permanentemente.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

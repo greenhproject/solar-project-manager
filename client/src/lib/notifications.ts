@@ -50,7 +50,7 @@ export function showNotification(title: string, options?: NotificationOptions) {
 
   try {
     const notification = new Notification(title, defaultOptions);
-    
+
     // Auto-cerrar después de 10 segundos si no se especifica requireInteraction
     if (!defaultOptions.requireInteraction) {
       setTimeout(() => notification.close(), 10000);
@@ -66,7 +66,11 @@ export function showNotification(title: string, options?: NotificationOptions) {
 /**
  * Mostrar notificación de hito próximo a vencer
  */
-export function notifyMilestoneDue(milestoneName: string, projectName: string, daysLeft: number) {
+export function notifyMilestoneDue(
+  milestoneName: string,
+  projectName: string,
+  daysLeft: number
+) {
   return showNotification("⏰ Hito Próximo a Vencer", {
     body: `El hito "${milestoneName}" del proyecto "${projectName}" vence en ${daysLeft} día(s)`,
     tag: `milestone-due-${milestoneName}`,

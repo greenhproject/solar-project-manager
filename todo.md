@@ -1,6 +1,7 @@
 # Solar Project Manager - Lista de Tareas
 
 ## Base de Datos y Backend
+
 - [x] Diseñar esquema de base de datos completo (proyectos, hitos, recordatorios, tipos de proyecto, sincronización OpenSolar)
 - [x] Implementar tablas con relaciones y restricciones
 - [x] Crear procedimientos tRPC para gestión de proyectos
@@ -10,12 +11,14 @@
 - [x] Implementar lógica de detección de retrasos automática
 
 ## Autenticación y Roles
+
 - [x] Configurar sistema de autenticación basado en roles (Admin/Ingeniero)
 - [x] Implementar control de acceso basado en roles (RBAC)
 - [x] Crear procedimientos protegidos para administradores
 - [x] Limitar acceso de ingenieros solo a sus proyectos asignados
 
 ## Dashboard Principal
+
 - [x] Crear página de dashboard con estadísticas generales
 - [x] Mostrar resumen de proyectos activos, completados y retrasados
 - [x] Implementar gráficos de progreso general
@@ -23,6 +26,7 @@
 - [x] Implementar filtros y búsqueda de proyectos
 
 ## Gestión de Proyectos
+
 - [x] Crear página de listado de proyectos
 - [x] Implementar formulario de creación de proyectos
 - [x] Implementar formulario de edición de proyectos
@@ -31,6 +35,7 @@
 - [x] Permitir asignación de ingenieros a proyectos
 
 ## Gestión de Hitos
+
 - [x] Crear sistema de hitos configurables por proyecto
 - [x] Implementar plantillas de hitos reutilizables
 - [x] Permitir agregar/editar/eliminar hitos personalizados
@@ -39,6 +44,7 @@
 - [x] Detectar y resaltar hitos vencidos
 
 ## Sistema de Recordatorios
+
 - [x] Crear tabla de recordatorios en base de datos
 - [x] Implementar creación de recordatorios automáticos para hitos próximos
 - [x] Permitir creación manual de recordatorios personalizados
@@ -46,6 +52,7 @@
 - [x] Implementar sistema de notificaciones para coordinadores
 
 ## Configuración de Administrador
+
 - [x] Crear panel de configuración para administradores
 - [x] Permitir configuración de tipos de proyectos solares
 - [x] Permitir configuración de plantillas de hitos
@@ -53,6 +60,7 @@
 - [x] Configurar tiempos estándar por tipo de proyecto
 
 ## Generación de Reportes PDF
+
 - [x] Implementar generación de reportes ejecutivos en PDF
 - [x] Incluir métricas clave del proyecto en reportes
 - [x] Mostrar progreso de hitos en reportes
@@ -61,6 +69,7 @@
 - [x] Permitir descarga de reportes consolidados de múltiples proyectos
 
 ## Integración con OpenSolar API
+
 - [x] Investigar y documentar API de OpenSolar
 - [x] Implementar autenticación con API de OpenSolar
 - [x] Crear procedimientos para sincronización de proyectos
@@ -70,6 +79,7 @@
 - [x] Implementar manejo de errores de sincronización
 
 ## Diseño y UX
+
 - [x] Implementar diseño limpio tipo Apple con paleta de colores moderna
 - [x] Aplicar diseño responsive optimizado para móviles
 - [x] Crear navegación intuitiva con sidebar para administradores
@@ -79,6 +89,7 @@
 - [x] Optimizar experiencia móvil con menú hamburguesa
 
 ## Testing y Validación
+
 - [x] Crear tests unitarios para procedimientos críticos
 - [x] Validar flujos de autenticación y autorización
 - [x] Probar generación de reportes PDF
@@ -86,19 +97,21 @@
 - [x] Realizar pruebas de responsividad en diferentes dispositivos
 
 ## Documentación y Despliegue
+
 - [x] Documentar código fuente en español
 - [x] Crear guía de usuario
 - [ ] Crear checkpoint final
 - [ ] Preparar para despliegue
 
-
 ## Mejoras de Interfaz y Navegación
+
 - [x] Implementar menú lateral deslizable (sidebar) con todas las páginas
 - [x] Agregar opción de cerrar sesión en el menú lateral
 - [x] Mejorar navegación con iconos y organización clara
 - [x] Hacer el sidebar responsive (colapsable en móvil)
 
 ## Gestión Avanzada de Usuarios
+
 - [x] Crear página de gestión de usuarios (solo admin)
 - [x] Permitir cambiar roles de usuarios (admin/ingeniero)
 - [x] Configurar registro por defecto como "ingeniero"
@@ -107,6 +120,7 @@
 - [x] Agregar funcionalidad de eliminar usuarios
 
 ## Asistente de IA para Análisis de Proyectos
+
 - [x] Integrar LLM para análisis de flujo de proyectos
 - [x] Detectar automáticamente problemas en proyectos
 - [x] Generar sugerencias de mejora personalizadas
@@ -116,13 +130,14 @@
 - [x] Sugerir optimizaciones de recursos y tiempos
 
 ## Optimizaciones Adicionales
+
 - [x] Mejorar diseño visual del dashboard
 - [x] Agregar más gráficos y visualizaciones
 - [x] Implementar búsqueda global en toda la aplicación
 - [x] Agregar filtros avanzados en listados
 
-
 ## Correcciones Urgentes
+
 - [x] Corregir botón "Nuevo Proyecto" en Dashboard para que sea visible y funcional
 - [x] Mejorar navegación desde Dashboard a formulario de creación de proyectos
 - [x] Asegurar que administradores puedan crear proyectos fácilmente
@@ -132,10 +147,10 @@
 - [x] Corregir elementos <a> anidados en Sidebar (error de React)
 - [x] Corregir Select.Item con value vacío en NewProject.tsx
 
-
 ## Mejoras Avanzadas - Fase 2
 
 ### Dashboard de Métricas Avanzadas
+
 - [x] Crear tabla de métricas mensuales en base de datos
 - [x] Implementar gráfico de línea temporal de proyectos por mes
 - [x] Agregar gráfico de tasa de completación
@@ -144,6 +159,7 @@
 - [x] Agregar filtros de rango de fechas para análisis
 
 ### Sistema de Archivos Adjuntos
+
 - [x] Crear tabla de archivos adjuntos en base de datos
 - [x] Implementar categorías de archivos (técnico, legal, financiero)
 - [x] Desarrollar componente de carga de archivos con drag & drop
@@ -160,8 +176,8 @@
 - [ ] Panel de configuración de preferencias de notificaciones
 - [ ] Historial de notificaciones enviadas
 
-
 ### Calendario de Proyectos
+
 - [ ] Crear página de calendario con vista mensual
 - [ ] Mostrar fechas de inicio y fin de proyectos
 - [ ] Visualizar vencimientos de hitos en el calendario
@@ -171,20 +187,20 @@
 - [ ] Hacer clic en eventos para ver detalles del proyecto
 - [ ] Integrar con librería de calendario (react-big-calendar o similar)
 
-
 ## Errores Críticos
+
 - [x] Corregir error "process is not defined" en env.ts que impide cargar la aplicación en el navegador
 - [x] Corregir error "jsPDF is not a constructor" en generador de reportes PDF (corregido usando named export)
 - [x] Revisar y corregir botón sin funcionalidad en ProjectDetail.tsx línea 263
 
-
 ## Problemas de Despliegue
+
 - [x] Investigar por qué el sitio publicado no muestra las actualizaciones más recientes
 - [x] Verificar versión desplegada vs versión de desarrollo
 - [x] Crear nuevo checkpoint para publicar versión actualizada
 
-
 ## Subida a GitHub
+
 - [x] Crear documentación completa en español (README.md)
 - [x] Documentar estructura del proyecto
 - [x] Documentar variables de entorno necesarias
@@ -195,8 +211,8 @@
 - [x] Subir código fuente completo a GitHub
 - [x] Verificar que el repositorio esté accesible
 
-
 ## Nuevas Funcionalidades - Calendario, Notificaciones Push y Diagrama de Gantt
+
 - [x] Analizar archivo Excel de cronograma para entender estructura
 - [x] Diseñar componente de diagrama de Gantt interactivo
 - [x] Implementar visualización de tareas con barras de progreso
@@ -219,6 +235,7 @@
 - [x] Subir cambios a GitHub (código guardado en checkpoint)
 
 ## Mejoras Avanzadas - Exportación Excel, Dependencias y Métricas
+
 - [x] Instalar librería para exportación a Excel (xlsx)
 - [x] Crear función de exportación de Gantt a Excel
 - [x] Crear función de exportación de calendario a Excel
@@ -237,11 +254,13 @@
 - [x] Crear checkpoint con las mejoras
 
 ## Corrección de Errores
+
 - [x] Corregir error 404 en ruta /users
 - [x] Verificar que todas las rutas del frontend estén correctamente configuradas
 - [x] Probar navegación completa de la aplicación
 
 ## Configuración del Sistema
+
 - [x] Crear schema de tipos de proyectos en base de datos
 - [x] Crear schema de plantillas de hitos en base de datos
 - [x] Implementar procedimientos tRPC para tipos de proyectos
@@ -252,12 +271,14 @@
 - [x] Probar funcionalidad completa de configuración del sistema
 
 ## Corrección de Error de Despliegue en Railway
+
 - [x] Modificar Dockerfile para no ejecutar migraciones durante build
 - [x] Configurar migraciones para ejecutarse en runtime
 - [ ] Probar despliegue en Railway
 - [ ] Verificar que el sitio de producción tenga todas las funcionalidades
 
 ## Bug Crítico - Cálculo de Progreso
+
 - [x] Investigar por qué el progreso muestra 0% cuando hay hitos completados
 - [x] Corregir lógica de cálculo de progreso del proyecto
 - [x] Crear función recalculateProjectProgress
@@ -266,6 +287,7 @@
 - [x] Verificar que el progreso se actualice correctamente (50% para 1/2 hitos)
 
 ## Bug - Métricas Mostrando Valores Incorrectos
+
 - [x] Investigar por qué Tasa de Completación muestra 0%
 - [x] Investigar por qué Tiempo Promedio muestra 0 días
 - [x] Investigar por qué Total de Proyectos muestra NaN
@@ -279,6 +301,7 @@
 - [x] Verificar que las APIs devuelvan datos correctos
 
 ## Bug Crítico - Login No Funciona
+
 - [x] Investigar por qué no deja ingresar después de autenticarse
 - [x] Revisar logs del servidor para identificar errores
 - [x] Identificar problema: campo email NOT NULL sin valor por defecto
@@ -288,6 +311,7 @@
 - [x] Verificar que el dashboard carga correctamente
 
 ## Bug - Progreso Incorrecto (50% cuando debería ser 100%)
+
 - [x] Investigar proyecto que tiene todos los hitos completados pero muestra 50%
 - [x] Verificar lógica de cálculo de progreso en recalculateProjectProgress
 - [x] Confirmar que el cálculo automático está implementado (líneas 431-432 routers.ts)
@@ -296,6 +320,7 @@
 - [x] Verificar que proyecto 30001 ahora muestre 100% correctamente
 
 ## Bug - Barra de Progreso Visual No Se Actualiza
+
 - [x] Investigar código de la barra de progreso en Projects.tsx línea 146
 - [x] Verificar que el valor de progressPercentage se esté pasando correctamente
 - [x] Identificar problema: caché de tRPC no se invalida después de actualizar hitos
@@ -304,6 +329,7 @@
 - [ ] Verificar que la barra se actualice correctamente en el navegador (pendiente de prueba del usuario)
 
 ## Mejoras UX - Barras de Progreso
+
 - [x] Agregar animación CSS suave (duration-500 ease-out) a la barra de progreso
 - [x] Implementar indicador visual de sincronización (RefreshCw spinning) al actualizar hitos
 - [x] Agregar tooltip con información del proyecto en tarjetas
@@ -312,7 +338,9 @@
 - [x] Integrar indicador en card de Progreso General en ProjectDetail
 
 ## Nuevas Mejoras - Notificaciones, Calendario y Reportes
+
 ### Notificaciones al Completar Proyectos
+
 - [x] Detectar cuando un proyecto alcanza 100% de progreso
 - [x] Enviar notificación al administrador usando notifyOwner
 - [x] Incluir resumen de duración total del proyecto
@@ -320,6 +348,7 @@
 - [x] Integrar en recalculateProjectProgress sin afectar funcionalidad existente
 
 ### Vista de Calendario Interactivo
+
 - [x] Crear página Calendar.tsx con vista mensual/semanal
 - [x] Integrar librería react-big-calendar
 - [x] Mostrar todos los hitos de todos los proyectos
@@ -330,6 +359,7 @@
 - [x] Localizar calendario en español
 
 ### Generador de Reportes Personalizados
+
 - [x] Crear página Reports.tsx con formulario de configuración
 - [x] Permitir seleccionar métricas específicas (4 opciones)
 - [x] Permitir seleccionar rango de fechas (5 opciones)
@@ -340,6 +370,7 @@
 - [ ] Agregar enlace en el sidebar
 
 ## Verificación Final
+
 - [x] Ejecutar todos los tests (29/29 pasando)
 - [x] Verificar que notificaciones funcionen correctamente
 - [x] Verificar que calendario se renderice correctamente
@@ -347,6 +378,7 @@
 - [x] Confirmar que funcionalidad existente no se rompió
 
 ## Integración con Google Calendar
+
 - [x] Configurar acceso a Google Calendar API mediante MCP
 - [x] Verificar herramientas disponibles (5 herramientas: create, search, get, update, delete)
 - [x] Agregar campo googleCalendarEventId en schema de milestones
@@ -359,8 +391,8 @@
 - [x] Ejecutar todos los tests (34/34 pasando)
 - [x] Verificar que todo funcione correctamente
 
-
 ## Problema de Despliegue en Producción
+
 - [ ] Verificar qué checkpoint está desplegado en solarmanagerghp.manus.space
 - [ ] Identificar por qué muestra interfaz antigua (tema oscuro rojo) en lugar de la actual (tema claro naranja)
 - [ ] Confirmar que el último checkpoint (ef57573a) se publicó correctamente
@@ -368,8 +400,8 @@
 - [ ] Corregir el problema de despliegue
 - [ ] Verificar que la versión correcta esté visible en producción
 
-
 ## Sistema de Notificaciones Personalizadas
+
 - [ ] Diseñar tipos de notificaciones (hito vencido, proyecto completado, asignación nueva, etc.)
 - [ ] Crear schema de notificaciones en base de datos
 - [ ] Crear procedimientos tRPC para obtener y marcar notificaciones
@@ -383,8 +415,8 @@
 - [ ] Crear tests de notificaciones
 - [ ] Verificar funcionamiento completo
 
-
 ## Sistema de Notificaciones Personalizadas
+
 - [x] Actualizar schema de notificationHistory con nuevos tipos de notificación
 - [x] Crear procedimientos tRPC para gestión de notificaciones (getUserNotifications, markAsRead, markAllAsRead, delete)
 - [x] Implementar funciones de base de datos para notificaciones
@@ -398,15 +430,15 @@
 - [x] Validar permisos de acceso a notificaciones por usuario
 - [x] Soportar todos los tipos de notificación (milestone_due_soon, milestone_overdue, project_completed, project_assigned, project_updated, milestone_reminder)
 
-
 ## Bug Reportado - Gráfica de Análisis
+
 - [ ] Investigar por qué la gráfica de proyectos completados en Analytics.tsx no se actualiza correctamente
 - [ ] Verificar consulta de base de datos para proyectos completados
 - [ ] Corregir lógica de cálculo de métricas
 - [ ] Probar que la gráfica muestre datos correctos
 
-
 ## Edición de Perfil de Usuario
+
 - [x] Crear procedimiento tRPC para actualizar datos de usuario (nombre, email)
 - [x] Crear funciones de base de datos para actualizar perfil (updateUserProfile, getUserByEmail)
 - [x] Crear página de perfil de usuario con formulario de edición
@@ -415,8 +447,8 @@
 - [x] Crear tests unitarios para actualización de perfil (8 tests)
 - [x] Probar actualización de datos y verificar que se reflejen en toda la aplicación
 
-
 ## Mejoras Avanzadas de Perfil de Usuario
+
 - [x] Implementar cambio de contraseña para usuarios JWT (con validación de longitud mínima 8 caracteres)
 - [x] Agregar validación de contraseña actual antes de cambiar (con bcrypt)
 - [x] Implementar carga de avatar personalizado (click en avatar para seleccionar archivo)
@@ -430,9 +462,10 @@
 - [x] Crear tests para preferencias de notificaciones (get, update, validación de rango)
 - [x] Todos los tests pasando (60/60)
 
-
 ## Mejoras Finales - Historial, Notificaciones Automáticas y Tema Personalizable
+
 ### Historial de Notificaciones
+
 - [x] Crear página NotificationHistory.tsx con tabla de notificaciones
 - [x] Implementar filtros por tipo de notificación
 - [x] Implementar filtros por estado (leída/no leída)
@@ -443,6 +476,7 @@
 - [x] Mostrar estadísticas (total, no leídas, filtradas)
 
 ### Notificaciones Automáticas por Eventos
+
 - [x] Crear funciones de notificaciones automáticas (createMilestoneDueSoonNotification, createMilestoneOverdueNotification)
 - [x] Reutilizar funciones existentes (getUpcomingMilestones, getOverdueMilestones)
 - [x] Evitar notificaciones duplicadas (verificación en las consultas SQL)
@@ -451,6 +485,7 @@
 - [ ] Crear procedimiento tRPC para ejecutar verificaciones periódicas (pendiente)
 
 ### Tema Oscuro/Claro Personalizable
+
 - [x] Agregar campo theme en tabla users (enum: 'light', 'dark', 'system')
 - [x] Aplicar migración de base de datos (ALTER TABLE)
 - [x] Actualizar función updateUserProfile para incluir theme
@@ -460,6 +495,7 @@
 - [ ] Aplicar tema al cargar la aplicación (pendiente)
 
 ### Testing y Despliegue
+
 - [ ] Crear tests para historial de notificaciones
 - [ ] Crear tests para notificaciones automáticas
 - [ ] Crear tests para cambio de tema
@@ -467,9 +503,10 @@
 - [ ] Crear checkpoint final
 - [ ] Subir código actualizado a GitHub
 
-
 ## Completar Selector de Tema y Notificaciones Automáticas
+
 ### Selector de Tema en Perfil
+
 - [x] Agregar Select component con opciones Light/Dark/System en UserProfile.tsx
 - [x] Conectar select con mutation updateProfile para guardar preferencia
 - [x] Leer tema actual del usuario y mostrarlo en el select (user.theme || "system")
@@ -481,6 +518,7 @@
 - [x] Mostrar mensaje descriptivo según tema seleccionado
 
 ### Notificaciones Automáticas Periódicas
+
 - [x] Crear procedimiento tRPC checkAndCreateAutoNotifications (solo admin)
 - [x] Implementar lógica para detectar hitos próximos (usando getUpcomingMilestones con 2 días)
 - [x] Implementar lógica para detectar hitos vencidos (usando getOverdueMilestones)
@@ -492,14 +530,15 @@
 - [x] Agregar manejo de errores y mensajes de éxito
 
 ### Testing y Despliegue
+
 - [ ] Crear tests para selector de tema
 - [ ] Crear tests para notificaciones automáticas
 - [ ] Verificar que todo funciona correctamente
 - [ ] Crear checkpoint final
 - [ ] Push a GitHub
 
-
 ## Bug Reportado - Producción Desactualizada (RESUELTO)
+
 - [x] Usuario diferente es normal (BD separadas entre dev y prod)
 - [x] 0 proyectos es normal (BD de producción vacía)
 - [x] PROBLEMA REAL: Versión desplegada en producción NO tenía las últimas mejoras (errores de TypeScript impedían build)
@@ -514,8 +553,8 @@
 - [x] Crear checkpoint y push a GitHub (f105cbfb)
 - [ ] Usuario debe hacer clic en "Publish" en el checkpoint f105cbfb para desplegar la nueva versión
 
-
 ## Bug Reportado - Módulos Faltantes en Producción
+
 - [x] Verificado: Módulos "Gestión de Usuarios" y "Configuración" faltan en producción
 - [x] Verificado: Usuario en producción tiene rol "Ingeniero" en lugar de "Admin"
 - [x] Identificado: Errores fantasma de TypeScript (29 errores) bloquean build de producción
@@ -524,8 +563,8 @@
 - [ ] Errores de TypeScript persisten en LSP pero no afectan ejecución
 - [ ] Intentar checkpoint y redespliegue para verificar si build de producción funciona
 
-
 ## URGENTE - Producción NO se Actualiza
+
 - [x] Confirmado: Usuario tiene rol "admin" en BD de producción
 - [x] Confirmado: Módulos existen en código (Settings.tsx, UserManagement.tsx)
 - [x] Confirmado: tsc --noEmit NO muestra errores reales
@@ -542,6 +581,7 @@
 - [ ] Usuario debe enviar el email manualmente a https://help.manus.im
 
 ## Adaptación para Railway (Despliegue Externo)
+
 - [x] Eliminar dependencia de OAuth de Manus en contexto de autenticación
 - [x] Configurar autenticación exclusivamente con JWT
 - [x] Actualizar middleware de autenticación para Railway
@@ -552,23 +592,27 @@
 - [x] Documentar variables de entorno en RAILWAY_ENV.md
 
 ## Bug Crítico - Error en Settings
+
 - [x] Corregir error "require is not defined" en página de Settings
 - [x] Reemplazar require() con import dinámico en routers.ts
 - [x] Verificar que logout funcione correctamente
 
 ## Bug - Home redirige a OAuth en Railway
+
 - [x] Actualizar Home.tsx para detectar entorno Railway
 - [x] Mostrar botones Login/Register en Railway
 - [x] Mantener OAuth redirect en Manus
 - [x] Verificar que funcione en ambos entornos
 
 ## Bug Crítico - Autenticación rota en ambos entornos
+
 - [x] OAuth no funciona en Manus (projectmanagerghp.manus.space)
 - [x] Railway redirige a OAuth en lugar de mostrar Login/Register
 - [x] Corregir lógica de detección de entorno isManusEnvironment()
 - [x] Cambiar detección de variable de entorno a detección por dominio
 
 ## Sistema de Emails Transaccionales
+
 - [x] Configurar servicio de email (Resend)
 - [x] Crear helper para envío de emails
 - [x] Implementar email de bienvenida al registrarse
@@ -582,6 +626,7 @@
 - [x] Probar flujo completo de recuperación
 
 ## Bug Crítico - Login No Funciona en Railway
+
 - [x] Investigar error "[Auth] Missing session cookie" en Railway
 - [x] Verificar configuración de cookies para producción
 - [x] Corregir dominio y configuración de SameSite (cambiado a "lax")
@@ -591,6 +636,7 @@
 - [ ] Verificar que login funcione en Railway
 
 ## Auto-Carga de Datos desde OpenSolar
+
 - [x] Agregar campo de entrada para ID de proyecto de OpenSolar en NewProject.tsx
 - [x] Agregar botón "Cargar desde OpenSolar" en el formulario
 - [x] Crear procedimiento tRPC para obtener datos de proyecto desde OpenSolar API
@@ -604,6 +650,7 @@
 - [x] Pushear a GitHub (commit 1665d6d)
 
 ## Bug - Error hooks[lastArg] is not a function
+
 - [x] Cambiar trpc.sync.getProjectData.query() a utils.sync.getProjectData.fetch()
 - [ ] Probar que la carga desde OpenSolar funcione correctamente
 - [ ] Pushear corrección a GitHub

@@ -12,7 +12,7 @@ describe("Progress Calculator", () => {
     // Usar proyecto existente (ID 1)
     const testProjectId = 1;
     const progress = await recalculateProjectProgress(testProjectId);
-    
+
     expect(progress).toBeGreaterThanOrEqual(0);
     expect(progress).toBeLessThanOrEqual(100);
     expect(Number.isInteger(progress)).toBe(true);
@@ -23,10 +23,10 @@ describe("Progress Calculator", () => {
     // usando los datos existentes en la base de datos
     const testProjectId = 1;
     const progress = await recalculateProjectProgress(testProjectId);
-    
+
     // El progreso debe ser un múltiplo de 50 si hay 2 hitos (0%, 50%, 100%)
     // o un número válido si hay más hitos
-    expect(typeof progress).toBe('number');
+    expect(typeof progress).toBe("number");
     expect(progress >= 0 && progress <= 100).toBe(true);
   });
 });

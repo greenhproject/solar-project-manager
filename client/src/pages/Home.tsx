@@ -1,8 +1,22 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
-import { Sun, TrendingUp, Bell, FileText, Zap, Shield, BarChart3 } from "lucide-react";
+import {
+  Sun,
+  TrendingUp,
+  Bell,
+  FileText,
+  Zap,
+  Shield,
+  BarChart3,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useEffect } from "react";
 
@@ -10,7 +24,9 @@ import { useEffect } from "react";
 const isManusEnvironment = () => {
   // Verificar si el dominio actual es de Manus (*.manus.space o *.manusvm.computer)
   const hostname = window.location.hostname;
-  return hostname.includes("manus.space") || hostname.includes("manusvm.computer");
+  return (
+    hostname.includes("manus.space") || hostname.includes("manusvm.computer")
+  );
 };
 
 export default function Home() {
@@ -46,7 +62,7 @@ export default function Home() {
             </div>
             <span className="font-bold text-xl">Solar PM-GHP</span>
           </div>
-          
+
           <div className="flex items-center gap-4">
             {useManusAuth ? (
               <a href={getLoginUrl()}>
@@ -73,20 +89,24 @@ export default function Home() {
             <Zap className="h-4 w-4" />
             Gestión de Proyectos Solares
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
             Coordina tus{" "}
-            <span className="bg-gradient-solar bg-clip-text text-transparent" style={{color: '#e95d00'}}>
+            <span
+              className="bg-gradient-solar bg-clip-text text-transparent"
+              style={{ color: "#e95d00" }}
+            >
               Proyectos Solares
-            </span>
-            {" "}con Eficiencia
+            </span>{" "}
+            con Eficiencia
           </h1>
-          
+
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Plataforma completa para la gestión y seguimiento de proyectos de energía solar. 
-            Controla hitos, genera reportes y mantén a tu equipo sincronizado.
+            Plataforma completa para la gestión y seguimiento de proyectos de
+            energía solar. Controla hitos, genera reportes y mantén a tu equipo
+            sincronizado.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {useManusAuth ? (
               <a href={getLoginUrl()}>
@@ -96,7 +116,11 @@ export default function Home() {
                 </Button>
               </a>
             ) : (
-              <Button size="lg" className="gap-2 text-lg px-8" onClick={() => setLocation("/register")}>
+              <Button
+                size="lg"
+                className="gap-2 text-lg px-8"
+                onClick={() => setLocation("/register")}
+              >
                 <Sun className="h-5 w-5" />
                 Comenzar Ahora
               </Button>
@@ -112,7 +136,8 @@ export default function Home() {
             Todo lo que necesitas para gestionar proyectos solares
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Herramientas profesionales diseñadas específicamente para la industria solar
+            Herramientas profesionales diseñadas específicamente para la
+            industria solar
           </p>
         </div>
 
@@ -124,7 +149,8 @@ export default function Home() {
               </div>
               <CardTitle>Seguimiento en Tiempo Real</CardTitle>
               <CardDescription>
-                Monitorea el progreso de cada proyecto con actualizaciones en tiempo real y métricas detalladas
+                Monitorea el progreso de cada proyecto con actualizaciones en
+                tiempo real y métricas detalladas
               </CardDescription>
             </CardHeader>
           </Card>
@@ -136,7 +162,8 @@ export default function Home() {
               </div>
               <CardTitle>Recordatorios Inteligentes</CardTitle>
               <CardDescription>
-                Recibe notificaciones automáticas sobre hitos próximos y proyectos que requieren atención
+                Recibe notificaciones automáticas sobre hitos próximos y
+                proyectos que requieren atención
               </CardDescription>
             </CardHeader>
           </Card>
@@ -148,7 +175,8 @@ export default function Home() {
               </div>
               <CardTitle>Reportes Ejecutivos</CardTitle>
               <CardDescription>
-                Genera reportes PDF profesionales con métricas clave y análisis de progreso
+                Genera reportes PDF profesionales con métricas clave y análisis
+                de progreso
               </CardDescription>
             </CardHeader>
           </Card>
@@ -160,7 +188,8 @@ export default function Home() {
               </div>
               <CardTitle>Integración OpenSolar</CardTitle>
               <CardDescription>
-                Sincroniza automáticamente con OpenSolar para mantener toda tu información actualizada
+                Sincroniza automáticamente con OpenSolar para mantener toda tu
+                información actualizada
               </CardDescription>
             </CardHeader>
           </Card>
@@ -172,7 +201,8 @@ export default function Home() {
               </div>
               <CardTitle>Control de Acceso</CardTitle>
               <CardDescription>
-                Sistema de roles para administradores e ingenieros con permisos personalizados
+                Sistema de roles para administradores e ingenieros con permisos
+                personalizados
               </CardDescription>
             </CardHeader>
           </Card>
@@ -184,7 +214,8 @@ export default function Home() {
               </div>
               <CardTitle>Análisis y Métricas</CardTitle>
               <CardDescription>
-                Visualiza el rendimiento de tus proyectos con dashboards intuitivos y gráficos detallados
+                Visualiza el rendimiento de tus proyectos con dashboards
+                intuitivos y gráficos detallados
               </CardDescription>
             </CardHeader>
           </Card>
@@ -194,7 +225,10 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t py-8 mt-20">
         <div className="container text-center text-muted-foreground">
-          <p>&copy; 2025 Solar Project Manager - Green House Project. Todos los derechos reservados.</p>
+          <p>
+            &copy; 2025 Solar Project Manager - Green House Project. Todos los
+            derechos reservados.
+          </p>
         </div>
       </footer>
     </div>

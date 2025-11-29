@@ -15,7 +15,9 @@ export function parseDependencies(dependencies: string | null): number[] {
   if (!dependencies) return [];
   try {
     const parsed = JSON.parse(dependencies);
-    return Array.isArray(parsed) ? parsed.filter(id => typeof id === 'number') : [];
+    return Array.isArray(parsed)
+      ? parsed.filter(id => typeof id === "number")
+      : [];
   } catch {
     return [];
   }
@@ -82,7 +84,7 @@ export function validateDependenciesExist(
 ): { valid: boolean; invalidIds: number[] } {
   const milestoneIds = new Set(projectMilestones.map(m => m.id));
   const invalidIds = dependencies.filter(id => !milestoneIds.has(id));
-  
+
   return {
     valid: invalidIds.length === 0,
     invalidIds,
@@ -122,13 +124,13 @@ export function topologicalSort(
 ): number[] {
   const inDegree = new Map<number, number>();
   const adjList = new Map<number, number[]>();
-  
+
   // Inicializar
   milestones.forEach(m => {
     inDegree.set(m.id, 0);
     adjList.set(m.id, []);
   });
-  
+
   // Construir grafo
   milestones.forEach(m => {
     const deps = parseDependencies(m.dependencies);
@@ -139,22 +141,22 @@ export function topologicalSort(
       inDegree.set(m.id, (inDegree.get(m.id) || 0) + 1);
     });
   });
-  
+
   // Algoritmo de Kahn
   const queue: number[] = [];
   const result: number[] = [];
-  
+
   // Agregar nodos sin dependencias
   inDegree.forEach((degree, id) => {
     if (degree === 0) {
       queue.push(id);
     }
   });
-  
+
   while (queue.length > 0) {
     const current = queue.shift()!;
     result.push(current);
-    
+
     const neighbors = adjList.get(current) || [];
     neighbors.forEach(neighbor => {
       const newDegree = (inDegree.get(neighbor) || 0) - 1;
@@ -164,7 +166,7 @@ export function topologicalSort(
       }
     });
   }
-  
+
   // Si no procesamos todos los nodos, hay un ciclo
   return result.length === milestones.length ? result : [];
 }

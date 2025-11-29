@@ -2,7 +2,13 @@ import { useState, useCallback } from "react";
 import { Upload, X, FileText, Image as ImageIcon, File } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { toast } from "sonner";
@@ -29,7 +35,9 @@ const ALLOWED_TYPES = [
 export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [category, setCategory] = useState<"technical" | "legal" | "financial" | "other">("technical");
+  const [category, setCategory] = useState<
+    "technical" | "legal" | "financial" | "other"
+  >("technical");
   const [description, setDescription] = useState("");
   const [isUploading, setIsUploading] = useState(false);
 
@@ -52,7 +60,9 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
     }
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error(`Tipo de archivo no permitido. Solo PDF, imágenes y documentos de Office`);
+      toast.error(
+        `Tipo de archivo no permitido. Solo PDF, imágenes y documentos de Office`
+      );
       return false;
     }
 
@@ -87,7 +97,9 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
     try {
       // Convertir archivo a base64 para enviar por tRPC
       const buffer = await selectedFile.arrayBuffer();
-      const base64 = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(buffer))));
+      const base64 = btoa(
+        String.fromCharCode.apply(null, Array.from(new Uint8Array(buffer)))
+      );
 
       // Generar nombre único para el archivo
       const timestamp = Date.now();
@@ -152,7 +164,12 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
             Arrastra y suelta un archivo aquí, o
           </p>
           <label htmlFor="file-upload">
-            <Button type="button" variant="outline" className="cursor-pointer" asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="cursor-pointer"
+              asChild
+            >
               <span>Seleccionar Archivo</span>
             </Button>
             <input
@@ -174,8 +191,12 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
               <div className="flex items-center space-x-3">
                 {getFileIcon(selectedFile)}
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                  <p className="text-xs text-gray-500">{formatFileSize(selectedFile.size)}</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {selectedFile.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formatFileSize(selectedFile.size)}
+                  </p>
                 </div>
               </div>
               <Button
@@ -191,7 +212,10 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
             <div className="space-y-3">
               <div>
                 <Label htmlFor="category">Categoría</Label>
-                <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+                <Select
+                  value={category}
+                  onValueChange={v => setCategory(v as any)}
+                >
                   <SelectTrigger id="category">
                     <SelectValue />
                   </SelectTrigger>
@@ -209,7 +233,7 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
                 <Input
                   id="description"
                   value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  onChange={e => setDescription(e.target.value)}
                   placeholder="Breve descripción del archivo"
                   disabled={isUploading}
                 />

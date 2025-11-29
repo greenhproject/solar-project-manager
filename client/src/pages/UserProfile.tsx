@@ -1,15 +1,41 @@
 import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { User, Mail, Shield, Calendar, Upload, Camera, Bell, Settings, Lock, Key, Sun, Moon, Monitor } from "lucide-react";
+import {
+  User,
+  Mail,
+  Shield,
+  Calendar,
+  Upload,
+  Camera,
+  Bell,
+  Settings,
+  Lock,
+  Key,
+  Sun,
+  Moon,
+  Monitor,
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function UserProfile() {
   const { user } = useAuth();
@@ -19,14 +45,15 @@ export default function UserProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Cambio de contraseña
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // Obtener configuración de notificaciones
-  const { data: notifSettings, isLoading: isLoadingSettings } = trpc.notifications.getSettings.useQuery();
+  const { data: notifSettings, isLoading: isLoadingSettings } =
+    trpc.notifications.getSettings.useQuery();
 
   const changePassword = trpc.users.changePassword.useMutation({
     onSuccess: () => {
@@ -35,7 +62,7 @@ export default function UserProfile() {
       setNewPassword("");
       setConfirmPassword("");
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || "Error al cambiar la contraseña");
     },
   });
@@ -45,18 +72,18 @@ export default function UserProfile() {
       toast.success("Preferencias actualizadas");
       utils.notifications.getSettings.invalidate();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || "Error al actualizar preferencias");
     },
   });
 
   const uploadAvatar = trpc.users.uploadAvatar.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast.success("Avatar actualizado exitosamente");
       utils.auth.me.invalidate();
       setAvatarPreview(null);
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || "Error al subir el avatar");
     },
   });
@@ -67,14 +94,14 @@ export default function UserProfile() {
       setIsEditing(false);
       utils.auth.me.invalidate();
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error.message || "Error al actualizar el perfil");
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim()) {
       toast.error("El nombre es requerido");
       return;
@@ -101,7 +128,7 @@ export default function UserProfile() {
     if (!file) return;
 
     // Validar tipo de archivo
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast.error("Por favor selecciona una imagen");
       return;
     }
@@ -117,11 +144,11 @@ export default function UserProfile() {
     reader.onloadend = async () => {
       const base64String = reader.result as string;
       setAvatarPreview(base64String);
-      
+
       // Subir inmediatamente
       uploadAvatar.mutate({
         imageData: base64String,
-        mimeType: file.type
+        mimeType: file.type,
       });
     };
     reader.readAsDataURL(file);
@@ -129,7 +156,7 @@ export default function UserProfile() {
 
   const handleChangePassword = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validar que las contraseñas coincidan
     if (newPassword !== confirmPassword) {
       toast.error("Las contraseñas nuevas no coinciden");
@@ -144,7 +171,7 @@ export default function UserProfile() {
 
     changePassword.mutate({
       currentPassword,
-      newPassword
+      newPassword,
     });
   };
 
@@ -189,8 +216,13 @@ export default function UserProfile() {
           </CardHeader>
           <CardContent className="flex items-center gap-6">
             <div className="relative">
-              <Avatar className="h-24 w-24 border-4 border-orange-200 cursor-pointer hover:opacity-80 transition-opacity" onClick={handleAvatarClick}>
-                <AvatarImage src={avatarPreview || user.avatarUrl || undefined} />
+              <Avatar
+                className="h-24 w-24 border-4 border-orange-200 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={handleAvatarClick}
+              >
+                <AvatarImage
+                  src={avatarPreview || user.avatarUrl || undefined}
+                />
                 <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white text-2xl font-semibold">
                   {user.name?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
@@ -211,9 +243,7 @@ export default function UserProfile() {
               <p className="text-sm text-gray-600 mb-2">
                 Formatos soportados: JPG, PNG, GIF
               </p>
-              <p className="text-sm text-gray-600">
-                Tamaño máximo: 2MB
-              </p>
+              <p className="text-sm text-gray-600">Tamaño máximo: 2MB</p>
             </div>
             <input
               ref={fileInputRef}
@@ -232,9 +262,7 @@ export default function UserProfile() {
               <User className="h-5 w-5 text-orange-500" />
               Información Personal
             </CardTitle>
-            <CardDescription>
-              Actualiza tu nombre y email
-            </CardDescription>
+            <CardDescription>Actualiza tu nombre y email</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -243,7 +271,7 @@ export default function UserProfile() {
                 <Input
                   id="name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   disabled={!isEditing || updateProfile.isPending}
                   placeholder="Tu nombre completo"
                   className="bg-white"
@@ -258,15 +286,15 @@ export default function UserProfile() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={e => setEmail(e.target.value)}
                     disabled={!isEditing || updateProfile.isPending}
                     placeholder="tu@email.com"
                     className="pl-10 bg-white"
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  {user.loginMethod === "oauth" 
-                    ? "Email proporcionado por OAuth (opcional)" 
+                  {user.loginMethod === "oauth"
+                    ? "Email proporcionado por OAuth (opcional)"
                     : "Email usado para iniciar sesión"}
                 </p>
               </div>
@@ -287,7 +315,9 @@ export default function UserProfile() {
                       disabled={updateProfile.isPending}
                       className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                     >
-                      {updateProfile.isPending ? "Guardando..." : "Guardar Cambios"}
+                      {updateProfile.isPending
+                        ? "Guardando..."
+                        : "Guardar Cambios"}
                     </Button>
                     <Button
                       type="button"
@@ -326,14 +356,22 @@ export default function UserProfile() {
               <>
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium text-gray-900">Notificaciones Push</p>
-                    <p className="text-sm text-gray-500">Recibir notificaciones en tiempo real</p>
+                    <p className="font-medium text-gray-900">
+                      Notificaciones Push
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Recibir notificaciones en tiempo real
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={notifSettings.enablePushNotifications}
-                      onChange={(e) => updateNotifSettings.mutate({ enablePushNotifications: e.target.checked })}
+                      onChange={e =>
+                        updateNotifSettings.mutate({
+                          enablePushNotifications: e.target.checked,
+                        })
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
@@ -342,14 +380,22 @@ export default function UserProfile() {
 
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium text-gray-900">Recordatorios de Hitos</p>
-                    <p className="text-sm text-gray-500">Alertas cuando un hito está próximo a vencer</p>
+                    <p className="font-medium text-gray-900">
+                      Recordatorios de Hitos
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Alertas cuando un hito está próximo a vencer
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={notifSettings.enableMilestoneReminders}
-                      onChange={(e) => updateNotifSettings.mutate({ enableMilestoneReminders: e.target.checked })}
+                      onChange={e =>
+                        updateNotifSettings.mutate({
+                          enableMilestoneReminders: e.target.checked,
+                        })
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
@@ -358,14 +404,22 @@ export default function UserProfile() {
 
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium text-gray-900">Alertas de Retrasos</p>
-                    <p className="text-sm text-gray-500">Notificaciones de proyectos retrasados</p>
+                    <p className="font-medium text-gray-900">
+                      Alertas de Retrasos
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Notificaciones de proyectos retrasados
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={notifSettings.enableDelayAlerts}
-                      onChange={(e) => updateNotifSettings.mutate({ enableDelayAlerts: e.target.checked })}
+                      onChange={e =>
+                        updateNotifSettings.mutate({
+                          enableDelayAlerts: e.target.checked,
+                        })
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
@@ -375,13 +429,19 @@ export default function UserProfile() {
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
                     <p className="font-medium text-gray-900">Alertas de IA</p>
-                    <p className="text-sm text-gray-500">Sugerencias y alertas generadas por IA</p>
+                    <p className="text-sm text-gray-500">
+                      Sugerencias y alertas generadas por IA
+                    </p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
                       type="checkbox"
                       checked={notifSettings.enableAIAlerts}
-                      onChange={(e) => updateNotifSettings.mutate({ enableAIAlerts: e.target.checked })}
+                      onChange={e =>
+                        updateNotifSettings.mutate({
+                          enableAIAlerts: e.target.checked,
+                        })
+                      }
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
@@ -389,7 +449,10 @@ export default function UserProfile() {
                 </div>
 
                 <div className="pt-2">
-                  <Label htmlFor="reminderDays" className="text-sm font-medium text-gray-900 mb-2 block">
+                  <Label
+                    htmlFor="reminderDays"
+                    className="text-sm font-medium text-gray-900 mb-2 block"
+                  >
                     Días de anticipación para recordatorios
                   </Label>
                   <div className="flex items-center gap-4">
@@ -399,16 +462,20 @@ export default function UserProfile() {
                       min={1}
                       max={30}
                       value={notifSettings.milestoneReminderDays}
-                      onChange={(e) => {
+                      onChange={e => {
                         const days = parseInt(e.target.value);
                         if (days >= 1 && days <= 30) {
-                          updateNotifSettings.mutate({ milestoneReminderDays: days });
+                          updateNotifSettings.mutate({
+                            milestoneReminderDays: days,
+                          });
                         }
                       }}
                       className="w-20"
                     />
                     <span className="text-sm text-gray-600">
-                      Recibir recordatorios {notifSettings.milestoneReminderDays} días antes del vencimiento
+                      Recibir recordatorios{" "}
+                      {notifSettings.milestoneReminderDays} días antes del
+                      vencimiento
                     </span>
                   </div>
                 </div>
@@ -424,9 +491,7 @@ export default function UserProfile() {
               <Monitor className="h-5 w-5 text-indigo-500" />
               Apariencia
             </CardTitle>
-            <CardDescription>
-              Elige el tema de la aplicación
-            </CardDescription>
+            <CardDescription>Elige el tema de la aplicación</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -463,11 +528,11 @@ export default function UserProfile() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500">
-                  {user.theme === "system" 
-                    ? "El tema se ajustará automáticamente según la configuración de tu sistema" 
+                  {user.theme === "system"
+                    ? "El tema se ajustará automáticamente según la configuración de tu sistema"
                     : user.theme === "dark"
-                    ? "Tema oscuro activado"
-                    : "Tema claro activado"}
+                      ? "Tema oscuro activado"
+                      : "Tema claro activado"}
                 </p>
               </div>
             </div>
@@ -496,7 +561,7 @@ export default function UserProfile() {
                       id="currentPassword"
                       type="password"
                       value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      onChange={e => setCurrentPassword(e.target.value)}
                       className="pl-10"
                       placeholder="Ingresa tu contraseña actual"
                       required
@@ -512,7 +577,7 @@ export default function UserProfile() {
                       id="newPassword"
                       type="password"
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      onChange={e => setNewPassword(e.target.value)}
                       className="pl-10"
                       placeholder="Mínimo 8 caracteres"
                       required
@@ -522,14 +587,16 @@ export default function UserProfile() {
                 </div>
 
                 <div>
-                  <Label htmlFor="confirmPassword">Confirmar Nueva Contraseña</Label>
+                  <Label htmlFor="confirmPassword">
+                    Confirmar Nueva Contraseña
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="confirmPassword"
                       type="password"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={e => setConfirmPassword(e.target.value)}
                       className="pl-10"
                       placeholder="Confirma tu nueva contraseña"
                       required
@@ -543,7 +610,9 @@ export default function UserProfile() {
                   className="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
                   disabled={changePassword.isPending}
                 >
-                  {changePassword.isPending ? "Cambiando..." : "Cambiar Contraseña"}
+                  {changePassword.isPending
+                    ? "Cambiando..."
+                    : "Cambiar Contraseña"}
                 </Button>
               </form>
             </CardContent>
@@ -564,11 +633,13 @@ export default function UserProfile() {
                 <Shield className="h-4 w-4" />
                 <span>Rol:</span>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                user.role === "admin" 
-                  ? "bg-orange-100 text-orange-700" 
-                  : "bg-blue-100 text-blue-700"
-              }`}>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  user.role === "admin"
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-blue-100 text-blue-700"
+                }`}
+              >
                 {user.role === "admin" ? "Administrador" : "Ingeniero"}
               </span>
             </div>
@@ -589,10 +660,10 @@ export default function UserProfile() {
                 <span>Miembro desde:</span>
               </div>
               <span className="text-sm font-medium text-gray-900">
-                {new Date(user.createdAt).toLocaleDateString('es-ES', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
+                {new Date(user.createdAt).toLocaleDateString("es-ES", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
                 })}
               </span>
             </div>

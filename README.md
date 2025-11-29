@@ -9,6 +9,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 ## ✨ Características Principales
 
 ### Gestión de Proyectos
+
 - **Creación y edición de proyectos** solares con información detallada (cliente, ubicación, capacidad, fechas)
 - **Tipos de proyecto configurables**: Residencial, Comercial, Industrial, Agrícola, Comunitario
 - **Estados de proyecto**: Planificación, En Progreso, Completado, En Espera, Cancelado
@@ -16,6 +17,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Vinculación con OpenSolar** mediante ID de proyecto externo
 
 ### Sistema de Hitos (Milestones)
+
 - **Plantillas de hitos** predefinidas por tipo de proyecto
 - **Hitos personalizados** para necesidades específicas
 - **Seguimiento de progreso** con cálculo automático de porcentaje de avance
@@ -23,6 +25,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Fechas de vencimiento** con alertas automáticas
 
 ### Gestión de Usuarios y Roles
+
 - **Autenticación OAuth** mediante Manus
 - **Dos roles**: Administrador y Ingeniero
 - **Usuario maestro**: `greenhproject@gmail.com` (administrador permanente, no modificable)
@@ -30,6 +33,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Gestión de usuarios**: Los administradores pueden cambiar roles y eliminar usuarios
 
 ### Dashboard y Análiticas
+
 - **Dashboard principal** con estadísticas en tiempo real:
   - Total de proyectos
   - Proyectos en progreso
@@ -42,12 +46,14 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
   - Filtros por rango de fechas
 
 ### Sistema de Recordatorios
+
 - **Recordatorios automáticos** para hitos próximos a vencer
 - **Recordatorios manuales** personalizados
 - **Notificaciones en dashboard** con indicador de no leídos
 - **Marcar como leído** para gestionar recordatorios
 
 ### Generación de Reportes PDF
+
 - **Reportes ejecutivos** profesionales en formato PDF
 - **Información incluida**:
   - Datos del proyecto (nombre, cliente, fechas, capacidad)
@@ -58,6 +64,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Descarga directa** desde la página de detalle del proyecto
 
 ### Integración con OpenSolar API
+
 - **Sincronización de proyectos** desde OpenSolar
 - **Actualización automática** de datos de proyectos
 - **Registro de logs** de sincronización con timestamps
@@ -65,6 +72,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Botón de sincronización manual** para forzar actualización
 
 ### Asistente de IA
+
 - **Análisis inteligente** de todos los proyectos del sistema
 - **Detección de problemas** y cuellos de botella
 - **Sugerencias de mejora** personalizadas
@@ -72,6 +80,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Predicción de riesgos** y retrasos potenciales
 
 ### Sistema de Archivos Adjuntos
+
 - **Carga de documentos** con drag-and-drop
 - **Categorías**: Técnico, Legal, Financiero, Otro
 - **Tipos soportados**: PDF, imágenes (JPG, PNG), documentos de Office
@@ -81,6 +90,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Descarga y eliminación** de archivos
 
 ### Diseño y UX
+
 - **Diseño moderno** tipo Apple con sombras suaves y bordes redondeados
 - **Paleta de colores solar**: Naranjas y ámbar (#FF6B35, #F7B32B)
 - **Tipografía**: Fuente Inter (similar a San Francisco)
@@ -91,6 +101,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 ## 🛠️ Tecnologías Utilizadas
 
 ### Frontend
+
 - **React 19** - Biblioteca de interfaz de usuario
 - **TypeScript** - Tipado estático para JavaScript
 - **Tailwind CSS 4** - Framework de estilos utility-first
@@ -104,6 +115,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Zod** - Validación de esquemas TypeScript-first
 
 ### Backend
+
 - **Node.js 22** - Entorno de ejecución JavaScript
 - **Express 4** - Framework web minimalista
 - **tRPC 11** - API type-safe end-to-end
@@ -115,6 +127,7 @@ Solar Project Manager es una plataforma full-stack diseñada específicamente pa
 - **Axios** - Cliente HTTP para integraciones externas
 
 ### Infraestructura y Servicios
+
 - **Manus OAuth** - Autenticación de usuarios
 - **AWS S3** - Almacenamiento de archivos adjuntos
 - **OpenAI API** - Asistente de IA (vía Manus LLM)
@@ -185,153 +198,164 @@ solar-project-manager/
 ## 🗄️ Esquema de Base de Datos
 
 ### Tabla: `users`
+
 Almacena información de usuarios registrados.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único del usuario |
-| openId | varchar(64) | ID de OAuth de Manus (único) |
-| name | text | Nombre completo del usuario |
-| email | varchar(320) | Correo electrónico |
-| loginMethod | varchar(64) | Método de login (google, github, etc.) |
-| role | enum | Rol: 'admin' o 'user' (ingeniero) |
-| createdAt | timestamp | Fecha de creación |
-| updatedAt | timestamp | Fecha de última actualización |
-| lastSignedIn | timestamp | Fecha del último inicio de sesión |
+| Campo        | Tipo         | Descripción                            |
+| ------------ | ------------ | -------------------------------------- |
+| id           | int (PK, AI) | ID único del usuario                   |
+| openId       | varchar(64)  | ID de OAuth de Manus (único)           |
+| name         | text         | Nombre completo del usuario            |
+| email        | varchar(320) | Correo electrónico                     |
+| loginMethod  | varchar(64)  | Método de login (google, github, etc.) |
+| role         | enum         | Rol: 'admin' o 'user' (ingeniero)      |
+| createdAt    | timestamp    | Fecha de creación                      |
+| updatedAt    | timestamp    | Fecha de última actualización          |
+| lastSignedIn | timestamp    | Fecha del último inicio de sesión      |
 
 ### Tabla: `project_types`
+
 Define los tipos de proyectos solares disponibles.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único del tipo |
-| name | varchar(100) | Nombre del tipo (ej: "Residencial") |
-| description | text | Descripción detallada |
-| defaultMilestones | text | JSON con plantilla de hitos |
-| createdAt | timestamp | Fecha de creación |
+| Campo             | Tipo         | Descripción                         |
+| ----------------- | ------------ | ----------------------------------- |
+| id                | int (PK, AI) | ID único del tipo                   |
+| name              | varchar(100) | Nombre del tipo (ej: "Residencial") |
+| description       | text         | Descripción detallada               |
+| defaultMilestones | text         | JSON con plantilla de hitos         |
+| createdAt         | timestamp    | Fecha de creación                   |
 
 ### Tabla: `projects`
+
 Almacena los proyectos solares.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único del proyecto |
-| name | varchar(255) | Nombre del proyecto |
-| client | varchar(255) | Nombre del cliente |
-| location | text | Ubicación del proyecto |
-| capacity | int | Capacidad en kW |
-| projectTypeId | int (FK) | Referencia a project_types |
-| assignedEngineerId | int (FK) | Referencia a users (ingeniero asignado) |
-| status | enum | Estado: 'planning', 'in_progress', 'completed', 'on_hold', 'cancelled' |
-| startDate | timestamp | Fecha de inicio estimada |
-| endDate | timestamp | Fecha de fin estimada |
-| actualEndDate | timestamp | Fecha real de finalización |
-| openSolarId | varchar(255) | ID del proyecto en OpenSolar |
-| notes | text | Notas adicionales |
-| createdAt | timestamp | Fecha de creación |
-| updatedAt | timestamp | Fecha de última actualización |
+| Campo              | Tipo         | Descripción                                                            |
+| ------------------ | ------------ | ---------------------------------------------------------------------- |
+| id                 | int (PK, AI) | ID único del proyecto                                                  |
+| name               | varchar(255) | Nombre del proyecto                                                    |
+| client             | varchar(255) | Nombre del cliente                                                     |
+| location           | text         | Ubicación del proyecto                                                 |
+| capacity           | int          | Capacidad en kW                                                        |
+| projectTypeId      | int (FK)     | Referencia a project_types                                             |
+| assignedEngineerId | int (FK)     | Referencia a users (ingeniero asignado)                                |
+| status             | enum         | Estado: 'planning', 'in_progress', 'completed', 'on_hold', 'cancelled' |
+| startDate          | timestamp    | Fecha de inicio estimada                                               |
+| endDate            | timestamp    | Fecha de fin estimada                                                  |
+| actualEndDate      | timestamp    | Fecha real de finalización                                             |
+| openSolarId        | varchar(255) | ID del proyecto en OpenSolar                                           |
+| notes              | text         | Notas adicionales                                                      |
+| createdAt          | timestamp    | Fecha de creación                                                      |
+| updatedAt          | timestamp    | Fecha de última actualización                                          |
 
 ### Tabla: `milestones`
+
 Hitos/etapas de cada proyecto.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único del hito |
-| projectId | int (FK) | Referencia a projects |
-| name | varchar(255) | Nombre del hito |
-| description | text | Descripción detallada |
-| status | enum | Estado: 'pending', 'in_progress', 'completed', 'delayed' |
-| dueDate | timestamp | Fecha de vencimiento |
-| completedDate | timestamp | Fecha de completación real |
-| order | int | Orden de visualización |
-| createdAt | timestamp | Fecha de creación |
+| Campo         | Tipo         | Descripción                                              |
+| ------------- | ------------ | -------------------------------------------------------- |
+| id            | int (PK, AI) | ID único del hito                                        |
+| projectId     | int (FK)     | Referencia a projects                                    |
+| name          | varchar(255) | Nombre del hito                                          |
+| description   | text         | Descripción detallada                                    |
+| status        | enum         | Estado: 'pending', 'in_progress', 'completed', 'delayed' |
+| dueDate       | timestamp    | Fecha de vencimiento                                     |
+| completedDate | timestamp    | Fecha de completación real                               |
+| order         | int          | Orden de visualización                                   |
+| createdAt     | timestamp    | Fecha de creación                                        |
 
 ### Tabla: `reminders`
+
 Recordatorios para hitos y proyectos.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único del recordatorio |
-| projectId | int (FK) | Referencia a projects |
-| milestoneId | int (FK) | Referencia a milestones (opcional) |
-| userId | int (FK) | Referencia a users (destinatario) |
-| message | text | Mensaje del recordatorio |
-| dueDate | timestamp | Fecha de vencimiento |
-| isRead | boolean | Si fue leído |
-| createdAt | timestamp | Fecha de creación |
+| Campo       | Tipo         | Descripción                        |
+| ----------- | ------------ | ---------------------------------- |
+| id          | int (PK, AI) | ID único del recordatorio          |
+| projectId   | int (FK)     | Referencia a projects              |
+| milestoneId | int (FK)     | Referencia a milestones (opcional) |
+| userId      | int (FK)     | Referencia a users (destinatario)  |
+| message     | text         | Mensaje del recordatorio           |
+| dueDate     | timestamp    | Fecha de vencimiento               |
+| isRead      | boolean      | Si fue leído                       |
+| createdAt   | timestamp    | Fecha de creación                  |
 
 ### Tabla: `project_updates`
+
 Historial de actualizaciones de proyectos.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único de la actualización |
-| projectId | int (FK) | Referencia a projects |
-| userId | int (FK) | Usuario que realizó la actualización |
-| updateType | enum | Tipo: 'status_change', 'milestone_completed', 'note_added', 'other' |
-| description | text | Descripción de la actualización |
-| createdAt | timestamp | Fecha de creación |
+| Campo       | Tipo         | Descripción                                                         |
+| ----------- | ------------ | ------------------------------------------------------------------- |
+| id          | int (PK, AI) | ID único de la actualización                                        |
+| projectId   | int (FK)     | Referencia a projects                                               |
+| userId      | int (FK)     | Usuario que realizó la actualización                                |
+| updateType  | enum         | Tipo: 'status_change', 'milestone_completed', 'note_added', 'other' |
+| description | text         | Descripción de la actualización                                     |
+| createdAt   | timestamp    | Fecha de creación                                                   |
 
 ### Tabla: `sync_logs`
+
 Logs de sincronización con OpenSolar.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único del log |
-| projectId | int (FK) | Referencia a projects (opcional) |
-| syncType | enum | Tipo: 'full_sync', 'project_sync', 'manual_sync' |
-| status | enum | Estado: 'success', 'failed', 'partial' |
-| message | text | Mensaje de resultado |
-| syncedBy | int (FK) | Usuario que inició la sincronización |
-| createdAt | timestamp | Fecha de sincronización |
+| Campo     | Tipo         | Descripción                                      |
+| --------- | ------------ | ------------------------------------------------ |
+| id        | int (PK, AI) | ID único del log                                 |
+| projectId | int (FK)     | Referencia a projects (opcional)                 |
+| syncType  | enum         | Tipo: 'full_sync', 'project_sync', 'manual_sync' |
+| status    | enum         | Estado: 'success', 'failed', 'partial'           |
+| message   | text         | Mensaje de resultado                             |
+| syncedBy  | int (FK)     | Usuario que inició la sincronización             |
+| createdAt | timestamp    | Fecha de sincronización                          |
 
 ### Tabla: `project_attachments`
+
 Archivos adjuntos a proyectos.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único del archivo |
-| projectId | int (FK) | Referencia a projects |
-| fileName | varchar(255) | Nombre original del archivo |
-| fileKey | varchar(500) | Clave del archivo en S3 |
-| fileUrl | text | URL pública del archivo |
-| fileSize | int | Tamaño en bytes |
-| mimeType | varchar(100) | Tipo MIME del archivo |
-| category | enum | Categoría: 'technical', 'legal', 'financial', 'other' |
-| uploadedBy | int (FK) | Usuario que subió el archivo |
-| createdAt | timestamp | Fecha de subida |
+| Campo      | Tipo         | Descripción                                           |
+| ---------- | ------------ | ----------------------------------------------------- |
+| id         | int (PK, AI) | ID único del archivo                                  |
+| projectId  | int (FK)     | Referencia a projects                                 |
+| fileName   | varchar(255) | Nombre original del archivo                           |
+| fileKey    | varchar(500) | Clave del archivo en S3                               |
+| fileUrl    | text         | URL pública del archivo                               |
+| fileSize   | int          | Tamaño en bytes                                       |
+| mimeType   | varchar(100) | Tipo MIME del archivo                                 |
+| category   | enum         | Categoría: 'technical', 'legal', 'financial', 'other' |
+| uploadedBy | int (FK)     | Usuario que subió el archivo                          |
+| createdAt  | timestamp    | Fecha de subida                                       |
 
 ### Tabla: `notification_settings`
+
 Configuración de notificaciones por usuario.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único de configuración |
-| userId | int (FK) | Referencia a users |
-| milestoneReminders | boolean | Activar recordatorios de hitos |
-| projectUpdates | boolean | Activar notificaciones de actualizaciones |
-| aiAlerts | boolean | Activar alertas del asistente IA |
-| reminderDays | int | Días de anticipación para recordatorios |
-| createdAt | timestamp | Fecha de creación |
-| updatedAt | timestamp | Fecha de última actualización |
+| Campo              | Tipo         | Descripción                               |
+| ------------------ | ------------ | ----------------------------------------- |
+| id                 | int (PK, AI) | ID único de configuración                 |
+| userId             | int (FK)     | Referencia a users                        |
+| milestoneReminders | boolean      | Activar recordatorios de hitos            |
+| projectUpdates     | boolean      | Activar notificaciones de actualizaciones |
+| aiAlerts           | boolean      | Activar alertas del asistente IA          |
+| reminderDays       | int          | Días de anticipación para recordatorios   |
+| createdAt          | timestamp    | Fecha de creación                         |
+| updatedAt          | timestamp    | Fecha de última actualización             |
 
 ### Tabla: `notification_history`
+
 Historial de notificaciones enviadas.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | int (PK, AI) | ID único de notificación |
-| userId | int (FK) | Referencia a users |
-| type | enum | Tipo: 'milestone_due', 'project_delayed', 'ai_alert', 'manual' |
-| title | varchar(255) | Título de la notificación |
-| message | text | Mensaje de la notificación |
-| relatedProjectId | int (FK) | Proyecto relacionado (opcional) |
-| relatedMilestoneId | int (FK) | Hito relacionado (opcional) |
-| sentAt | timestamp | Fecha de envío |
+| Campo              | Tipo         | Descripción                                                    |
+| ------------------ | ------------ | -------------------------------------------------------------- |
+| id                 | int (PK, AI) | ID único de notificación                                       |
+| userId             | int (FK)     | Referencia a users                                             |
+| type               | enum         | Tipo: 'milestone_due', 'project_delayed', 'ai_alert', 'manual' |
+| title              | varchar(255) | Título de la notificación                                      |
+| message            | text         | Mensaje de la notificación                                     |
+| relatedProjectId   | int (FK)     | Proyecto relacionado (opcional)                                |
+| relatedMilestoneId | int (FK)     | Hito relacionado (opcional)                                    |
+| sentAt             | timestamp    | Fecha de envío                                                 |
 
 ## 🚀 Instalación y Configuración
 
 ### Requisitos Previos
+
 - Node.js 22 o superior
 - pnpm (gestor de paquetes)
 - Base de datos MySQL o TiDB
@@ -378,28 +402,33 @@ VITE_APP_LOGO="/logo.png"
 ### Instalación
 
 1. **Clonar el repositorio**:
+
 ```bash
 git clone https://github.com/greenhproject/solar-project-manager.git
 cd solar-project-manager
 ```
 
 2. **Instalar dependencias**:
+
 ```bash
 pnpm install
 ```
 
 3. **Configurar variables de entorno**:
+
 ```bash
 cp .env.example .env
 # Editar .env con tus credenciales
 ```
 
 4. **Ejecutar migraciones de base de datos**:
+
 ```bash
 pnpm db:push
 ```
 
 5. **Cargar datos iniciales** (tipos de proyecto):
+
 ```bash
 npx tsx seed-data.mjs
 ```
@@ -417,11 +446,13 @@ La aplicación estará disponible en `http://localhost:3000`
 ### Producción
 
 1. **Construir la aplicación**:
+
 ```bash
 pnpm build
 ```
 
 2. **Iniciar el servidor de producción**:
+
 ```bash
 pnpm start
 ```
@@ -436,19 +467,20 @@ pnpm test
 
 ## 📝 Scripts Disponibles
 
-| Script | Descripción |
-|--------|-------------|
-| `pnpm dev` | Inicia el servidor de desarrollo |
-| `pnpm build` | Construye la aplicación para producción |
-| `pnpm start` | Inicia el servidor de producción |
-| `pnpm test` | Ejecuta los tests unitarios |
-| `pnpm db:push` | Ejecuta migraciones de base de datos |
-| `pnpm check` | Verifica tipos de TypeScript sin compilar |
-| `pnpm format` | Formatea el código con Prettier |
+| Script         | Descripción                               |
+| -------------- | ----------------------------------------- |
+| `pnpm dev`     | Inicia el servidor de desarrollo          |
+| `pnpm build`   | Construye la aplicación para producción   |
+| `pnpm start`   | Inicia el servidor de producción          |
+| `pnpm test`    | Ejecuta los tests unitarios               |
+| `pnpm db:push` | Ejecuta migraciones de base de datos      |
+| `pnpm check`   | Verifica tipos de TypeScript sin compilar |
+| `pnpm format`  | Formatea el código con Prettier           |
 
 ## 🔐 Seguridad
 
 ### Autenticación y Autorización
+
 - **OAuth 2.0** mediante Manus para autenticación segura
 - **JWT** para mantener sesiones de usuario
 - **Cookies HttpOnly** para almacenar tokens de sesión
@@ -456,12 +488,14 @@ pnpm test
 - **Usuario maestro inmutable**: `greenhproject@gmail.com` no puede cambiar su rol de admin
 
 ### Protección de Datos
+
 - **Validación de entrada** con Zod en todos los endpoints
 - **Sanitización de datos** antes de almacenar en base de datos
 - **Encriptación de contraseñas** (manejada por Manus OAuth)
 - **Variables de entorno** para secretos (nunca en código)
 
 ### Almacenamiento de Archivos
+
 - **S3 con claves no enumerables** (sufijos aleatorios en nombres de archivo)
 - **Validación de tipo MIME** antes de subir archivos
 - **Límite de tamaño** de 10MB por archivo
@@ -475,9 +509,9 @@ Los colores se definen en `client/src/index.css` usando variables CSS:
 
 ```css
 :root {
-  --primary: 24 100% 60%;        /* Naranja solar #FF6B35 */
+  --primary: 24 100% 60%; /* Naranja solar #FF6B35 */
   --primary-foreground: 0 0% 100%; /* Blanco */
-  --secondary: 42 95% 58%;       /* Ámbar #F7B32B */
+  --secondary: 42 95% 58%; /* Ámbar #F7B32B */
   /* ... más colores */
 }
 ```
@@ -487,12 +521,16 @@ Los colores se definen en `client/src/index.css` usando variables CSS:
 La fuente Inter se carga desde Google Fonts en `client/index.html`:
 
 ```html
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
 ```
 
 ### Logo y Favicon
 
 Reemplaza los archivos en `client/public/`:
+
 - `logo.png` - Logo principal
 - `favicon.ico` - Icono del navegador
 
@@ -548,17 +586,20 @@ Reemplaza los archivos en `client/public/`:
 ### Proceso de Desarrollo
 
 1. Crear una rama para la nueva funcionalidad:
+
 ```bash
 git checkout -b feature/nombre-funcionalidad
 ```
 
 2. Realizar cambios y commits:
+
 ```bash
 git add .
 git commit -m "Descripción del cambio"
 ```
 
 3. Subir cambios a GitHub:
+
 ```bash
 git push origin feature/nombre-funcionalidad
 ```
@@ -580,6 +621,7 @@ git push origin feature/nombre-funcionalidad
 **Error**: `EADDRINUSE: address already in use`
 
 **Solución**: Otro proceso está usando el puerto 3000. Matar el proceso:
+
 ```bash
 lsof -ti:3000 | xargs kill -9
 ```
@@ -607,6 +649,7 @@ lsof -ti:3000 | xargs kill -9
 **Problema**: Después de hacer "Publish", el sitio sigue mostrando versión anterior
 
 **Solución**:
+
 1. Crear un nuevo checkpoint desde la interfaz de Manus
 2. Hacer clic en "Publish" y seleccionar el checkpoint más reciente
 3. Limpiar caché del navegador (Ctrl+Shift+R o Cmd+Shift+R)
@@ -619,6 +662,7 @@ Este proyecto es propiedad de **GreenH Project** y está destinado para uso inte
 ## 👥 Contacto
 
 **GreenH Project**
+
 - Email: greenhproject@gmail.com
 - Sitio web: [Por definir]
 

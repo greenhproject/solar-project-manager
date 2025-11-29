@@ -7,18 +7,28 @@ import { exportGanttToExcel } from "@/lib/excelExport";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2, Calendar, ZoomIn, ZoomOut, Download } from "lucide-react";
 
 export default function GanttChart() {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  
-  const { data: projects, isLoading: projectsLoading } = trpc.projects.list.useQuery();
-  const { data: milestones, isLoading: milestonesLoading } = trpc.milestones.getByProject.useQuery(
-    { projectId: selectedProjectId! },
-    { enabled: !!selectedProjectId }
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
+    null
   );
+
+  const { data: projects, isLoading: projectsLoading } =
+    trpc.projects.list.useQuery();
+  const { data: milestones, isLoading: milestonesLoading } =
+    trpc.milestones.getByProject.useQuery(
+      { projectId: selectedProjectId! },
+      { enabled: !!selectedProjectId }
+    );
 
   // Seleccionar el primer proyecto por defecto
   useEffect(() => {
@@ -39,7 +49,7 @@ export default function GanttChart() {
     // Agregar el proyecto como tarea principal
     const projectStart = new Date(project.startDate);
     const projectEnd = new Date(project.estimatedEndDate);
-    
+
     ganttTasks.push({
       id: `project-${project.id}`,
       name: project.name,
@@ -60,16 +70,22 @@ export default function GanttChart() {
     milestones.forEach((milestone, index) => {
       const start = new Date(milestone.dueDate);
       const end = new Date(milestone.completedDate || milestone.dueDate);
-      
+
       // Si el hito está completado, usar la fecha de completación
       // Si no, usar la fecha de vencimiento más 1 día para visualización
-      const taskEnd = milestone.status === "completed" 
-        ? end 
-        : new Date(start.getTime() + 24 * 60 * 60 * 1000);
+      const taskEnd =
+        milestone.status === "completed"
+          ? end
+          : new Date(start.getTime() + 24 * 60 * 60 * 1000);
 
-      const progress = milestone.status === "completed" ? 100 :
-                      milestone.status === "in_progress" ? 50 :
-                      milestone.status === "overdue" ? 25 : 0;
+      const progress =
+        milestone.status === "completed"
+          ? 100
+          : milestone.status === "in_progress"
+            ? 50
+            : milestone.status === "overdue"
+              ? 25
+              : 0;
 
       const color = getStatusColor(milestone.status);
 
@@ -81,7 +97,8 @@ export default function GanttChart() {
         progress: progress,
         type: "task",
         project: `project-${project.id}`,
-        dependencies: index > 0 ? [`milestone-${milestones[index - 1].id}`] : undefined,
+        dependencies:
+          index > 0 ? [`milestone-${milestones[index - 1].id}`] : undefined,
         styles: {
           backgroundColor: color,
           backgroundSelectedColor: color,
@@ -123,7 +140,9 @@ export default function GanttChart() {
       <div className="container py-8">
         <Card className="p-8 text-center">
           <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">No hay proyectos disponibles</h3>
+          <h3 className="text-lg font-semibold mb-2">
+            No hay proyectos disponibles
+          </h3>
           <p className="text-muted-foreground">
             Crea un proyecto para visualizar el diagrama de Gantt
           </p>
@@ -150,13 +169,13 @@ export default function GanttChart() {
             <label className="text-sm font-medium mb-2 block">Proyecto</label>
             <Select
               value={selectedProjectId?.toString() || ""}
-              onValueChange={(value) => setSelectedProjectId(parseInt(value))}
+              onValueChange={value => setSelectedProjectId(parseInt(value))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un proyecto" />
               </SelectTrigger>
               <SelectContent>
-                {projects.map((project) => (
+                {projects.map(project => (
                   <SelectItem key={project.id} value={project.id.toString()}>
                     {project.name}
                   </SelectItem>
@@ -196,7 +215,8 @@ export default function GanttChart() {
               size="icon"
               onClick={() => {
                 if (viewMode === ViewMode.Day) setViewMode(ViewMode.Week);
-                else if (viewMode === ViewMode.Week) setViewMode(ViewMode.Month);
+                else if (viewMode === ViewMode.Week)
+                  setViewMode(ViewMode.Month);
               }}
               title="Alejar"
             >
@@ -240,7 +260,13 @@ export default function GanttChart() {
               viewMode={viewMode}
               locale="es"
               listCellWidth="200px"
-              columnWidth={viewMode === ViewMode.Month ? 60 : viewMode === ViewMode.Week ? 80 : 100}
+              columnWidth={
+                viewMode === ViewMode.Month
+                  ? 60
+                  : viewMode === ViewMode.Week
+                    ? 80
+                    : 100
+              }
               rowHeight={50}
               barCornerRadius={4}
               barProgressColor="#F7B32B"
@@ -259,7 +285,9 @@ export default function GanttChart() {
         ) : (
           <div className="text-center py-12">
             <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No hay hitos en este proyecto</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              No hay hitos en este proyecto
+            </h3>
             <p className="text-muted-foreground">
               Agrega hitos al proyecto para visualizar el diagrama de Gantt
             </p>
@@ -272,19 +300,31 @@ export default function GanttChart() {
         <h3 className="font-semibold mb-3">Leyenda de Estados</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#10B981" }}></div>
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: "#10B981" }}
+            ></div>
             <span className="text-sm">Completado</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#3B82F6" }}></div>
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: "#3B82F6" }}
+            ></div>
             <span className="text-sm">En Progreso</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#EF4444" }}></div>
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: "#EF4444" }}
+            ></div>
             <span className="text-sm">Vencido</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#9CA3AF" }}></div>
+            <div
+              className="w-4 h-4 rounded"
+              style={{ backgroundColor: "#9CA3AF" }}
+            ></div>
             <span className="text-sm">Pendiente</span>
           </div>
         </div>
@@ -318,12 +358,17 @@ function darkenColor(color: string, percent: number): string {
   const num = parseInt(color.replace("#", ""), 16);
   const amt = Math.round(2.55 * percent);
   const R = (num >> 16) - amt;
-  const G = (num >> 8 & 0x00FF) - amt;
-  const B = (num & 0x0000FF) - amt;
-  return "#" + (
-    0x1000000 +
-    (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
-    (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
-    (B < 255 ? (B < 1 ? 0 : B) : 255)
-  ).toString(16).slice(1);
+  const G = ((num >> 8) & 0x00ff) - amt;
+  const B = (num & 0x0000ff) - amt;
+  return (
+    "#" +
+    (
+      0x1000000 +
+      (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
+      (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
+      (B < 255 ? (B < 1 ? 0 : B) : 255)
+    )
+      .toString(16)
+      .slice(1)
+  );
 }

@@ -1,5 +1,8 @@
 import { getDb } from "./db";
-import { notificationHistory, type InsertNotificationHistory } from "../drizzle/schema";
+import {
+  notificationHistory,
+  type InsertNotificationHistory,
+} from "../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 
 /**
@@ -7,7 +10,7 @@ import { eq, desc, and } from "drizzle-orm";
  */
 export async function createNotification(data: InsertNotificationHistory) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  if (!db) throw new Error("Database not available");
   const [result] = await db.insert(notificationHistory).values(data);
   return result;
 }
@@ -15,9 +18,12 @@ export async function createNotification(data: InsertNotificationHistory) {
 /**
  * Obtener todas las notificaciones de un usuario
  */
-export async function getNotificationsByUserId(userId: number, limit: number = 50) {
+export async function getNotificationsByUserId(
+  userId: number,
+  limit: number = 50
+) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  if (!db) throw new Error("Database not available");
   return await db
     .select()
     .from(notificationHistory)
@@ -31,7 +37,7 @@ export async function getNotificationsByUserId(userId: number, limit: number = 5
  */
 export async function getUnreadNotifications(userId: number) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  if (!db) throw new Error("Database not available");
   return await db
     .select()
     .from(notificationHistory)
@@ -47,7 +53,9 @@ export async function getUnreadNotifications(userId: number) {
 /**
  * Contar notificaciones no leídas
  */
-export async function countUnreadNotifications(userId: number): Promise<number> {
+export async function countUnreadNotifications(
+  userId: number
+): Promise<number> {
   const notifications = await getUnreadNotifications(userId);
   return notifications.length;
 }
@@ -57,12 +65,12 @@ export async function countUnreadNotifications(userId: number): Promise<number> 
  */
 export async function markNotificationAsRead(notificationId: number) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  if (!db) throw new Error("Database not available");
   await db
     .update(notificationHistory)
     .set({ isRead: true })
     .where(eq(notificationHistory.id, notificationId));
-  
+
   return { success: true };
 }
 
@@ -71,7 +79,7 @@ export async function markNotificationAsRead(notificationId: number) {
  */
 export async function markAllNotificationsAsRead(userId: number) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  if (!db) throw new Error("Database not available");
   await db
     .update(notificationHistory)
     .set({ isRead: true })
@@ -81,7 +89,7 @@ export async function markAllNotificationsAsRead(userId: number) {
         eq(notificationHistory.isRead, false)
       )
     );
-  
+
   return { success: true };
 }
 
@@ -90,11 +98,11 @@ export async function markAllNotificationsAsRead(userId: number) {
  */
 export async function deleteNotification(notificationId: number) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  if (!db) throw new Error("Database not available");
   await db
     .delete(notificationHistory)
     .where(eq(notificationHistory.id, notificationId));
-  
+
   return { success: true };
 }
 
@@ -103,10 +111,10 @@ export async function deleteNotification(notificationId: number) {
  */
 export async function deleteAllNotifications(userId: number) {
   const db = await getDb();
-  if (!db) throw new Error('Database not available');
+  if (!db) throw new Error("Database not available");
   await db
     .delete(notificationHistory)
     .where(eq(notificationHistory.userId, userId));
-  
+
   return { success: true };
 }

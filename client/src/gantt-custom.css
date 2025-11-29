@@ -1,22 +1,22 @@
 /* Estilos personalizados para el diagrama de Gantt */
 
 .gantt-container {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   width: 100%;
   overflow-x: auto;
 }
 
 /* Personalizar colores del header */
 ._3vJC0 {
-  background-color: #FFF7ED !important;
-  border-bottom: 2px solid #FF6B35 !important;
+  background-color: #fff7ed !important;
+  border-bottom: 2px solid #ff6b35 !important;
   font-weight: 600 !important;
-  color: #1F2937 !important;
+  color: #1f2937 !important;
 }
 
 /* Personalizar grid */
 ._1b4aS {
-  stroke: #F3F4F6 !important;
+  stroke: #f3f4f6 !important;
 }
 
 /* Personalizar barras de tareas */
@@ -27,16 +27,18 @@
 
 /* Personalizar tooltips */
 ._1xNuW {
-  background-color: #1F2937 !important;
+  background-color: #1f2937 !important;
   border: 1px solid #374151 !important;
   border-radius: 8px !important;
   padding: 12px !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
 
 /* Personalizar texto de tooltips */
 ._2O1lW {
-  color: #F9FAFB !important;
+  color: #f9fafb !important;
   font-size: 14px !important;
 }
 
@@ -52,17 +54,17 @@
 }
 
 .gantt-container::-webkit-scrollbar-track {
-  background: #F3F4F6;
+  background: #f3f4f6;
   border-radius: 4px;
 }
 
 .gantt-container::-webkit-scrollbar-thumb {
-  background: #FF6B35;
+  background: #ff6b35;
   border-radius: 4px;
 }
 
 .gantt-container::-webkit-scrollbar-thumb:hover {
-  background: #F7B32B;
+  background: #f7b32b;
 }
 
 /* Responsive */
@@ -70,7 +72,7 @@
   .gantt-container {
     font-size: 12px;
   }
-  
+
   ._1xNuW {
     padding: 8px !important;
   }

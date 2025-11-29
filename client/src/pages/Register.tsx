@@ -4,7 +4,14 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { Sun, Mail, Lock, User, Loader2 } from "lucide-react";
 
@@ -24,7 +31,7 @@ export default function Register() {
       // Recargar para obtener la sesión actualizada
       window.location.href = "/";
     },
-    onError: (error) => {
+    onError: error => {
       toast.error("Error al crear cuenta", {
         description: error.message,
       });
@@ -34,7 +41,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name || !email || !password || !confirmPassword) {
       toast.error("Por favor completa todos los campos");
       return;
@@ -84,7 +91,7 @@ export default function Register() {
                   type="text"
                   placeholder="Juan Pérez"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
@@ -103,7 +110,7 @@ export default function Register() {
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
@@ -122,7 +129,7 @@ export default function Register() {
                   type="password"
                   placeholder="Mínimo 6 caracteres"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
@@ -142,7 +149,7 @@ export default function Register() {
                   type="password"
                   placeholder="Repite tu contraseña"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required

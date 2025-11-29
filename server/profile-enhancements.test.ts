@@ -14,13 +14,13 @@ describe("Profile Enhancements", () => {
       });
 
       const settings = await caller.notifications.getSettings();
-      
+
       expect(settings).toBeDefined();
-      expect(settings).toHaveProperty('enablePushNotifications');
-      expect(settings).toHaveProperty('enableMilestoneReminders');
-      expect(settings).toHaveProperty('enableDelayAlerts');
-      expect(settings).toHaveProperty('enableAIAlerts');
-      expect(settings).toHaveProperty('milestoneReminderDays');
+      expect(settings).toHaveProperty("enablePushNotifications");
+      expect(settings).toHaveProperty("enableMilestoneReminders");
+      expect(settings).toHaveProperty("enableDelayAlerts");
+      expect(settings).toHaveProperty("enableAIAlerts");
+      expect(settings).toHaveProperty("milestoneReminderDays");
     });
 
     it("should update notification settings", async () => {
@@ -32,7 +32,7 @@ describe("Profile Enhancements", () => {
 
       const updated = await caller.notifications.updateSettings({
         enablePushNotifications: false,
-        milestoneReminderDays: 7
+        milestoneReminderDays: 7,
       });
 
       expect(updated).toBeDefined();
@@ -42,7 +42,7 @@ describe("Profile Enhancements", () => {
       // Restaurar valores por defecto
       await caller.notifications.updateSettings({
         enablePushNotifications: true,
-        milestoneReminderDays: 3
+        milestoneReminderDays: 3,
       });
     });
 
@@ -76,7 +76,7 @@ describe("Profile Enhancements", () => {
       await expect(
         caller.users.uploadAvatar({
           imageData: "data:text/plain;base64,SGVsbG8gV29ybGQ=",
-          mimeType: "text/plain"
+          mimeType: "text/plain",
         })
       ).rejects.toThrow();
     });
@@ -94,7 +94,7 @@ describe("Profile Enhancements", () => {
       await expect(
         caller.users.uploadAvatar({
           imageData: largeData,
-          mimeType: "image/png"
+          mimeType: "image/png",
         })
       ).rejects.toThrow();
     });
@@ -104,9 +104,9 @@ describe("Profile Enhancements", () => {
     it("should reject password change for OAuth users", async () => {
       // Obtener un usuario OAuth
       const oauthUser = await db.getUserById(testUserId);
-      
+
       // Si el usuario de prueba es JWT, skip este test
-      if (oauthUser?.loginMethod === 'jwt') {
+      if (oauthUser?.loginMethod === "jwt") {
         return;
       }
 
@@ -119,7 +119,7 @@ describe("Profile Enhancements", () => {
       await expect(
         caller.users.changePassword({
           currentPassword: "oldpass",
-          newPassword: "newpass123"
+          newPassword: "newpass123",
         })
       ).rejects.toThrow("JWT");
     });
@@ -134,16 +134,16 @@ describe("Profile Enhancements", () => {
       await expect(
         caller.users.changePassword({
           currentPassword: "anything",
-          newPassword: "short"
+          newPassword: "short",
         })
       ).rejects.toThrow();
     });
 
     it("should reject incorrect current password", async () => {
       const user = await db.getUserById(testUserId);
-      
+
       // Solo probar si es usuario JWT con contraseña
-      if (user?.loginMethod !== 'jwt' || !user.password) {
+      if (user?.loginMethod !== "jwt" || !user.password) {
         return;
       }
 
@@ -156,7 +156,7 @@ describe("Profile Enhancements", () => {
       await expect(
         caller.users.changePassword({
           currentPassword: "wrongpassword",
-          newPassword: "newpassword123"
+          newPassword: "newpassword123",
         })
       ).rejects.toThrow("incorrecta");
     });
@@ -165,17 +165,17 @@ describe("Profile Enhancements", () => {
   describe("Database Functions", () => {
     it("should get user notification settings", async () => {
       const settings = await db.getUserNotificationSettings(testUserId);
-      
+
       expect(settings).toBeDefined();
-      expect(typeof settings?.enablePushNotifications).toBe('boolean');
-      expect(typeof settings?.milestoneReminderDays).toBe('number');
+      expect(typeof settings?.enablePushNotifications).toBe("boolean");
+      expect(typeof settings?.milestoneReminderDays).toBe("number");
     });
 
     it("should update notification settings via db function", async () => {
       const original = await db.getUserNotificationSettings(testUserId);
-      
+
       const updated = await db.updateNotificationSettings(testUserId, {
-        enableDelayAlerts: false
+        enableDelayAlerts: false,
       });
 
       expect(updated?.enableDelayAlerts).toBe(false);
@@ -183,7 +183,7 @@ describe("Profile Enhancements", () => {
       // Restaurar
       if (original) {
         await db.updateNotificationSettings(testUserId, {
-          enableDelayAlerts: original.enableDelayAlerts
+          enableDelayAlerts: original.enableDelayAlerts,
         });
       }
     });

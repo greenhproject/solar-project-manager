@@ -4,7 +4,14 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { Sun, Mail, Lock, Loader2 } from "lucide-react";
 
@@ -22,7 +29,7 @@ export default function Login() {
       // Recargar para obtener la sesión actualizada
       window.location.href = "/";
     },
-    onError: (error) => {
+    onError: error => {
       toast.error("Error al iniciar sesión", {
         description: error.message,
       });
@@ -32,7 +39,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error("Por favor completa todos los campos");
       return;
@@ -72,7 +79,7 @@ export default function Login() {
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
@@ -91,17 +98,20 @@ export default function Login() {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
                 />
               </div>
             </div>
-            
+
             <div className="text-right">
               <Link href="/forgot-password">
-                <button type="button" className="text-sm text-orange-600 hover:text-orange-700 hover:underline">
+                <button
+                  type="button"
+                  className="text-sm text-orange-600 hover:text-orange-700 hover:underline"
+                >
                   ¿Olvidaste tu contraseña?
                 </button>
               </Link>

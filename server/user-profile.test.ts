@@ -65,9 +65,9 @@ describe("User Profile Update", () => {
     const newName = "Full Update " + timestamp;
     const newEmail = `fullupdate${timestamp}@example.com`;
 
-    const result = await caller.users.updateProfile({ 
+    const result = await caller.users.updateProfile({
       name: newName,
-      email: newEmail 
+      email: newEmail,
     });
 
     expect(result).toBeDefined();
@@ -75,9 +75,9 @@ describe("User Profile Update", () => {
     expect(result?.email).toBe(newEmail);
 
     // Restaurar datos originales
-    await db.updateUserProfile(testUserId, { 
+    await db.updateUserProfile(testUserId, {
       name: originalName || "Test User",
-      email: originalEmail || ""
+      email: originalEmail || "",
     });
   });
 
@@ -88,9 +88,7 @@ describe("User Profile Update", () => {
       res: {} as any,
     });
 
-    await expect(
-      caller.users.updateProfile({ name: "" })
-    ).rejects.toThrow();
+    await expect(caller.users.updateProfile({ name: "" })).rejects.toThrow();
   });
 
   it("should reject invalid email format", async () => {
@@ -138,7 +136,9 @@ describe("User Profile Update", () => {
     });
 
     // Actualizar con el mismo email no debería dar error
-    const result = await caller.users.updateProfile({ email: currentUser.email });
+    const result = await caller.users.updateProfile({
+      email: currentUser.email,
+    });
     expect(result).toBeDefined();
     expect(result?.email).toBe(currentUser.email);
   });

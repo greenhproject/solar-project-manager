@@ -1,5 +1,11 @@
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -36,7 +42,10 @@ export default function UserManagement() {
   const deleteUser = trpc.users.delete.useMutation();
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
 
-  const handleRoleChange = async (userId: number, newRole: "admin" | "engineer") => {
+  const handleRoleChange = async (
+    userId: number,
+    newRole: "admin" | "engineer"
+  ) => {
     setUpdatingUserId(userId);
     try {
       await updateRole.mutateAsync({ userId, role: newRole });
@@ -96,13 +105,17 @@ export default function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Administradores</CardDescription>
-            <CardTitle className="text-3xl text-orange-600">{adminUsers.length}</CardTitle>
+            <CardTitle className="text-3xl text-orange-600">
+              {adminUsers.length}
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Ingenieros</CardDescription>
-            <CardTitle className="text-3xl text-blue-600">{engineerUsers.length}</CardTitle>
+            <CardTitle className="text-3xl text-blue-600">
+              {engineerUsers.length}
+            </CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -115,12 +128,15 @@ export default function UserManagement() {
         </h2>
 
         <div className="grid gap-4">
-          {adminUsers.map((user) => {
+          {adminUsers.map(user => {
             const isMaster = isMasterUser(user.email);
             const isCurrentUser = currentUser?.id === user.id;
-            
+
             return (
-              <Card key={user.id} className={isMaster ? "border-2 border-orange-500" : ""}>
+              <Card
+                key={user.id}
+                className={isMaster ? "border-2 border-orange-500" : ""}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-4 flex-1">
@@ -129,20 +145,28 @@ export default function UserManagement() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <CardTitle className="text-lg">{user.name || "Sin nombre"}</CardTitle>
+                          <CardTitle className="text-lg">
+                            {user.name || "Sin nombre"}
+                          </CardTitle>
                           {isMaster && (
                             <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 gap-1">
                               <Crown className="h-3 w-3" />
                               Usuario Maestro
                             </Badge>
                           )}
-                          {isCurrentUser && (
-                            <Badge variant="outline">Tú</Badge>
-                          )}
+                          {isCurrentUser && <Badge variant="outline">Tú</Badge>}
                         </div>
-                        <CardDescription className="mt-1">{user.email}</CardDescription>
+                        <CardDescription className="mt-1">
+                          {user.email}
+                        </CardDescription>
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span>Último acceso: {formatDistanceToNow(new Date(user.lastSignedIn), { addSuffix: true, locale: es })}</span>
+                          <span>
+                            Último acceso:{" "}
+                            {formatDistanceToNow(new Date(user.lastSignedIn), {
+                              addSuffix: true,
+                              locale: es,
+                            })}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -151,7 +175,12 @@ export default function UserManagement() {
                         <>
                           <Select
                             value={user.role}
-                            onValueChange={(value) => handleRoleChange(user.id, value as "admin" | "engineer")}
+                            onValueChange={value =>
+                              handleRoleChange(
+                                user.id,
+                                value as "admin" | "engineer"
+                              )
+                            }
                             disabled={updatingUserId === user.id}
                           >
                             <SelectTrigger className="w-[140px]">
@@ -175,15 +204,22 @@ export default function UserManagement() {
 
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+                                <AlertDialogTitle>
+                                  ¿Eliminar usuario?
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. Se eliminará permanentemente el usuario {user.name}.
+                                  Esta acción no se puede deshacer. Se eliminará
+                                  permanentemente el usuario {user.name}.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -229,9 +265,9 @@ export default function UserManagement() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {engineerUsers.map((user) => {
+            {engineerUsers.map(user => {
               const isCurrentUser = currentUser?.id === user.id;
-              
+
               return (
                 <Card key={user.id}>
                   <CardHeader>
@@ -242,21 +278,36 @@ export default function UserManagement() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg">{user.name || "Sin nombre"}</CardTitle>
+                            <CardTitle className="text-lg">
+                              {user.name || "Sin nombre"}
+                            </CardTitle>
                             {isCurrentUser && (
                               <Badge variant="outline">Tú</Badge>
                             )}
                           </div>
-                          <CardDescription className="mt-1">{user.email}</CardDescription>
+                          <CardDescription className="mt-1">
+                            {user.email}
+                          </CardDescription>
                           <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                            <span>Último acceso: {formatDistanceToNow(new Date(user.lastSignedIn), { addSuffix: true, locale: es })}</span>
+                            <span>
+                              Último acceso:{" "}
+                              {formatDistanceToNow(
+                                new Date(user.lastSignedIn),
+                                { addSuffix: true, locale: es }
+                              )}
+                            </span>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
                         <Select
                           value={user.role}
-                          onValueChange={(value) => handleRoleChange(user.id, value as "admin" | "engineer")}
+                          onValueChange={value =>
+                            handleRoleChange(
+                              user.id,
+                              value as "admin" | "engineer"
+                            )
+                          }
                           disabled={updatingUserId === user.id}
                         >
                           <SelectTrigger className="w-[140px]">
@@ -280,15 +331,22 @@ export default function UserManagement() {
 
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                ¿Eliminar usuario?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta acción no se puede deshacer. Se eliminará permanentemente el usuario {user.name}.
+                                Esta acción no se puede deshacer. Se eliminará
+                                permanentemente el usuario {user.name}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

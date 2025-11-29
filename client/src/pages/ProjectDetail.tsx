@@ -2,11 +2,17 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -24,11 +30,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Sun, 
-  ArrowLeft, 
-  MapPin, 
-  Users, 
+import {
+  Sun,
+  ArrowLeft,
+  MapPin,
+  Users,
   Calendar,
   CheckCircle2,
   Clock,
@@ -37,7 +43,7 @@ import {
   FileText,
   RefreshCw,
   Edit,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useState } from "react";
@@ -52,10 +58,17 @@ export default function ProjectDetail() {
   const [, params] = useRoute("/projects/:id");
   const projectId = params?.id ? parseInt(params.id) : 0;
 
-  const { data: project, isLoading, refetch } = trpc.projects.getById.useQuery({ id: projectId });
+  const {
+    data: project,
+    isLoading,
+    refetch,
+  } = trpc.projects.getById.useQuery({ id: projectId });
   const [, setLocation] = useLocation();
-  const { data: milestones, refetch: refetchMilestones } = trpc.milestones.getByProject.useQuery({ projectId });
-  const { data: updates } = trpc.projectUpdates.getByProject.useQuery({ projectId });
+  const { data: milestones, refetch: refetchMilestones } =
+    trpc.milestones.getByProject.useQuery({ projectId });
+  const { data: updates } = trpc.projectUpdates.getByProject.useQuery({
+    projectId,
+  });
   const { data: syncLogs } = trpc.sync.logs.useQuery({ projectId });
 
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
@@ -115,20 +128,39 @@ export default function ProjectDetail() {
       completed: { label: "Completado", variant: "default" as const },
       cancelled: { label: "Cancelado", variant: "destructive" as const },
     };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.planning;
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] ||
+      statusConfig.planning;
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const getMilestoneStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { label: "Pendiente", variant: "secondary" as const, icon: Clock },
-      in_progress: { label: "En Progreso", variant: "default" as const, icon: RefreshCw },
-      completed: { label: "Completado", variant: "default" as const, icon: CheckCircle2 },
-      overdue: { label: "Vencido", variant: "destructive" as const, icon: AlertTriangle },
+      pending: {
+        label: "Pendiente",
+        variant: "secondary" as const,
+        icon: Clock,
+      },
+      in_progress: {
+        label: "En Progreso",
+        variant: "default" as const,
+        icon: RefreshCw,
+      },
+      completed: {
+        label: "Completado",
+        variant: "default" as const,
+        icon: CheckCircle2,
+      },
+      overdue: {
+        label: "Vencido",
+        variant: "destructive" as const,
+        icon: AlertTriangle,
+      },
     };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+
+    const config =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
     const Icon = config.icon;
     return (
       <Badge variant={config.variant} className="gap-1">
@@ -139,7 +171,11 @@ export default function ProjectDetail() {
   };
 
   const isOverdue = (estimatedEndDate: Date, status: string) => {
-    return status !== 'completed' && status !== 'cancelled' && new Date(estimatedEndDate) < new Date();
+    return (
+      status !== "completed" &&
+      status !== "cancelled" &&
+      new Date(estimatedEndDate) < new Date()
+    );
   };
 
   const handleAddMilestone = async () => {
@@ -168,9 +204,12 @@ export default function ProjectDetail() {
     }
   };
 
-  const handleToggleMilestoneStatus = async (milestoneId: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
-    const completedDate = newStatus === 'completed' ? new Date() : undefined;
+  const handleToggleMilestoneStatus = async (
+    milestoneId: number,
+    currentStatus: string
+  ) => {
+    const newStatus = currentStatus === "completed" ? "pending" : "completed";
+    const completedDate = newStatus === "completed" ? new Date() : undefined;
 
     try {
       setIsSyncing(true);
@@ -180,11 +219,13 @@ export default function ProjectDetail() {
         completedDate,
       });
 
-      toast.success(`Hito marcado como ${newStatus === 'completed' ? 'completado' : 'pendiente'}`);
+      toast.success(
+        `Hito marcado como ${newStatus === "completed" ? "completado" : "pendiente"}`
+      );
       refetchMilestones();
       refetch(); // Actualizar progreso del proyecto
       utils.projects.list.invalidate(); // Invalidar caché de lista de proyectos
-      
+
       // Mostrar indicador de sincronización por 1 segundo
       setTimeout(() => setIsSyncing(false), 1000);
     } catch (error: any) {
@@ -193,7 +234,8 @@ export default function ProjectDetail() {
     }
   };
 
-  const completedMilestones = milestones?.filter(m => m.status === 'completed').length || 0;
+  const completedMilestones =
+    milestones?.filter(m => m.status === "completed").length || 0;
   const totalMilestones = milestones?.length || 0;
 
   return (
@@ -208,7 +250,7 @@ export default function ProjectDetail() {
                 Volver a Proyectos
               </Button>
             </Link>
-            
+
             <div className="flex items-center gap-3">
               <div className="h-14 w-14 rounded-xl bg-gradient-solar flex items-center justify-center">
                 <Sun className="h-8 w-8 text-white" />
@@ -229,14 +271,14 @@ export default function ProjectDetail() {
           </div>
 
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="gap-2"
               onClick={async () => {
                 try {
                   toast.info("Generando reporte PDF...");
                   const result = await generatePDF.mutateAsync({ projectId });
-                  
+
                   // Convertir base64 a blob y descargar
                   const byteCharacters = atob(result.pdfBase64);
                   const byteNumbers = new Array(byteCharacters.length);
@@ -244,17 +286,19 @@ export default function ProjectDetail() {
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
                   }
                   const byteArray = new Uint8Array(byteNumbers);
-                  const blob = new Blob([byteArray], { type: 'application/pdf' });
-                  
+                  const blob = new Blob([byteArray], {
+                    type: "application/pdf",
+                  });
+
                   const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
+                  const a = document.createElement("a");
                   a.href = url;
                   a.download = result.fileName;
                   document.body.appendChild(a);
                   a.click();
                   window.URL.revokeObjectURL(url);
                   document.body.removeChild(a);
-                  
+
                   toast.success("Reporte PDF generado exitosamente");
                 } catch (error: any) {
                   toast.error(error.message || "Error al generar el reporte");
@@ -269,9 +313,9 @@ export default function ProjectDetail() {
               )}
               Generar Reporte
             </Button>
-            {user.role === 'admin' && (
-              <Button 
-                variant="outline" 
+            {user.role === "admin" && (
+              <Button
+                variant="outline"
                 className="gap-2"
                 onClick={() => setLocation(`/projects/${projectId}/edit`)}
               >
@@ -297,7 +341,9 @@ export default function ProjectDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">{project.progressPercentage}%</div>
+              <div className="text-3xl font-bold mb-2">
+                {project.progressPercentage}%
+              </div>
               <Progress value={project.progressPercentage} className="h-2" />
               <p className="text-xs text-muted-foreground mt-2">
                 {completedMilestones} de {totalMilestones} hitos completados
@@ -315,16 +361,28 @@ export default function ProjectDetail() {
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Inicio:</span>
-                <span className="font-medium">{format(new Date(project.startDate), 'dd MMM yyyy', { locale: es })}</span>
+                <span className="font-medium">
+                  {format(new Date(project.startDate), "dd MMM yyyy", {
+                    locale: es,
+                  })}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Estimado:</span>
-                <span className="font-medium">{format(new Date(project.estimatedEndDate), 'dd MMM yyyy', { locale: es })}</span>
+                <span className="font-medium">
+                  {format(new Date(project.estimatedEndDate), "dd MMM yyyy", {
+                    locale: es,
+                  })}
+                </span>
               </div>
               {project.actualEndDate && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Finalizado:</span>
-                  <span className="font-medium">{format(new Date(project.actualEndDate), 'dd MMM yyyy', { locale: es })}</span>
+                  <span className="font-medium">
+                    {format(new Date(project.actualEndDate), "dd MMM yyyy", {
+                      locale: es,
+                    })}
+                  </span>
                 </div>
               )}
             </CardContent>
@@ -342,10 +400,14 @@ export default function ProjectDetail() {
                 <div className="font-medium">{project.clientName}</div>
               )}
               {project.clientEmail && (
-                <div className="text-muted-foreground">{project.clientEmail}</div>
+                <div className="text-muted-foreground">
+                  {project.clientEmail}
+                </div>
               )}
               {project.clientPhone && (
-                <div className="text-muted-foreground">{project.clientPhone}</div>
+                <div className="text-muted-foreground">
+                  {project.clientPhone}
+                </div>
               )}
               {project.location && (
                 <div className="flex items-center gap-1 text-muted-foreground mt-2">
@@ -370,7 +432,10 @@ export default function ProjectDetail() {
           <TabsContent value="milestones" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Hitos del Proyecto</h2>
-              <Dialog open={isAddingMilestone} onOpenChange={setIsAddingMilestone}>
+              <Dialog
+                open={isAddingMilestone}
+                onOpenChange={setIsAddingMilestone}
+              >
                 <DialogTrigger asChild>
                   <Button className="gap-2">
                     <Plus className="h-4 w-4" />
@@ -390,7 +455,12 @@ export default function ProjectDetail() {
                       <Input
                         id="milestoneName"
                         value={newMilestone.name}
-                        onChange={(e) => setNewMilestone({ ...newMilestone, name: e.target.value })}
+                        onChange={e =>
+                          setNewMilestone({
+                            ...newMilestone,
+                            name: e.target.value,
+                          })
+                        }
                         placeholder="Ej: Instalación de paneles"
                       />
                     </div>
@@ -399,21 +469,37 @@ export default function ProjectDetail() {
                       <Textarea
                         id="milestoneDescription"
                         value={newMilestone.description}
-                        onChange={(e) => setNewMilestone({ ...newMilestone, description: e.target.value })}
+                        onChange={e =>
+                          setNewMilestone({
+                            ...newMilestone,
+                            description: e.target.value,
+                          })
+                        }
                         placeholder="Detalles del hito..."
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="milestoneDueDate">Fecha de Vencimiento *</Label>
+                      <Label htmlFor="milestoneDueDate">
+                        Fecha de Vencimiento *
+                      </Label>
                       <Input
                         id="milestoneDueDate"
                         type="date"
                         value={newMilestone.dueDate}
-                        onChange={(e) => setNewMilestone({ ...newMilestone, dueDate: e.target.value })}
+                        onChange={e =>
+                          setNewMilestone({
+                            ...newMilestone,
+                            dueDate: e.target.value,
+                          })
+                        }
                       />
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setIsAddingMilestone(false)} className="flex-1">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsAddingMilestone(false)}
+                        className="flex-1"
+                      >
                         Cancelar
                       </Button>
                       <Button onClick={handleAddMilestone} className="flex-1">
@@ -427,46 +513,71 @@ export default function ProjectDetail() {
 
             {milestones && milestones.length > 0 ? (
               <div className="space-y-3">
-                {milestones.map((milestone) => (
-                  <Card key={milestone.id} className="hover:shadow-apple transition-all">
+                {milestones.map(milestone => (
+                  <Card
+                    key={milestone.id}
+                    className="hover:shadow-apple transition-all"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
                         <button
-                          onClick={() => handleToggleMilestoneStatus(milestone.id, milestone.status)}
+                          onClick={() =>
+                            handleToggleMilestoneStatus(
+                              milestone.id,
+                              milestone.status
+                            )
+                          }
                           className="mt-1 flex-shrink-0"
                         >
-                          {milestone.status === 'completed' ? (
+                          {milestone.status === "completed" ? (
                             <CheckCircle2 className="h-6 w-6 text-green-500" />
                           ) : (
                             <div className="h-6 w-6 rounded-full border-2 border-muted-foreground hover:border-primary transition-colors" />
                           )}
                         </button>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4 mb-2">
-                            <h3 className={`font-semibold ${milestone.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
+                            <h3
+                              className={`font-semibold ${milestone.status === "completed" ? "line-through text-muted-foreground" : ""}`}
+                            >
                               {milestone.name}
                             </h3>
                             {getMilestoneStatusBadge(milestone.status)}
                           </div>
-                          
+
                           {milestone.description && (
-                            <p className="text-sm text-muted-foreground mb-2">{milestone.description}</p>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {milestone.description}
+                            </p>
                           )}
-                          
+
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              Vence: {format(new Date(milestone.dueDate), 'dd MMM yyyy', { locale: es })}
+                              Vence:{" "}
+                              {format(
+                                new Date(milestone.dueDate),
+                                "dd MMM yyyy",
+                                { locale: es }
+                              )}
                             </span>
                             {milestone.completedDate && (
                               <span className="flex items-center gap-1 text-green-600">
                                 <CheckCircle2 className="h-3 w-3" />
-                                Completado: {format(new Date(milestone.completedDate), 'dd MMM yyyy', { locale: es })}
+                                Completado:{" "}
+                                {format(
+                                  new Date(milestone.completedDate),
+                                  "dd MMM yyyy",
+                                  { locale: es }
+                                )}
                               </span>
                             )}
                             {(milestone as any).googleCalendarEventId && (
-                              <span className="flex items-center gap-1 text-blue-600" title="Sincronizado con Google Calendar">
+                              <span
+                                className="flex items-center gap-1 text-blue-600"
+                                title="Sincronizado con Google Calendar"
+                              >
                                 <Calendar className="h-3 w-3" />
                                 Sincronizado
                               </span>
@@ -482,7 +593,9 @@ export default function ProjectDetail() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No hay hitos definidos para este proyecto</p>
+                  <p className="text-muted-foreground">
+                    No hay hitos definidos para este proyecto
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -493,7 +606,7 @@ export default function ProjectDetail() {
             <h2 className="text-2xl font-bold">Historial de Actualizaciones</h2>
             {updates && updates.length > 0 ? (
               <div className="space-y-3">
-                {updates.map((update) => (
+                {updates.map(update => (
                   <Card key={update.id}>
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
@@ -503,10 +616,15 @@ export default function ProjectDetail() {
                         <div className="flex-1">
                           <h4 className="font-medium">{update.title}</h4>
                           {update.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{update.description}</p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {update.description}
+                            </p>
                           )}
                           <p className="text-xs text-muted-foreground mt-2">
-                            {formatDistanceToNow(new Date(update.createdAt), { addSuffix: true, locale: es })}
+                            {formatDistanceToNow(new Date(update.createdAt), {
+                              addSuffix: true,
+                              locale: es,
+                            })}
                           </p>
                         </div>
                       </div>
@@ -518,7 +636,9 @@ export default function ProjectDetail() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No hay actualizaciones registradas</p>
+                  <p className="text-muted-foreground">
+                    No hay actualizaciones registradas
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -529,15 +649,18 @@ export default function ProjectDetail() {
             <div>
               <h2 className="text-2xl font-bold mb-4">Archivos Adjuntos</h2>
               <p className="text-gray-600 mb-6">
-                Sube y gestiona documentos relacionados con este proyecto (planos, contratos, certificaciones, etc.)
+                Sube y gestiona documentos relacionados con este proyecto
+                (planos, contratos, certificaciones, etc.)
               </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <h3 className="text-lg font-semibold mb-3">Subir Nuevo Archivo</h3>
-                <FileUpload 
-                  projectId={projectId} 
+                <h3 className="text-lg font-semibold mb-3">
+                  Subir Nuevo Archivo
+                </h3>
+                <FileUpload
+                  projectId={projectId}
                   onUploadComplete={() => {
                     // Los archivos se recargarán automáticamente gracias a tRPC
                   }}
@@ -545,7 +668,9 @@ export default function ProjectDetail() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold mb-3">Archivos del Proyecto</h3>
+                <h3 className="text-lg font-semibold mb-3">
+                  Archivos del Proyecto
+                </h3>
                 <FileList projectId={projectId} />
               </div>
             </div>
@@ -554,10 +679,12 @@ export default function ProjectDetail() {
           {/* Sincronización */}
           <TabsContent value="sync" className="space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Sincronización con OpenSolar</h2>
-              {user.role === 'admin' && project.openSolarId && (
-                <Button 
-                  variant="outline" 
+              <h2 className="text-2xl font-bold">
+                Sincronización con OpenSolar
+              </h2>
+              {user.role === "admin" && project.openSolarId && (
+                <Button
+                  variant="outline"
                   className="gap-2"
                   onClick={async () => {
                     try {
@@ -580,37 +707,50 @@ export default function ProjectDetail() {
                 </Button>
               )}
             </div>
-            
+
             {project.openSolarId && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm">ID de OpenSolar</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <code className="text-sm bg-muted px-2 py-1 rounded">{project.openSolarId}</code>
+                  <code className="text-sm bg-muted px-2 py-1 rounded">
+                    {project.openSolarId}
+                  </code>
                 </CardContent>
               </Card>
             )}
 
             {syncLogs && syncLogs.length > 0 ? (
               <div className="space-y-3">
-                {syncLogs.map((log) => (
+                {syncLogs.map(log => (
                   <Card key={log.id}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <Badge variant={log.status === 'success' ? 'default' : 'destructive'}>
+                            <Badge
+                              variant={
+                                log.status === "success"
+                                  ? "default"
+                                  : "destructive"
+                              }
+                            >
                               {log.status}
                             </Badge>
-                            <span className="text-sm text-muted-foreground">{log.syncType}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {log.syncType}
+                            </span>
                           </div>
                           {log.message && (
                             <p className="text-sm mt-1">{log.message}</p>
                           )}
                         </div>
                         <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(log.syncedAt), { addSuffix: true, locale: es })}
+                          {formatDistanceToNow(new Date(log.syncedAt), {
+                            addSuffix: true,
+                            locale: es,
+                          })}
                         </span>
                       </div>
                     </CardContent>
@@ -621,7 +761,9 @@ export default function ProjectDetail() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <RefreshCw className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No hay logs de sincronización</p>
+                  <p className="text-muted-foreground">
+                    No hay logs de sincronización
+                  </p>
                 </CardContent>
               </Card>
             )}

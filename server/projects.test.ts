@@ -139,7 +139,9 @@ describe("projects", () => {
     const ctx = createEngineerContext();
     const caller = appRouter.createCaller(ctx);
 
-    await expect(caller.users.list()).rejects.toThrow("Solo los administradores");
+    await expect(caller.users.list()).rejects.toThrow(
+      "Solo los administradores"
+    );
   });
 });
 
@@ -163,8 +165,6 @@ describe("recordatorios", () => {
     expect(result).toBeDefined();
     expect(Array.isArray(result)).toBe(true);
   });
-
-
 });
 
 describe("autenticación", () => {

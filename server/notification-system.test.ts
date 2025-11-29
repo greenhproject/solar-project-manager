@@ -18,7 +18,7 @@ describe("Notification System - CRUD Operations", () => {
 
     const notifications = await db.getUserNotifications(testUserId, 10, false);
     expect(notifications.length).toBeGreaterThan(0);
-    
+
     const notification = notifications[0];
     testNotificationId = notification.id;
     expect(notification.title).toBe("Nuevo proyecto asignado");
@@ -87,7 +87,11 @@ describe("Notification System - CRUD Operations", () => {
 
     await caller.notifications.markAllAsRead();
 
-    const unreadNotifications = await db.getUserNotifications(testUserId, 10, true);
+    const unreadNotifications = await db.getUserNotifications(
+      testUserId,
+      10,
+      true
+    );
     expect(unreadNotifications.length).toBe(0);
   });
 
@@ -161,7 +165,7 @@ describe("Notification System - CRUD Operations", () => {
 
     const notifications = await db.getUserNotifications(testUserId, 50, false);
     const createdTypes = notifications.map(n => n.type);
-    
+
     for (const type of types) {
       expect(createdTypes).toContain(type);
     }

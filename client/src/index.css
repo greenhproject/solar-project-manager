@@ -51,7 +51,7 @@
   --chart-1: oklch(0.75 0.15 65); /* Ámbar claro */
   --chart-2: oklch(0.65 0.19 45); /* Naranja principal */
   --chart-3: oklch(0.55 0.18 40); /* Naranja oscuro */
-  --chart-4: oklch(0.50 0.15 35); /* Naranja profundo */
+  --chart-4: oklch(0.5 0.15 35); /* Naranja profundo */
   --chart-5: oklch(0.45 0.12 30); /* Naranja muy oscuro */
   --radius: 0.65rem;
   --background: oklch(1 0 0);
@@ -95,7 +95,7 @@
   --muted: oklch(0.274 0.006 286.033);
   --muted-foreground: oklch(0.705 0.015 286.067);
   --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
+  --accent-foreground: oklch(0.92 0.005 65);
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 10%);
@@ -104,12 +104,12 @@
   --chart-1: oklch(0.75 0.15 65);
   --chart-2: oklch(0.65 0.19 45);
   --chart-3: oklch(0.55 0.18 40);
-  --chart-4: oklch(0.50 0.15 35);
+  --chart-4: oklch(0.5 0.15 35);
   --chart-5: oklch(0.45 0.12 30);
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.85 0.005 65);
   --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.488 0.243 264.376);
 }
@@ -179,13 +179,24 @@
 
 @layer base {
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-family:
+      "Inter",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      "Roboto",
+      sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 }
@@ -193,18 +204,26 @@
 @layer utilities {
   /* Gradientes solares */
   .gradient-solar {
-    background: linear-gradient(135deg, oklch(0.65 0.19 45) 0%, oklch(0.75 0.15 65) 100%);
+    background: linear-gradient(
+      135deg,
+      oklch(0.65 0.19 45) 0%,
+      oklch(0.75 0.15 65) 100%
+    );
   }
-  
+
   .gradient-solar-subtle {
-    background: linear-gradient(135deg, oklch(0.65 0.19 45 / 0.1) 0%, oklch(0.75 0.15 65 / 0.1) 100%);
+    background: linear-gradient(
+      135deg,
+      oklch(0.65 0.19 45 / 0.1) 0%,
+      oklch(0.75 0.15 65 / 0.1) 100%
+    );
   }
-  
+
   /* Sombras suaves tipo Apple */
   .shadow-apple {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   }
-  
+
   .shadow-apple-lg {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   }

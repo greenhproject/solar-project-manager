@@ -1,7 +1,13 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -21,7 +27,7 @@ import { es } from "date-fns/locale";
 export default function Reports() {
   const { user, isAuthenticated } = useAuth();
   const { data: projects } = trpc.projects.list.useQuery();
-  
+
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState({
     completionRate: true,
@@ -79,24 +85,26 @@ export default function Reports() {
 
     try {
       setIsGenerating(true);
-      
+
       // Generar un PDF por cada proyecto seleccionado
       for (const projectId of selectedProjects) {
         const result = await generatePDF.mutateAsync({ projectId });
-        
+
         // Descargar el PDF
-        const link = document.createElement('a');
+        const link = document.createElement("a");
         link.href = `data:application/pdf;base64,${result.pdfBase64}`;
         link.download = result.fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         // Esperar un poco entre descargas
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      toast.success(`${selectedProjects.length} reporte(s) generado(s) exitosamente`);
+      toast.success(
+        `${selectedProjects.length} reporte(s) generado(s) exitosamente`
+      );
     } catch (error: any) {
       toast.error(error.message || "Error al generar el reporte");
     } finally {
@@ -141,14 +149,23 @@ export default function Reports() {
                 <div className="flex items-center justify-between">
                   <Label>Seleccionar todos</Label>
                   <Checkbox
-                    checked={selectedProjects.length === projects?.length && projects?.length > 0}
+                    checked={
+                      selectedProjects.length === projects?.length &&
+                      projects?.length > 0
+                    }
                     onCheckedChange={handleSelectAllProjects}
                   />
                 </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {projects?.map((project) => (
-                    <div key={project.id} className="flex items-center justify-between p-2 hover:bg-muted rounded-lg">
-                      <Label htmlFor={`project-${project.id}`} className="flex-1 cursor-pointer">
+                  {projects?.map(project => (
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-2 hover:bg-muted rounded-lg"
+                    >
+                      <Label
+                        htmlFor={`project-${project.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
                         {project.name}
                       </Label>
                       <Checkbox
@@ -176,8 +193,11 @@ export default function Reports() {
                   <Checkbox
                     id="completionRate"
                     checked={selectedMetrics.completionRate}
-                    onCheckedChange={(checked) =>
-                      setSelectedMetrics(prev => ({ ...prev, completionRate: checked as boolean }))
+                    onCheckedChange={checked =>
+                      setSelectedMetrics(prev => ({
+                        ...prev,
+                        completionRate: checked as boolean,
+                      }))
                     }
                   />
                 </div>
@@ -186,8 +206,11 @@ export default function Reports() {
                   <Checkbox
                     id="averageTime"
                     checked={selectedMetrics.averageTime}
-                    onCheckedChange={(checked) =>
-                      setSelectedMetrics(prev => ({ ...prev, averageTime: checked as boolean }))
+                    onCheckedChange={checked =>
+                      setSelectedMetrics(prev => ({
+                        ...prev,
+                        averageTime: checked as boolean,
+                      }))
                     }
                   />
                 </div>
@@ -196,8 +219,11 @@ export default function Reports() {
                   <Checkbox
                     id="monthlyMetrics"
                     checked={selectedMetrics.monthlyMetrics}
-                    onCheckedChange={(checked) =>
-                      setSelectedMetrics(prev => ({ ...prev, monthlyMetrics: checked as boolean }))
+                    onCheckedChange={checked =>
+                      setSelectedMetrics(prev => ({
+                        ...prev,
+                        monthlyMetrics: checked as boolean,
+                      }))
                     }
                   />
                 </div>
@@ -206,8 +232,11 @@ export default function Reports() {
                   <Checkbox
                     id="distribution"
                     checked={selectedMetrics.distribution}
-                    onCheckedChange={(checked) =>
-                      setSelectedMetrics(prev => ({ ...prev, distribution: checked as boolean }))
+                    onCheckedChange={checked =>
+                      setSelectedMetrics(prev => ({
+                        ...prev,
+                        distribution: checked as boolean,
+                      }))
                     }
                   />
                 </div>
@@ -230,7 +259,9 @@ export default function Reports() {
                   <SelectContent>
                     <SelectItem value="last_week">Última semana</SelectItem>
                     <SelectItem value="last_month">Último mes</SelectItem>
-                    <SelectItem value="last_quarter">Último trimestre</SelectItem>
+                    <SelectItem value="last_quarter">
+                      Último trimestre
+                    </SelectItem>
                     <SelectItem value="last_year">Último año</SelectItem>
                     <SelectItem value="all_time">Todo el tiempo</SelectItem>
                   </SelectContent>
@@ -250,30 +281,41 @@ export default function Reports() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-sm font-semibold">Proyectos Seleccionados</Label>
+                  <Label className="text-sm font-semibold">
+                    Proyectos Seleccionados
+                  </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {selectedProjects.length} de {projects?.length || 0} proyectos
+                    {selectedProjects.length} de {projects?.length || 0}{" "}
+                    proyectos
                   </p>
                 </div>
-                
+
                 <div>
-                  <Label className="text-sm font-semibold">Métricas Seleccionadas</Label>
+                  <Label className="text-sm font-semibold">
+                    Métricas Seleccionadas
+                  </Label>
                   <ul className="text-sm text-muted-foreground mt-1 space-y-1">
-                    {selectedMetrics.completionRate && <li>• Tasa de Completación</li>}
+                    {selectedMetrics.completionRate && (
+                      <li>• Tasa de Completación</li>
+                    )}
                     {selectedMetrics.averageTime && <li>• Tiempo Promedio</li>}
-                    {selectedMetrics.monthlyMetrics && <li>• Métricas Mensuales</li>}
-                    {selectedMetrics.distribution && <li>• Distribución por Tipo</li>}
+                    {selectedMetrics.monthlyMetrics && (
+                      <li>• Métricas Mensuales</li>
+                    )}
+                    {selectedMetrics.distribution && (
+                      <li>• Distribución por Tipo</li>
+                    )}
                   </ul>
                 </div>
 
                 <div>
                   <Label className="text-sm font-semibold">Período</Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {dateRange === 'last_week' && 'Última semana'}
-                    {dateRange === 'last_month' && 'Último mes'}
-                    {dateRange === 'last_quarter' && 'Último trimestre'}
-                    {dateRange === 'last_year' && 'Último año'}
-                    {dateRange === 'all_time' && 'Todo el tiempo'}
+                    {dateRange === "last_week" && "Última semana"}
+                    {dateRange === "last_month" && "Último mes"}
+                    {dateRange === "last_quarter" && "Último trimestre"}
+                    {dateRange === "last_year" && "Último año"}
+                    {dateRange === "all_time" && "Todo el tiempo"}
                   </p>
                 </div>
 
@@ -305,7 +347,8 @@ export default function Reports() {
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-2">
                 <p>
-                  El reporte incluirá gráficos y tablas con las métricas seleccionadas para los proyectos especificados.
+                  El reporte incluirá gráficos y tablas con las métricas
+                  seleccionadas para los proyectos especificados.
                 </p>
                 <p>
                   El archivo PDF se descargará automáticamente una vez generado.

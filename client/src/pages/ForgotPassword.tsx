@@ -2,7 +2,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
 import { Sun, ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 import { Link } from "wouter";
@@ -10,7 +16,7 @@ import { Link } from "wouter";
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
-  
+
   const forgotPasswordMutation = trpc.auth.forgotPassword.useMutation({
     onSuccess: () => {
       setSubmitted(true);
@@ -32,16 +38,19 @@ export default function ForgotPassword() {
             </div>
             <CardTitle className="text-2xl">Email Enviado</CardTitle>
             <CardDescription>
-              Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.
+              Si el email existe en nuestro sistema, recibirás un enlace para
+              restablecer tu contraseña.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-                <p className="font-medium mb-1">📧 Revisa tu bandeja de entrada</p>
+                <p className="font-medium mb-1">
+                  📧 Revisa tu bandeja de entrada
+                </p>
                 <p>El enlace expirará en 1 hora por seguridad.</p>
               </div>
-              
+
               <Link href="/login">
                 <Button variant="outline" className="w-full">
                   <ArrowLeft className="mr-2 h-4 w-4" />
@@ -64,7 +73,8 @@ export default function ForgotPassword() {
           </div>
           <CardTitle className="text-2xl">Recuperar Contraseña</CardTitle>
           <CardDescription>
-            Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña
+            Ingresa tu email y te enviaremos un enlace para restablecer tu
+            contraseña
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -78,7 +88,7 @@ export default function ForgotPassword() {
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   required
                   className="pl-10"
                 />
@@ -91,12 +101,14 @@ export default function ForgotPassword() {
               </div>
             )}
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-gradient-solar hover:opacity-90"
               disabled={forgotPasswordMutation.isPending}
             >
-              {forgotPasswordMutation.isPending ? "Enviando..." : "Enviar Enlace de Recuperación"}
+              {forgotPasswordMutation.isPending
+                ? "Enviando..."
+                : "Enviar Enlace de Recuperación"}
             </Button>
 
             <div className="text-center space-y-2">

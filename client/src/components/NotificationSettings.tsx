@@ -36,12 +36,12 @@ export function NotificationSettings() {
     }
 
     const granted = await requestNotificationPermission();
-    
+
     if (granted) {
       setNotificationsEnabled(true);
       setPermissionStatus({ granted: true, denied: false, default: false });
       toast.success("Notificaciones activadas correctamente");
-      
+
       // Enviar notificación de prueba
       notifyCustom(
         "Notificaciones activadas",
@@ -56,7 +56,9 @@ export function NotificationSettings() {
 
   const handleDisableNotifications = () => {
     setNotificationsEnabled(false);
-    toast.info("Las notificaciones se han desactivado. Para volver a activarlas, deberás cambiar los permisos en la configuración de tu navegador.");
+    toast.info(
+      "Las notificaciones se han desactivado. Para volver a activarlas, deberás cambiar los permisos en la configuración de tu navegador."
+    );
   };
 
   const handleTestNotification = () => {
@@ -74,9 +76,12 @@ export function NotificationSettings() {
         <div className="flex items-start gap-4">
           <BellOff className="h-6 w-6 text-muted-foreground mt-1" />
           <div>
-            <h3 className="font-semibold mb-2">Notificaciones no disponibles</h3>
+            <h3 className="font-semibold mb-2">
+              Notificaciones no disponibles
+            </h3>
             <p className="text-sm text-muted-foreground">
-              Tu navegador no soporta notificaciones push. Considera usar un navegador moderno como Chrome, Firefox o Edge.
+              Tu navegador no soporta notificaciones push. Considera usar un
+              navegador moderno como Chrome, Firefox o Edge.
             </p>
           </div>
         </div>
@@ -93,14 +98,15 @@ export function NotificationSettings() {
             <div>
               <h3 className="font-semibold mb-2">Notificaciones Push</h3>
               <p className="text-sm text-muted-foreground">
-                Recibe alertas en tiempo real sobre hitos próximos a vencer y proyectos retrasados
+                Recibe alertas en tiempo real sobre hitos próximos a vencer y
+                proyectos retrasados
               </p>
             </div>
           </div>
-          
+
           <Switch
             checked={notificationsEnabled}
-            onCheckedChange={(checked) => {
+            onCheckedChange={checked => {
               if (checked) {
                 handleEnableNotifications();
               } else {
@@ -154,7 +160,9 @@ export function NotificationSettings() {
 
         {/* Información adicional */}
         <div className="pt-4 border-t">
-          <h4 className="font-medium text-sm mb-2">¿Qué notificaciones recibirás?</h4>
+          <h4 className="font-medium text-sm mb-2">
+            ¿Qué notificaciones recibirás?
+          </h4>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>

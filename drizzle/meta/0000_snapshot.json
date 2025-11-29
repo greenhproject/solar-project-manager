@@ -81,9 +81,7 @@
       "compositePrimaryKeys": {
         "milestone_templates_id": {
           "name": "milestone_templates_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -206,16 +204,12 @@
       "indexes": {
         "project_idx": {
           "name": "project_idx",
-          "columns": [
-            "projectId"
-          ],
+          "columns": ["projectId"],
           "isUnique": false
         },
         "status_idx": {
           "name": "status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         }
       },
@@ -223,9 +217,7 @@
       "compositePrimaryKeys": {
         "milestones_id": {
           "name": "milestones_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -298,9 +290,7 @@
       "compositePrimaryKeys": {
         "notification_history_id": {
           "name": "notification_history_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -386,17 +376,13 @@
       "compositePrimaryKeys": {
         "notification_settings_id": {
           "name": "notification_settings_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {
         "notification_settings_userId_unique": {
           "name": "notification_settings_userId_unique",
-          "columns": [
-            "userId"
-          ]
+          "columns": ["userId"]
         }
       },
       "checkConstraint": {}
@@ -498,9 +484,7 @@
       "compositePrimaryKeys": {
         "project_attachments_id": {
           "name": "project_attachments_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -577,9 +561,7 @@
       "compositePrimaryKeys": {
         "project_types_id": {
           "name": "project_types_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -656,16 +638,12 @@
       "indexes": {
         "project_idx": {
           "name": "project_idx",
-          "columns": [
-            "projectId"
-          ],
+          "columns": ["projectId"],
           "isUnique": false
         },
         "type_idx": {
           "name": "type_idx",
-          "columns": [
-            "updateType"
-          ],
+          "columns": ["updateType"],
           "isUnique": false
         }
       },
@@ -673,9 +651,7 @@
       "compositePrimaryKeys": {
         "project_updates_id": {
           "name": "project_updates_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -819,23 +795,17 @@
       "indexes": {
         "engineer_idx": {
           "name": "engineer_idx",
-          "columns": [
-            "assignedEngineerId"
-          ],
+          "columns": ["assignedEngineerId"],
           "isUnique": false
         },
         "status_idx": {
           "name": "status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "opensolar_idx": {
           "name": "opensolar_idx",
-          "columns": [
-            "openSolarId"
-          ],
+          "columns": ["openSolarId"],
           "isUnique": false
         }
       },
@@ -843,9 +813,7 @@
       "compositePrimaryKeys": {
         "projects_id": {
           "name": "projects_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -948,23 +916,17 @@
       "indexes": {
         "user_idx": {
           "name": "user_idx",
-          "columns": [
-            "userId"
-          ],
+          "columns": ["userId"],
           "isUnique": false
         },
         "date_idx": {
           "name": "date_idx",
-          "columns": [
-            "reminderDate"
-          ],
+          "columns": ["reminderDate"],
           "isUnique": false
         },
         "read_idx": {
           "name": "read_idx",
-          "columns": [
-            "isRead"
-          ],
+          "columns": ["isRead"],
           "isUnique": false
         }
       },
@@ -972,9 +934,7 @@
       "compositePrimaryKeys": {
         "reminders_id": {
           "name": "reminders_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -1061,16 +1021,12 @@
       "indexes": {
         "project_idx": {
           "name": "project_idx",
-          "columns": [
-            "projectId"
-          ],
+          "columns": ["projectId"],
           "isUnique": false
         },
         "status_idx": {
           "name": "status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         }
       },
@@ -1078,9 +1034,7 @@
       "compositePrimaryKeys": {
         "sync_logs_id": {
           "name": "sync_logs_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {},
@@ -1185,23 +1139,17 @@
       "compositePrimaryKeys": {
         "users_id": {
           "name": "users_id",
-          "columns": [
-            "id"
-          ]
+          "columns": ["id"]
         }
       },
       "uniqueConstraints": {
         "users_openId_unique": {
           "name": "users_openId_unique",
-          "columns": [
-            "openId"
-          ]
+          "columns": ["openId"]
         },
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "checkConstraint": {}

@@ -1,17 +1,23 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
-import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
-import { es } from 'date-fns/locale';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { Calendar as BigCalendar, dateFnsLocalizer } from "react-big-calendar";
+import { format, parse, startOfWeek, getDay } from "date-fns";
+import { es } from "date-fns/locale";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useMemo } from "react";
 
 const locales = {
-  'es': es,
+  es: es,
 };
 
 const localizer = dateFnsLocalizer({
@@ -24,20 +30,22 @@ const localizer = dateFnsLocalizer({
 
 // Colores para diferentes proyectos
 const projectColors = [
-  '#FF6B35', // Naranja solar
-  '#4ECDC4', // Turquesa
-  '#95E1D3', // Verde menta
-  '#F38181', // Rosa coral
-  '#AA96DA', // Púrpura
-  '#FCBAD3', // Rosa claro
-  '#A8D8EA', // Azul cielo
-  '#FFCF56', // Amarillo dorado
+  "#FF6B35", // Naranja solar
+  "#4ECDC4", // Turquesa
+  "#95E1D3", // Verde menta
+  "#F38181", // Rosa coral
+  "#AA96DA", // Púrpura
+  "#FCBAD3", // Rosa claro
+  "#A8D8EA", // Azul cielo
+  "#FFCF56", // Amarillo dorado
 ];
 
 export default function CalendarPage() {
   const { user, isAuthenticated } = useAuth();
-  const { data: projects, isLoading: loadingProjects } = trpc.projects.list.useQuery();
-  const { data: allMilestones, isLoading: loadingMilestones } = trpc.milestones.getAll.useQuery();
+  const { data: projects, isLoading: loadingProjects } =
+    trpc.projects.list.useQuery();
+  const { data: allMilestones, isLoading: loadingMilestones } =
+    trpc.milestones.getAll.useQuery();
 
   if (!isAuthenticated || !user) {
     return (
@@ -64,12 +72,12 @@ export default function CalendarPage() {
   // Convertir hitos a eventos de calendario
   const events = useMemo(() => {
     if (!allMilestones || !projects) return [];
-    
+
     return allMilestones.map(milestone => {
       const project = projects.find(p => p.id === milestone.projectId);
       return {
         id: milestone.id,
-        title: `${project?.name || 'Proyecto'}: ${milestone.name}`,
+        title: `${project?.name || "Proyecto"}: ${milestone.name}`,
         start: new Date(milestone.dueDate),
         end: new Date(milestone.dueDate),
         resource: {
@@ -86,13 +94,13 @@ export default function CalendarPage() {
   const eventStyleGetter = (event: any) => {
     const style = {
       backgroundColor: event.resource.color,
-      borderRadius: '4px',
-      opacity: event.resource.status === 'completed' ? 0.6 : 1,
-      color: 'white',
-      border: '0px',
-      display: 'block',
-      fontSize: '12px',
-      padding: '2px 4px',
+      borderRadius: "4px",
+      opacity: event.resource.status === "completed" ? 0.6 : 1,
+      color: "white",
+      border: "0px",
+      display: "block",
+      fontSize: "12px",
+      padding: "2px 4px",
     };
     return { style };
   };
@@ -136,12 +144,12 @@ export default function CalendarPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {projects?.map((project) => (
-                <Badge 
-                  key={project.id} 
-                  style={{ 
+              {projects?.map(project => (
+                <Badge
+                  key={project.id}
+                  style={{
                     backgroundColor: projectColorMap[project.id],
-                    color: 'white'
+                    color: "white",
                   }}
                 >
                   {project.name}
@@ -154,13 +162,13 @@ export default function CalendarPage() {
         {/* Calendario */}
         <Card>
           <CardContent className="p-6">
-            <div style={{ height: '600px' }}>
+            <div style={{ height: "600px" }}>
               <BigCalendar
                 localizer={localizer}
                 events={events}
                 startAccessor="start"
                 endAccessor="end"
-                style={{ height: '100%' }}
+                style={{ height: "100%" }}
                 eventPropGetter={eventStyleGetter}
                 messages={{
                   next: "Siguiente",
@@ -174,7 +182,7 @@ export default function CalendarPage() {
                   time: "Hora",
                   event: "Evento",
                   noEventsInRange: "No hay hitos en este rango de fechas",
-                  showMore: (total: number) => `+ Ver más (${total})`
+                  showMore: (total: number) => `+ Ver más (${total})`,
                 }}
                 culture="es"
               />
@@ -191,7 +199,9 @@ export default function CalendarPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{allMilestones?.length || 0}</div>
+              <div className="text-3xl font-bold">
+                {allMilestones?.length || 0}
+              </div>
             </CardContent>
           </Card>
 
@@ -203,7 +213,8 @@ export default function CalendarPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-500">
-                {allMilestones?.filter(m => m.status === 'completed').length || 0}
+                {allMilestones?.filter(m => m.status === "completed").length ||
+                  0}
               </div>
             </CardContent>
           </Card>
@@ -216,7 +227,8 @@ export default function CalendarPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-orange-500">
-                {allMilestones?.filter(m => m.status !== 'completed').length || 0}
+                {allMilestones?.filter(m => m.status !== "completed").length ||
+                  0}
               </div>
             </CardContent>
           </Card>

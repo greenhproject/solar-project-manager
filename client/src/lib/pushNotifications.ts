@@ -96,14 +96,11 @@ export function notifyMilestoneDue(
   daysRemaining: number,
   onClick?: () => void
 ) {
-  const notification = sendNotification(
-    `🎯 Hito próximo a vencer`,
-    {
-      body: `El hito "${milestoneName}" del proyecto "${projectName}" vence en ${daysRemaining} día${daysRemaining !== 1 ? "s" : ""}`,
-      tag: `milestone-due-${milestoneName}`,
-      requireInteraction: true,
-    }
-  );
+  const notification = sendNotification(`🎯 Hito próximo a vencer`, {
+    body: `El hito "${milestoneName}" del proyecto "${projectName}" vence en ${daysRemaining} día${daysRemaining !== 1 ? "s" : ""}`,
+    tag: `milestone-due-${milestoneName}`,
+    requireInteraction: true,
+  });
 
   if (notification && onClick) {
     notification.onclick = () => {
@@ -124,14 +121,11 @@ export function notifyProjectDelayed(
   daysOverdue: number,
   onClick?: () => void
 ) {
-  const notification = sendNotification(
-    `⚠️ Proyecto retrasado`,
-    {
-      body: `El proyecto "${projectName}" está retrasado por ${daysOverdue} día${daysOverdue !== 1 ? "s" : ""}`,
-      tag: `project-delayed-${projectName}`,
-      requireInteraction: true,
-    }
-  );
+  const notification = sendNotification(`⚠️ Proyecto retrasado`, {
+    body: `El proyecto "${projectName}" está retrasado por ${daysOverdue} día${daysOverdue !== 1 ? "s" : ""}`,
+    tag: `project-delayed-${projectName}`,
+    requireInteraction: true,
+  });
 
   if (notification && onClick) {
     notification.onclick = () => {
@@ -152,13 +146,10 @@ export function notifyMilestoneCompleted(
   projectName: string,
   onClick?: () => void
 ) {
-  const notification = sendNotification(
-    `✅ Hito completado`,
-    {
-      body: `El hito "${milestoneName}" del proyecto "${projectName}" ha sido completado`,
-      tag: `milestone-completed-${milestoneName}`,
-    }
-  );
+  const notification = sendNotification(`✅ Hito completado`, {
+    body: `El hito "${milestoneName}" del proyecto "${projectName}" ha sido completado`,
+    tag: `milestone-completed-${milestoneName}`,
+  });
 
   if (notification && onClick) {
     notification.onclick = () => {
@@ -187,13 +178,10 @@ export function notifyCustom(
     error: "❌",
   };
 
-  const notification = sendNotification(
-    `${icons[type]} ${title}`,
-    {
-      body: message,
-      tag: `custom-${Date.now()}`,
-    }
-  );
+  const notification = sendNotification(`${icons[type]} ${title}`, {
+    body: message,
+    tag: `custom-${Date.now()}`,
+  });
 
   if (notification && onClick) {
     notification.onclick = () => {
@@ -211,15 +199,15 @@ export function notifyCustom(
  */
 export async function ensureNotificationPermission(): Promise<boolean> {
   const status = getNotificationPermission();
-  
+
   if (status.granted) {
     return true;
   }
-  
+
   if (status.denied) {
     return false;
   }
-  
+
   // Si es default, solicitar permiso
   return await requestNotificationPermission();
 }
