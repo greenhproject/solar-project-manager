@@ -580,3 +580,10 @@
 - [x] Crear página ResetPassword.tsx
 - [x] Agregar link "Olvidé mi contraseña" en Login
 - [x] Probar flujo completo de recuperación
+
+## Bug Crítico - Login No Funciona en Railway
+- [x] Investigar error "[Auth] Missing session cookie" en Railway
+- [x] Verificar configuración de cookies para producción
+- [x] Corregir dominio y configuración de SameSite (cambiado a "lax")
+- [ ] Pushear cambios a GitHub
+- [ ] Verificar que login funcione en Railway
