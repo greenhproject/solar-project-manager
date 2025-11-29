@@ -91,9 +91,9 @@ export const appRouter = router({
           user.name || ""
         );
 
-        // Establecer cookie
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
+        // NO establecer cookie - solo usar Authorization header
+        // const cookieOptions = getSessionCookieOptions(ctx.req);
+        // ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
 
         // Enviar email de bienvenida (no bloqueante)
         const { sendWelcomeEmail } = await import("./_core/email");
@@ -154,16 +154,15 @@ export const appRouter = router({
           user.name || ""
         );
 
-        // Establecer cookie
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
+        // NO establecer cookie - solo usar Authorization header
+        // const cookieOptions = getSessionCookieOptions(ctx.req);
+        // ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
 
         console.log("[Login Success]", {
           userId: user.id,
           email: user.email,
-          cookieName: JWT_COOKIE_NAME,
           tokenLength: token.length,
-          cookieSet: true,
+          authMethod: 'Authorization header only',
         });
 
         return {

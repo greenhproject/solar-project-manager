@@ -57,7 +57,8 @@ const trpcClient = trpc.createClient({
         
         return globalThis.fetch(input, {
           ...(init ?? {}),
-          credentials: "include", // Mantener cookies para compatibilidad
+          // NO enviar cookies - solo usar Authorization header
+          credentials: "omit",
           headers,
         });
       },
