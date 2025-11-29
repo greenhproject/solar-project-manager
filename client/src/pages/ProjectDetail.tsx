@@ -59,6 +59,7 @@ export default function ProjectDetail() {
   const { data: syncLogs } = trpc.sync.logs.useQuery({ projectId });
 
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [newMilestone, setNewMilestone] = useState({
     name: "",
     description: "",
@@ -172,6 +173,7 @@ export default function ProjectDetail() {
     const completedDate = newStatus === 'completed' ? new Date() : undefined;
 
     try {
+      setIsSyncing(true);
       await updateMilestone.mutateAsync({
         id: milestoneId,
         status: newStatus,
@@ -182,7 +184,11 @@ export default function ProjectDetail() {
       refetchMilestones();
       refetch(); // Actualizar progreso del proyecto
       utils.projects.list.invalidate(); // Invalidar caché de lista de proyectos
+      
+      // Mostrar indicador de sincronización por 1 segundo
+      setTimeout(() => setIsSyncing(false), 1000);
     } catch (error: any) {
+      setIsSyncing(false);
       toast.error(error.message || "Error al actualizar el hito");
     }
   };
@@ -280,8 +286,14 @@ export default function ProjectDetail() {
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 Progreso General
+                {isSyncing && (
+                  <span className="flex items-center gap-1 text-xs text-primary animate-pulse">
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                    Sincronizando...
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>

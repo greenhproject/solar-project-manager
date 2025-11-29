@@ -302,3 +302,11 @@
 - [x] Agregar utils.projects.list.invalidate() después de actualizar hitos
 - [x] Modificar procedimiento milestones.update para retornar projectId
 - [ ] Verificar que la barra se actualice correctamente en el navegador (pendiente de prueba del usuario)
+
+## Mejoras UX - Barras de Progreso
+- [x] Agregar animación CSS suave (duration-500 ease-out) a la barra de progreso
+- [x] Implementar indicador visual de sincronización (RefreshCw spinning) al actualizar hitos
+- [x] Agregar tooltip con información del proyecto en tarjetas
+- [x] Agregar cursor-help para indicar interactividad
+- [x] Agregar estado isSyncing que se muestra por 1 segundo después de actualizar
+- [x] Integrar indicador en card de Progreso General en ProjectDetail

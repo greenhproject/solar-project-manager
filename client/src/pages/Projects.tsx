@@ -11,7 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sun, Plus, Search, Filter, AlertTriangle, Users, MapPin } from "lucide-react";
+import { Sun, Plus, Search, Filter, AlertTriangle, Users, MapPin, CheckCircle2, Circle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Link } from "wouter";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -190,18 +196,36 @@ export default function Projects() {
                     </div>
                     
                     {/* Barra de progreso */}
-                    <div>
-                      <div className="flex items-center justify-between text-xs mb-2">
-                        <span className="text-muted-foreground">Progreso</span>
-                        <span className="font-semibold">{project.progressPercentage}%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-solar transition-all"
-                          style={{ width: `${project.progressPercentage}%` }}
-                        />
-                      </div>
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="cursor-help">
+                            <div className="flex items-center justify-between text-xs mb-2">
+                              <span className="text-muted-foreground">Progreso</span>
+                              <span className="font-semibold">{project.progressPercentage}%</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-solar transition-all duration-500 ease-out"
+                                style={{ width: `${project.progressPercentage}%` }}
+                              />
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <div className="space-y-2">
+                            <p className="font-semibold text-sm">Estado del Proyecto</p>
+                            <div className="flex items-center gap-2 text-xs">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                              <span>Progreso: {project.progressPercentage}%</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Haz clic en el proyecto para ver el desglose completo de hitos
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     
                     {/* Fechas */}
                     <div className="text-xs text-muted-foreground pt-2 border-t">
