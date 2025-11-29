@@ -793,3 +793,43 @@ export async function deleteNotification(id: number) {
     .delete(notificationHistory)
     .where(eq(notificationHistory.id, id));
 }
+
+/**
+ * Actualizar perfil de usuario
+ */
+export async function updateUserProfile(userId: number, data: {
+  name?: string;
+  email?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = {};
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.email !== undefined) updateData.email = data.email;
+
+  await db
+    .update(users)
+    .set(updateData)
+    .where(eq(users.id, userId));
+
+  // Retornar usuario actualizado
+  const updated = await getUserById(userId);
+  return updated;
+}
+
+/**
+ * Obtener usuario por email
+ */
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
+  return result[0] || null;
+}

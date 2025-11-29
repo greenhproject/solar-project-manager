@@ -59,6 +59,28 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // Actualizar perfil de usuario
+    updateProfile: protectedProcedure
+      .input(z.object({ 
+        name: z.string().min(1).optional(),
+        email: z.string().email().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Verificar que el email no esté en uso por otro usuario
+        if (input.email) {
+          const existingUser = await db.getUserByEmail(input.email);
+          if (existingUser && existingUser.id !== ctx.user.id) {
+            throw new TRPCError({ 
+              code: 'CONFLICT', 
+              message: 'Este email ya está en uso por otro usuario' 
+            });
+          }
+        }
+
+        const updated = await db.updateUserProfile(ctx.user.id, input);
+        return updated;
+      }),
+
     // Eliminar usuario
     delete: adminProcedure
       .input(z.object({ userId: z.number() }))

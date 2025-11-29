@@ -397,3 +397,20 @@
 - [x] Crear tests unitarios para sistema de notificaciones (8 tests)
 - [x] Validar permisos de acceso a notificaciones por usuario
 - [x] Soportar todos los tipos de notificación (milestone_due_soon, milestone_overdue, project_completed, project_assigned, project_updated, milestone_reminder)
+
+
+## Bug Reportado - Gráfica de Análisis
+- [ ] Investigar por qué la gráfica de proyectos completados en Analytics.tsx no se actualiza correctamente
+- [ ] Verificar consulta de base de datos para proyectos completados
+- [ ] Corregir lógica de cálculo de métricas
+- [ ] Probar que la gráfica muestre datos correctos
+
+
+## Edición de Perfil de Usuario
+- [x] Crear procedimiento tRPC para actualizar datos de usuario (nombre, email)
+- [x] Crear funciones de base de datos para actualizar perfil (updateUserProfile, getUserByEmail)
+- [x] Crear página de perfil de usuario con formulario de edición
+- [x] Agregar validación de datos en el formulario (nombre requerido, email válido, email único)
+- [x] Agregar enlace al perfil en el menú de usuario del Sidebar (clickeable en avatar)
+- [x] Crear tests unitarios para actualización de perfil (8 tests)
+- [x] Probar actualización de datos y verificar que se reflejen en toda la aplicación

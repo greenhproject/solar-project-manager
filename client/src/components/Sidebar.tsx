@@ -147,13 +147,16 @@ export function Sidebar({ className }: SidebarProps) {
       {/* User Info */}
       {isAuthenticated && user && !isCollapsed && (
         <div className="p-4 border-b border-orange-100">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm border border-orange-100/50">
+          <button
+            onClick={() => navigate("/profile")}
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm border border-orange-100/50 hover:shadow-md hover:border-orange-200 transition-all cursor-pointer"
+          >
             <Avatar className="h-10 w-10 border-2 border-orange-200 flex-shrink-0">
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="font-semibold text-sm text-gray-900 truncate">
                 {user.name || "Usuario"}
               </p>
@@ -167,18 +170,24 @@ export function Sidebar({ className }: SidebarProps) {
                 {user.role === "admin" ? "Admin" : "Ingeniero"}
               </span>
             </div>
-          </div>
+          </button>
         </div>
       )}
 
       {/* Collapsed User Avatar */}
       {isAuthenticated && user && isCollapsed && (
         <div className="p-4 border-b border-orange-100 flex justify-center">
-          <Avatar className="h-10 w-10 border-2 border-orange-200">
-            <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
-              {user.name?.charAt(0).toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
+          <button
+            onClick={() => navigate("/profile")}
+            className="hover:opacity-80 transition-opacity"
+            title="Ver perfil"
+          >
+            <Avatar className="h-10 w-10 border-2 border-orange-200">
+              <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
+                {user.name?.charAt(0).toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+          </button>
         </div>
       )}
 

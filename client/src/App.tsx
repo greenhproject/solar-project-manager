@@ -19,6 +19,7 @@ import GanttChart from "./pages/GanttChart";
 import CalendarPage from "./pages/Calendar";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 import Reports from "./pages/Reports";
+import UserProfile from "./pages/UserProfile";
 
 function Router() {
   return (
@@ -30,6 +31,12 @@ function Router() {
       <Route path="/dashboard">
         <MainLayout>
           <Dashboard />
+        </MainLayout>
+      </Route>
+      
+      <Route path="/profile">
+        <MainLayout>
+          <UserProfile />
         </MainLayout>
       </Route>
       
