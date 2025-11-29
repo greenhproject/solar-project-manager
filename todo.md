@@ -567,3 +567,16 @@
 - [x] Railway redirige a OAuth en lugar de mostrar Login/Register
 - [x] Corregir lógica de detección de entorno isManusEnvironment()
 - [x] Cambiar detección de variable de entorno a detección por dominio
+
+## Sistema de Emails Transaccionales
+- [x] Configurar servicio de email (Resend)
+- [x] Crear helper para envío de emails
+- [x] Implementar email de bienvenida al registrarse
+- [x] Crear tabla de tokens de recuperación en schema
+- [x] Implementar generación de tokens seguros
+- [x] Crear ruta forgot-password (solicitar reset)
+- [x] Crear ruta reset-password (cambiar contraseña)
+- [x] Crear página ForgotPassword.tsx
+- [x] Crear página ResetPassword.tsx
+- [x] Agregar link "Olvidé mi contraseña" en Login
+- [x] Probar flujo completo de recuperación

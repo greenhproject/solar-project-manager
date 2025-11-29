@@ -98,6 +98,14 @@ export default function Login() {
                 />
               </div>
             </div>
+            
+            <div className="text-right">
+              <Link href="/forgot-password">
+                <button type="button" className="text-sm text-orange-600 hover:text-orange-700 hover:underline">
+                  ¿Olvidaste tu contraseña?
+                </button>
+              </Link>
+            </div>
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-4">

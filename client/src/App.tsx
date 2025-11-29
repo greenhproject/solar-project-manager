@@ -23,6 +23,8 @@ import UserProfile from "./pages/UserProfile";
 import NotificationHistory from "./pages/NotificationHistory";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function Router() {
   return (
@@ -31,6 +33,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       
       {/* Protected routes with MainLayout */}
       <Route path="/dashboard">

@@ -79,6 +79,12 @@ export const appRouter = router({
         const cookieOptions = getSessionCookieOptions(ctx.req);
         ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
         
+        // Enviar email de bienvenida (no bloqueante)
+        const { sendWelcomeEmail } = await import("./_core/email");
+        sendWelcomeEmail(user.email!, user.name || "Usuario").catch(err => 
+          console.error("[Register] Error sending welcome email:", err)
+        );
+        
         return { success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } };
       }),
     
@@ -122,6 +128,74 @@ export const appRouter = router({
         ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
         
         return { success: true, user: { id: user.id, email: user.email, name: user.name, role: user.role } };
+      }),
+    
+    // Solicitar recuperación de contraseña
+    forgotPassword: publicProcedure
+      .input(z.object({
+        email: z.string().email("Email inválido")
+      }))
+      .mutation(async ({ input }) => {
+        const { getUserByEmailForAuth } = await import("./jwtAuthFunctions");
+        const { createPasswordResetToken } = await import("./passwordResetFunctions");
+        const { sendPasswordResetEmail } = await import("./_core/email");
+        
+        // Buscar usuario
+        const user = await getUserByEmailForAuth(input.email);
+        
+        // Siempre retornar éxito para no revelar si el email existe
+        if (!user) {
+          return { success: true, message: "Si el email existe, recibirás un enlace de recuperación" };
+        }
+        
+        // Crear token de recuperación
+        const resetToken = await createPasswordResetToken(user.id);
+        
+        // Construir URL de reset (detectar entorno)
+        const isProduction = process.env.NODE_ENV === "production";
+        const baseUrl = isProduction 
+          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || "localhost:3000"}`
+          : "http://localhost:3000";
+        const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
+        
+        // Enviar email (no bloqueante)
+        sendPasswordResetEmail(
+          user.email!,
+          user.name || "Usuario",
+          resetToken,
+          resetUrl
+        ).catch(err => console.error("[ForgotPassword] Error sending email:", err));
+        
+        return { success: true, message: "Si el email existe, recibirás un enlace de recuperación" };
+      }),
+    
+    // Restablecer contraseña con token
+    resetPassword: publicProcedure
+      .input(z.object({
+        token: z.string().min(1, "Token requerido"),
+        newPassword: z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
+      }))
+      .mutation(async ({ input }) => {
+        const { verifyResetToken } = await import("./passwordResetFunctions");
+        const { hashPassword } = await import("./jwtAuthFunctions");
+        const { updateUserPassword } = await import("./db");
+        
+        // Verificar token
+        const userId = await verifyResetToken(input.token);
+        if (!userId) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Token inválido o expirado' 
+          });
+        }
+        
+        // Hash de nueva contraseña
+        const hashedPassword = await hashPassword(input.newPassword);
+        
+        // Actualizar contraseña
+        await updateUserPassword(userId, hashedPassword);
+        
+        return { success: true, message: "Contraseña actualizada correctamente" };
       }),
   }),
 

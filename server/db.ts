@@ -1002,3 +1002,19 @@ export async function createMilestoneOverdueNotification(
     isRead: false
   });
 }
+
+
+/**
+ * Update user password (for password reset)
+ */
+export async function updateUserPassword(userId: number, hashedPassword: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(users)
+    .set({ password: hashedPassword })
+    .where(eq(users.id, userId));
+  
+  return true;
+}
