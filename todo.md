@@ -555,3 +555,9 @@
 - [x] Corregir error "require is not defined" en página de Settings
 - [x] Reemplazar require() con import dinámico en routers.ts
 - [x] Verificar que logout funcione correctamente
+
+## Bug - Home redirige a OAuth en Railway
+- [x] Actualizar Home.tsx para detectar entorno Railway
+- [x] Mostrar botones Login/Register en Railway
+- [x] Mantener OAuth redirect en Manus
+- [x] Verificar que funcione en ambos entornos

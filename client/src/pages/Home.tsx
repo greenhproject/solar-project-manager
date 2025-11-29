@@ -3,11 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
 import { Sun, TrendingUp, Bell, FileText, Zap, Shield, BarChart3 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useEffect } from "react";
+
+// Detectar si estamos en entorno Manus (tiene OAuth configurado)
+const isManusEnvironment = () => {
+  const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
+  return oauthPortalUrl && oauthPortalUrl.includes("manus.im");
+};
 
 export default function Home() {
   const { user, loading, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
+  const useManusAuth = isManusEnvironment();
 
   // Redirigir al dashboard si ya está autenticado
   useEffect(() => {
@@ -35,13 +43,24 @@ export default function Home() {
             <div className="h-8 w-8 rounded-lg bg-gradient-solar flex items-center justify-center">
               <Sun className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl">Solar PM</span>
+            <span className="font-bold text-xl">Solar PM-GHP</span>
           </div>
           
           <div className="flex items-center gap-4">
-            <a href={getLoginUrl()}>
-              <Button>Iniciar Sesión</Button>
-            </a>
+            {useManusAuth ? (
+              <a href={getLoginUrl()}>
+                <Button>Iniciar Sesión</Button>
+              </a>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => setLocation("/login")}>
+                  Iniciar Sesión
+                </Button>
+                <Button onClick={() => setLocation("/register")}>
+                  Registrarse
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -68,12 +87,19 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href={getLoginUrl()}>
-              <Button size="lg" className="gap-2 text-lg px-8">
+            {useManusAuth ? (
+              <a href={getLoginUrl()}>
+                <Button size="lg" className="gap-2 text-lg px-8">
+                  <Sun className="h-5 w-5" />
+                  Comenzar Ahora
+                </Button>
+              </a>
+            ) : (
+              <Button size="lg" className="gap-2 text-lg px-8" onClick={() => setLocation("/register")}>
                 <Sun className="h-5 w-5" />
                 Comenzar Ahora
               </Button>
-            </a>
+            )}
             <Button size="lg" variant="outline" className="text-lg px-8">
               Ver Demo
             </Button>
@@ -178,12 +204,19 @@ export default function Home() {
               Únete a los equipos que ya están transformando la forma en que gestionan 
               sus proyectos de energía solar
             </p>
-            <a href={getLoginUrl()}>
-              <Button size="lg" variant="secondary" className="gap-2 text-lg px-8">
+            {useManusAuth ? (
+              <a href={getLoginUrl()}>
+                <Button size="lg" variant="secondary" className="gap-2 text-lg px-8">
+                  Comenzar Gratis
+                  <Sun className="h-5 w-5" />
+                </Button>
+              </a>
+            ) : (
+              <Button size="lg" variant="secondary" className="gap-2 text-lg px-8" onClick={() => setLocation("/register")}>
                 Comenzar Gratis
                 <Sun className="h-5 w-5" />
               </Button>
-            </a>
+            )}
           </CardContent>
         </Card>
       </section>
