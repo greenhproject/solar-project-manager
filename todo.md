@@ -601,4 +601,9 @@
 - [x] Generar resumen de equipos del sistema en descripción
 - [x] Implementar manejo de errores si el ID no existe
 - [x] Agregar indicador de carga mientras se obtienen los datos
-- [ ] Probar funcionalidad completa con proyecto real de OpenSolar
+- [x] Pushear a GitHub (commit 1665d6d)
+
+## Bug - Error hooks[lastArg] is not a function
+- [x] Cambiar trpc.sync.getProjectData.query() a utils.sync.getProjectData.fetch()
+- [ ] Probar que la carga desde OpenSolar funcione correctamente
+- [ ] Pushear corrección a GitHub

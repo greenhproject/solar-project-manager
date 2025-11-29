@@ -26,6 +26,7 @@ export default function NewProject() {
   const { data: projectTypes } = trpc.projectTypes.list.useQuery();
   const { data: users } = trpc.users.list.useQuery();
   const createProject = trpc.projects.create.useMutation();
+  const utils = trpc.useUtils();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -101,7 +102,7 @@ export default function NewProject() {
     setIsLoadingFromOpenSolar(true);
     
     try {
-      const data = await trpc.sync.getProjectData.query({ openSolarId: formData.openSolarId });
+      const data = await utils.sync.getProjectData.fetch({ openSolarId: formData.openSolarId });
       
       // Auto-completar campos del formulario
       setFormData(prev => ({
