@@ -561,3 +561,9 @@
 - [x] Mostrar botones Login/Register en Railway
 - [x] Mantener OAuth redirect en Manus
 - [x] Verificar que funcione en ambos entornos
+
+## Bug Crítico - Autenticación rota en ambos entornos
+- [x] OAuth no funciona en Manus (projectmanagerghp.manus.space)
+- [x] Railway redirige a OAuth en lugar de mostrar Login/Register
+- [x] Corregir lógica de detección de entorno isManusEnvironment()
+- [x] Cambiar detección de variable de entorno a detección por dominio

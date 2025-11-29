@@ -6,10 +6,11 @@ import { Sun, TrendingUp, Bell, FileText, Zap, Shield, BarChart3 } from "lucide-
 import { Link, useLocation } from "wouter";
 import { useEffect } from "react";
 
-// Detectar si estamos en entorno Manus (tiene OAuth configurado)
+// Detectar si estamos en entorno Manus verificando el dominio actual
 const isManusEnvironment = () => {
-  const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
-  return oauthPortalUrl && oauthPortalUrl.includes("manus.im");
+  // Verificar si el dominio actual es de Manus (*.manus.space o *.manusvm.computer)
+  const hostname = window.location.hostname;
+  return hostname.includes("manus.space") || hostname.includes("manusvm.computer");
 };
 
 export default function Home() {
