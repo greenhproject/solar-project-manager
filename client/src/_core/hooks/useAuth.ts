@@ -36,6 +36,10 @@ export function useAuth(options?: UseAuthOptions) {
       }
       throw error;
     } finally {
+      // Limpiar el token de localStorage
+      localStorage.removeItem('auth_token');
+      console.log('[Logout] Token eliminado de localStorage');
+      
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
     }

@@ -96,25 +96,36 @@ class JWTAuthService {
   }
 
   /**
-   * Authenticate a request using JWT
+   * Authenticate a request using JWT (cookies o Authorization header)
    */
   async authenticateRequest(req: Request): Promise<User> {
+    // Intentar obtener el token de la cookie primero
     const cookies = this.parseCookies(req.headers.cookie);
-    const sessionCookie = cookies.get(JWT_COOKIE_NAME);
+    let token = cookies.get(JWT_COOKIE_NAME);
+
+    // Si no hay cookie, intentar obtener del header Authorization
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7); // Remover 'Bearer '
+      }
+    }
 
     console.log("[JWT Auth] Authenticate Request", {
       hasCookieHeader: !!req.headers.cookie,
-      cookieHeader: req.headers.cookie?.substring(0, 100),
+      hasAuthHeader: !!req.headers.authorization,
       cookiesFound: cookies.size,
-      hasSessionCookie: !!sessionCookie,
-      sessionCookieLength: sessionCookie?.length,
+      hasSessionCookie: !!cookies.get(JWT_COOKIE_NAME),
+      hasAuthToken: !!token,
+      tokenLength: token?.length,
+      source: cookies.get(JWT_COOKIE_NAME) ? 'cookie' : (req.headers.authorization ? 'header' : 'none'),
     });
 
-    const session = await this.verifyJWTSession(sessionCookie);
+    const session = await this.verifyJWTSession(token);
 
     if (!session) {
       console.error("[JWT Auth] Session verification failed");
-      throw ForbiddenError("Invalid JWT session cookie");
+      throw ForbiddenError("Invalid JWT session");
     }
 
     const user = await db.getUserById(session.userId);

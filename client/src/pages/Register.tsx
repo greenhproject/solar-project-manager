@@ -24,7 +24,13 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
 
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Guardar el token en localStorage para autenticación híbrida
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+        console.log('[Register] Token guardado en localStorage');
+      }
+      
       toast.success("¡Cuenta creada exitosamente!", {
         description: "Redirigiendo al dashboard...",
       });

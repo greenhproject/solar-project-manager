@@ -22,7 +22,13 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Guardar el token en localStorage para autenticación híbrida
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
+        console.log('[Login] Token guardado en localStorage');
+      }
+      
       toast.success("¡Bienvenido!", {
         description: "Has iniciado sesión correctamente",
       });

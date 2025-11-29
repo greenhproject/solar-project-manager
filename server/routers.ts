@@ -103,6 +103,7 @@ export const appRouter = router({
 
         return {
           success: true,
+          token, // Devolver el token para autenticación híbrida
           user: {
             id: user.id,
             email: user.email,
@@ -167,6 +168,7 @@ export const appRouter = router({
 
         return {
           success: true,
+          token, // Devolver el token para autenticación híbrida
           user: {
             id: user.id,
             email: user.email,
