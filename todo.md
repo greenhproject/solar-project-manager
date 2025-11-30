@@ -654,3 +654,16 @@
 - [x] Cambiar trpc.sync.getProjectData.query() a utils.sync.getProjectData.fetch()
 - [ ] Probar que la carga desde OpenSolar funcione correctamente
 - [ ] Pushear corrección a GitHub
+
+
+## Refactorización Integración OpenSolar API (Completada)
+- [x] Cambiar de OPENSOLAR_API_KEY a OPENSOLAR_EMAIL/PASSWORD/ORG_ID en ENV
+- [x] Crear server/_core/openSolarClient.ts con autenticación basada en credenciales
+- [x] Implementar gestión automática de tokens (renovación cada 6 días)
+- [x] Agregar manejo de expiración de tokens (retry automático en 401)
+- [x] Actualizar procedimiento tRPC sync.getProjectData con nuevo cliente
+- [x] Mapear correctamente campos de OpenSolar a formulario de proyecto
+- [x] Crear tests de integración (opensolar.test.ts)
+- [x] Configurar credenciales: org 80856 (Green house project), 1558 proyectos
+- [x] Subir cambios a GitHub (commit ff4aebe)
+- [x] Resolver conflictos de merge con rama main
