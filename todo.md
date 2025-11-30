@@ -677,3 +677,14 @@
 - [x] Probar login con Auth0 en entorno de desarrollo
 - [x] Documentar configuración de Auth0 para Railway
 - [x] Subir cambios a GitHub
+
+
+## Corrección de Flujo de Autenticación
+- [x] Diagnosticar problema de login que redirige a página inicial
+- [x] Verificar flujo de autenticación en LoginAuth0
+- [x] Verificar manejo de callback de Auth0
+- [x] Revisar protección de rutas en MainLayout
+- [x] Corregir redirección después de login exitoso
+- [x] Probar login en Manus OAuth
+- [x] Probar login en Auth0
+- [x] Subir corrección a GitHub

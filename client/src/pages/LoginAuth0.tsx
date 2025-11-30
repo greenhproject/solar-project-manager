@@ -15,7 +15,7 @@ export default function LoginAuth0() {
   useEffect(() => {
     // Si el usuario ya está autenticado, redirigir al dashboard
     if (isAuthenticated) {
-      setLocation("/");
+      setLocation("/dashboard");
     }
   }, [isAuthenticated, setLocation]);
 

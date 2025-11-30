@@ -68,8 +68,8 @@ const trpcClient = trpc.createClient({
         
         return globalThis.fetch(input, {
           ...(init ?? {}),
-          // NO enviar cookies - solo usar Authorization header
-          credentials: "omit",
+          // Enviar cookies para Manus OAuth y Auth0
+          credentials: "include",
           headers,
         });
       },
