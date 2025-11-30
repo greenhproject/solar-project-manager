@@ -44,6 +44,7 @@ import {
   RefreshCw,
   Trash2,
   Loader2,
+  Edit,
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useState } from "react";
@@ -313,6 +314,14 @@ export default function ProjectDetail() {
                 <FileText className="h-4 w-4" />
               )}
               Generar Reporte
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setLocation(`/projects/${project.id}/edit`)}
+            >
+              <Edit className="h-4 w-4" />
+              Editar
             </Button>
             {user.role === "admin" && (
               <Button

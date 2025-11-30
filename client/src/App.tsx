@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import NewProject from "./pages/NewProject";
+import EditProject from "./pages/EditProject";
 import ProjectDetail from "./pages/ProjectDetail";
 import Reminders from "./pages/Reminders";
 import AIAssistant from "./pages/AIAssistant";
@@ -66,6 +67,12 @@ function Router() {
       <Route path="/projects/new">
         <MainLayout>
           <NewProject />
+        </MainLayout>
+      </Route>
+
+      <Route path="/projects/:id/edit">
+        <MainLayout>
+          <EditProject />
         </MainLayout>
       </Route>
 

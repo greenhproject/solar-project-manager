@@ -527,10 +527,12 @@ export const appRouter = router({
         const projectId = Number((result as any).insertId || 0);
 
         // Crear hitos desde plantillas
+        console.log('[Project Create] projectId:', projectId, 'projectTypeId:', input.projectTypeId);
         if (projectId > 0) {
           const templates = await db.getMilestoneTemplatesByProjectType(
             input.projectTypeId
           );
+          console.log('[Project Create] Found templates:', templates.length);
 
           for (const template of templates) {
             const dueDate = new Date(input.startDate);
@@ -550,6 +552,8 @@ export const appRouter = router({
             });
           }
 
+          console.log('[Project Create] Created', templates.length, 'milestones for project', projectId);
+          
           // Crear actualización de proyecto
           await db.createProjectUpdate({
             projectId,
@@ -1112,12 +1116,18 @@ Pregunta del usuario: ${input.question}
       .query(async ({ input }) => {
         const { openSolarClient } = await import('./_core/openSolarClient');
         
+        console.log('[OpenSolar] Getting project data for ID:', input.openSolarId);
+        
         try {
           const project = await openSolarClient.getProjectById(input.openSolarId);
+          console.log('[OpenSolar] Project retrieved successfully');
+          
           const formData = openSolarClient.mapProjectToForm(project);
+          console.log('[OpenSolar] Form data mapped successfully');
           
           return formData;
         } catch (error: any) {
+          console.error('[OpenSolar] Error getting project:', error);
           throw new TRPCError({ 
             code: 'INTERNAL_SERVER_ERROR', 
             message: error.message || 'Error al obtener datos de OpenSolar' 

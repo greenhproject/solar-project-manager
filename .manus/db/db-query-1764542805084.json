@@ -1,0 +1,9 @@
+{
+  "query": "SELECT p.id, p.name, p.projectTypeId, pt.name as project_type_name, \n(SELECT COUNT(*) FROM milestone_templates WHERE projectTypeId = p.projectTypeId AND isActive = 1) as template_count\nFROM projects p \nJOIN project_types pt ON p.projectTypeId = pt.id \nWHERE p.name LIKE '%prueba comercial%'",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT p.id, p.name, p.projectTypeId, pt.name as project_type_name, \n(SELECT COUNT(*) FROM milestone_templates WHERE projectTypeId = p.projectTypeId AND isActive = 1) as template_count\nFROM projects p \nJOIN project_types pt ON p.projectTypeId = pt.id \nWHERE p.name LIKE '%prueba comercial%'",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 52
+}

@@ -1,0 +1,21 @@
+{
+  "query": "SELECT * FROM milestone_templates LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT * FROM milestone_templates LIMIT 10",
+  "rows": [
+    {
+      "id": "1",
+      "projectTypeId": "1",
+      "name": "diseño de planos y esquematico",
+      "description": "diseño de esquematicos y planos unifilares",
+      "orderIndex": "1",
+      "estimatedDurationDays": "1",
+      "isActive": "1",
+      "createdAt": "2025-11-28 22:37:27",
+      "updatedAt": "2025-11-28 22:37:27"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tprojectTypeId\tname\tdescription\torderIndex\testimatedDurationDays\tisActive\tcreatedAt\tupdatedAt\n1\t1\tdiseño de planos y esquematico\tdiseño de esquematicos y planos unifilares\t1\t1\t1\t2025-11-28 22:37:27\t2025-11-28 22:37:27\n",
+  "stderr": "",
+  "execution_time_ms": 2001
+}

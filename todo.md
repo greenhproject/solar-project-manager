@@ -748,3 +748,13 @@
 - [x] Verificar problema en entorno de producción de Manus (manus.space) - CONFIRMADO
 - [x] Identificar diferencias entre local y producción - versión desactualizada en producción
 - [ ] Redesplegar en Manus producción con checkpoint actualizado
+
+
+## Bugs Críticos Reportados - Sesión 2
+
+- [x] Las plantillas de hitos SÍ se cargan automáticamente (código correcto, solo falta crear plantillas para cada tipo)
+- [x] Botón "Editar" restaurado en ProjectDetail + página EditProject.tsx creada
+- [x] Logs de debugging agregados a botón "Cargar desde OpenSolar" para diagnosticar error
+- [ ] Probar carga de hitos desde plantillas con plantillas configuradas
+- [ ] Probar botón Editar en Railway
+- [ ] Diagnosticar error específico de OpenSolar en Railway
