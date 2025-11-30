@@ -18,6 +18,7 @@ import {
   checkOpenSolarConnection,
 } from "./openSolarIntegration";
 import { metricsRouter } from "./metricsRouters";
+import { adminToolsRouter } from "./routes/admin-tools";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -33,6 +34,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 export const appRouter = router({
   system: systemRouter,
   analytics: metricsRouter,
+  adminTools: adminToolsRouter,
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

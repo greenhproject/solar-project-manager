@@ -94,13 +94,18 @@ class Auth0Service {
       console.log("[Auth0] User not found, creating new user");
       
       // Crear nuevo usuario
+      // Asignar rol admin a greenhproject@gmail.com, engineer a los demás
+      const role = email === "greenhproject@gmail.com" ? "admin" : "engineer";
+      
       await db.upsertUser({
         openId: auth0UserId,
         name: name || null,
         email: email || null,
-        role: "engineer", // Rol por defecto
+        role: role,
         lastSignedIn: new Date(),
       });
+      
+      console.log("[Auth0] User created with role:", role);
 
       user = await db.getUserByOpenId(auth0UserId);
       
