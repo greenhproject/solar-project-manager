@@ -90,6 +90,39 @@ class Auth0Service {
     // Usamos el sub de Auth0 como openId para compatibilidad
     let user = await db.getUserByOpenId(auth0UserId);
 
+    // Si no existe usuario con este sub, pero existe con el email, fusionar
+    if (!user && email) {
+      const existingUserByEmail = await db.getUserByEmail(email);
+      if (existingUserByEmail) {
+        console.log("[Auth0] Found existing user with email, merging accounts", {
+          existingUserId: existingUserByEmail.id,
+          email,
+        });
+        
+        // Actualizar el usuario existente con el openId de Auth0
+        const ADMIN_SUB = "google-oauth2|106723310869919984535";
+        const role = auth0UserId === ADMIN_SUB ? "admin" : existingUserByEmail.role;
+        
+        await db.upsertUser({
+          openId: auth0UserId,
+          name: name || existingUserByEmail.name,
+          email: email,
+          role: role,
+          lastSignedIn: new Date(),
+        });
+        
+        console.log("[Auth0] User accounts merged successfully");
+        
+        user = await db.getUserByOpenId(auth0UserId);
+        
+        if (!user) {
+          throw ForbiddenError("Failed to merge user accounts");
+        }
+        
+        return user;
+      }
+    }
+
     if (!user) {
       console.log("[Auth0] User not found, creating new user");
       
