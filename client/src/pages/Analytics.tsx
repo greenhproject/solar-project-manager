@@ -22,7 +22,17 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Clock, CheckCircle2, PieChartIcon } from "lucide-react";
+import { TrendingUp, Clock, CheckCircle2, PieChartIcon, AlertCircle } from "lucide-react";
+
+// Función para formatear el mes en español
+const formatMonth = (monthStr: string) => {
+  const [year, month] = monthStr.split('-');
+  const months = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ];
+  return `${months[parseInt(month) - 1]} ${year}`;
+};
 
 export default function Analytics() {
   const { data: monthlyData, isLoading: loadingMonthly } =
@@ -38,6 +48,7 @@ export default function Analytics() {
   const timelineData =
     monthlyData?.map(m => ({
       month: m.month,
+      monthLabel: formatMonth(m.month),
       total: Number(m.total),
       completados: Number(m.completed),
       enProgreso: Number(m.in_progress),
@@ -52,6 +63,12 @@ export default function Analytics() {
     })) || [];
 
   const COLORS = distributionData.map(d => d.color);
+
+  // Calcular el valor máximo para el eje Y
+  const maxValue = Math.max(
+    ...timelineData.map(d => Math.max(d.total, d.completados, d.enProgreso)),
+    5 // Mínimo de 5 para que el gráfico se vea bien incluso con pocos datos
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6">
@@ -107,10 +124,10 @@ export default function Analytics() {
               ) : (
                 <>
                   <div className="text-3xl font-bold text-gray-900">
-                    {averageTime?.avgDays} días
+                    {averageTime?.avgDays || 0} días
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Basado en {averageTime?.totalCompleted} proyectos
+                    Basado en {averageTime?.totalCompleted || 0} proyectos
                     completados
                   </p>
                 </>
@@ -141,6 +158,26 @@ export default function Analytics() {
           </Card>
         </div>
 
+        {/* Alerta de datos insuficientes */}
+        {timelineData.length > 0 && timelineData.length < 3 && (
+          <Card className="shadow-apple border-0 bg-amber-50 border-amber-200">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-900">
+                    Datos limitados para análisis
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Los gráficos mostrarán información más detallada cuando haya más proyectos registrados en diferentes meses.
+                    Actualmente hay datos de {timelineData.length} {timelineData.length === 1 ? 'mes' : 'meses'}.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Gráfico de Evolución Temporal */}
         <Card className="shadow-apple border-0">
           <CardHeader>
@@ -152,12 +189,31 @@ export default function Analytics() {
           <CardContent>
             {loadingMonthly ? (
               <Skeleton className="h-80 w-full" />
+            ) : timelineData.length === 0 ? (
+              <div className="h-80 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <p>No hay proyectos registrados aún</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Los gráficos aparecerán cuando se creen proyectos
+                  </p>
+                </div>
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={timelineData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="month" stroke="#666" />
-                  <YAxis stroke="#666" />
+                  <XAxis 
+                    dataKey="monthLabel" 
+                    stroke="#666"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    stroke="#666"
+                    allowDecimals={false}
+                    domain={[0, maxValue]}
+                    tick={{ fontSize: 12 }}
+                  />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "white",
@@ -165,6 +221,7 @@ export default function Analytics() {
                       borderRadius: "8px",
                       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                     }}
+                    labelFormatter={(label) => `Mes: ${label}`}
                   />
                   <Legend />
                   <Line
@@ -173,7 +230,8 @@ export default function Analytics() {
                     stroke="#FF6B35"
                     strokeWidth={2}
                     name="Total"
-                    dot={{ fill: "#FF6B35", r: 4 }}
+                    dot={{ fill: "#FF6B35", r: 5 }}
+                    activeDot={{ r: 7 }}
                   />
                   <Line
                     type="monotone"
@@ -181,7 +239,8 @@ export default function Analytics() {
                     stroke="#10B981"
                     strokeWidth={2}
                     name="Completados"
-                    dot={{ fill: "#10B981", r: 4 }}
+                    dot={{ fill: "#10B981", r: 5 }}
+                    activeDot={{ r: 7 }}
                   />
                   <Line
                     type="monotone"
@@ -189,7 +248,8 @@ export default function Analytics() {
                     stroke="#3B82F6"
                     strokeWidth={2}
                     name="En Progreso"
-                    dot={{ fill: "#3B82F6", r: 4 }}
+                    dot={{ fill: "#3B82F6", r: 5 }}
+                    activeDot={{ r: 7 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -209,12 +269,28 @@ export default function Analytics() {
             <CardContent>
               {loadingMonthly ? (
                 <Skeleton className="h-64 w-full" />
+              ) : timelineData.length === 0 ? (
+                <div className="h-64 flex items-center justify-center text-gray-500">
+                  <div className="text-center">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <p>No hay datos disponibles</p>
+                  </div>
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={timelineData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="month" stroke="#666" />
-                    <YAxis stroke="#666" />
+                    <XAxis 
+                      dataKey="monthLabel" 
+                      stroke="#666"
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis 
+                      stroke="#666"
+                      allowDecimals={false}
+                      domain={[0, maxValue]}
+                      tick={{ fontSize: 12 }}
+                    />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
@@ -222,8 +298,14 @@ export default function Analytics() {
                         borderRadius: "8px",
                         boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                       }}
+                      labelFormatter={(label) => `Mes: ${label}`}
                     />
-                    <Bar dataKey="total" fill="#FF6B35" radius={[8, 8, 0, 0]} />
+                    <Bar 
+                      dataKey="total" 
+                      fill="#FF6B35" 
+                      radius={[8, 8, 0, 0]}
+                      name="Total de proyectos"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               )}

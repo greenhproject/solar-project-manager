@@ -718,3 +718,11 @@
 - [ ] Verificar variables de entorno en Railway
 - [ ] Push a GitHub para trigger auto-deploy
 - [ ] Verificar funcionamiento completo en Railway
+
+
+## Corrección de Visualización de Gráficos en Análisis
+- [ ] Verificar datos que llegan a los gráficos de Recharts
+- [ ] Corregir formato de ejes X e Y en gráfico de evolución mensual
+- [ ] Ajustar escala y labels del gráfico de línea temporal
+- [ ] Verificar queries SQL de métricas mensuales
+- [ ] Probar visualización con datos reales en Railway
