@@ -25,7 +25,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
+// useAuth0Custom removed - using Manus OAuth
 import { NotificationBell } from "./NotificationBell";
 
 interface SidebarProps {
@@ -37,11 +37,16 @@ export function Sidebar({ className }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, isAuthenticated } = useAuth();
-  const { logout: auth0Logout } = useAuth0Custom();
+  const logoutMutation = trpc.auth.logout.useMutation();
 
-  const handleLogout = () => {
-    toast.success("Cerrando sesión...");
-    auth0Logout();
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      toast.success("Sesión cerrada exitosamente");
+      window.location.href = "/login";
+    } catch (error) {
+      toast.error("Error al cerrar sesión");
+    }
   };
 
   const menuItems = [
