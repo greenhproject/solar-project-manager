@@ -708,3 +708,13 @@
 - [x] Probar login en Manus público después de la corrección
 - [x] Subir corrección a GitHub
 - [x] Republicar en Manus
+
+
+## Corrección de Deployment en Railway
+- [ ] Probar link de Railway en navegador
+- [ ] Acceder a Railway CLI para revisar logs
+- [ ] Identificar errores en los logs de deployment
+- [ ] Corregir errores de configuración o código
+- [ ] Verificar variables de entorno en Railway
+- [ ] Push a GitHub para trigger auto-deploy
+- [ ] Verificar funcionamiento completo en Railway

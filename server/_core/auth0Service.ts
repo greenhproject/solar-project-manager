@@ -98,33 +98,37 @@ class Auth0Service {
     // Usamos el sub de Auth0 como openId para compatibilidad
     let user = await db.getUserByOpenId(auth0UserId);
 
-    // Si no existe usuario con este sub, pero existe con el email, fusionar
+    // Si no existe usuario con este sub, pero existe con el email, actualizar el openId
     if (!user && email) {
       const existingUserByEmail = await db.getUserByEmail(email);
       if (existingUserByEmail) {
-        console.log("[Auth0] Found existing user with email, merging accounts", {
+        console.log("[Auth0] Found existing user with email, updating openId", {
           existingUserId: existingUserByEmail.id,
+          existingOpenId: existingUserByEmail.openId,
+          newOpenId: auth0UserId,
           email,
         });
         
-        // Actualizar el usuario existente con el openId de Auth0
+        // Actualizar el openId del usuario existente en lugar de crear uno nuevo
         const ADMIN_SUB = "google-oauth2|106723310869919984535";
         const role = auth0UserId === ADMIN_SUB ? "admin" : existingUserByEmail.role;
         
+        // Usar el openId existente para el upsert, no el nuevo
         await db.upsertUser({
-          openId: auth0UserId,
+          openId: existingUserByEmail.openId!,
           name: name || existingUserByEmail.name,
           email: email,
           role: role,
           lastSignedIn: new Date(),
         });
         
-        console.log("[Auth0] User accounts merged successfully");
+        console.log("[Auth0] User updated successfully");
         
-        user = await db.getUserByOpenId(auth0UserId);
+        // Retornar el usuario con el openId existente
+        user = await db.getUserByOpenId(existingUserByEmail.openId!);
         
         if (!user) {
-          throw ForbiddenError("Failed to merge user accounts");
+          throw ForbiddenError("Failed to update user");
         }
         
         return user;
