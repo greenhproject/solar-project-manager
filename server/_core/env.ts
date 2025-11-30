@@ -9,4 +9,8 @@ export const ENV = {
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
   auth0Domain: process.env.AUTH0_DOMAIN ?? "",
   auth0Audience: process.env.AUTH0_AUDIENCE ?? "",
+  // OpenSolar API credentials
+  openSolarEmail: process.env.OPENSOLAR_EMAIL ?? "",
+  openSolarPassword: process.env.OPENSOLAR_PASSWORD ?? "",
+  openSolarOrgId: process.env.OPENSOLAR_ORG_ID ?? "",
 };
