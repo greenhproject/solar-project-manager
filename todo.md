@@ -698,3 +698,13 @@
 - [x] Probar login en entorno de desarrollo
 - [x] Documentar configuración para publicación
 - [x] Subir cambios a GitHub
+
+
+## Corrección de Cookies en Manus Público
+- [x] Diagnosticar por qué las cookies no se envían en producción (errores 401)
+- [x] Verificar configuración de sameSite en cookies.ts
+- [x] Revisar si el dominio de la cookie es correcto para .manus.space
+- [x] Actualizar configuración de cookies para cross-site en HTTPS
+- [x] Probar login en Manus público después de la corrección
+- [x] Subir corrección a GitHub
+- [x] Republicar en Manus

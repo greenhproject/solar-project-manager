@@ -31,7 +31,9 @@ export function getSessionCookieOptions(
   const options = {
     httpOnly: true,
     path: "/",
-    sameSite: isSecure ? ("none" as const) : ("lax" as const),
+    // Usar lax para mismo dominio (funciona en Manus público)
+    // Solo usar none si realmente es cross-domain
+    sameSite: "lax" as const,
     secure: isSecure,
     // No establecer domain para permitir que funcione en subdominios
     domain: undefined,
