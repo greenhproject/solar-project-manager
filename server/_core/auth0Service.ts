@@ -77,8 +77,24 @@ class Auth0Service {
 
     // Extraer información del usuario del token
     const auth0UserId = payload.sub as string; // e.g., "auth0|123456"
-    const email = payload.email as string;
-    const name = payload.name as string;
+    
+    // Auth0 puede enviar email y name como custom claims con namespace
+    // Intentar leer tanto los claims estándar como los custom claims
+    let email = payload.email as string | undefined;
+    let name = payload.name as string | undefined;
+    
+    // Si no están en los claims estándar, buscar en custom claims
+    if (!email || !name) {
+      // Buscar en todos los claims del payload
+      for (const [key, value] of Object.entries(payload)) {
+        if (key.includes('email') && typeof value === 'string') {
+          email = value;
+        }
+        if (key.includes('name') && typeof value === 'string') {
+          name = value;
+        }
+      }
+    }
 
     console.log("[Auth0] Token verified", {
       sub: auth0UserId,
