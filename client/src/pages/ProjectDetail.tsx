@@ -42,7 +42,7 @@ import {
   Plus,
   FileText,
   RefreshCw,
-  Edit,
+  Trash2,
   Loader2,
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
@@ -83,6 +83,7 @@ export default function ProjectDetail() {
   const createMilestone = trpc.milestones.create.useMutation();
   const updateMilestone = trpc.milestones.update.useMutation();
   const updateProject = trpc.projects.update.useMutation();
+  const deleteProject = trpc.projects.delete.useMutation();
   const generatePDF = trpc.reports.generateProjectPDF.useMutation();
   const syncProject = trpc.sync.syncProject.useMutation();
 
@@ -315,12 +316,33 @@ export default function ProjectDetail() {
             </Button>
             {user.role === "admin" && (
               <Button
-                variant="outline"
+                variant="destructive"
                 className="gap-2"
-                onClick={() => setLocation(`/projects/${projectId}/edit`)}
+                onClick={async () => {
+                  if (
+                    !confirm(
+                      `¿Estás seguro de que deseas eliminar el proyecto "${project.name}"?\n\nEsta acción no se puede deshacer y eliminará todos los hitos, archivos y datos asociados.`
+                    )
+                  ) {
+                    return;
+                  }
+
+                  try {
+                    await deleteProject.mutateAsync({ id: project.id });
+                    toast.success("Proyecto eliminado exitosamente");
+                    setLocation("/projects");
+                  } catch (error: any) {
+                    toast.error(error.message || "Error al eliminar el proyecto");
+                  }
+                }}
+                disabled={deleteProject.isPending}
               >
-                <Edit className="h-4 w-4" />
-                Editar
+                {deleteProject.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                Eliminar
               </Button>
             )}
           </div>

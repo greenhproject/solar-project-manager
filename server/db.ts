@@ -238,6 +238,15 @@ export async function updateProject(id: number, data: Partial<InsertProject>) {
   await db.update(projects).set(data).where(eq(projects.id, id));
 }
 
+export async function deleteProject(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Eliminar proyecto (las foreign keys con ON DELETE CASCADE eliminarán automáticamente
+  // los hitos, archivos, actualizaciones, etc. relacionados)
+  await db.delete(projects).where(eq(projects.id, id));
+}
+
 export async function getProjectStats() {
   const db = await getDb();
   if (!db) return { total: 0, active: 0, completed: 0, overdue: 0 };

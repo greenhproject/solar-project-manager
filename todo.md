@@ -726,3 +726,14 @@
 - [x] Ajustar escala y labels del gráfico de línea temporal
 - [x] Verificar queries SQL de métricas mensuales
 - [ ] Probar visualización con datos reales en Railway
+
+
+## Bugs Críticos Reportados por Usuario
+
+- [x] Corregir error 404 al intentar editar un proyecto (solución: eliminado botón editar, agregar edición inline en futuro)
+- [x] Agregar botón de eliminar proyecto (solo para administradores)
+- [ ] Corregir error de ID al cargar proyecto desde OpenSolar (pendiente: necesita más información del error específico)
+- [x] Implementar actualización automática de estado del proyecto basado en hitos
+- [x] Corregir métrica "En Progreso" para que muestre proyectos con hitos activos
+- [x] Corregir métrica "Completados" para que muestre proyectos con todos los hitos completados
+- [x] Verificar que el estado del proyecto se actualice cuando se completan todos los hitos

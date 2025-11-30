@@ -632,6 +632,24 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.id);
+
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Eliminar proyecto (esto eliminará en cascada hitos, archivos, etc.)
+        await db.deleteProject(input.id);
+
+        return { success: true };
+      }),
+
     stats: protectedProcedure.query(async ({ ctx }) => {
       // Estadísticas generales solo para admin
       if (ctx.user.role === "admin") {

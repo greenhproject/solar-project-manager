@@ -42,8 +42,26 @@ export async function recalculateProjectProgress(
     `[Progress] Project ${projectId}: ${progressPercentage}% progress`
   );
 
-  // Actualizar el proyecto
-  await db.updateProject(projectId, { progressPercentage });
+  // Determinar el nuevo estado basado en el progreso
+  let newStatus: "planning" | "in_progress" | "completed" | "on_hold" | "cancelled" = "in_progress";
+  
+  if (progressPercentage === 0) {
+    newStatus = "planning";
+  } else if (progressPercentage === 100) {
+    newStatus = "completed";
+  } else {
+    newStatus = "in_progress";
+  }
+
+  console.log(
+    `[Progress] Project ${projectId}: Updating status to ${newStatus}`
+  );
+
+  // Actualizar el proyecto con progreso y estado
+  await db.updateProject(projectId, { 
+    progressPercentage,
+    status: newStatus
+  });
 
   // Si el proyecto acaba de completarse (pasó de <100% a 100%), enviar notificación
   if (previousProgress < 100 && progressPercentage === 100 && project) {
