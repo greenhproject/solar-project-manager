@@ -90,7 +90,7 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {user.role === "admin" && (
+          {(user.role === "admin" || user.role === "engineer") && (
             <Link href="/projects/new">
               <Button
                 size="lg"
@@ -226,7 +226,7 @@ export default function Dashboard() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              {user.role === "admin" && (
+              {(user.role === "admin" || user.role === "engineer") && (
                 <Link href="/projects/new">
                   <Button className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
                     <Plus className="h-4 w-4" />

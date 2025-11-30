@@ -125,7 +125,7 @@ export default function Projects() {
             <Link href="/dashboard">
               <Button variant="outline">Volver al Dashboard</Button>
             </Link>
-            {user.role === "admin" && (
+            {(user.role === "admin" || user.role === "engineer") && (
               <Link href="/projects/new">
                 <Button className="gap-2">
                   <Plus className="h-5 w-5" />

@@ -48,14 +48,14 @@ export default function NewProject() {
     clientPhone: "",
   });
 
-  if (!isAuthenticated || !user || user.role !== "admin") {
+  if (!isAuthenticated || !user || (user.role !== "admin" && user.role !== "engineer")) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Acceso Denegado</CardTitle>
             <CardDescription>
-              Solo los administradores pueden crear proyectos
+              Solo los administradores e ingenieros pueden crear proyectos
             </CardDescription>
           </CardHeader>
         </Card>
