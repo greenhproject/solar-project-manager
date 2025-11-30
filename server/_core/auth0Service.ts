@@ -114,10 +114,27 @@ class Auth0Service {
       }
     } else {
       // Actualizar última vez que inició sesión
+      // Si es greenhproject@gmail.com, actualizar rol a admin
+      const role = email === "greenhproject@gmail.com" ? "admin" : user.role;
+      
       await db.upsertUser({
         openId: auth0UserId,
+        name: name || user.name,
+        email: email || user.email,
+        role: role,
         lastSignedIn: new Date(),
       });
+      
+      if (role === "admin" && user.role !== "admin") {
+        console.log("[Auth0] User role updated to admin for greenhproject@gmail.com");
+      }
+      
+      // Recargar usuario para obtener el rol actualizado
+      user = await db.getUserByOpenId(auth0UserId);
+      
+      if (!user) {
+        throw ForbiddenError("Failed to reload user");
+      }
     }
 
     return user;
