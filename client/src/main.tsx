@@ -46,6 +46,8 @@ const trpcClient = trpc.createClient({
       fetch(input, init) {
         // Obtener el token de localStorage
         const token = localStorage.getItem('auth_token');
+        const userEmail = localStorage.getItem('auth_user_email');
+        const userName = localStorage.getItem('auth_user_name');
         
         const headers: Record<string, string> = {
           ...(init?.headers as Record<string, string> || {}),
@@ -54,6 +56,14 @@ const trpcClient = trpc.createClient({
         // Agregar el token al header Authorization si existe
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        // Agregar email y name como headers personalizados
+        if (userEmail) {
+          headers['X-User-Email'] = userEmail;
+        }
+        if (userName) {
+          headers['X-User-Name'] = userName;
         }
         
         return globalThis.fetch(input, {

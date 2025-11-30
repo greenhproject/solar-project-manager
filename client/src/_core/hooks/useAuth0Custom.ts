@@ -28,6 +28,14 @@ export function useAuth0Custom() {
           setAccessToken(token);
           // Guardar el token en localStorage para usarlo en las peticiones
           localStorage.setItem('auth_token', token);
+          
+          // Guardar email y name del usuario para enviarlos al backend
+          if (user?.email) {
+            localStorage.setItem('auth_user_email', user.email);
+          }
+          if (user?.name) {
+            localStorage.setItem('auth_user_name', user.name);
+          }
         } catch (error) {
           console.error('[Auth0] Error getting access token:', error);
         }
@@ -47,6 +55,8 @@ export function useAuth0Custom() {
   const logout = () => {
     // Limpiar token del localStorage
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user_email');
+    localStorage.removeItem('auth_user_name');
     
     // Cerrar sesión de Auth0 y redirigir a la página de login
     auth0Logout({

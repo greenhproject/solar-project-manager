@@ -78,30 +78,15 @@ class Auth0Service {
     // Extraer información del usuario del token
     const auth0UserId = payload.sub as string; // e.g., "auth0|123456"
     
-    // DEBUG: Ver todos los claims del token
-    console.log("[Auth0] All token claims:", JSON.stringify(payload, null, 2));
+    // Leer email y name de los headers HTTP personalizados
+    // El frontend envía estos valores desde el objeto user de Auth0
+    let email = req.headers['x-user-email'] as string | undefined;
+    let name = req.headers['x-user-name'] as string | undefined;
     
-    // Auth0 puede enviar email y name como custom claims con namespace
-    // Intentar leer tanto los claims estándar como los custom claims
-    let email = payload.email as string | undefined;
-    let name = payload.name as string | undefined;
-    
-    // Si no están en los claims estándar, buscar en custom claims
-    if (!email || !name) {
-      console.log("[Auth0] Email or name not found in standard claims, searching custom claims...");
-      // Buscar en todos los claims del payload
-      for (const [key, value] of Object.entries(payload)) {
-        console.log(`[Auth0] Checking claim: ${key} = ${value}`);
-        if (key.includes('email') && typeof value === 'string') {
-          console.log(`[Auth0] Found email in claim: ${key}`);
-          email = value;
-        }
-        if (key.includes('name') && typeof value === 'string') {
-          console.log(`[Auth0] Found name in claim: ${key}`);
-          name = value;
-        }
-      }
-    }
+    console.log("[Auth0] User info from headers:", {
+      email,
+      name,
+    });
 
     console.log("[Auth0] Token verified", {
       sub: auth0UserId,
