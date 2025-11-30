@@ -671,14 +671,76 @@ export const appRouter = router({
               p.status !== "completed" &&
               p.status !== "cancelled" &&
               p.estimatedEndDate < now
-          ).length,
-        };
+          ).length        };
       }
     }),
+
+    // Cargar hitos desde plantillas
+    loadMilestonesFromTemplate: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        console.log(`[Projects] Loading milestones from template for project ${input.projectId}`);
+        
+        // Obtener el proyecto
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Verificar permisos
+        if (ctx.user.role !== "admin" && project.createdBy !== ctx.user.id) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permisos para modificar este proyecto",
+          });
+        }
+
+        // Obtener plantillas de hitos para el tipo de proyecto
+        const templates = await db.getMilestoneTemplatesByProjectType(project.projectTypeId);
+        console.log(`[Projects] Found ${templates.length} milestone templates for project type ${project.projectTypeId}`);
+
+        if (templates.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "No hay plantillas de hitos configuradas para este tipo de proyecto",
+          });
+        }
+
+        // Insertar hitos desde las plantillas
+        let createdCount = 0;
+        for (const template of templates) {
+          console.log(`[Projects] Creating milestone from template: ${template.name}`);
+          await db.createMilestone({
+            projectId: project.id,
+            name: template.name,
+            description: template.description || "",
+            dueDate: new Date(project.startDate.getTime() + (template.estimatedDurationDays || 0) * 24 * 60 * 60 * 1000),
+            orderIndex: template.orderIndex,
+            status: "pending",
+          });
+          createdCount++;
+        }
+
+        // Recalcular progreso del proyecto
+        const { recalculateProjectProgress } = await import(
+          "./progressCalculator.js"
+        );
+        await recalculateProjectProgress(project.id);
+        console.log(`[Projects] Created ${createdCount} milestones and recalculated progress`);
+
+        return {
+          success: true,
+          count: createdCount,
+          message: `Se cargaron ${createdCount} hitos predeterminados correctamente`,
+        };
+      }),
   }),
 
   // ============================================
-  // GESTIÓN DE PLANTILLAS DE HITOS
+  // MILESTONES (Hitos)ILLAS DE HITOS
   // ============================================
   milestoneTemplates: router({
     list: protectedProcedure.query(async () => {

@@ -87,6 +87,7 @@ export default function ProjectDetail() {
   const deleteProject = trpc.projects.delete.useMutation();
   const generatePDF = trpc.reports.generateProjectPDF.useMutation();
   const syncProject = trpc.sync.syncProject.useMutation();
+  const loadMilestonesFromTemplate = trpc.projects.loadMilestonesFromTemplate.useMutation();
 
   if (!isAuthenticated || !user) {
     return (
@@ -233,6 +234,17 @@ export default function ProjectDetail() {
     } catch (error: any) {
       setIsSyncing(false);
       toast.error(error.message || "Error al actualizar el hito");
+    }
+  };
+
+  const handleLoadMilestonesFromTemplate = async () => {
+    try {
+      const result = await loadMilestonesFromTemplate.mutateAsync({ projectId });
+      toast.success(result.message);
+      refetchMilestones();
+      refetch();
+    } catch (error: any) {
+      toast.error(error.message || "Error al cargar plantillas de hitos");
     }
   };
 
@@ -463,16 +475,35 @@ export default function ProjectDetail() {
           <TabsContent value="milestones" className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Hitos del Proyecto</h2>
-              <Dialog
-                open={isAddingMilestone}
-                onOpenChange={setIsAddingMilestone}
-              >
-                <DialogTrigger asChild>
-                  <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Agregar Hito
-                  </Button>
-                </DialogTrigger>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={handleLoadMilestonesFromTemplate}
+                  disabled={loadMilestonesFromTemplate.isPending}
+                >
+                  {loadMilestonesFromTemplate.isPending ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Cargando...
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="h-4 w-4" />
+                      Cargar Hitos Predeterminados
+                    </>
+                  )}
+                </Button>
+                <Dialog
+                  open={isAddingMilestone}
+                  onOpenChange={setIsAddingMilestone}
+                >
+                  <DialogTrigger asChild>
+                    <Button className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Agregar Hito
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Nuevo Hito</DialogTitle>
@@ -540,6 +571,7 @@ export default function ProjectDetail() {
                   </div>
                 </DialogContent>
               </Dialog>
+              </div>
             </div>
 
             {milestones && milestones.length > 0 ? (

@@ -755,6 +755,42 @@
 - [x] Las plantillas de hitos SÍ se cargan automáticamente (código correcto, solo falta crear plantillas para cada tipo)
 - [x] Botón "Editar" restaurado en ProjectDetail + página EditProject.tsx creada
 - [x] Logs de debugging agregados a botón "Cargar desde OpenSolar" para diagnosticar error
-- [ ] Probar carga de hitos desde plantillas con plantillas configuradas
+- [ ] VERIFICAR: Plantillas NO se cargan automáticamente en Railway al crear proyecto tipo Comercial
+- [ ] Revisar logs de Railway para ver si hay errores al crear proyecto
+- [ ] Verificar que existan plantillas en la base de datos de Railway
 - [ ] Probar botón Editar en Railway
 - [ ] Diagnosticar error específico de OpenSolar en Railway
+
+
+## Bug Crítico CONFIRMADO: Login en Producción de Manus
+
+- [x] Confirmar problema: Después del login exitoso en https://projectmanagerghp.manus.space, la aplicación redirige a /dashboard pero muestra pantalla de "Iniciar Sesión" en lugar del dashboard
+- [ ] Identificar causa raíz: La sesión no se está estableciendo correctamente después del callback de OAuth
+- [ ] Revisar configuración de cookies en producción de Manus
+- [ ] Verificar que el callback de OAuth esté funcionando correctamente
+- [ ] Implementar corrección definitiva
+- [ ] Probar login en producción después de la corrección
+
+
+## Nueva Funcionalidad: Botón "Cargar Hitos Predeterminados"
+
+- [ ] Crear procedimiento backend `projects.loadMilestonesFromTemplate` que:
+  - Obtenga el tipo de proyecto
+  - Busque plantillas activas para ese tipo
+  - Inserte los hitos desde las plantillas
+  - Recalcule el progreso del proyecto
+- [ ] Agregar botón "Cargar Hitos Predeterminados" en ProjectDetail.tsx
+- [ ] Mostrar confirmación con cantidad de hitos cargados
+- [ ] Probar en local
+- [ ] Desplegar en Railway y GitHub
+
+## Corrección de Carga Automática de Plantillas de Hitos
+
+- [x] Diagnosticar problema de carga automática de plantillas en Railway
+- [x] Crear procedimiento tRPC `loadMilestonesFromTemplate` para carga manual
+- [x] Agregar botón "Cargar Hitos Predefinidos" en página de detalle de proyecto
+- [x] Implementar handler con notificaciones de éxito/error
+- [x] Calcular fechas de vencimiento basadas en `estimatedDurationDays`
+- [x] Recalcular progreso del proyecto después de cargar hitos
+- [x] Crear tests unitarios para el procedimiento (8/8 pasando)
+- [x] Verificar funcionamiento en entorno local
