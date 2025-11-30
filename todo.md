@@ -825,9 +825,11 @@
 
 ## Corrección Urgente de OpenSolar en Railway
 
-- [ ] Revisar investigación previa de integración OpenSolar
-- [ ] Verificar URL correcta de API de OpenSolar
-- [ ] Verificar endpoints correctos para obtener proyectos
-- [ ] Corregir implementación del cliente OpenSolar
-- [ ] Probar sincronización con ID real (8614520)
-- [ ] Verificar carga de documentos desde OpenSolar
+- [x] Revisar investigación previa de integración OpenSolar
+- [x] Verificar URL correcta de API de OpenSolar (https://api.opensolar.com)
+- [x] Verificar endpoints correctos para obtener proyectos
+- [x] Corregir formato de respuesta (array directo vs {results:[]})
+- [x] Agregar logs detallados para debugging
+- [x] Tests de OpenSolar pasando (3/3)
+- [x] Probar con IDs reales de la organización
+- [ ] Verificar carga de documentos desde OpenSolar (pendiente)
