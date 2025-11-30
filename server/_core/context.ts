@@ -3,7 +3,7 @@ import type { User } from "../../drizzle/schema";
 import { ENV } from "./env";
 import { jwtAuthService } from "./jwtAuth";
 import { sdk } from "./sdk";
-// auth0Service removed - using Manus OAuth
+import { auth0Service } from "./auth0Service";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -16,7 +16,9 @@ const isManusEnvironment = () => {
   return !!ENV.oAuthServerUrl && ENV.oAuthServerUrl.includes("manus.im");
 };
 
-// Auth0 environment detection removed
+const isAuth0Environment = () => {
+  return !!ENV.auth0Domain && !!ENV.auth0Audience;
+};
 
 export async function createContext(
   opts: CreateExpressContextOptions
@@ -25,9 +27,12 @@ export async function createContext(
 
   try {
     // Prioridad de autenticación:
-    // 1. OAuth de Manus (si estamos en entorno Manus)
-    // 2. JWT manual (fallback para Railway)
-    if (isManusEnvironment()) {
+    // 1. Auth0 (si está configurado - para Railway/producción)
+    // 2. OAuth de Manus (si estamos en entorno Manus - para desarrollo)
+    // 3. JWT manual (fallback)
+    if (isAuth0Environment()) {
+      user = await auth0Service.authenticateRequest(opts.req);
+    } else if (isManusEnvironment()) {
       user = await sdk.authenticateRequest(opts.req);
     } else {
       user = await jwtAuthService.authenticateRequest(opts.req);

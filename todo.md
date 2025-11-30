@@ -667,3 +667,13 @@
 - [x] Configurar credenciales: org 80856 (Green house project), 1558 proyectos
 - [x] Subir cambios a GitHub (commit ff4aebe)
 - [x] Resolver conflictos de merge con rama main
+
+
+## Restauración de Auth0 para Railway (Producción)
+- [x] Instalar dependencias de Auth0 (@auth0/auth0-react, express-oauth2-jwt-bearer)
+- [x] Restaurar archivos de Auth0 desde historial de Git
+- [x] Configurar variables de entorno AUTH0_DOMAIN y AUTH0_AUDIENCE
+- [x] Verificar que context.ts detecte correctamente el entorno (Manus vs Auth0)
+- [x] Probar login con Auth0 en entorno de desarrollo
+- [x] Documentar configuración de Auth0 para Railway
+- [x] Subir cambios a GitHub
