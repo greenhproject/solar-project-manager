@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { Button } from "./ui/button";
 import { useNotificationMonitor } from "@/hooks/useNotificationMonitor";
+import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -12,6 +13,18 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { isAuthenticated, loading } = useAuth();
+  const auth0 = useAuth0Custom();
+  
+  // Detectar si Auth0 está configurado
+  const isAuth0Configured = import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID;
+  
+  const handleLogin = () => {
+    if (isAuth0Configured) {
+      auth0.login();
+    } else {
+      window.location.href = getLoginUrl();
+    }
+  };
 
   // Monitorear y enviar notificaciones automáticas
   useNotificationMonitor();
@@ -59,7 +72,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <Button
             size="lg"
             className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple"
-            onClick={() => (window.location.href = getLoginUrl())}
+            onClick={handleLogin}
           >
             Iniciar Sesión
           </Button>
