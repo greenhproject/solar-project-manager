@@ -94,8 +94,9 @@ class Auth0Service {
       console.log("[Auth0] User not found, creating new user");
       
       // Crear nuevo usuario
-      // Asignar rol admin a greenhproject@gmail.com, engineer a los demás
-      const role = email === "greenhproject@gmail.com" ? "admin" : "engineer";
+      // Asignar rol admin al sub específico de greenhproject@gmail.com
+      const ADMIN_SUB = "google-oauth2|106723310869919984535";
+      const role = auth0UserId === ADMIN_SUB ? "admin" : "engineer";
       
       await db.upsertUser({
         openId: auth0UserId,
@@ -114,8 +115,9 @@ class Auth0Service {
       }
     } else {
       // Actualizar última vez que inició sesión
-      // Si es greenhproject@gmail.com, actualizar rol a admin
-      const role = email === "greenhproject@gmail.com" ? "admin" : user.role;
+      // Si es el sub de greenhproject@gmail.com, actualizar rol a admin
+      const ADMIN_SUB = "google-oauth2|106723310869919984535";
+      const role = auth0UserId === ADMIN_SUB ? "admin" : user.role;
       
       await db.upsertUser({
         openId: auth0UserId,
@@ -126,7 +128,7 @@ class Auth0Service {
       });
       
       if (role === "admin" && user.role !== "admin") {
-        console.log("[Auth0] User role updated to admin for greenhproject@gmail.com");
+        console.log("[Auth0] User role updated to admin for sub:", auth0UserId);
       }
       
       // Recargar usuario para obtener el rol actualizado
