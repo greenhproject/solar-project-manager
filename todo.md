@@ -836,9 +836,12 @@
 
 ## Corrección de Carga de Archivos con Cloudinary
 
-- [ ] Revisar implementación del upload en frontend
-- [ ] Verificar procedimiento uploadFile en backend
-- [ ] Verificar que Cloudinary esté correctamente configurado
-- [ ] Probar carga de archivos en local
-- [ ] Verificar logs de error específicos
-- [ ] Corregir cualquier problema encontrado
+- [x] Revisar implementación del upload en frontend (FileUpload.tsx)
+- [x] Verificar procedimiento uploadFile en backend (attachments.upload)
+- [x] Verificar que Cloudinary esté correctamente configurado
+- [x] Upload Preset `solar_project_manager` creado en Cloudinary (Unsigned)
+- [x] Mejorar mensajes de error en storage.ts
+- [x] Crear guía completa CLOUDINARY_SETUP_GUIDE.md
+- [x] Pushear cambios a GitHub
+- [ ] Esperar redeploy de Railway (2-3 minutos)
+- [ ] Probar carga de archivos en Railway
