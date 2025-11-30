@@ -2,6 +2,8 @@
  * Proveedor de Auth0 para la aplicación React
  * 
  * Este componente envuelve la aplicación y proporciona el contexto de autenticación
+ * 
+ * Dominio correcto: dev-s1tr6aqjujd8goqu.us.auth0.com
  */
 
 import { Auth0Provider } from '@auth0/auth0-react';
