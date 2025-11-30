@@ -688,3 +688,13 @@
 - [x] Probar login en Manus OAuth
 - [x] Probar login en Auth0
 - [x] Subir corrección a GitHub
+
+
+## Configuración Manus OAuth para Link Público
+- [x] Revisar configuración actual de OAuth y callbacks
+- [x] Actualizar getLoginUrl para detectar entorno automáticamente
+- [x] Configurar redirect_uri dinámico basado en URL actual
+- [x] Actualizar cookies para funcionar en dominio público de Manus
+- [x] Probar login en entorno de desarrollo
+- [x] Documentar configuración para publicación
+- [x] Subir cambios a GitHub
