@@ -737,3 +737,14 @@
 - [x] Corregir métrica "En Progreso" para que muestre proyectos con hitos activos
 - [x] Corregir métrica "Completados" para que muestre proyectos con todos los hitos completados
 - [x] Verificar que el estado del proyecto se actualice cuando se completan todos los hitos
+
+
+## Bug Crítico: Login con Manus OAuth
+
+- [x] Diagnosticar por qué no redirige al dashboard después del login (funciona en local)
+- [x] Revisar flujo de autenticación en MainLayout
+- [x] Verificar callback de OAuth en backend
+- [x] Probar login completo en entorno local (FUNCIONA)
+- [x] Verificar problema en entorno de producción de Manus (manus.space) - CONFIRMADO
+- [x] Identificar diferencias entre local y producción - versión desactualizada en producción
+- [ ] Redesplegar en Manus producción con checkpoint actualizado
