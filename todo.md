@@ -833,3 +833,12 @@
 - [x] Tests de OpenSolar pasando (3/3)
 - [x] Probar con IDs reales de la organización
 - [ ] Verificar carga de documentos desde OpenSolar (pendiente)
+
+## Corrección de Carga de Archivos con Cloudinary
+
+- [ ] Revisar implementación del upload en frontend
+- [ ] Verificar procedimiento uploadFile en backend
+- [ ] Verificar que Cloudinary esté correctamente configurado
+- [ ] Probar carga de archivos en local
+- [ ] Verificar logs de error específicos
+- [ ] Corregir cualquier problema encontrado

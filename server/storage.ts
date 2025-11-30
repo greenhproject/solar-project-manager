@@ -181,6 +181,20 @@ async function cloudinaryPut(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('[Cloudinary] Upload failed:', {
+        status: response.status,
+        error: errorData,
+        uploadPreset: config.uploadPreset,
+        cloudName: config.cloudName,
+      });
+      
+      if (response.status === 400 && JSON.stringify(errorData).includes('preset')) {
+        throw new Error(
+          `Upload Preset "${config.uploadPreset}" no existe en Cloudinary. ` +
+          `Crea el preset en: Settings → Upload → Add upload preset (Unsigned mode)`
+        );
+      }
+      
       throw new Error(
         `Cloudinary upload failed (${response.status}): ${JSON.stringify(errorData)}`
       );
