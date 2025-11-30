@@ -146,23 +146,42 @@ class OpenSolarClient {
    */
   async getProjects(limit = 100): Promise<OpenSolarProject[]> {
     if (!ENV.openSolarOrgId) {
+      console.error('[OpenSolar] OPENSOLAR_ORG_ID no configurado');
       throw new Error('OPENSOLAR_ORG_ID no configurado. Necesitas el ID de tu organización.');
     }
 
-    const data = await this.makeRequest<OpenSolarProjectsResponse>(
-      `/api/orgs/${ENV.openSolarOrgId}/projects/?limit=${limit}`
-    );
-
-    return data.results;
+    try {
+      console.log(`[OpenSolar] Obteniendo proyectos de org ${ENV.openSolarOrgId}`);
+      const data = await this.makeRequest<any>(
+        `/api/orgs/${ENV.openSolarOrgId}/projects/?limit=${limit}`
+      );
+      console.log('[OpenSolar] Respuesta de API:', JSON.stringify(data).substring(0, 200));
+      
+      // La API puede retornar { results: [...] } o directamente un array
+      const projects = Array.isArray(data) ? data : (data.results || []);
+      console.log(`[OpenSolar] Obtenidos ${projects.length} proyectos`);
+      return projects;
+    } catch (error: any) {
+      console.error('[OpenSolar] Error al obtener proyectos:', error.message);
+      throw error;
+    }
   }
 
   /**
    * Obtiene un proyecto específico por ID
    */
   async getProjectById(projectId: string): Promise<OpenSolarProject> {
-    return await this.makeRequest<OpenSolarProject>(
-      `/api/projects/${projectId}/`
-    );
+    try {
+      console.log(`[OpenSolar] Obteniendo proyecto con ID: ${projectId}`);
+      const project = await this.makeRequest<OpenSolarProject>(
+        `/api/projects/${projectId}/`
+      );
+      console.log(`[OpenSolar] Proyecto obtenido: ${project.title}`);
+      return project;
+    } catch (error: any) {
+      console.error(`[OpenSolar] Error al obtener proyecto ${projectId}:`, error.message);
+      throw error;
+    }
   }
 
   /**

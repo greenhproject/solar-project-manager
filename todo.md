@@ -822,3 +822,12 @@
 - [x] Corregir procedimiento syncProject en routers.ts
 - [x] Verificar variables de entorno requeridas (OPENSOLAR_EMAIL, OPENSOLAR_PASSWORD, OPENSOLAR_ORG_ID)
 - [x] Documentar credenciales necesarias para Railway
+
+## Corrección Urgente de OpenSolar en Railway
+
+- [ ] Revisar investigación previa de integración OpenSolar
+- [ ] Verificar URL correcta de API de OpenSolar
+- [ ] Verificar endpoints correctos para obtener proyectos
+- [ ] Corregir implementación del cliente OpenSolar
+- [ ] Probar sincronización con ID real (8614520)
+- [ ] Verificar carga de documentos desde OpenSolar
