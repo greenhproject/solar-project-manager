@@ -721,8 +721,8 @@
 
 
 ## Corrección de Visualización de Gráficos en Análisis
-- [ ] Verificar datos que llegan a los gráficos de Recharts
-- [ ] Corregir formato de ejes X e Y en gráfico de evolución mensual
-- [ ] Ajustar escala y labels del gráfico de línea temporal
-- [ ] Verificar queries SQL de métricas mensuales
+- [x] Verificar datos que llegan a los gráficos de Recharts
+- [x] Corregir formato de ejes X e Y en gráfico de evolución mensual
+- [x] Ajustar escala y labels del gráfico de línea temporal
+- [x] Verificar queries SQL de métricas mensuales
 - [ ] Probar visualización con datos reales en Railway
