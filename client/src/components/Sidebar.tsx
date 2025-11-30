@@ -25,6 +25,7 @@ import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 import { NotificationBell } from "./NotificationBell";
 
 interface SidebarProps {
@@ -36,17 +37,11 @@ export function Sidebar({ className }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, isAuthenticated } = useAuth();
-  const logout = trpc.auth.logout.useMutation();
+  const { logout: auth0Logout } = useAuth0Custom();
 
-  const handleLogout = async () => {
-    try {
-      await logout.mutateAsync();
-      toast.success("Sesión cerrada exitosamente");
-      navigate("/");
-      window.location.reload();
-    } catch (error) {
-      toast.error("Error al cerrar sesión");
-    }
+  const handleLogout = () => {
+    toast.success("Cerrando sesión...");
+    auth0Logout();
   };
 
   const menuItems = [
@@ -267,7 +262,6 @@ export function Sidebar({ className }: SidebarProps) {
             isCollapsed && "justify-center px-2"
           )}
           onClick={handleLogout}
-          disabled={logout.isPending}
           title={isCollapsed ? "Cerrar Sesión" : undefined}
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
@@ -275,7 +269,7 @@ export function Sidebar({ className }: SidebarProps) {
         </Button>
         {!isCollapsed && (
           <p className="text-xs text-center text-gray-400 pt-2">
-            v1.0.0 • GreenH Project
+            v2.0.0 • GreenH Project
           </p>
         )}
       </div>

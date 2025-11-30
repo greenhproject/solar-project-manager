@@ -45,10 +45,13 @@ export function useAuth0Custom() {
   };
 
   const logout = () => {
+    // Limpiar token del localStorage
     localStorage.removeItem('auth_token');
+    
+    // Cerrar sesión de Auth0 y redirigir a la página de login
     auth0Logout({
       logoutParams: {
-        returnTo: window.location.origin,
+        returnTo: `${window.location.origin}/login`,
       },
     });
   };
