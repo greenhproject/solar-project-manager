@@ -794,3 +794,31 @@
 - [x] Recalcular progreso del proyecto después de cargar hitos
 - [x] Crear tests unitarios para el procedimiento (8/8 pasando)
 - [x] Verificar funcionamiento en entorno local
+
+## Corrección de Autenticación en Manus Producción
+
+- [ ] Abrir https://projectmanagerghp.manus.space en el navegador
+- [ ] Analizar errores en la consola del navegador
+- [ ] Revisar flujo de autenticación OAuth de Manus
+- [ ] Identificar causa raíz del problema de login
+- [ ] Implementar corrección necesaria
+- [ ] Publicar checkpoint actualizado
+- [ ] Verificar que el login funcione correctamente
+
+## Corrección de Problemas en Railway
+
+### Sistema de Archivos Adjuntos
+- [x] Analizar configuración actual de S3 en el código
+- [x] Evaluar alternativas: usar S3 propio, Cloudinary, o sistema local
+- [x] Implementar solución más práctica para Railway (Cloudinary)
+- [x] Actualizar variables de entorno necesarias
+- [x] Crear tests unitarios para storage (7/7 pasando)
+- [x] Documentar configuración en RAILWAY_SETUP.md
+
+### Integración OpenSolar
+- [x] Revisar configuración actual del cliente OpenSolar
+- [x] Identificar dos implementaciones conflictivas
+- [x] Unificar implementación para usar _core/openSolarClient
+- [x] Corregir procedimiento syncProject en routers.ts
+- [x] Verificar variables de entorno requeridas (OPENSOLAR_EMAIL, OPENSOLAR_PASSWORD, OPENSOLAR_ORG_ID)
+- [x] Documentar credenciales necesarias para Railway

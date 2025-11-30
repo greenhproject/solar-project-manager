@@ -1216,34 +1216,48 @@ Pregunta del usuario: ${input.question}
           });
         }
 
-        const client = getOpenSolarClient();
-        const result = await client.syncProjectFromOpenSolar(
-          project.openSolarId
-        );
-
-        // Registrar log de sincronización
-        await db.createSyncLog({
-          projectId: input.projectId,
-          syncedBy: ctx.user.id,
-          syncType: "manual",
-          status: result.success ? "success" : "failed",
-          message: result.message,
-          errorDetails: result.error,
-        });
-
-        if (!result.success) {
+        // Usar el cliente correcto de OpenSolar (con EMAIL/PASSWORD)
+        const { openSolarClient } = await import('./_core/openSolarClient');
+        
+        try {
+          const openSolarProject = await openSolarClient.getProjectById(project.openSolarId);
+          const formData = openSolarClient.mapProjectToForm(openSolarProject);
+          
+          // Actualizar proyecto con datos sincronizados
+          await db.updateProject(input.projectId, {
+            name: formData.name,
+            location: formData.location,
+            clientName: formData.clientName,
+            clientEmail: formData.clientEmail,
+            clientPhone: formData.clientPhone,
+          });
+          
+             // Registrar log de sincronización exitosa
+          await db.createSyncLog({
+            projectId: input.projectId,
+            syncedBy: ctx.user.id,
+            syncType: "manual",
+            status: "success",
+            message: 'Proyecto sincronizado exitosamente desde OpenSolar',
+          });
+          
+          return { success: true, message: "Proyecto sincronizado exitosamente" };
+        } catch (error: any) {
+          // Registrar log de sincronización fallida
+          await db.createSyncLog({
+            projectId: input.projectId,
+            syncedBy: ctx.user.id,
+            syncType: "manual",
+            status: "failed",
+            message: 'Error al sincronizar con OpenSolar',
+            errorDetails: error.message,
+          });
+          
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: result.message || "Error al sincronizar con OpenSolar",
+            message: error.message || "Error al sincronizar con OpenSolar",
           });
         }
-
-        // Actualizar proyecto con datos sincronizados si es necesario
-        if (result.data) {
-          await db.updateProject(input.projectId, result.data);
-        }
-
-        return { success: true, message: "Proyecto sincronizado exitosamente" };
       }),
 
     // Obtener logs de sincronización
