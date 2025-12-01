@@ -1184,6 +1184,80 @@ Pregunta del usuario: ${input.question}
             "No se pudo generar una respuesta",
         };
       }),
+
+    // Generar informe PDF descargable
+    generateReport: protectedProcedure.mutation(async ({ ctx }) => {
+      const projects = await db.getAllProjects();
+      const stats = await db.getProjectStats();
+      const milestones = await db.getUpcomingMilestones(7);
+      const overdueMilestones = await db.getOverdueMilestones();
+
+      // Generar análisis con IA
+      const context = `
+Análisis de Proyectos Solares - GreenH Project
+
+Estadísticas Generales:
+- Total de proyectos: ${stats.total}
+- Proyectos activos: ${stats.active}
+- Proyectos completados: ${stats.completed}
+- Proyectos con retraso: ${stats.overdue}
+
+Proyectos:
+${projects
+  .map(
+    p => `
+- ${p.name} (${p.location})
+  Estado: ${p.status}
+  Tipo: ${p.projectTypeId}
+  Fecha inicio: ${p.startDate}
+  Fecha fin estimada: ${p.estimatedEndDate}
+`
+  )
+  .join("")}
+
+Hitos próximos a vencer (7 días):
+${milestones.map(m => `- ${m.milestoneName} (${m.projectName}) - Vence: ${m.dueDate}`).join("\n")}
+
+Hitos vencidos:
+${overdueMilestones.map(m => `- ${m.milestoneName} (${m.projectName}) - Venció: ${m.dueDate}`).join("\n")}
+
+Por favor, genera un informe ejecutivo profesional en formato Markdown con:
+1. Resumen Ejecutivo
+2. Estado General de Proyectos
+3. Análisis de Riesgos
+4. Hitos Críticos
+5. Recomendaciones Prioritarias
+6. Plan de Acción
+`;
+
+      const { invokeLLM } = await import("./_core/llm");
+
+      const response = await invokeLLM({
+        messages: [
+          {
+            role: "system",
+            content:
+              "Eres un consultor experto en gestión de proyectos solares. Genera informes ejecutivos profesionales, concisos y accionables en español. Usa formato Markdown con secciones claras.",
+          },
+          {
+            role: "user",
+            content: context,
+          },
+        ],
+      });
+
+      const reportContent =
+        response.choices[0]?.message?.content ||
+        "No se pudo generar el informe";
+
+      // Por ahora retornamos el contenido del informe
+      // En una implementación completa, generaríamos un PDF y lo subiríamos a S3
+      return {
+        reportContent,
+        reportUrl: null, // TODO: Implementar generación de PDF
+        timestamp: new Date().toISOString(),
+      };
+    }),
   }),
 
   // ============================================

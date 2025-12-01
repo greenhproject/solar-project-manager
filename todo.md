@@ -913,3 +913,20 @@
 - [x] Verificar filtro de userId en la consulta
 - [x] Corregir checkAndCreateAutoNotifications para notificar al admin si no hay ingeniero
 - [x] Probar en producción
+
+
+## Corrección y Mejora del Asistente IA (30 Nov 2025)
+
+- [x] Investigar y corregir error "Lo siento, hubo un error al analizar los proyectos"
+- [x] Verificar conexión con LLM (invokeLLM)
+- [x] Rediseñar interfaz para mejor visualización
+- [x] Implementar generación de informes descargables (formato Markdown)
+- [x] Agregar análisis de:
+  * Proyectos con retraso
+  * Hitos críticos
+  * Recomendaciones de optimización
+  * Predicciones de finalización
+- [x] Mejorar presentación de resultados con cards de estadísticas
+- [x] Agregar acciones rápidas con preguntas predefinidas
+- [x] Implementar mejor manejo de errores
+- [ ] Probar en producción
