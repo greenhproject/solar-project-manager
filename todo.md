@@ -871,3 +871,11 @@
 - [ ] Publicar checkpoint en Manus para ver logs
 - [ ] Analizar logs y corregir problema
 - [ ] Probar login completo en Manus
+
+## Corrección de Sincronización OpenSolar
+
+- [x] Analizar error 404 en endpoint `/api/projects/{ID}/`
+- [x] Confirmar que solo funciona `/api/orgs/{ORG_ID}/projects/`
+- [x] Modificar `getProjectById` para buscar en lista de proyectos
+- [x] Tests de OpenSolar pasando (3/3)
+- [x] Guardar checkpoint y pushear a GitHub

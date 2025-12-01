@@ -169,14 +169,24 @@ class OpenSolarClient {
 
   /**
    * Obtiene un proyecto específico por ID
+   * Nota: OpenSolar no tiene endpoint directo para obtener proyecto por ID,
+   * entonces buscamos en la lista de proyectos de la organización
    */
   async getProjectById(projectId: string): Promise<OpenSolarProject> {
     try {
-      console.log(`[OpenSolar] Obteniendo proyecto con ID: ${projectId}`);
-      const project = await this.makeRequest<OpenSolarProject>(
-        `/api/projects/${projectId}/`
-      );
-      console.log(`[OpenSolar] Proyecto obtenido: ${project.title}`);
+      console.log(`[OpenSolar] Buscando proyecto con ID: ${projectId}`);
+      
+      // Obtener todos los proyectos de la organización
+      const projects = await this.getProjects();
+      
+      // Buscar el proyecto por ID
+      const project = projects.find(p => p.id.toString() === projectId.toString());
+      
+      if (!project) {
+        throw new Error(`Proyecto con ID ${projectId} no encontrado en la organización`);
+      }
+      
+      console.log(`[OpenSolar] Proyecto encontrado: ${project.title}`);
       return project;
     } catch (error: any) {
       console.error(`[OpenSolar] Error al obtener proyecto ${projectId}:`, error.message);
