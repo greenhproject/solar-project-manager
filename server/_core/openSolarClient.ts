@@ -40,6 +40,44 @@ interface OpenSolarProjectsResponse {
   results: OpenSolarProject[];
 }
 
+interface OpenSolarModule {
+  module_activation_id: number;
+  code: string;
+  manufacturer_name: string;
+  quantity: number;
+}
+
+interface OpenSolarInverter {
+  inverter_activation_id: number;
+  code: string;
+  manufacturer_name: string;
+  quantity: number;
+}
+
+interface OpenSolarBattery {
+  battery_activation_id: number;
+  code: string;
+  manufacturer_name: string;
+  quantity: number;
+  total_kwh?: number;
+}
+
+interface OpenSolarSystem {
+  id: number;
+  name: string;
+  kw_stc: number;
+  module_quantity: number;
+  battery_total_kwh: number;
+  output_annual_kwh: number;
+  consumption_offset_percentage: number;
+  is_current: boolean;
+  modules: OpenSolarModule[];
+  inverters: OpenSolarInverter[];
+  batteries: OpenSolarBattery[];
+  others: any[];
+  project: string;
+}
+
 /**
  * Cliente singleton para OpenSolar API
  */
@@ -168,6 +206,36 @@ class OpenSolarClient {
   }
 
   /**
+   * Obtiene los sistemas (diseños) de un proyecto específico
+   */
+  async getSystems(projectId: string): Promise<OpenSolarSystem[]> {
+    if (!ENV.openSolarOrgId) {
+      throw new Error('OPENSOLAR_ORG_ID no configurado');
+    }
+
+    try {
+      console.log(`[OpenSolar] Obteniendo sistemas del proyecto ${projectId}`);
+      const data = await this.makeRequest<any>(
+        `/api/orgs/${ENV.openSolarOrgId}/systems/?fieldset=list&project=${projectId}`
+      );
+      
+      // La API puede retornar un array directamente o { results: [...] }
+      const systems = Array.isArray(data) ? data : (data.results || []);
+      console.log(`[OpenSolar] Obtenidos ${systems.length} sistemas para proyecto ${projectId}`);
+      
+      if (systems.length > 0) {
+        console.log(`[OpenSolar] Sistema principal: ${systems[0].kw_stc} kW, ${systems[0].modules?.length || 0} tipos de paneles`);
+      }
+      
+      return systems;
+    } catch (error: any) {
+      console.error(`[OpenSolar] Error al obtener sistemas del proyecto ${projectId}:`, error.message);
+      // No lanzar error, retornar array vacío para que la sincronización continúe
+      return [];
+    }
+  }
+
+  /**
    * Obtiene un proyecto específico por ID
    * Nota: OpenSolar no tiene endpoint directo para obtener proyecto por ID,
    * entonces buscamos en la lista de proyectos de la organización
@@ -195,7 +263,81 @@ class OpenSolarClient {
   }
 
   /**
+   * Construye una descripción detallada con los equipos del sistema
+   */
+  private buildEquipmentDescription(systems: OpenSolarSystem[]): string {
+    if (!systems || systems.length === 0) {
+      return '';
+    }
+
+    // Usar el sistema actual o el primero disponible
+    const system = systems.find(s => s.is_current) || systems[0];
+    
+    let description = `Sistema Solar:\n`;
+    description += `- Capacidad: ${system.kw_stc} kW\n`;
+    description += `- Producción anual estimada: ${system.output_annual_kwh.toLocaleString()} kWh\n`;
+    
+    if (system.consumption_offset_percentage > 0) {
+      description += `- Compensación de consumo: ${system.consumption_offset_percentage}%\n`;
+    }
+
+    // Paneles solares
+    if (system.modules && system.modules.length > 0) {
+      description += `\nPaneles Solares:\n`;
+      system.modules.forEach(module => {
+        description += `- ${module.quantity}x ${module.manufacturer_name} ${module.code}\n`;
+      });
+    }
+
+    // Inversores
+    if (system.inverters && system.inverters.length > 0) {
+      description += `\nInversores:\n`;
+      system.inverters.forEach(inv => {
+        description += `- ${inv.quantity}x ${inv.manufacturer_name} ${inv.code}\n`;
+      });
+    }
+
+    // Baterías
+    if (system.batteries && system.batteries.length > 0) {
+      description += `\nBaterías:\n`;
+      system.batteries.forEach(bat => {
+        const capacity = bat.total_kwh ? ` (${bat.total_kwh} kWh)` : '';
+        description += `- ${bat.quantity}x ${bat.manufacturer_name} ${bat.code}${capacity}\n`;
+      });
+    }
+
+    if (system.battery_total_kwh > 0 && (!system.batteries || system.batteries.length === 0)) {
+      description += `\nCapacidad total de baterías: ${system.battery_total_kwh} kWh\n`;
+    }
+
+    return description;
+  }
+
+  /**
    * Mapea un proyecto de OpenSolar al formato del formulario
+   * Incluye información de equipos si están disponibles
+   */
+  async mapProjectToFormWithEquipment(project: OpenSolarProject) {
+    const primaryContact = project.contacts_data?.[0];
+
+    // Obtener sistemas (diseños) del proyecto
+    const systems = await this.getSystems(project.id.toString());
+    const equipmentDescription = this.buildEquipmentDescription(systems);
+
+    return {
+      name: project.title || 'Proyecto sin nombre',
+      location: project.address || '',
+      clientName: primaryContact?.display || primaryContact?.first_name || '',
+      clientEmail: primaryContact?.email || '',
+      clientPhone: primaryContact?.phone || '',
+      description: equipmentDescription || `Proyecto importado desde OpenSolar (ID: ${project.id})`,
+      startDate: project.created_date ? new Date(project.created_date) : new Date(),
+    };
+  }
+
+  /**
+   * Mapea un proyecto de OpenSolar al formato del formulario (versión síncrona, sin equipos)
+   * @deprecated Usar mapProjectToFormWithEquipment para incluir información de equipos
    */
   mapProjectToForm(project: OpenSolarProject) {
     const primaryContact = project.contacts_data?.[0];

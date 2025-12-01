@@ -1,0 +1,125 @@
+{
+  "address": "Via Corredor al Mar #Km 10, Condominio Barceloneta, Apto 403, Bl 3, Cartagena de Indias, Bolívar",
+  "assigned_role_data": {
+    "id": 219155,
+    "email": "Asesorcomercialghp@gmail.com",
+    "is_admin": false,
+    "user": "https://api.opensolar.com/api/global_users/1687874/",
+    "user_email": "Asesorcomercialghp@gmail.com",
+    "org": "https://api.opensolar.com/api/orgs/80856/",
+    "is_hidden": false,
+    "url": "https://api.opensolar.com/api/orgs/80856/roles/219155/",
+    "first_name": "Asesor externo",
+    "family_name": "Comercial GHP",
+    "job_title": "Asesor comercial",
+    "accreditation": "",
+    "user_phone": "",
+    "display": "Asesor externo Comercial GHP",
+    "phone": "3142832283",
+    "allow_email_notifications": true,
+    "portrait_image": null,
+    "google_calendar_id": null,
+    "has_logged_in": true,
+    "schedule_meeting_url": "https://calendly.com/asesorcomercialghp/30min",
+    "schedule_meeting_label": "Asesoría virtual",
+    "api_key_chat": "",
+    "user_is_staff": false,
+    "org_name": "Green house project",
+    "mosaic_sales_rep_id": null,
+    "ironridge_email": null,
+    "ironridge_terms_accepted": null,
+    "integration_json": null,
+    "loanpal_channels": null,
+    "sungage_email": null,
+    "permissions_role": 6264,
+    "permissions_role_title": "asesor externo ghp",
+    "access_projects_from_users": [
+      193789
+    ],
+    "brighte_agent_id": "",
+    "dividend_contact_id": "",
+    "user_data": null,
+    "phoenix_user_email": null,
+    "managed_by": null,
+    "portrait_image_public_url": null,
+    "non_admin_editable": false
+  },
+  "auto_design_status": [
+    "NOT_STARTED",
+    null,
+    0
+  ],
+  "business_name": null,
+  "calculation_error_messages": [],
+  "contacts": [
+    "https://api.opensolar.com/api/orgs/80856/contacts/1593979364/"
+  ],
+  "contacts_data": [
+    {
+      "id": 1593979364,
+      "email": "carruselcasadelpan@gmail.com",
+      "phone": "(57)3128962264",
+      "url": "https://api.opensolar.com/api/orgs/80856/contacts/1593979364/",
+      "first_name": "Andres",
+      "family_name": "Capriles",
+      "display": "Andres Capriles",
+      "passport_number": "",
+      "licence_number": "",
+      "custom_contact_info_1": "419105",
+      "custom_contact_info_2": "",
+      "middle_name": "",
+      "gender": 0,
+      "date_of_birth": null,
+      "user_id": null,
+      "org_id": 80856,
+      "identifier": "",
+      "type": 0,
+      "custom_data": {
+        "os_meta": {
+          "phone_country_iso2": "CO"
+        }
+      }
+    }
+  ],
+  "country": "https://api.opensolar.com/api/countries/50/",
+  "created_date": "2025-11-30T21:36:46.039882Z",
+  "id": 8616702,
+  "is_lite": false,
+  "is_residential": true,
+  "last_calculation_error": null,
+  "lead_source": "",
+  "locality": "Cartagena de Indias",
+  "modified_date": "2025-11-30T21:58:30.811089Z",
+  "notes": "",
+  "org_id": 80856,
+  "org_name": "Green house project",
+  "priority": 2,
+  "project_installed": null,
+  "project_sold": null,
+  "shared_with": [],
+  "stage": 0,
+  "stars": [],
+  "state": "Bolívar",
+  "tags_data": [
+    {
+      "url": "https://api.opensolar.com/api/orgs/80856/tags/1599194/",
+      "org": "https://api.opensolar.com/api/orgs/80856/",
+      "title": "Diego Salazar",
+      "allow_fetch": false,
+      "created_date": "2025-07-03T12:23:49.231182Z",
+      "modified_date": "2025-07-03T12:35:23.951592Z",
+      "remove_tag_when_fetched": false,
+      "create_activity_when_fetched": false,
+      "id": 1599194
+    }
+  ],
+  "title": "Via Corredor al Mar #Km 10, Condominio Barceloneta, Apto 403, Bl 3, Cartagena de Indias, Bolívar",
+  "url": "https://api.opensolar.com/api/orgs/80856/projects/8616702/",
+  "workflow": {
+    "id": 8513837,
+    "workflow_id": 1529,
+    "active_stage_id": 7641
+  },
+  "zip": "130008",
+  "hide_pricing": false
+}

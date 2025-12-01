@@ -879,3 +879,12 @@
 - [x] Modificar `getProjectById` para buscar en lista de proyectos
 - [x] Tests de OpenSolar pasando (3/3)
 - [x] Guardar checkpoint y pushear a GitHub
+
+## Mejora de Mapeo OpenSolar - Equipos Diseñados
+
+- [ ] Explorar respuesta de API para encontrar campos de equipos
+- [ ] Identificar paneles solares, inversores, baterías, etc.
+- [ ] Actualizar método `mapProjectToForm` para incluir equipos
+- [ ] Formatear descripción con lista de equipos
+- [ ] Probar con proyecto real
+- [ ] Guardar checkpoint y pushear

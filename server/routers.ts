@@ -1182,10 +1182,11 @@ Pregunta del usuario: ${input.question}
         
         try {
           const project = await openSolarClient.getProjectById(input.openSolarId);
-          console.log('[OpenSolar] Project retrieved successfully');
+          console.log('[OpenSolar] Project retrieved successfully:', project.title);
           
-          const formData = openSolarClient.mapProjectToForm(project);
-          console.log('[OpenSolar] Form data mapped successfully');
+          // Usar la nueva función que incluye equipos
+          const formData = await openSolarClient.mapProjectToFormWithEquipment(project);
+          console.log('[OpenSolar] Form data mapped with equipment successfully');
           
           return formData;
         } catch (error: any) {
