@@ -1,6 +1,6 @@
 // Storage system that works in both Manus and Railway environments
 // - Manus: Uses built-in Forge API storage
-// - Railway: Uses Cloudinary (free tier: 25GB storage, 25GB bandwidth/month)
+// - Railway: Uses Cloudinary with official SDK (signed uploads)
 
 import { ENV } from "./_core/env";
 
@@ -114,21 +114,19 @@ async function manusStorageGet(
 }
 
 // ============================================================================
-// CLOUDINARY STORAGE (Railway)
+// CLOUDINARY STORAGE (Railway) - Using Official SDK
 // ============================================================================
 
 interface CloudinaryConfig {
   cloudName: string;
   apiKey: string;
   apiSecret: string;
-  uploadPreset: string;
 }
 
 function getCloudinaryConfig(): CloudinaryConfig {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
-  const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET || 'solar_project_manager';
 
   if (!cloudName || !apiKey || !apiSecret) {
     throw new Error(
@@ -136,7 +134,7 @@ function getCloudinaryConfig(): CloudinaryConfig {
     );
   }
 
-  return { cloudName, apiKey, apiSecret, uploadPreset };
+  return { cloudName, apiKey, apiSecret };
 }
 
 async function cloudinaryPut(
@@ -146,15 +144,24 @@ async function cloudinaryPut(
 ): Promise<{ key: string; url: string }> {
   const config = getCloudinaryConfig();
 
-  // Convertir datos a base64
-  const base64Data = typeof data === 'string' 
-    ? Buffer.from(data).toString('base64')
-    : Buffer.from(data).toString('base64');
+  // Importar SDK de Cloudinary dinámicamente
+  const { v2: cloudinary } = await import('cloudinary');
 
-  const dataUri = `data:${contentType};base64,${base64Data}`;
+  // Configurar Cloudinary
+  cloudinary.config({
+    cloud_name: config.cloudName,
+    api_key: config.apiKey,
+    api_secret: config.apiSecret,
+    secure: true,
+  });
+
+  // Convertir datos a buffer si es necesario
+  const buffer = typeof data === 'string' 
+    ? Buffer.from(data) 
+    : Buffer.from(data);
 
   // Determinar resource_type basado en contentType
-  let resourceType = 'auto';
+  let resourceType: 'image' | 'video' | 'raw' | 'auto' = 'auto';
   if (contentType.startsWith('image/')) {
     resourceType = 'image';
   } else if (contentType.startsWith('video/')) {
@@ -167,47 +174,50 @@ async function cloudinaryPut(
   const publicId = `${folder}/${normalizeKey(relKey)}`;
 
   try {
-    const formData = new FormData();
-    formData.append('file', dataUri);
-    formData.append('upload_preset', config.uploadPreset);
-    formData.append('public_id', publicId);
-
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${config.cloudName}/${resourceType}/upload`;
-
-    const response = await fetch(uploadUrl, {
-      method: 'POST',
-      body: formData,
+    console.log('[Cloudinary] Uploading file:', {
+      publicId,
+      resourceType,
+      contentType,
+      size: buffer.length,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('[Cloudinary] Upload failed:', {
-        status: response.status,
-        error: errorData,
-        uploadPreset: config.uploadPreset,
-        cloudName: config.cloudName,
-      });
-      
-      if (response.status === 400 && JSON.stringify(errorData).includes('preset')) {
-        throw new Error(
-          `Upload Preset "${config.uploadPreset}" no existe en Cloudinary. ` +
-          `Crea el preset en: Settings → Upload → Add upload preset (Unsigned mode)`
-        );
-      }
-      
-      throw new Error(
-        `Cloudinary upload failed (${response.status}): ${JSON.stringify(errorData)}`
+    // Upload usando el SDK oficial con signed upload
+    const result = await new Promise<any>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          public_id: publicId,
+          resource_type: resourceType,
+          folder: folder,
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result);
+          }
+        }
       );
-    }
 
-    const result = await response.json();
+      // Escribir el buffer al stream
+      uploadStream.end(buffer);
+    });
+
+    console.log('[Cloudinary] Upload successful:', {
+      url: result.secure_url,
+      publicId: result.public_id,
+    });
 
     return {
       key: relKey,
       url: result.secure_url,
     };
   } catch (error: any) {
-    console.error('[Cloudinary] Upload error:', error);
+    console.error('[Cloudinary] Upload error:', {
+      error: error.message,
+      stack: error.stack,
+      publicId,
+      resourceType,
+    });
     throw new Error(`Error al subir archivo a Cloudinary: ${error.message}`);
   }
 }

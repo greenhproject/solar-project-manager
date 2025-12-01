@@ -848,11 +848,20 @@
 - [ ] Esperar redeploy de Railway (2-3 minutos)
 - [ ] Probar carga de archivos en Railway
 
-## 🚨 CRÍTICO: Autenticación No Funciona en Railway
+## 🚨 CRÍTICO: Cloudinary 404 Error en Railway
 
-- [ ] Diagnosticar por qué muestra "Acceso Restringido" después del login
-- [ ] Revisar diferencias entre auth de Manus y Railway
-- [ ] Verificar configuración de OAuth en Railway
-- [ ] Verificar cookies y sesiones en Railway
+- [ ] Diagnosticar error "Storage upload failed (404 Not Found)"
+- [ ] Verificar configuración del Upload Preset en Cloudinary
+- [ ] Verificar que el preset permita uploads sin firma (Unsigned)
+- [ ] Verificar folder y permisos del preset
+- [ ] Corregir configuración o cambiar a signed uploads
+- [ ] Probar upload en Railway
+
+## 🚨 CRÍTICO: Login No Funciona en Manus Producción
+
+- [ ] Diagnosticar por qué muestra "Acceso Restringido" después del OAuth
+- [ ] Revisar código de autenticación en DashboardLayout
+- [ ] Verificar que useAuth() funcione correctamente
+- [ ] Verificar cookies y tokens de sesión
 - [ ] Corregir problema de autenticación
-- [ ] Probar login completo en Railway
+- [ ] Probar login completo en Manus
