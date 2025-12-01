@@ -893,3 +893,14 @@
 - [ ] Formatear descripción con lista de equipos
 - [ ] Probar con proyecto real
 - [ ] Guardar checkpoint y pushear
+
+
+## Corrección de Historial de Notificaciones (30 Nov 2025)
+
+- [x] Crear 5 notificaciones de prueba en la base de datos
+- [x] Implementar generación automática de notificaciones para hitos próximos a vencer
+- [x] Implementar generación automática de notificaciones para hitos vencidos
+- [x] Agregar botón "Generar Notificaciones" para administradores
+- [ ] Crear job/cron para verificar hitos diariamente (automatización futura)
+- [ ] Agregar notificaciones al completar proyectos (ya existe en progressCalculator)
+- [ ] Agregar notificaciones al asignar proyectos a ingenieros (funcionalidad futura)

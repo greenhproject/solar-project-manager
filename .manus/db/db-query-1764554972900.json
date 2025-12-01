@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as total FROM notification_history;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT COUNT(*) as total FROM notification_history;",
+  "rows": [
+    {
+      "total": "63"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\n63\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

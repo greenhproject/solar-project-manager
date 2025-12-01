@@ -1,0 +1,16 @@
+{
+  "query": "SHOW TABLES LIKE '%notification%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SHOW TABLES LIKE '%notification%';",
+  "rows": [
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi (%notification%)": "notification_history"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi (%notification%)": "notification_settings"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_i9L9SEfcrUSsT5mzwNhmmi (%notification%)\nnotification_history\nnotification_settings\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

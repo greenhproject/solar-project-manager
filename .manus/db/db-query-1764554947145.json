@@ -1,0 +1,49 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "milestone_templates"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "milestones"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "notification_history"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "notification_settings"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "password_reset_tokens"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "project_attachments"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "project_types"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "project_updates"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "projects"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "reminders"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "sync_logs"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_i9L9SEfcrUSsT5mzwNhmmi\n__drizzle_migrations\nmilestone_templates\nmilestones\nnotification_history\nnotification_settings\npassword_reset_tokens\nproject_attachments\nproject_types\nproject_updates\nprojects\nreminders\nsync_logs\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 50
+}

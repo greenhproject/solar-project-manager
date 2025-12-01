@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -52,11 +54,25 @@ export default function NotificationHistory() {
     "all"
   );
 
+  const { user } = useAuth();
+
   // Obtener todas las notificaciones
-  const { data: notifications, isLoading } =
+  const { data: notifications, isLoading, refetch } =
     trpc.notifications.getUserNotifications.useQuery({
       limit: 1000,
       unreadOnly: false,
+    });
+
+  // Generar notificaciones automáticas
+  const generateNotifications =
+    trpc.notifications.checkAndCreateAutoNotifications.useMutation({
+      onSuccess: (data) => {
+        toast.success(data.message);
+        refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message);
+      },
     });
 
   // Filtrar notificaciones
@@ -183,14 +199,28 @@ export default function NotificationHistory() {
               Todas tus notificaciones en un solo lugar
             </p>
           </div>
-          <Button
-            onClick={handleExport}
-            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
-            disabled={filteredNotifications.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar a Excel
-          </Button>
+          <div className="flex gap-2">
+            {user?.role === "admin" && (
+              <Button
+                onClick={() => generateNotifications.mutate()}
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+                disabled={generateNotifications.isPending}
+              >
+                <Bell className="h-4 w-4 mr-2" />
+                {generateNotifications.isPending
+                  ? "Generando..."
+                  : "Generar Notificaciones"}
+              </Button>
+            )}
+            <Button
+              onClick={handleExport}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              disabled={filteredNotifications.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exportar a Excel
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}
