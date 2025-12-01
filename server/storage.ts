@@ -8,7 +8,26 @@ type StorageConfig = { baseUrl: string; apiKey: string };
 
 // Detectar entorno
 function isRailwayEnvironment(): boolean {
-  return !ENV.forgeApiUrl || !ENV.forgeApiKey;
+  // Railway usa Auth0, no tiene Forge API
+  const hasCloudinary = !!process.env.CLOUDINARY_CLOUD_NAME && 
+                        !!process.env.CLOUDINARY_API_KEY && 
+                        !!process.env.CLOUDINARY_API_SECRET;
+  const hasForgeApi = !!ENV.forgeApiUrl && !!ENV.forgeApiKey;
+  
+  // Si tiene Cloudinary configurado, es Railway
+  if (hasCloudinary) {
+    console.log('[Storage] Detected Railway environment (has Cloudinary config)');
+    return true;
+  }
+  
+  // Si no tiene Forge API, asumir Railway
+  if (!hasForgeApi) {
+    console.log('[Storage] Detected Railway environment (no Forge API)');
+    return true;
+  }
+  
+  console.log('[Storage] Detected Manus environment (has Forge API)');
+  return false;
 }
 
 // ============================================================================
