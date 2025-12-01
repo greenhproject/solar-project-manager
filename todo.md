@@ -904,3 +904,12 @@
 - [ ] Crear job/cron para verificar hitos diariamente (automatización futura)
 - [ ] Agregar notificaciones al completar proyectos (ya existe en progressCalculator)
 - [ ] Agregar notificaciones al asignar proyectos a ingenieros (funcionalidad futura)
+
+
+## Corrección: Notificaciones generadas no se muestran (30 Nov 2025)
+
+- [x] Verificar si las notificaciones se crearon en la base de datos de producción
+- [x] Revisar consulta getUserNotifications en routers.ts
+- [x] Verificar filtro de userId en la consulta
+- [x] Corregir checkAndCreateAutoNotifications para notificar al admin si no hay ingeniero
+- [x] Probar en producción

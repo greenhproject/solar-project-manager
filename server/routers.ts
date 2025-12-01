@@ -1652,34 +1652,36 @@ Pregunta del usuario: ${input.question}
           const upcomingMilestones = await getUpcomingMilestones(2);
 
           for (const milestone of upcomingMilestones) {
-            if (milestone.assignedEngineerId) {
-              await createMilestoneDueSoonNotification(
-                milestone.assignedEngineerId,
-                milestone.milestoneId,
-                milestone.projectId,
-                milestone.milestoneName,
-                milestone.projectName,
-                new Date(milestone.dueDate)
-              );
-              upcomingCount++;
-            }
+            // Notificar al ingeniero asignado, o al admin si no hay ingeniero
+            const targetUserId = milestone.assignedEngineerId || ctx.user.id;
+            
+            await createMilestoneDueSoonNotification(
+              targetUserId,
+              milestone.milestoneId,
+              milestone.projectId,
+              milestone.milestoneName,
+              milestone.projectName,
+              new Date(milestone.dueDate)
+            );
+            upcomingCount++;
           }
 
           // Obtener hitos vencidos
           const overdueMilestones = await getOverdueMilestones();
 
           for (const milestone of overdueMilestones) {
-            if (milestone.assignedEngineerId) {
-              await createMilestoneOverdueNotification(
-                milestone.assignedEngineerId,
-                milestone.milestoneId,
-                milestone.projectId,
-                milestone.milestoneName,
-                milestone.projectName,
-                new Date(milestone.dueDate)
-              );
-              overdueCount++;
-            }
+            // Notificar al ingeniero asignado, o al admin si no hay ingeniero
+            const targetUserId = milestone.assignedEngineerId || ctx.user.id;
+            
+            await createMilestoneOverdueNotification(
+              targetUserId,
+              milestone.milestoneId,
+              milestone.projectId,
+              milestone.milestoneName,
+              milestone.projectName,
+              new Date(milestone.dueDate)
+            );
+            overdueCount++;
           }
 
           return {

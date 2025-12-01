@@ -1,0 +1,90 @@
+{
+  "query": "SELECT id, userId, title, type, isRead, sentAt FROM notification_history ORDER BY sentAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT id, userId, title, type, isRead, sentAt FROM notification_history ORDER BY sentAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "150001",
+      "userId": "1",
+      "title": "Hito próximo a vencer",
+      "type": "milestone_due_soon",
+      "isRead": "0",
+      "sentAt": "2025-12-01 02:09:49"
+    },
+    {
+      "id": "120010",
+      "userId": "1",
+      "title": "Test milestone_reminder",
+      "type": "milestone_reminder",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120006",
+      "userId": "1",
+      "title": "Test milestone_overdue",
+      "type": "milestone_overdue",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120009",
+      "userId": "1",
+      "title": "Test project_updated",
+      "type": "project_updated",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120007",
+      "userId": "1",
+      "title": "Test project_completed",
+      "type": "project_completed",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120003",
+      "userId": "1",
+      "title": "Notificación de prueba",
+      "type": "general",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120002",
+      "userId": "1",
+      "title": "Hito próximo a vencer",
+      "type": "milestone_due_soon",
+      "isRead": "1",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120008",
+      "userId": "1",
+      "title": "Test project_assigned",
+      "type": "project_assigned",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120005",
+      "userId": "1",
+      "title": "Test milestone_due_soon",
+      "type": "milestone_due_soon",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    },
+    {
+      "id": "120004",
+      "userId": "1",
+      "title": "Private notification",
+      "type": "general",
+      "isRead": "0",
+      "sentAt": "2025-12-01 01:25:08"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\ttitle\ttype\tisRead\tsentAt\n150001\t1\tHito próximo a vencer\tmilestone_due_soon\t0\t2025-12-01 02:09:49\n120010\t1\tTest milestone_reminder\tmilestone_reminder\t0\t2025-12-01 01:25:08\n120006\t1\tTest milestone_overdue\tmilestone_overdue\t0\t2025-12-01 01:25:08\n120009\t1\tTest project_updated\tproject_updated\t0\t2025-12-01 01:25:08\n120007\t1\tTest project_completed\tproject_completed\t0\t2025-12-01 01:25:08\n120003\t1\tNotificación de prueba\tgeneral\t0\t2025-12-01 01:25:08\n120002\t1\tHito próximo a vencer\tmilestone_due_soon\t1\t2025-12-01 01:25:08\n120008\t1\tTest project_assigned\tproject_assigned\t0\t2025-12-01 01:25:08\n120005\t1\tTest milestone_due_soon\tmilestone_due_soon\t0\t2025-12-01 01:25:08\n120004\t1\tPrivate notification\tgeneral\t0\t2025-12-01 01:25:08\n",
+  "stderr": "",
+  "execution_time_ms": 903
+}
