@@ -848,7 +848,7 @@
 - [ ] Esperar redeploy de Railway (2-3 minutos)
 - [ ] Probar carga de archivos en Railway
 
-## 🚨 CRÍTICO: Cloudinary 404 Error en Railway
+## 🚨 CRÍTICO: Cloudinary Error en Railway
 
 - [x] Diagnosticar error "Storage upload failed (404 Not Found)"
 - [x] Verificar configuración del Upload Preset en Cloudinary
@@ -857,8 +857,9 @@
 - [x] Cambiar a signed uploads con SDK oficial
 - [x] Identificar problema: Railway tiene Forge API configurado por Manus
 - [x] Corregir detección de entorno (priorizar Cloudinary config)
-- [x] Pushear corrección a GitHub (commit b529e68)
-- [ ] Esperar redeploy de Railway (2-3 minutos)
+- [x] Identificar Cloud Name incorrecto: `projectmanagerghhp` vs `dx25wtuzh`
+- [x] Instruir usuario para cambiar CLOUDINARY_CLOUD_NAME en Railway
+- [ ] Esperar redeploy de Railway (automático al cambiar env var)
 - [ ] Probar upload en Railway
 
 ## 🚨 CRÍTICO: Login No Funciona en Manus Producción
