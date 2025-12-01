@@ -1123,7 +1123,7 @@ Por favor, proporciona:
 5. Predicción de riesgos potenciales
 `;
 
-      const { invokeLLM } = await import("./_core/llm");
+      const { invokeLLM } = await import("./_core/groqClient");
 
       const response = await invokeLLM({
         messages: [
@@ -1162,7 +1162,7 @@ Proyectos: ${projects.map(p => `${p.name} (${p.status})`).join(", ")}
 Pregunta del usuario: ${input.question}
 `;
 
-        const { invokeLLM } = await import("./_core/llm");
+        const { invokeLLM } = await import("./_core/groqClient");
 
         const response = await invokeLLM({
           messages: [
@@ -1230,7 +1230,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
 6. Plan de Acción
 `;
 
-      const { invokeLLM } = await import("./_core/llm");
+      const { invokeLLM } = await import("./_core/groqClient");
 
       const response = await invokeLLM({
         messages: [

@@ -95,7 +95,7 @@ export default function AIAssistant() {
           ? response.data.analysis
           : Array.isArray(response.data.analysis)
             ? response.data.analysis
-                .map(item =>
+                .map((item: any) =>
                   typeof item === "string"
                     ? item
                     : "text" in item
@@ -143,7 +143,7 @@ export default function AIAssistant() {
             ? response.reportContent
             : Array.isArray(response.reportContent)
               ? response.reportContent
-                  .map(item =>
+                  .map((item: any) =>
                     typeof item === "string"
                       ? item
                       : "text" in item
@@ -207,7 +207,7 @@ export default function AIAssistant() {
           ? response.answer
           : Array.isArray(response.answer)
             ? response.answer
-                .map(item =>
+                .map((item: any) =>
                   typeof item === "string"
                     ? item
                     : "text" in item

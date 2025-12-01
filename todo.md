@@ -930,3 +930,15 @@
 - [x] Agregar acciones rápidas con preguntas predefinidas
 - [x] Implementar mejor manejo de errores
 - [ ] Probar en producción
+
+
+## Integración de Groq AI (30 Nov 2025)
+
+- [x] Instalar SDK de Groq (`groq-sdk`)
+- [x] Crear cliente de Groq en `server/_core/groqClient.ts`
+- [x] Reemplazar `invokeLLM` con llamadas a Groq
+- [x] Solicitar GROQ_API_KEY al usuario
+- [x] Actualizar procedimientos de AI en routers.ts
+- [x] Probar en desarrollo (4 tests pasando)
+- [x] Validar API key con test (pasando)
+- [ ] Probar en producción (Railway)
