@@ -62,12 +62,22 @@ export function NotificationSettings() {
   };
 
   const handleTestNotification = () => {
-    notifyCustom(
+    console.log("[Test] Iniciando notificación de prueba...");
+    console.log("[Test] Permisos:", Notification.permission);
+    
+    const notification = notifyCustom(
       "Notificación de prueba",
       "Esta es una notificación de prueba del sistema Solar Project Manager",
       "info"
     );
-    toast.success("Notificación de prueba enviada");
+    
+    if (notification) {
+      console.log("[Test] Notificación creada:", notification);
+      toast.success("Notificación de prueba enviada");
+    } else {
+      console.error("[Test] No se pudo crear la notificación");
+      toast.error("Error al enviar notificación. Revisa la consola del navegador.");
+    }
   };
 
   if (!areNotificationsSupported()) {

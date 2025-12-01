@@ -942,3 +942,14 @@
 - [x] Probar en desarrollo (4 tests pasando)
 - [x] Validar API key con test (pasando)
 - [ ] Probar en producción (Railway)
+
+
+## Corrección de Notificaciones Push (30 Nov 2025)
+
+- [x] Investigar por qué las notificaciones push no aparecen
+- [x] Verificar si hay service worker registrado (no hay)
+- [x] Agregar logging detallado para debugging
+- [x] Mejorar manejo de errores en sendNotification
+- [x] Agregar eventos onshow/onerror/onclose
+- [ ] Probar notificación de prueba en producción (Railway)
+- [ ] Verificar logs del navegador para diagnosticar

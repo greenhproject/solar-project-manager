@@ -64,25 +64,33 @@ export function sendNotification(
   options?: NotificationOptions
 ): Notification | null {
   if (!areNotificationsSupported()) {
-    console.warn("Las notificaciones no están soportadas");
+    console.warn("[Push] Las notificaciones no están soportadas");
     return null;
   }
 
   if (Notification.permission !== "granted") {
-    console.warn("No hay permisos para enviar notificaciones");
+    console.warn("[Push] No hay permisos para enviar notificaciones. Estado:", Notification.permission);
     return null;
   }
 
   try {
+    console.log("[Push] Enviando notificación:", title);
     const notification = new Notification(title, {
-      icon: "/logo.png",
-      badge: "/logo.png",
+      icon: "/favicon.ico",
+      badge: "/favicon.ico",
       ...options,
     });
 
+    console.log("[Push] Notificación creada exitosamente");
+    
+    // Agregar eventos para debugging
+    notification.onshow = () => console.log("[Push] Notificación mostrada");
+    notification.onerror = (error) => console.error("[Push] Error en notificación:", error);
+    notification.onclose = () => console.log("[Push] Notificación cerrada");
+
     return notification;
   } catch (error) {
-    console.error("Error al enviar notificación:", error);
+    console.error("[Push] Error al enviar notificación:", error);
     return null;
   }
 }
