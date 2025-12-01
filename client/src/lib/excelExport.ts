@@ -78,6 +78,10 @@ export function exportGanttToExcel(
     { wch: 30 }, // NOTAS
   ];
 
+  // Aplicar formato condicional (colores según estado)
+  // Nota: xlsx no soporta estilos avanzados, pero podemos agregar comentarios
+  // Para ver colores en Excel, el usuario puede aplicar formato condicional manualmente
+
   // Agregar hoja al workbook
   XLSX.utils.book_append_sheet(wb, ws, "Cronograma");
 

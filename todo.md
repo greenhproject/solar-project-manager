@@ -953,3 +953,24 @@
 - [x] Agregar eventos onshow/onerror/onclose
 - [ ] Probar notificación de prueba en producción (Railway)
 - [ ] Verificar logs del navegador para diagnosticar
+
+
+## Corrección Error Groq AI en Producción (30 Nov 2025)
+
+- [ ] Diagnosticar error "Cannot read properties of undefined (reading 'chat')"
+- [ ] Verificar que GROQ_API_KEY está configurada en Railway
+- [ ] Corregir inicialización del cliente Groq en groqClient.ts
+- [ ] Agregar validación de API key antes de usar el cliente
+- [ ] Probar en producción (Railway)
+
+
+## Rediseño de Diagrama de Gantt (30 Nov 2025)
+
+- [x] Analizar código actual de GanttChart.tsx
+- [x] Rediseñar interfaz con scroll horizontal para desktop
+- [x] Implementar vista responsive para móviles (lista vertical)
+- [x] Mejorar visualización de barras y textos (sin superposición)
+- [x] Detectar automáticamente desktop vs móvil
+- [x] Agregar controles de zoom y navegación
+- [x] Verificar exportación a Excel (ya funcionaba correctamente)
+- [ ] Probar en producción (Railway)

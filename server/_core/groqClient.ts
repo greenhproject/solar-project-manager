@@ -1,5 +1,11 @@
 import Groq from "groq-sdk";
 
+// Validar que la API key esté configurada
+if (!process.env.GROQ_API_KEY) {
+  console.error("[Groq] GROQ_API_KEY no está configurada en las variables de entorno");
+  throw new Error("GROQ_API_KEY no configurada. Por favor, agrega la variable de entorno en Railway.");
+}
+
 // Inicializar cliente de Groq
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
