@@ -936,6 +936,11 @@ export const appRouter = router({
             dependencies.length > 0 ? JSON.stringify(dependencies) : null;
         }
 
+        // Si se marca como completado y no hay completedDate, usar fecha actual
+        if (updateData.status === "completed" && !updateData.completedDate) {
+          updateData.completedDate = new Date();
+        }
+
         // Obtener el hito para saber su projectId
         const milestone = await db.getMilestoneById(id);
         if (!milestone) {

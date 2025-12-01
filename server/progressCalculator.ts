@@ -57,11 +57,20 @@ export async function recalculateProjectProgress(
     `[Progress] Project ${projectId}: Updating status to ${newStatus}`
   );
 
-  // Actualizar el proyecto con progreso y estado
-  await db.updateProject(projectId, { 
+  // Preparar datos de actualización
+  const updateData: any = {
     progressPercentage,
     status: newStatus
-  });
+  };
+
+  // Si el proyecto se completa y no tiene actualEndDate, usar fecha actual
+  if (newStatus === "completed" && !project?.actualEndDate) {
+    updateData.actualEndDate = new Date();
+    console.log(`[Progress] Project ${projectId}: Setting actualEndDate to now`);
+  }
+
+  // Actualizar el proyecto con progreso, estado y fecha de fin
+  await db.updateProject(projectId, updateData);
 
   // Si el proyecto acaba de completarse (pasó de <100% a 100%), enviar notificación
   if (previousProgress < 100 && progressPercentage === 100 && project) {

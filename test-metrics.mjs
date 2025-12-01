@@ -1,40 +1,33 @@
-import { drizzle } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
-import { sql } from "drizzle-orm";
-
-const DATABASE_URL = process.env.DATABASE_URL;
+import { calculateTeamVelocity, calculateProjectTypeMetrics, predictProjectCompletion, calculateDashboardStats } from './server/metricsCalculator.ts';
 
 async function testMetrics() {
-  const connection = await mysql.createConnection(DATABASE_URL);
-  const db = drizzle(connection);
-
-  console.log("\n=== Testing Completion Rate ===");
-  const completionResult = await db.execute(sql`
-    SELECT 
-      COUNT(*) as total,
-      SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
-    FROM projects
-  `);
-  console.log("Raw result:", completionResult);
-  const row1 = completionResult[0];
-  console.log("First row:", row1);
-  console.log("Total:", row1?.total, "Type:", typeof row1?.total);
-  console.log("Completed:", row1?.completed, "Type:", typeof row1?.completed);
-
-  console.log("\n=== Testing Average Time ===");
-  const avgResult = await db.execute(sql`
-    SELECT 
-      AVG(DATEDIFF(updatedAt, startDate)) as avgDays,
-      COUNT(*) as totalCompleted
-    FROM projects
-    WHERE status = 'completed' AND startDate IS NOT NULL
-  `);
-  console.log("Raw result:", avgResult);
-  const row2 = avgResult[0];
-  console.log("First row:", row2);
-  console.log("AvgDays:", row2?.avgDays, "Type:", typeof row2?.avgDays);
-
-  await connection.end();
+  console.log('=== Testing Metrics Functions ===\n');
+  
+  try {
+    console.log('1. Testing Team Velocity...');
+    const velocity = await calculateTeamVelocity();
+    console.log(`✅ Team Velocity: ${velocity.length} months of data`);
+    console.log(JSON.stringify(velocity, null, 2));
+    
+    console.log('\n2. Testing Project Type Metrics...');
+    const typeMetrics = await calculateProjectTypeMetrics();
+    console.log(`✅ Type Metrics: ${typeMetrics.length} project types`);
+    console.log(JSON.stringify(typeMetrics, null, 2));
+    
+    console.log('\n3. Testing Predictions...');
+    const predictions = await predictProjectCompletion();
+    console.log(`✅ Predictions: ${predictions.length} active projects`);
+    console.log(JSON.stringify(predictions, null, 2));
+    
+    console.log('\n4. Testing Dashboard Stats...');
+    const stats = await calculateDashboardStats();
+    console.log(`✅ Dashboard Stats:`);
+    console.log(JSON.stringify(stats, null, 2));
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    console.error(error.stack);
+  }
 }
 
-testMetrics().catch(console.error);
+testMetrics();
