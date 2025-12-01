@@ -850,18 +850,21 @@
 
 ## 🚨 CRÍTICO: Cloudinary 404 Error en Railway
 
-- [ ] Diagnosticar error "Storage upload failed (404 Not Found)"
-- [ ] Verificar configuración del Upload Preset en Cloudinary
-- [ ] Verificar que el preset permita uploads sin firma (Unsigned)
-- [ ] Verificar folder y permisos del preset
-- [ ] Corregir configuración o cambiar a signed uploads
+- [x] Diagnosticar error "Storage upload failed (404 Not Found)"
+- [x] Verificar configuración del Upload Preset en Cloudinary
+- [x] Identificar que unsigned uploads no funcionan
+- [x] Instalar SDK oficial de Cloudinary
+- [x] Cambiar a signed uploads con SDK oficial
+- [x] Pushear cambios a GitHub (commit e4d1d5f)
+- [ ] Esperar redeploy de Railway (en progreso)
 - [ ] Probar upload en Railway
 
 ## 🚨 CRÍTICO: Login No Funciona en Manus Producción
 
-- [ ] Diagnosticar por qué muestra "Acceso Restringido" después del OAuth
-- [ ] Revisar código de autenticación en DashboardLayout
-- [ ] Verificar que useAuth() funcione correctamente
-- [ ] Verificar cookies y tokens de sesión
-- [ ] Corregir problema de autenticación
+- [x] Diagnosticar por qué muestra "Acceso Restringido" después del OAuth
+- [x] Revisar código de autenticación en context.ts
+- [x] Agregar logs detallados para debugging
+- [x] Pushear logs a GitHub (commit 45fe5cc)
+- [ ] Publicar checkpoint en Manus para ver logs
+- [ ] Analizar logs y corregir problema
 - [ ] Probar login completo en Manus
