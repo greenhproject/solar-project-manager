@@ -97,9 +97,16 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
     try {
       // Convertir archivo a base64 para enviar por tRPC
       const buffer = await selectedFile.arrayBuffer();
-      const base64 = btoa(
-        String.fromCharCode.apply(null, Array.from(new Uint8Array(buffer)))
-      );
+      const bytes = new Uint8Array(buffer);
+      
+      // Convertir a base64 en chunks para evitar "Maximum call stack size exceeded"
+      let base64 = '';
+      const chunkSize = 0x8000; // 32KB chunks
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        base64 += String.fromCharCode.apply(null, Array.from(chunk));
+      }
+      base64 = btoa(base64);
 
       // Generar nombre único para el archivo
       const timestamp = Date.now();

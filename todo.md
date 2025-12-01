@@ -842,6 +842,17 @@
 - [x] Upload Preset `solar_project_manager` creado en Cloudinary (Unsigned)
 - [x] Mejorar mensajes de error en storage.ts
 - [x] Crear guía completa CLOUDINARY_SETUP_GUIDE.md
-- [x] Pushear cambios a GitHub
+- [x] Identificar error: "Maximum call stack size exceeded" en conversión base64
+- [x] Corregir conversión base64 usando chunks (32KB) para archivos grandes
+- [x] Pushear corrección a GitHub
 - [ ] Esperar redeploy de Railway (2-3 minutos)
 - [ ] Probar carga de archivos en Railway
+
+## 🚨 CRÍTICO: Autenticación No Funciona en Railway
+
+- [ ] Diagnosticar por qué muestra "Acceso Restringido" después del login
+- [ ] Revisar diferencias entre auth de Manus y Railway
+- [ ] Verificar configuración de OAuth en Railway
+- [ ] Verificar cookies y sesiones en Railway
+- [ ] Corregir problema de autenticación
+- [ ] Probar login completo en Railway
