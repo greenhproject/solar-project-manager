@@ -855,8 +855,10 @@
 - [x] Identificar que unsigned uploads no funcionan
 - [x] Instalar SDK oficial de Cloudinary
 - [x] Cambiar a signed uploads con SDK oficial
-- [x] Pushear cambios a GitHub (commit e4d1d5f)
-- [ ] Esperar redeploy de Railway (en progreso)
+- [x] Identificar problema: Railway tiene Forge API configurado por Manus
+- [x] Corregir detección de entorno (priorizar Cloudinary config)
+- [x] Pushear corrección a GitHub (commit b529e68)
+- [ ] Esperar redeploy de Railway (2-3 minutos)
 - [ ] Probar upload en Railway
 
 ## 🚨 CRÍTICO: Login No Funciona en Manus Producción
