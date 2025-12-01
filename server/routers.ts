@@ -1028,6 +1028,24 @@ export const appRouter = router({
       return await db.getUnreadRemindersByUserId(ctx.user.id);
     }),
 
+    // Obtener hitos próximos a vencer
+    upcoming: protectedProcedure
+      .input(
+        z
+          .object({
+            daysAhead: z.number().min(1).max(30).default(7),
+          })
+          .optional()
+      )
+      .query(async ({ input }) => {
+        return await db.getUpcomingMilestones(input?.daysAhead || 7);
+      }),
+
+    // Obtener hitos vencidos
+    overdue: protectedProcedure.query(async () => {
+      return await db.getOverdueMilestones();
+    }),
+
     create: protectedProcedure
       .input(
         z.object({

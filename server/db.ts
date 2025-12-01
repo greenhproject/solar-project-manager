@@ -385,8 +385,11 @@ export async function getOverdueMilestones() {
       milestoneId: milestones.id,
       milestoneName: milestones.name,
       dueDate: milestones.dueDate,
+      status: milestones.status,
+      description: milestones.description,
       projectId: projects.id,
       projectName: projects.name,
+      projectLocation: projects.location,
       assignedEngineerId: projects.assignedEngineerId,
     })
     .from(milestones)
@@ -394,6 +397,40 @@ export async function getOverdueMilestones() {
     .where(
       and(
         lte(milestones.dueDate, now),
+        or(
+          eq(milestones.status, "pending"),
+          eq(milestones.status, "in_progress")
+        )
+      )
+    )
+    .orderBy(asc(milestones.dueDate));
+}
+
+export async function getUpcomingMilestones(daysAhead: number = 7) {
+  const db = await getDb();
+  if (!db) return [];
+  const now = new Date();
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + daysAhead);
+
+  return await db
+    .select({
+      milestoneId: milestones.id,
+      milestoneName: milestones.name,
+      dueDate: milestones.dueDate,
+      status: milestones.status,
+      description: milestones.description,
+      projectId: projects.id,
+      projectName: projects.name,
+      projectLocation: projects.location,
+      assignedEngineerId: projects.assignedEngineerId,
+    })
+    .from(milestones)
+    .innerJoin(projects, eq(milestones.projectId, projects.id))
+    .where(
+      and(
+        gte(milestones.dueDate, now),
+        lte(milestones.dueDate, futureDate),
         or(
           eq(milestones.status, "pending"),
           eq(milestones.status, "in_progress")
@@ -681,40 +718,7 @@ export async function getProjectAttachmentById(id: number) {
 
 // ==================== NOTIFICACIONES ====================
 
-/**
- * Obtener hitos que vencen pronto (próximos 3 días)
- */
-export async function getUpcomingMilestones(daysAhead: number = 3) {
-  const db = await getDb();
-  if (!db) return [];
 
-  const futureDate = new Date();
-  futureDate.setDate(futureDate.getDate() + daysAhead);
-
-  const results = await db
-    .select({
-      milestoneId: milestones.id,
-      milestoneName: milestones.name,
-      dueDate: milestones.dueDate,
-      projectId: projects.id,
-      projectName: projects.name,
-      assignedEngineerId: projects.assignedEngineerId,
-    })
-    .from(milestones)
-    .innerJoin(projects, eq(milestones.projectId, projects.id))
-    .where(
-      and(
-        or(
-          eq(milestones.status, "pending"),
-          eq(milestones.status, "in_progress")
-        ),
-        gte(milestones.dueDate, new Date()),
-        lte(milestones.dueDate, futureDate)
-      )
-    );
-
-  return results;
-}
 
 /**
  * Obtener proyectos con retraso

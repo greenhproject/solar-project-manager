@@ -50,6 +50,11 @@
 - [x] Permitir creación manual de recordatorios personalizados
 - [x] Mostrar notificaciones de recordatorios pendientes
 - [x] Implementar sistema de notificaciones para coordinadores
+- [x] Rediseñar página de Recordatorios para mostrar hitos próximos a vencer
+- [x] Implementar backend para obtener hitos vencidos y próximos
+- [x] Agregar navegación a proyectos desde recordatorios
+- [x] Agregar botón para marcar hitos como completados
+- [x] Crear 5 tests de verificación (todos pasando)
 
 ## Configuración de Administrador
 
