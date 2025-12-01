@@ -974,3 +974,12 @@
 - [x] Agregar controles de zoom y navegación
 - [x] Verificar exportación a Excel (ya funcionaba correctamente)
 - [ ] Probar en producción (Railway)
+
+
+## Corrección Error de Logout OAuth (30 Nov 2025)
+
+- [x] Investigar código de logout en useAuth.ts
+- [x] Agregar redirección explícita a login después de logout
+- [x] Limpiar localStorage completo (auth_token + manus-runtime-user-info)
+- [x] Mejorar manejo de errores en logout
+- [ ] Probar logout en producción (Railway)

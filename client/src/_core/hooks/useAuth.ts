@@ -32,16 +32,21 @@ export function useAuth(options?: UseAuthOptions) {
         error instanceof TRPCClientError &&
         error.data?.code === "UNAUTHORIZED"
       ) {
-        return;
+        // Ya no autenticado, continuar con limpieza
+      } else {
+        console.error('[Logout] Error:', error);
       }
-      throw error;
     } finally {
       // Limpiar el token de localStorage
       localStorage.removeItem('auth_token');
-      console.log('[Logout] Token eliminado de localStorage');
+      localStorage.removeItem('manus-runtime-user-info');
+      console.log('[Logout] Tokens eliminados de localStorage');
       
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
+      
+      // Redirigir a la página de login
+      window.location.href = getLoginUrl();
     }
   }, [logoutMutation, utils]);
 
