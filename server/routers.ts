@@ -562,6 +562,26 @@ export const appRouter = router({
             description: `El proyecto "${input.name}" ha sido creado con ${templates.length} hitos`,
             createdBy: ctx.user.id,
           });
+
+          // Enviar email al ingeniero asignado
+          if (input.assignedEngineerId) {
+            try {
+              const { sendProjectAssignedEmail } = await import("./emailService");
+              const engineer = await db.getUserById(input.assignedEngineerId);
+              if (engineer?.email) {
+                await sendProjectAssignedEmail(
+                  engineer.email,
+                  engineer.name || 'Ingeniero',
+                  input.name,
+                  input.location || 'No especificada',
+                  input.startDate
+                );
+                console.log(`[Project Create] Email sent to ${engineer.email} for project assignment`);
+              }
+            } catch (error) {
+              console.error('[Project Create] Error sending email:', error);
+            }
+          }
         }
 
         return { success: true, projectId };

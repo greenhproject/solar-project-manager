@@ -22,3 +22,18 @@
 - [x] Limpiar localStorage completo (auth_token + manus-runtime-user-info)
 - [x] Mejorar manejo de errores en logout
 - [ ] Probar logout en producción (Railway)
+
+
+## Notificaciones por Email con Resend (30 Nov 2025)
+
+- [x] Instalar resend SDK
+- [x] Identificar todos los tipos de notificaciones en el sistema
+- [x] Crear servicio de email (emailService.ts)
+- [x] Crear plantillas HTML para emails
+- [x] Integrar envío de email en hitos próximos a vencer
+- [x] Integrar envío de email en hitos vencidos
+- [x] Integrar envío de email en proyectos completados
+- [x] Integrar envío de email en asignación de proyectos
+- [ ] Configurar RESEND_FROM_EMAIL en Railway (email verificado)
+- [ ] Probar envío de emails en desarrollo
+- [ ] Verificar que funcione en Railway

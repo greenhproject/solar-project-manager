@@ -3,6 +3,7 @@
  */
 
 import * as db from "./db";
+import { sendMilestoneDueSoonEmail, sendMilestoneOverdueEmail } from "./emailService";
 
 /**
  * Genera notificaciones para hitos próximos a vencer (3 días antes)
@@ -35,6 +36,23 @@ export async function generateUpcomingMilestoneNotifications() {
         type: "milestone_due_soon",
         projectId: milestone.projectId,
       });
+
+      // Enviar email
+      try {
+        const engineer = await db.getUserById(milestone.assignedEngineerId);
+        if (engineer?.email) {
+          await sendMilestoneDueSoonEmail(
+            engineer.email,
+            milestone.milestoneName,
+            milestone.projectName,
+            new Date(milestone.dueDate),
+            daysUntil
+          );
+          console.log(`[NotificationGenerator] Email sent to ${engineer.email} for upcoming milestone`);
+        }
+      } catch (error) {
+        console.error('[NotificationGenerator] Error sending email:', error);
+      }
 
       notifications.push({
         userId: milestone.assignedEngineerId,
@@ -76,6 +94,23 @@ export async function generateOverdueMilestoneNotifications() {
         type: "milestone_overdue",
         projectId: milestone.projectId,
       });
+
+      // Enviar email
+      try {
+        const engineer = await db.getUserById(milestone.assignedEngineerId);
+        if (engineer?.email) {
+          await sendMilestoneOverdueEmail(
+            engineer.email,
+            milestone.milestoneName,
+            milestone.projectName,
+            new Date(milestone.dueDate),
+            daysOverdue
+          );
+          console.log(`[NotificationGenerator] Email sent to ${engineer.email} for overdue milestone`);
+        }
+      } catch (error) {
+        console.error('[NotificationGenerator] Error sending email:', error);
+      }
 
       notifications.push({
         userId: milestone.assignedEngineerId,

@@ -76,6 +76,7 @@ export async function recalculateProjectProgress(
   if (previousProgress < 100 && progressPercentage === 100 && project) {
     try {
       const { notifyOwner } = await import("./_core/notification");
+      const { sendProjectCompletedEmail } = await import("./emailService");
 
       // Calcular duración total
       const startDate = new Date(project.startDate);
@@ -84,6 +85,7 @@ export async function recalculateProjectProgress(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
       );
 
+      // Notificación al propietario
       await notifyOwner({
         title: `¡Proyecto Completado! 🎉`,
         content:
@@ -97,6 +99,20 @@ export async function recalculateProjectProgress(
           `- Preparar informe de entrega\n` +
           `- Solicitar feedback del cliente`,
       });
+
+      // Email al ingeniero asignado
+      if (project.assignedEngineerId) {
+        const engineer = await db.getUserById(project.assignedEngineerId);
+        if (engineer?.email) {
+          await sendProjectCompletedEmail(
+            engineer.email,
+            project.name,
+            project.location || 'No especificada',
+            durationDays
+          );
+          console.log(`[Progress] Email sent to ${engineer.email} for completed project`);
+        }
+      }
 
       console.log(
         `[Progress] Notification sent for completed project ${projectId}`
