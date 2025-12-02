@@ -88,6 +88,7 @@ export default function ProjectDetail() {
   const generatePDF = trpc.reports.generateProjectPDF.useMutation();
   const syncProject = trpc.sync.syncProject.useMutation();
   const loadMilestonesFromTemplate = trpc.projects.loadMilestonesFromTemplate.useMutation();
+  const syncToCalendar = trpc.milestones.syncToCalendar.useMutation();
 
   if (!isAuthenticated || !user) {
     return (
@@ -646,6 +647,36 @@ export default function ProjectDetail() {
                               </span>
                             )}
                           </div>
+                          
+                          {/* Botón de sincronización manual */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-2 gap-2"
+                            onClick={async () => {
+                              try {
+                                toast.info("Sincronizando con Google Calendar...");
+                                const result = await syncToCalendar.mutateAsync({
+                                  id: milestone.id,
+                                });
+                                toast.success(result.message);
+                                // Refrescar hitos para mostrar el indicador actualizado
+                                await refetchMilestones();
+                              } catch (error: any) {
+                                toast.error(error.message || "Error al sincronizar con Google Calendar");
+                              }
+                            }}
+                            disabled={syncToCalendar.isPending}
+                          >
+                            {syncToCalendar.isPending ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Calendar className="h-3 w-3" />
+                            )}
+                            {(milestone as any).googleCalendarEventId
+                              ? "Resincronizar"
+                              : "Sincronizar con Calendar"}
+                          </Button>
                         </div>
                       </div>
                     </CardContent>

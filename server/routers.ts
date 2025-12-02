@@ -1014,6 +1014,104 @@ export const appRouter = router({
 
       return overdueMilestones;
     }),
+
+    // Sincronizar hito manualmente con Google Calendar
+    syncToCalendar: protectedProcedure
+      .input(
+        z.object({
+          id: z.number(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const milestone = await db.getMilestoneById(input.id);
+
+        if (!milestone) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Hito no encontrado",
+          });
+        }
+
+        const project = await db.getProjectById(milestone.projectId);
+
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Verificar permisos
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para sincronizar este hito",
+          });
+        }
+
+        try {
+          const { createCalendarEvent, updateCalendarEvent, toRFC3339, createEndDate } =
+            await import("./googleCalendarClient");
+
+          // Si ya tiene eventId, actualizar; si no, crear
+          if (milestone.googleCalendarEventId) {
+            const success = await updateCalendarEvent({
+              event_id: milestone.googleCalendarEventId,
+              summary: `📅 ${project.name} - ${milestone.name}`,
+              description:
+                milestone.description || `Hito del proyecto ${project.name}`,
+              start_time: toRFC3339(milestone.dueDate),
+              end_time: toRFC3339(createEndDate(milestone.dueDate)),
+              location: project.location || undefined,
+              reminders: [1440, 60],
+            });
+
+            if (!success) {
+              throw new Error("Error al actualizar evento en Google Calendar");
+            }
+
+            return {
+              success: true,
+              message: "Hito actualizado en Google Calendar",
+              eventId: milestone.googleCalendarEventId,
+            };
+          } else {
+            const eventId = await createCalendarEvent({
+              summary: `📅 ${project.name} - ${milestone.name}`,
+              description:
+                milestone.description || `Hito del proyecto ${project.name}`,
+              start_time: toRFC3339(milestone.dueDate),
+              end_time: toRFC3339(createEndDate(milestone.dueDate)),
+              location: project.location || undefined,
+              reminders: [1440, 60],
+            });
+
+            if (!eventId) {
+              throw new Error("Error al crear evento en Google Calendar");
+            }
+
+            // Guardar el eventId
+            await db.updateMilestone(input.id, {
+              googleCalendarEventId: eventId,
+            });
+
+            return {
+              success: true,
+              message: "Hito sincronizado con Google Calendar",
+              eventId,
+            };
+          }
+        } catch (error: any) {
+          console.error("[Milestone] Error syncing with Google Calendar:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: error.message || "Error al sincronizar con Google Calendar",
+          });
+        }
+      }),
   }),
 
   // ============================================
