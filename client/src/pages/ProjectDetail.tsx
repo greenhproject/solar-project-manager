@@ -624,12 +624,12 @@ export default function ProjectDetail() {
                             <div className="flex-1">
                               <Label className="text-xs text-muted-foreground mb-1 block">Responsable</Label>
                               <Select
-                                value={(milestone as any).assignedUserId?.toString() || ""}
+                                value={(milestone as any).assignedUserId?.toString() || "none"}
                                 onValueChange={async (value) => {
                                   try {
                                     await assignResponsible.mutateAsync({
                                       milestoneId: milestone.id,
-                                      userId: value ? parseInt(value) : null,
+                                      userId: value === "none" ? null : parseInt(value),
                                     });
                                     toast.success("Responsable asignado correctamente");
                                     await refetchMilestones();
@@ -642,7 +642,7 @@ export default function ProjectDetail() {
                                   <SelectValue placeholder="Sin asignar" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Sin asignar</SelectItem>
+                                  <SelectItem value="none">Sin asignar</SelectItem>
                                   {allUsers?.map((u) => (
                                     <SelectItem key={u.id} value={u.id.toString()}>
                                       {u.name} {(u as any).jobTitle ? `(${(u as any).jobTitle})` : ''}

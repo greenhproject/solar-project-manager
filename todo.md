@@ -60,3 +60,10 @@
 - [ ] Agregar filtros por responsable en vista de proyectos
 - [x] Notificar por email al responsable cuando se le asigna un hito (ya implementado en backend)
 - [x] Probar funcionalidad completa
+
+
+## Corrección de Error en Select de Responsables (3 Dic 2025)
+
+- [x] Cambiar valor vacío "" por "none" en SelectItem de responsables
+- [x] Actualizar lógica de onValueChange para manejar "none" como null
+- [x] Probar que funcione correctamente
