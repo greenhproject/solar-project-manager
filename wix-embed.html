@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solar Project Manager</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #f5f5f5;
+    }
+
+    #solar-manager-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    #solar-manager-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* Loading spinner */
+    .loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 10;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #f97316;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: #666;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="solar-manager-container">
+    <!-- Loading spinner -->
+    <div class="loading-spinner" id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">Cargando Solar Project Manager...</div>
+    </div>
+
+    <!-- Iframe que contiene la aplicación -->
+    <iframe 
+      id="solar-manager-iframe"
+      src="https://solar-project-manager-production.up.railway.app"
+      title="Solar Project Manager"
+      allow="clipboard-write; clipboard-read"
+      loading="lazy"
+      onload="hideLoading()"
+    ></iframe>
+  </div>
+
+  <script>
+    // Ocultar loading spinner cuando el iframe cargue
+    function hideLoading() {
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.classList.add('hidden');
+      }
+    }
+
+    // Manejar mensajes del iframe (opcional, para comunicación bidireccional)
+    window.addEventListener('message', function(event) {
+      // Verificar el origen por seguridad
+      if (event.origin !== 'https://solar-project-manager-production.up.railway.app') {
+        return;
+      }
+
+      // Aquí puedes manejar mensajes del iframe si es necesario
+      console.log('Mensaje del iframe:', event.data);
+    });
+
+    // Ajustar altura del iframe en dispositivos móviles
+    function adjustIframeHeight() {
+      const iframe = document.getElementById('solar-manager-iframe');
+      const container = document.getElementById('solar-manager-container');
+      
+      // En móviles, ajustar al viewport
+      if (window.innerWidth < 768) {
+        container.style.height = window.innerHeight + 'px';
+      }
+    }
+
+    // Ejecutar al cargar y al cambiar tamaño
+    window.addEventListener('load', adjustIframeHeight);
+    window.addEventListener('resize', adjustIframeHeight);
+  </script>
+</body>
+</html>

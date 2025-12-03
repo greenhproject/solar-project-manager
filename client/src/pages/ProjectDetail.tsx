@@ -71,6 +71,7 @@ export default function ProjectDetail() {
     projectId,
   });
   const { data: syncLogs } = trpc.sync.logs.useQuery({ projectId });
+  const { data: allUsers } = trpc.users.list.useQuery(); // Obtener todos los usuarios
 
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -89,6 +90,8 @@ export default function ProjectDetail() {
   const syncProject = trpc.sync.syncProject.useMutation();
   const loadMilestonesFromTemplate = trpc.projects.loadMilestonesFromTemplate.useMutation();
   const syncToCalendar = trpc.milestones.syncToCalendar.useMutation();
+  const assignResponsible = trpc.milestones.assignResponsible.useMutation();
+  const updateDueDate = trpc.milestones.updateDueDate.useMutation();
 
   if (!isAuthenticated || !user) {
     return (
@@ -615,6 +618,62 @@ export default function ProjectDetail() {
                               {milestone.description}
                             </p>
                           )}
+
+                          {/* Asignación de responsable */}
+                          <div className="flex items-center gap-4 mb-3">
+                            <div className="flex-1">
+                              <Label className="text-xs text-muted-foreground mb-1 block">Responsable</Label>
+                              <Select
+                                value={(milestone as any).assignedUserId?.toString() || ""}
+                                onValueChange={async (value) => {
+                                  try {
+                                    await assignResponsible.mutateAsync({
+                                      milestoneId: milestone.id,
+                                      userId: value ? parseInt(value) : null,
+                                    });
+                                    toast.success("Responsable asignado correctamente");
+                                    await refetchMilestones();
+                                  } catch (error: any) {
+                                    toast.error(error.message || "Error al asignar responsable");
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="Sin asignar" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="">Sin asignar</SelectItem>
+                                  {allUsers?.map((u) => (
+                                    <SelectItem key={u.id} value={u.id.toString()}>
+                                      {u.name} {(u as any).jobTitle ? `(${(u as any).jobTitle})` : ''}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha de vencimiento</Label>
+                              <Input
+                                type="date"
+                                className="h-8 text-xs"
+                                value={format(new Date(milestone.dueDate), "yyyy-MM-dd")}
+                                onChange={async (e) => {
+                                  if (!e.target.value) return;
+                                  try {
+                                    await updateDueDate.mutateAsync({
+                                      milestoneId: milestone.id,
+                                      dueDate: new Date(e.target.value),
+                                    });
+                                    toast.success("Fecha actualizada correctamente");
+                                    await refetchMilestones();
+                                  } catch (error: any) {
+                                    toast.error(error.message || "Error al actualizar fecha");
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
 
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">

@@ -1132,6 +1132,150 @@ export const appRouter = router({
           });
         }
       }),
+
+    assignResponsible: protectedProcedure
+      .input(
+        z.object({
+          milestoneId: z.number(),
+          userId: z.number().nullable(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const milestone = await db.getMilestoneById(input.milestoneId);
+
+        if (!milestone) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Hito no encontrado",
+          });
+        }
+
+        const project = await db.getProjectById(milestone.projectId);
+
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Verificar permisos (solo admin o ingeniero asignado)
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para asignar responsables",
+          });
+        }
+
+        // Actualizar responsable
+        await db.updateMilestone(input.milestoneId, {
+          assignedUserId: input.userId,
+        });
+
+        // Si se asignó un responsable, enviar notificación por email
+        if (input.userId) {
+          try {
+            const assignedUser = await db.getUserById(input.userId);
+            if (assignedUser && assignedUser.email) {
+              const { sendEmail } = await import("./emailService");
+              await sendEmail({
+                to: assignedUser.email,
+                subject: `📌 Nuevo hito asignado: ${milestone.name}`,
+                html: `
+                  <h2>Hito asignado</h2>
+                  <p>Hola ${assignedUser.name},</p>
+                  <p>Se te ha asignado el siguiente hito:</p>
+                  <ul>
+                    <li><strong>Proyecto:</strong> ${project.name}</li>
+                    <li><strong>Hito:</strong> ${milestone.name}</li>
+                    <li><strong>Fecha de vencimiento:</strong> ${new Date(milestone.dueDate).toLocaleDateString('es-ES')}</li>
+                    ${milestone.description ? `<li><strong>Descripción:</strong> ${milestone.description}</li>` : ''}
+                  </ul>
+                  <p>Por favor, revisa los detalles en el sistema.</p>
+                `,
+              });
+            }
+          } catch (error) {
+            console.error("[Milestone] Error sending assignment email:", error);
+            // No fallar la asignación si falla el email
+          }
+        }
+
+        return { success: true };
+      }),
+
+    updateDueDate: protectedProcedure
+      .input(
+        z.object({
+          milestoneId: z.number(),
+          dueDate: z.date(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const milestone = await db.getMilestoneById(input.milestoneId);
+
+        if (!milestone) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Hito no encontrado",
+          });
+        }
+
+        const project = await db.getProjectById(milestone.projectId);
+
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Verificar permisos
+        if (
+          ctx.user.role !== "admin" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para editar este hito",
+          });
+        }
+
+        // Actualizar fecha de vencimiento
+        await db.updateMilestone(input.milestoneId, {
+          dueDate: input.dueDate,
+        });
+
+        // Sincronizar con Google Calendar si existe eventId
+        if (milestone.googleCalendarEventId) {
+          try {
+            const { updateCalendarEvent, toRFC3339, createEndDate } =
+              await import("./googleCalendarClient");
+
+            await updateCalendarEvent({
+              event_id: milestone.googleCalendarEventId,
+              summary: `📅 ${project.name} - ${milestone.name}`,
+              description:
+                milestone.description || `Hito del proyecto ${project.name}`,
+              start_time: toRFC3339(input.dueDate),
+              end_time: toRFC3339(createEndDate(input.dueDate)),
+              location: project.location || undefined,
+              reminders: [1440, 60],
+            });
+          } catch (error) {
+            console.error(
+              "[Milestone] Error updating Google Calendar event:",
+              error
+            );
+            // No fallar la actualización si falla la sincronización
+          }
+        }
+
+        return { success: true };
+      }),
   }),
 
   // ============================================

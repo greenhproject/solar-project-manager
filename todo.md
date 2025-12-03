@@ -37,3 +37,26 @@
 - [ ] Configurar RESEND_FROM_EMAIL en Railway (email verificado)
 - [ ] Probar envío de emails en desarrollo
 - [ ] Verificar que funcione en Railway
+
+
+## Código HTML para Embeber en Wix (30 Nov 2025)
+
+- [x] Crear código HTML de iframe optimizado para Wix (wix-embed.html)
+- [x] Crear instrucciones paso a paso para integración en Wix (WIX_INTEGRATION_GUIDE.md)
+- [x] Documentar configuración de CORS si es necesario
+- [x] Crear versión responsive del iframe
+
+
+## Asignación de Responsables a Hitos (30 Nov 2025)
+
+- [x] Investigar API de OpenSolar para obtener acciones/tareas (actions)
+- [x] Verificar si OpenSolar API devuelve responsables y fechas de vencimiento (NO disponible en API)
+- [x] Actualizar schema: agregar campo assignedUserId a milestones
+- [x] Agregar campo jobTitle a tabla users
+- [x] Crear procedimiento tRPC para asignar responsable a hito
+- [x] Crear procedimiento tRPC para editar fecha de vencimiento
+- [x] Crear dropdown de usuarios en cada hito (UI)
+- [x] Permitir editar fecha de vencimiento en cada hito (UI)
+- [ ] Agregar filtros por responsable en vista de proyectos
+- [x] Notificar por email al responsable cuando se le asigna un hito (ya implementado en backend)
+- [x] Probar funcionalidad completa

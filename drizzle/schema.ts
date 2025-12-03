@@ -151,6 +151,9 @@ export const milestones = mysqlTable(
     // Dependencias (IDs de hitos que deben completarse antes)
     dependencies: text("dependencies"), // JSON array de IDs: [1, 2, 3]
 
+    // Responsable asignado al hito
+    assignedUserId: int("assignedUserId"), // Usuario responsable de completar este hito
+
     // Sincronización con Google Calendar
     googleCalendarEventId: varchar("googleCalendarEventId", { length: 255 }),
 
@@ -160,6 +163,7 @@ export const milestones = mysqlTable(
   table => ({
     projectIdx: index("project_idx").on(table.projectId),
     statusIdx: index("status_idx").on(table.status),
+    assignedUserIdx: index("assigned_user_idx").on(table.assignedUserId),
   })
 );
 
