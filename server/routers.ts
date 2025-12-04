@@ -881,7 +881,15 @@ export const appRouter = router({
           }
         }
 
-        return await db.getMilestonesByProjectId(input.projectId);
+        // Obtener hitos del proyecto
+        const allMilestones = await db.getMilestonesByProjectId(input.projectId);
+        
+        // Filtrar: admin ve todos, otros usuarios solo sus hitos asignados
+        if (ctx.user.role === "admin") {
+          return allMilestones;
+        } else {
+          return allMilestones.filter(m => m.assignedUserId === ctx.user.id);
+        }
       }),
 
     create: protectedProcedure

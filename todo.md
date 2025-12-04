@@ -265,3 +265,10 @@
 - [x] Actualizar milestones.create para verificar hitos asignados
 - [x] Actualizar milestones.syncToCalendar para verificar hitos asignados
 - [ ] Probar con Santiago Bravo en Railway
+
+
+## Fix Filtrado de Hitos por Usuario (4 Dic 2025)
+
+- [x] Actualizar milestones.getByProject para filtrar solo hitos asignados al usuario
+- [x] Verificar que admin siga viendo todos los hitos (lógica implementada)
+- [ ] Probar con Santiago Bravo en Railway
