@@ -272,3 +272,11 @@
 - [x] Actualizar milestones.getByProject para filtrar solo hitos asignados al usuario
 - [x] Verificar que admin siga viendo todos los hitos (lógica implementada)
 - [ ] Probar con Santiago Bravo en Railway
+
+
+## Fix Responsive Sidebar Móviles (4 Dic 2025)
+
+- [x] Sidebar debe estar cerrado por defecto en móviles (defaultOpen={!isMobile})
+- [x] Sidebar funciona como overlay en móviles (comportamiento nativo de shadcn/ui)
+- [x] Backdrop incluido por defecto en shadcn/ui Sidebar
+- [ ] Probar en Railway con diferentes dispositivos móviles
