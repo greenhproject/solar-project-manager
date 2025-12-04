@@ -255,3 +255,13 @@
 - [x] Actualizar projects.update para verificar hitos asignados
 - [x] Actualizar projects.loadMilestonesFromTemplate para verificar hitos asignados
 - [ ] Probar acceso con Santiago Bravo en Railway
+
+
+## Fix Hitos No Visibles para Usuario Asignado (4 Dic 2025)
+
+- [x] Diagnosticar por qué milestones.getByProject no muestra hitos
+- [x] Revisar validación de permisos en milestones.getByProject
+- [x] Actualizar milestones.getByProject para verificar hitos asignados
+- [x] Actualizar milestones.create para verificar hitos asignados
+- [x] Actualizar milestones.syncToCalendar para verificar hitos asignados
+- [ ] Probar con Santiago Bravo en Railway

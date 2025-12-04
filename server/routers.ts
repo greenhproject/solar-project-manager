@@ -866,15 +866,19 @@ export const appRouter = router({
           });
         }
 
-        // Verificar permisos
-        if (
-          ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
-        ) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "No tienes permiso para ver estos hitos",
-          });
+        // Verificar permisos: admin puede ver todos, otros usuarios solo si tienen hitos asignados
+        if (ctx.user.role !== "admin") {
+          const hasAccess = await db.userHasAssignedMilestonesInProject(
+            ctx.user.id,
+            input.projectId
+          );
+          
+          if (!hasAccess) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "No tienes permiso para ver estos hitos",
+            });
+          }
         }
 
         return await db.getMilestonesByProjectId(input.projectId);
@@ -901,15 +905,19 @@ export const appRouter = router({
           });
         }
 
-        // Solo admin o ingeniero asignado pueden crear hitos
-        if (
-          ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
-        ) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "No tienes permiso para crear hitos en este proyecto",
-          });
+        // Verificar permisos: admin puede crear hitos, otros usuarios solo si tienen hitos asignados
+        if (ctx.user.role !== "admin") {
+          const hasAccess = await db.userHasAssignedMilestonesInProject(
+            ctx.user.id,
+            input.projectId
+          );
+          
+          if (!hasAccess) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "No tienes permiso para crear hitos en este proyecto",
+            });
+          }
         }
 
         // Validar y convertir dependencias
@@ -1088,15 +1096,19 @@ export const appRouter = router({
           });
         }
 
-        // Verificar permisos
-        if (
-          ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
-        ) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "No tienes permiso para sincronizar este hito",
-          });
+        // Verificar permisos: admin puede sincronizar, otros usuarios solo si tienen hitos asignados
+        if (ctx.user.role !== "admin") {
+          const hasAccess = await db.userHasAssignedMilestonesInProject(
+            ctx.user.id,
+            milestone.projectId
+          );
+          
+          if (!hasAccess) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "No tienes permiso para sincronizar este hito",
+            });
+          }
         }
 
         try {
