@@ -289,3 +289,13 @@
 - [x] Forzar cierre en móviles con useEffect que detecta isMobile
 - [x] Sobrescribir estado guardado en cookies con lógica de useEffect
 - [ ] Probar en Railway después del despliegue (limpiar cache del navegador)
+
+
+## Solución Alternativa Sidebar Móviles (4 Dic 2025)
+
+- [x] Ocultar sidebar lateral completamente en móviles (className hidden)
+- [x] Crear Sheet modal para navegación en móviles (SheetContent side=left)
+- [x] Contenido principal a pantalla completa en móviles (SidebarInset sin sidebar)
+- [x] Botón menú abre Sheet con navegación (PanelLeft icon)
+- [x] Agregar perfil de usuario y cerrar sesión en Sheet
+- [ ] Probar en Railway
