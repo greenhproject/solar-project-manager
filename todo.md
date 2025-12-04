@@ -103,3 +103,11 @@
 - [x] Agregar columnas: Nombre, Cliente, Estado, Progreso, Ubicación, Acciones
 - [x] Mantener estadísticas en cards arriba de la tabla
 - [x] Probar funcionalidad completa
+
+
+## Responsive Dashboard Tabla (4 Dic 2025)
+
+- [x] Detectar tamaño de pantalla con hook useIsMobile
+- [x] Mostrar cards en móviles (< 768px)
+- [x] Mostrar tabla en desktop (>= 768px)
+- [x] Probar en diferentes tamaños de pantalla

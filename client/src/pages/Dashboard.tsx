@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useIsMobile } from "@/hooks/useMobile";
 import { trpc } from "@/lib/trpc";
 import {
   Card,
@@ -27,6 +28,7 @@ import { es } from "date-fns/locale";
 
 export default function Dashboard() {
   const { user, isAuthenticated } = useAuth();
+  const isMobile = useIsMobile();
   const { data: stats, isLoading: statsLoading } =
     trpc.projects.stats.useQuery();
   const { data: projects, isLoading: projectsLoading } =
@@ -250,8 +252,84 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : projects && projects.length > 0 ? (
-              <div className="rounded-md border">
-                <table className="w-full">
+              isMobile ? (
+                // Vista móvil: Cards
+                <div className="space-y-4">
+                  {projects.slice(0, 10).map(project => (
+                    <Link key={project.id} href={`/projects/${project.id}`}>
+                      <div className="p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="h-10 w-10 rounded-full bg-gradient-solar flex items-center justify-center flex-shrink-0">
+                            <Sun className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold truncate">
+                              {project.name}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">
+                              ID: {project.id}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Cliente:</span>
+                            <span className="text-sm font-medium">
+                              {project.clientName || "-"}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Estado:</span>
+                            <div className="flex flex-col gap-1 items-end">
+                              {getStatusBadge(project.status)}
+                              {isOverdue(project.estimatedEndDate, project.status) && (
+                                <Badge variant="destructive" className="gap-1 text-xs">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  Retrasado
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Progreso:</span>
+                            <div className="flex items-center gap-2">
+                              <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-solar transition-all"
+                                  style={{ width: `${project.progressPercentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-medium">
+                                {project.progressPercentage}%
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {project.location && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-muted-foreground">Ubicación:</span>
+                              <span className="text-sm truncate max-w-[60%]">
+                                {project.location}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Button size="sm" className="w-full mt-3" variant="outline">
+                          Ver Detalles
+                          <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                // Vista desktop: Tabla
+                <div className="rounded-md border">
+                  <table className="w-full">
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-3 font-medium">Proyecto</th>
@@ -341,6 +419,7 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
+              )
             ) : (
               <div className="text-center py-12">
                 <Sun className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
