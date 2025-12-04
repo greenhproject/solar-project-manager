@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
+import { handleLogin } from "@/_core/iframeAuth";
 import {
   Sun,
   TrendingUp,
@@ -65,9 +66,9 @@ export default function Home() {
 
           <div className="flex items-center gap-4">
             {useManusAuth ? (
-              <a href={getLoginUrl()}>
-                <Button>Iniciar Sesión</Button>
-              </a>
+              <Button onClick={() => handleLogin(getLoginUrl())}>
+                Iniciar Sesión
+              </Button>
             ) : (
               <>
                 <Button variant="ghost" onClick={() => setLocation("/login")}>
@@ -109,12 +110,14 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {useManusAuth ? (
-              <a href={getLoginUrl()}>
-                <Button size="lg" className="gap-2 text-lg px-8">
-                  <Sun className="h-5 w-5" />
-                  Comenzar Ahora
-                </Button>
-              </a>
+              <Button 
+                size="lg" 
+                className="gap-2 text-lg px-8"
+                onClick={() => handleLogin(getLoginUrl())}
+              >
+                <Sun className="h-5 w-5" />
+                Comenzar Ahora
+              </Button>
             ) : (
               <Button
                 size="lg"

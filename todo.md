@@ -67,3 +67,27 @@
 - [x] Cambiar valor vacío "" por "none" en SelectItem de responsables
 - [x] Actualizar lógica de onValueChange para manejar "none" como null
 - [x] Probar que funcione correctamente
+
+
+## Mejoras de Funcionalidad (3 Dic 2025)
+
+### 1. Cargar desde OpenSolar para todos los roles
+- [x] Remover restricción de rol admin en botón "Cargar desde OpenSolar"
+- [x] Actualizar procedimiento tRPC para permitir acceso a todos los roles
+- [x] Probar que ingenieros puedan cargar proyectos desde OpenSolar
+
+### 2. Campo de observaciones en hitos
+- [x] Agregar campo "observations" a tabla milestones en schema
+- [x] Aplicar migración de base de datos
+- [x] Actualizar procedimiento tRPC update para incluir observaciones
+- [x] Agregar textarea de observaciones en UI de cada hito
+- [x] Probar funcionalidad de observaciones
+
+### 3. Login con popup para iframe de Wix
+- [x] Detectar si la app está en iframe (isInIframe)
+- [x] Implementar login con popup window para Auth0 (openLoginPopup)
+- [x] Manejar comunicación entre popup y iframe (polling)
+- [x] Cerrar popup automáticamente después de login exitoso
+- [x] Actualizar estado de autenticación en iframe (reload)
+- [x] Actualizar DashboardLayout y Home para usar handleLogin
+- [ ] Probar en entorno de Wix

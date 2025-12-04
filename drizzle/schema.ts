@@ -147,6 +147,7 @@ export const milestones = mysqlTable(
 
     // Notas y observaciones
     notes: text("notes"),
+    observations: text("observations"), // Observaciones del equipo sobre el hito
 
     // Dependencias (IDs de hitos que deben completarse antes)
     dependencies: text("dependencies"), // JSON array de IDs: [1, 2, 3]

@@ -707,6 +707,30 @@ export default function ProjectDetail() {
                             )}
                           </div>
                           
+                          {/* Observaciones del equipo */}
+                          <div className="mt-3">
+                            <Label className="text-xs text-muted-foreground mb-1 block">Observaciones del equipo</Label>
+                            <Textarea
+                              placeholder="Escribe observaciones sobre este hito..."
+                              className="min-h-[80px] text-sm"
+                              defaultValue={(milestone as any).observations || ""}
+                              onBlur={async (e) => {
+                                const newValue = e.target.value;
+                                if (newValue === ((milestone as any).observations || "")) return;
+                                try {
+                                  await updateMilestone.mutateAsync({
+                                    id: milestone.id,
+                                    observations: newValue,
+                                  });
+                                  toast.success("Observaciones actualizadas");
+                                  await refetchMilestones();
+                                } catch (error: any) {
+                                  toast.error(error.message || "Error al actualizar observaciones");
+                                }
+                              }}
+                            />
+                          </div>
+
                           {/* Botón de sincronización manual */}
                           <Button
                             variant="outline"
@@ -835,7 +859,7 @@ export default function ProjectDetail() {
               <h2 className="text-2xl font-bold">
                 Sincronización con OpenSolar
               </h2>
-              {user.role === "admin" && project.openSolarId && (
+              {project.openSolarId && (
                 <Button
                   variant="outline"
                   className="gap-2"

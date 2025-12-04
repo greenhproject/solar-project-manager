@@ -20,6 +20,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
+import { handleLogin, isInIframe } from "@/_core/iframeAuth";
 import { useIsMobile } from "@/hooks/useMobile";
 import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -71,12 +72,16 @@ export default function DashboardLayout({
           </div>
           <Button
             onClick={() => {
-              window.location.href = getLoginUrl();
+              handleLogin(
+                getLoginUrl(),
+                () => console.log('[Auth] Login exitoso'),
+                (error) => console.error('[Auth] Error en login:', error)
+              );
             }}
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
-            Sign in
+            Sign in {isInIframe() ? '(Popup)' : ''}
           </Button>
         </div>
       </div>

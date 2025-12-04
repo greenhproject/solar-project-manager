@@ -943,6 +943,7 @@ export const appRouter = router({
             .optional(),
           completedDate: z.date().optional(),
           notes: z.string().optional(),
+          observations: z.string().optional(),
           dependencies: z.array(z.number()).optional(),
         })
       )
@@ -1558,7 +1559,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
       }),
 
     // Sincronizar proyecto desde OpenSolar
-    syncProject: adminProcedure
+    syncProject: protectedProcedure
       .input(z.object({ projectId: z.number() }))
       .mutation(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
