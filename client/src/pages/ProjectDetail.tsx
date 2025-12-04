@@ -53,6 +53,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { FileUpload } from "@/components/FileUpload";
 import { FileList } from "@/components/FileList";
+import LegalizationChecklist from "@/components/LegalizationChecklist";
 
 export default function ProjectDetail() {
   const { user, isAuthenticated } = useAuth();
@@ -472,6 +473,7 @@ export default function ProjectDetail() {
             <TabsTrigger value="milestones">Hitos</TabsTrigger>
             <TabsTrigger value="updates">Actualizaciones</TabsTrigger>
             <TabsTrigger value="attachments">Archivos</TabsTrigger>
+            <TabsTrigger value="legalization">Trámites y Legalización</TabsTrigger>
             <TabsTrigger value="sync">Sincronización</TabsTrigger>
           </TabsList>
 
@@ -851,6 +853,11 @@ export default function ProjectDetail() {
                 <FileList projectId={projectId} />
               </div>
             </div>
+          </TabsContent>
+
+          {/* Trámites y Legalización */}
+          <TabsContent value="legalization" className="space-y-4">
+            <LegalizationChecklist projectId={projectId} />
           </TabsContent>
 
           {/* Sincronización */}

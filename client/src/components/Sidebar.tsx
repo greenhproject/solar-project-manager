@@ -16,6 +16,7 @@ import {
   GanttChartSquare,
   Calendar,
   TrendingUp,
+  FileText,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -131,6 +132,12 @@ export function Sidebar({ className }: SidebarProps) {
       label: "Asistente IA",
       href: "/ai-assistant",
       roles: ["admin", "engineer"],
+    },
+    {
+      icon: FileText,
+      label: "Trámites y Diseño",
+      href: "/tramites",
+      roles: ["admin", "ingeniero_tramites"],
     },
     {
       icon: Users,

@@ -136,3 +136,46 @@
 - [x] Modificar auth0Service para NO sobrescribir nombre si ya existe
 - [x] Solo actualizar nombre si viene de Auth0 Y el usuario no tiene nombre guardado
 - [x] Probar que el nombre se mantenga después de editarlo
+
+
+## Versión 3.0 - Módulo Trámites y Diseño (4 Dic 2025)
+
+### Fase 1: Schema y Nuevo Rol
+- [x] Agregar rol "ingeniero_tramites" al enum de roles en schema
+- [x] Migrar base de datos con nuevo rol
+- [x] Actualizar permisos en routers para incluir ingeniero_tramites
+
+### Fase 2: Biblioteca de Plantillas CAD
+- [x] Crear tabla cad_templates en schema (marca_inversor, potencia, operador_red, cantidad_paneles, potencia_paneles, descripcion, fileUrl, fileKey)
+- [x] Crear procedimientos tRPC para CRUD de plantillas CAD
+- [x] Crear página TramitesYDiseno.tsx con sección de plantillas
+- [x] Implementar filtros por marca, potencia, operador, etc.
+- [x] Implementar carga y descarga de archivos CAD
+
+### Fase 3: Biblioteca de Archivos Comunes
+- [x] Crear tabla common_documents en schema (tipo, marca, modelo, descripcion, fileUrl, fileKey)
+- [x] Tipos: certificado_inversor, certificado_paneles, manual_inversor, matricula_constructor, matricula_disenador
+- [x] Crear procedimientos tRPC para gestionar biblioteca común
+- [x] Implementar UI para cargar archivos comunes con filtros
+
+### Fase 4: Checklist de Legalización por Proyecto
+- [x] Crear tabla project_legalization_checklist en schema (projectId, documentType, fileUrl, fileKey, autoLoaded, uploadedAt)
+- [x] 13 tipos de documentos: certificado_tradicion, cedula_cliente, plano_agpe, autodeclaracion_retie, certificado_inversor, certificado_paneles, manual_inversor, matricula_inversor, experiencia_constructor, matricula_disenador, memoria_calculo, disponibilidad_red, otros
+- [x] Crear procedimientos tRPC para checklist
+- [x] Implementar sección "Trámites y Legalización" en ProjectDetail.tsx
+- [x] Implementar carga automática desde biblioteca común
+- [x] Implementar carga manual de archivos
+### Fase 5: Descarga Masiva en ZIP
+- [x] Instalar librería jszip para generar archivos ZIP
+- [x] Implementar botón "Descargar Todo" en checklist
+- [x] Probar descarga de archivos organizados
+- [x] Agregar ruta /tramites en App.tsx
+- [x] Agregar link en Sidebar para admin e ingeniero_tramitesdentro del ZIP
+
+### Fase 6: Testing y Documentación
+- [ ] Crear tests para plantillas CAD
+- [ ] Crear tests para biblioteca común
+- [ ] Crear tests para checklist de legalización
+- [ ] Actualizar documentación del proyecto
+- [ ] Guardar checkpoint versión 3.0
+- [ ] Pushear a GitHub

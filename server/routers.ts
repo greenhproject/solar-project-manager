@@ -31,6 +31,17 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+// Procedimiento para admin e ingeniero_tramites
+const tramitesProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "admin" && ctx.user.role !== "ingeniero_tramites") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Solo administradores e ingenieros de trámites pueden realizar esta acción",
+    });
+  }
+  return next({ ctx });
+});
+
 export const appRouter = router({
   system: systemRouter,
   analytics: metricsRouter,
@@ -2066,6 +2077,290 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         }
 
         return await db.getProjectUpdatesByProjectId(input.projectId);
+      }),
+  }),
+
+  // ============================================
+  // MÓDULO TRÁMITES Y DISEÑO
+  // ============================================
+  
+  // Plantillas CAD
+  cadTemplates: router({
+    // Listar plantillas con filtros
+    list: tramitesProcedure
+      .input(
+        z.object({
+          marcaInversor: z.string().optional(),
+          potenciaInversor: z.string().optional(),
+          operadorRed: z.string().optional(),
+          cantidadPaneles: z.number().optional(),
+          potenciaPaneles: z.string().optional(),
+          marcaPaneles: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return await db.getCadTemplates(input);
+      }),
+
+    // Crear plantilla CAD
+    create: tramitesProcedure
+      .input(
+        z.object({
+          fileName: z.string(),
+          fileKey: z.string(),
+          fileData: z.string(), // base64
+          fileSize: z.number(),
+          marcaInversor: z.string(),
+          modeloInversor: z.string().optional(),
+          potenciaInversor: z.string().optional(),
+          operadorRed: z.string().optional(),
+          cantidadPaneles: z.number().optional(),
+          potenciaPaneles: z.string().optional(),
+          marcaPaneles: z.string().optional(),
+          descripcion: z.string().optional(),
+          tags: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { fileData, fileKey, ...rest } = input;
+
+        // Convertir base64 a buffer y subir a S3
+        const buffer = Buffer.from(fileData, "base64");
+        const { storagePut } = await import("./storage");
+        const { url } = await storagePut(fileKey, buffer, "application/octet-stream");
+
+        await db.createCadTemplate({
+          ...rest,
+          fileKey,
+          fileUrl: url,
+          uploadedBy: ctx.user.id,
+        });
+
+        return { success: true };
+      }),
+
+    // Eliminar plantilla CAD
+    delete: tramitesProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteCadTemplate(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // Documentos comunes
+  commonDocuments: router({
+    // Listar documentos con filtros
+    list: tramitesProcedure
+      .input(
+        z.object({
+          tipo: z.string().optional(),
+          marca: z.string().optional(),
+          modelo: z.string().optional(),
+          potencia: z.string().optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return await db.getCommonDocuments(input);
+      }),
+
+    // Crear documento común
+    create: tramitesProcedure
+      .input(
+        z.object({
+          tipo: z.enum([
+            "certificado_inversor",
+            "certificado_paneles",
+            "manual_inversor",
+            "matricula_constructor",
+            "matricula_disenador",
+            "experiencia_constructor",
+          ]),
+          fileName: z.string(),
+          fileKey: z.string(),
+          fileData: z.string(), // base64
+          fileSize: z.number(),
+          mimeType: z.string(),
+          marca: z.string().optional(),
+          modelo: z.string().optional(),
+          potencia: z.string().optional(),
+          descripcion: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { fileData, fileKey, ...rest } = input;
+
+        // Convertir base64 a buffer y subir a S3
+        const buffer = Buffer.from(fileData, "base64");
+        const { storagePut } = await import("./storage");
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+        await db.createCommonDocument({
+          ...rest,
+          fileKey,
+          fileUrl: url,
+          uploadedBy: ctx.user.id,
+        });
+
+        return { success: true };
+      }),
+
+    // Eliminar documento común
+    delete: tramitesProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteCommonDocument(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // Checklist de legalización
+  legalizationChecklist: router({
+    // Obtener checklist de un proyecto
+    get: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Verificar permisos
+        if (
+          ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para ver este checklist",
+          });
+        }
+
+        return await db.getProjectLegalizationChecklist(input.projectId);
+      }),
+
+    // Inicializar checklist para un proyecto
+    initialize: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Verificar permisos
+        if (
+          ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para inicializar este checklist",
+          });
+        }
+
+        await db.initializeProjectLegalizationChecklist(input.projectId);
+        return { success: true };
+      }),
+
+    // Actualizar item del checklist
+    upsert: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.number(),
+          documentType: z.enum([
+            "certificado_tradicion",
+            "cedula_cliente",
+            "plano_agpe",
+            "autodeclaracion_retie",
+            "certificado_inversor",
+            "certificado_paneles",
+            "manual_inversor",
+            "matricula_inversor",
+            "experiencia_constructor",
+            "matricula_disenador",
+            "memoria_calculo",
+            "disponibilidad_red",
+            "otros",
+          ]),
+          fileName: z.string().optional(),
+          fileKey: z.string().optional(),
+          fileData: z.string().optional(), // base64
+          fileSize: z.number().optional(),
+          mimeType: z.string().optional(),
+          isCompleted: z.boolean(),
+          autoLoaded: z.boolean(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Verificar permisos
+        if (
+          ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para actualizar este checklist",
+          });
+        }
+
+        let fileUrl = input.fileKey;
+        
+        // Si hay datos de archivo, subirlo a S3
+        if (input.fileData && input.fileKey && input.mimeType) {
+          const buffer = Buffer.from(input.fileData, "base64");
+          const { storagePut } = await import("./storage");
+          const { url } = await storagePut(input.fileKey, buffer, input.mimeType);
+          fileUrl = url;
+        }
+
+        await db.upsertLegalizationChecklistItem({
+          projectId: input.projectId,
+          documentType: input.documentType,
+          fileName: input.fileName,
+          fileKey: input.fileKey,
+          fileUrl,
+          fileSize: input.fileSize,
+          mimeType: input.mimeType,
+          isCompleted: input.isCompleted,
+          autoLoaded: input.autoLoaded,
+          uploadedBy: ctx.user.id,
+        });
+
+        return { success: true };
+      }),
+
+    // Eliminar item del checklist
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        // Solo admin e ingeniero_tramites pueden eliminar
+        if (ctx.user.role !== "admin" && ctx.user.role !== "ingeniero_tramites") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para eliminar items del checklist",
+          });
+        }
+
+        await db.deleteLegalizationChecklistItem(input.id);
+        return { success: true };
       }),
   }),
 });

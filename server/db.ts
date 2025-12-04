@@ -21,6 +21,9 @@ import {
   InsertReminder,
   InsertSyncLog,
   InsertProjectUpdate,
+  cadTemplates,
+  commonDocuments,
+  projectLegalizationChecklist,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -1151,4 +1154,310 @@ export async function updateUserPassword(
     .where(eq(users.id, userId));
 
   return true;
+}
+
+
+// ============================================
+// MÓDULO TRÁMITES Y DISEÑO
+// ============================================
+
+/**
+ * Obtener todas las plantillas CAD con filtros opcionales
+ */
+export async function getCadTemplates(filters?: {
+  marcaInversor?: string;
+  potenciaInversor?: string;
+  operadorRed?: string;
+  cantidadPaneles?: number;
+  potenciaPaneles?: string;
+  marcaPaneles?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  let query = db.select().from(cadTemplates);
+  
+  const conditions: any[] = [];
+  
+  if (filters?.marcaInversor) {
+    conditions.push(eq(cadTemplates.marcaInversor, filters.marcaInversor));
+  }
+  if (filters?.potenciaInversor) {
+    conditions.push(eq(cadTemplates.potenciaInversor, filters.potenciaInversor));
+  }
+  if (filters?.operadorRed) {
+    conditions.push(eq(cadTemplates.operadorRed, filters.operadorRed));
+  }
+  if (filters?.cantidadPaneles) {
+    conditions.push(eq(cadTemplates.cantidadPaneles, filters.cantidadPaneles));
+  }
+  if (filters?.potenciaPaneles) {
+    conditions.push(eq(cadTemplates.potenciaPaneles, filters.potenciaPaneles));
+  }
+  if (filters?.marcaPaneles) {
+    conditions.push(eq(cadTemplates.marcaPaneles, filters.marcaPaneles));
+  }
+  
+  if (conditions.length > 0) {
+    const results = await db
+      .select()
+      .from(cadTemplates)
+      .where(and(...conditions))
+      .orderBy(desc(cadTemplates.createdAt));
+    return results;
+  }
+  
+  const results = await db
+    .select()
+    .from(cadTemplates)
+    .orderBy(desc(cadTemplates.createdAt));
+  return results;
+}
+
+/**
+ * Crear plantilla CAD
+ */
+export async function createCadTemplate(data: {
+  fileName: string;
+  fileKey: string;
+  fileUrl: string;
+  fileSize: number;
+  marcaInversor: string;
+  modeloInversor?: string;
+  potenciaInversor?: string;
+  operadorRed?: string;
+  cantidadPaneles?: number;
+  potenciaPaneles?: string;
+  marcaPaneles?: string;
+  descripcion?: string;
+  tags?: string;
+  uploadedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(cadTemplates).values(data);
+  return result;
+}
+
+/**
+ * Eliminar plantilla CAD
+ */
+export async function deleteCadTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(cadTemplates).where(eq(cadTemplates.id, id));
+}
+
+/**
+ * Obtener documentos comunes con filtros
+ */
+export async function getCommonDocuments(filters?: {
+  tipo?: string;
+  marca?: string;
+  modelo?: string;
+  potencia?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const conditions: any[] = [];
+  
+  if (filters?.tipo) {
+    conditions.push(eq(commonDocuments.tipo, filters.tipo as any));
+  }
+  if (filters?.marca) {
+    conditions.push(eq(commonDocuments.marca, filters.marca));
+  }
+  if (filters?.modelo) {
+    conditions.push(eq(commonDocuments.modelo, filters.modelo));
+  }
+  if (filters?.potencia) {
+    conditions.push(eq(commonDocuments.potencia, filters.potencia));
+  }
+  
+  if (conditions.length > 0) {
+    const results = await db
+      .select()
+      .from(commonDocuments)
+      .where(and(...conditions))
+      .orderBy(desc(commonDocuments.createdAt));
+    return results;
+  }
+  
+  const results = await db
+    .select()
+    .from(commonDocuments)
+    .orderBy(desc(commonDocuments.createdAt));
+  return results;
+}
+
+/**
+ * Crear documento común
+ */
+export async function createCommonDocument(data: {
+  tipo: string;
+  fileName: string;
+  fileKey: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  marca?: string;
+  modelo?: string;
+  potencia?: string;
+  descripcion?: string;
+  uploadedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(commonDocuments).values(data as any);
+  return result;
+}
+
+/**
+ * Eliminar documento común
+ */
+export async function deleteCommonDocument(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(commonDocuments).where(eq(commonDocuments.id, id));
+}
+
+/**
+ * Obtener checklist de legalización de un proyecto
+ */
+export async function getProjectLegalizationChecklist(projectId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const results = await db
+    .select()
+    .from(projectLegalizationChecklist)
+    .where(eq(projectLegalizationChecklist.projectId, projectId))
+    .orderBy(projectLegalizationChecklist.documentType);
+  
+  return results;
+}
+
+/**
+ * Crear o actualizar item del checklist
+ */
+export async function upsertLegalizationChecklistItem(data: {
+  projectId: number;
+  documentType: string;
+  fileName?: string;
+  fileKey?: string;
+  fileUrl?: string;
+  fileSize?: number;
+  mimeType?: string;
+  isCompleted: boolean;
+  autoLoaded: boolean;
+  uploadedBy?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Verificar si ya existe
+  const existing = await db
+    .select()
+    .from(projectLegalizationChecklist)
+    .where(
+      and(
+        eq(projectLegalizationChecklist.projectId, data.projectId),
+        eq(projectLegalizationChecklist.documentType, data.documentType as any)
+      )
+    )
+    .limit(1);
+  
+  if (existing[0]) {
+    // Actualizar
+    await db
+      .update(projectLegalizationChecklist)
+      .set({
+        fileName: data.fileName,
+        fileKey: data.fileKey,
+        fileUrl: data.fileUrl,
+        fileSize: data.fileSize,
+        mimeType: data.mimeType,
+        isCompleted: data.isCompleted,
+        autoLoaded: data.autoLoaded,
+        uploadedBy: data.uploadedBy,
+        uploadedAt: new Date(),
+      })
+      .where(eq(projectLegalizationChecklist.id, existing[0].id));
+    
+    return existing[0].id;
+  } else {
+    // Crear
+    const result = await db.insert(projectLegalizationChecklist).values({
+      ...data,
+      documentType: data.documentType as any,
+      uploadedAt: new Date(),
+    });
+    return result;
+  }
+}
+
+/**
+ * Eliminar item del checklist
+ */
+export async function deleteLegalizationChecklistItem(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .delete(projectLegalizationChecklist)
+    .where(eq(projectLegalizationChecklist.id, id));
+}
+
+/**
+ * Inicializar checklist de legalización para un proyecto
+ * Crea los 13 items requeridos vacíos
+ */
+export async function initializeProjectLegalizationChecklist(projectId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const documentTypes = [
+    "certificado_tradicion",
+    "cedula_cliente",
+    "plano_agpe",
+    "autodeclaracion_retie",
+    "certificado_inversor",
+    "certificado_paneles",
+    "manual_inversor",
+    "matricula_inversor",
+    "experiencia_constructor",
+    "matricula_disenador",
+    "memoria_calculo",
+    "disponibilidad_red",
+    "otros",
+  ];
+  
+  // Verificar cuáles ya existen
+  const existing = await db
+    .select()
+    .from(projectLegalizationChecklist)
+    .where(eq(projectLegalizationChecklist.projectId, projectId));
+  
+  const existingTypes = existing.map((item) => item.documentType);
+  
+  // Crear solo los que faltan
+  const toCreate = documentTypes.filter(
+    (type) => !existingTypes.includes(type as any)
+  );
+  
+  if (toCreate.length > 0) {
+    await db.insert(projectLegalizationChecklist).values(
+      toCreate.map((type) => ({
+        projectId,
+        documentType: type as any,
+        isCompleted: false,
+        autoLoaded: false,
+      }))
+    );
+  }
 }

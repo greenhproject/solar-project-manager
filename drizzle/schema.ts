@@ -22,7 +22,8 @@ export const users = mysqlTable("users", {
   avatarUrl: text("avatarUrl"), // URL del avatar personalizado en S3
   theme: mysqlEnum("theme", ["light", "dark", "system"]).default("system"), // Tema preferido del usuario
   loginMethod: varchar("loginMethod", { length: 64 }), // 'oauth' o 'jwt'
-  role: mysqlEnum("role", ["admin", "engineer"]).default("engineer").notNull(),
+  role: mysqlEnum("role", ["admin", "engineer", "ingeniero_tramites"]).default("engineer").notNull(),
+  jobTitle: varchar("jobTitle", { length: 255 }), // Cargo del usuario
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -419,3 +420,125 @@ export const passwordResetTokens = mysqlTable("password_reset_tokens", {
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+/**
+ * Plantillas CAD para diseño de proyectos solares
+ * Biblioteca de planos prediseñados con filtros específicos
+ */
+export const cadTemplates = mysqlTable("cad_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Información del archivo CAD
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: text("fileUrl").notNull(), // S3 URL
+  fileSize: int("fileSize").notNull(), // Tamaño en bytes
+  
+  // Filtros de búsqueda
+  marcaInversor: varchar("marcaInversor", { length: 100 }).notNull(),
+  modeloInversor: varchar("modeloInversor", { length: 100 }),
+  potenciaInversor: varchar("potenciaInversor", { length: 50 }), // ej: "5kW", "10kW"
+  operadorRed: varchar("operadorRed", { length: 100 }), // ej: "ENEL", "EPM", "Codensa"
+  cantidadPaneles: int("cantidadPaneles"),
+  potenciaPaneles: varchar("potenciaPaneles", { length: 50 }), // ej: "450W", "550W"
+  marcaPaneles: varchar("marcaPaneles", { length: 100 }),
+  
+  // Descripción y metadatos
+  descripcion: text("descripcion"),
+  tags: text("tags"), // JSON array de tags para búsqueda adicional
+  
+  // Auditoría
+  uploadedBy: int("uploadedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CadTemplate = typeof cadTemplates.$inferSelect;
+export type InsertCadTemplate = typeof cadTemplates.$inferInsert;
+
+/**
+ * Biblioteca de documentos comunes para legalización
+ * Certificados, manuales, matrículas que se reutilizan entre proyectos
+ */
+export const commonDocuments = mysqlTable("common_documents", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Tipo de documento
+  tipo: mysqlEnum("tipo", [
+    "certificado_inversor",
+    "certificado_paneles",
+    "manual_inversor",
+    "matricula_constructor",
+    "matricula_disenador",
+    "experiencia_constructor",
+  ]).notNull(),
+  
+  // Información del archivo
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: text("fileUrl").notNull(), // S3 URL
+  fileSize: int("fileSize").notNull(), // Tamaño en bytes
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  
+  // Filtros específicos según tipo
+  marca: varchar("marca", { length: 100 }), // Para certificados y manuales
+  modelo: varchar("modelo", { length: 100 }), // Para certificados y manuales
+  potencia: varchar("potencia", { length: 50 }), // Para paneles e inversores
+  
+  // Descripción
+  descripcion: text("descripcion"),
+  
+  // Auditoría
+  uploadedBy: int("uploadedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CommonDocument = typeof commonDocuments.$inferSelect;
+export type InsertCommonDocument = typeof commonDocuments.$inferInsert;
+
+/**
+ * Checklist de legalización por proyecto
+ * Documentos requeridos para trámites ante UPME, Operador de Red y RETIE
+ */
+export const projectLegalizationChecklist = mysqlTable("project_legalization_checklist", {
+  id: int("id").autoincrement().primaryKey(),
+  projectId: int("projectId").notNull(),
+  
+  // Tipo de documento requerido
+  documentType: mysqlEnum("documentType", [
+    "certificado_tradicion",      // a. Certificado de tradición y libertad
+    "cedula_cliente",             // b. Cédula del cliente
+    "plano_agpe",                 // c. Plano AGPE
+    "autodeclaracion_retie",      // d. Auto declaración RETIE
+    "certificado_inversor",       // e. Certificado inversor
+    "certificado_paneles",        // f. Certificado de paneles
+    "manual_inversor",            // g. Manual del inversor
+    "matricula_inversor",         // h. Matrícula inversor
+    "experiencia_constructor",    // i. Experiencia del constructor
+    "matricula_disenador",        // k. Matrícula del diseñador
+    "memoria_calculo",            // l. Memoria de cálculo
+    "disponibilidad_red",         // m. Disponibilidad de la red
+    "otros",                      // Otros documentos
+  ]).notNull(),
+  
+  // Información del archivo (si ya está cargado)
+  fileName: varchar("fileName", { length: 255 }),
+  fileKey: varchar("fileKey", { length: 500 }), // S3 key
+  fileUrl: text("fileUrl"), // S3 URL
+  fileSize: int("fileSize"), // Tamaño en bytes
+  mimeType: varchar("mimeType", { length: 100 }),
+  
+  // Indicadores
+  isCompleted: boolean("isCompleted").default(false).notNull(),
+  autoLoaded: boolean("autoLoaded").default(false).notNull(), // Si se cargó automáticamente desde biblioteca
+  
+  // Auditoría
+  uploadedBy: int("uploadedBy"),
+  uploadedAt: timestamp("uploadedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProjectLegalizationChecklist = typeof projectLegalizationChecklist.$inferSelect;
+export type InsertProjectLegalizationChecklist = typeof projectLegalizationChecklist.$inferInsert;

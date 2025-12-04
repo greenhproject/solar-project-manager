@@ -27,6 +27,7 @@ import LoginAuth0 from "./pages/LoginAuth0";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import TramitesYDiseno from "./pages/TramitesYDiseno";
 
 function Router() {
   return (
@@ -138,6 +139,12 @@ function Router() {
       <Route path="/reports">
         <MainLayout>
           <Reports />
+        </MainLayout>
+      </Route>
+
+      <Route path="/tramites">
+        <MainLayout>
+          <TramitesYDiseno />
         </MainLayout>
       </Route>
 
