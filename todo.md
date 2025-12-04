@@ -225,3 +225,12 @@
 - [x] Mejorar logs de error en storage.ts
 - [ ] Agregar validación de tamaño de archivo en frontend (opcional)
 - [ ] Probar upload con archivo PDF grande en Railway
+
+
+## Fix Dropdown de Roles (4 Dic 2025)
+
+- [x] Localizar componente de gestión de usuarios (UserManagement.tsx)
+- [x] Agregar opción "Ingeniero de Trámites" al dropdown de roles
+- [x] Actualizar filtro para mostrar ingeniero_tramites en sección Ingenieros
+- [x] Corregir type casts en ambos dropdowns
+- [ ] Probar cambio de rol en Railway

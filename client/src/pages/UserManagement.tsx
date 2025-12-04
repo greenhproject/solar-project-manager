@@ -44,7 +44,7 @@ export default function UserManagement() {
 
   const handleRoleChange = async (
     userId: number,
-    newRole: "admin" | "engineer"
+    newRole: "admin" | "engineer" | "ingeniero_tramites"
   ) => {
     setUpdatingUserId(userId);
     try {
@@ -81,7 +81,7 @@ export default function UserManagement() {
   }
 
   const adminUsers = users?.filter(u => u.role === "admin") || [];
-  const engineerUsers = users?.filter(u => u.role === "engineer") || [];
+  const engineerUsers = users?.filter(u => u.role === "engineer" || u.role === "ingeniero_tramites") || [];
 
   return (
     <div className="space-y-6">
@@ -178,7 +178,7 @@ export default function UserManagement() {
                             onValueChange={value =>
                               handleRoleChange(
                                 user.id,
-                                value as "admin" | "engineer"
+                                value as "admin" | "engineer" | "ingeniero_tramites"
                               )
                             }
                             disabled={updatingUserId === user.id}
@@ -197,6 +197,12 @@ export default function UserManagement() {
                                 <div className="flex items-center gap-2">
                                   <Wrench className="h-4 w-4" />
                                   Ingeniero
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="ingeniero_tramites">
+                                <div className="flex items-center gap-2">
+                                  <Wrench className="h-4 w-4" />
+                                  Ingeniero de Trámites
                                 </div>
                               </SelectItem>
                             </SelectContent>
@@ -305,7 +311,7 @@ export default function UserManagement() {
                           onValueChange={value =>
                             handleRoleChange(
                               user.id,
-                              value as "admin" | "engineer"
+                              value as "admin" | "engineer" | "ingeniero_tramites"
                             )
                           }
                           disabled={updatingUserId === user.id}
@@ -324,6 +330,12 @@ export default function UserManagement() {
                               <div className="flex items-center gap-2">
                                 <Wrench className="h-4 w-4" />
                                 Ingeniero
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="ingeniero_tramites">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-4 w-4" />
+                                Ingeniero de Trámites
                               </div>
                             </SelectItem>
                           </SelectContent>
