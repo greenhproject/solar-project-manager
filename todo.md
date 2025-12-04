@@ -234,3 +234,12 @@
 - [x] Actualizar filtro para mostrar ingeniero_tramites en sección Ingenieros
 - [x] Corregir type casts en ambos dropdowns
 - [ ] Probar cambio de rol en Railway
+
+
+## Fix Validación Backend Rol Ingeniero Trámites (4 Dic 2025)
+
+- [x] Buscar procedimiento users.updateRole en routers.ts (línea 286)
+- [x] Actualizar schema de validación para incluir "ingeniero_tramites" (z.enum)
+- [x] Actualizar tipo en db.ts updateUserRole (línea 562)
+- [x] Verificar que no haya otros procedimientos con validación de rol
+- [ ] Probar cambio de rol en Railway
