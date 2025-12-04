@@ -46,12 +46,15 @@ export function useAuth0Custom() {
           localStorage.setItem('auth_token', token);
           
           // Guardar email y name del usuario para enviarlos al backend
+          console.log('[Auth0] User data:', { email: user?.email, name: user?.name, nickname: user?.nickname });
+          
           if (user?.email) {
             localStorage.setItem('auth_user_email', user.email);
           }
-          if (user?.name) {
-            localStorage.setItem('auth_user_name', user.name);
-          }
+          
+          // Usar name, nickname o email como fallback
+          const userName = user?.name || user?.nickname || user?.email?.split('@')[0] || 'Usuario';
+          localStorage.setItem('auth_user_name', userName);
         } catch (error) {
           console.error('[Auth0] Error getting access token:', error);
         }

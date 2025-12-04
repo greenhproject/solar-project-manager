@@ -118,3 +118,12 @@
 - [x] Envolver tabla en contenedor con overflow-x-auto
 - [x] Agregar min-width a tabla para forzar scroll
 - [x] Probar en tablet que la tabla tenga scroll horizontal
+
+
+## Corrección de Edición de Perfil (4 Dic 2025)
+
+- [x] Investigar por qué el nombre no se guarda (Auth0 no devuelve name)
+- [x] Agregar fallback para usar nickname o email si name no existe
+- [x] Agregar logs para debuggear datos de Auth0
+- [x] Probar que el nombre se guarde correctamente al hacer login
+- [x] Probar flujo completo de edición de perfil
