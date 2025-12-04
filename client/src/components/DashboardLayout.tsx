@@ -116,12 +116,19 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
-  const { state, toggleSidebar } = useSidebar();
+  const { state, toggleSidebar, open, setOpen } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
+
+  // Force sidebar closed on mobile
+  useEffect(() => {
+    if (isMobile && open) {
+      setOpen(false);
+    }
+  }, [isMobile, open, setOpen]);
 
   useEffect(() => {
     if (isCollapsed) {

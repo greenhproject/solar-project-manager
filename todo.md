@@ -280,3 +280,12 @@
 - [x] Sidebar funciona como overlay en móviles (comportamiento nativo de shadcn/ui)
 - [x] Backdrop incluido por defecto en shadcn/ui Sidebar
 - [ ] Probar en Railway con diferentes dispositivos móviles
+
+
+## Fix defaultOpen No Funciona en Móviles (4 Dic 2025)
+
+- [x] Investigar por qué defaultOpen={!isMobile} no cierra el sidebar (cookie guardaba estado)
+- [x] Implementar estado controlado con open y setOpen
+- [x] Forzar cierre en móviles con useEffect que detecta isMobile
+- [x] Sobrescribir estado guardado en cookies con lógica de useEffect
+- [ ] Probar en Railway después del despliegue (limpiar cache del navegador)
