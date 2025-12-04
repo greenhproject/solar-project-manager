@@ -1,4 +1,4 @@
-import { eq, and, or, desc, asc, sql, gte, lte } from "drizzle-orm";
+import { eq, and, or, desc, asc, sql, gte, lte, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -218,6 +218,27 @@ export async function getProjectsByEngineerId(engineerId: number) {
     .select()
     .from(projects)
     .where(eq(projects.assignedEngineerId, engineerId))
+    .orderBy(desc(projects.createdAt));
+}
+
+export async function getProjectsWithAssignedMilestones(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Obtener IDs de proyectos que tienen hitos asignados al usuario
+  const projectIds = await db
+    .selectDistinct({ projectId: milestones.projectId })
+    .from(milestones)
+    .where(eq(milestones.assignedUserId, userId));
+  
+  if (projectIds.length === 0) return [];
+  
+  // Obtener los proyectos completos
+  const projectIdList = projectIds.map(p => p.projectId);
+  return await db
+    .select()
+    .from(projects)
+    .where(inArray(projects.id, projectIdList))
     .orderBy(desc(projects.createdAt));
 }
 

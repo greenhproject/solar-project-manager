@@ -244,80 +244,102 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             {projectsLoading ? (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
+                  <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>
             ) : projects && projects.length > 0 ? (
-              <div className="space-y-4">
-                {projects.slice(0, 5).map(project => (
-                  <Link key={project.id} href={`/projects/${project.id}`}>
-                    <div className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer">
-                      <div className="flex-shrink-0">
-                        <div className="h-12 w-12 rounded-full bg-gradient-solar flex items-center justify-center">
-                          <Sun className="h-6 w-6 text-white" />
-                        </div>
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold truncate">
-                            {project.name}
-                          </h3>
-                          {getStatusBadge(project.status)}
-                          {isOverdue(
-                            project.estimatedEndDate,
-                            project.status
-                          ) && (
-                            <Badge variant="destructive" className="gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              Retrasado
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          {project.location && (
-                            <span className="truncate">{project.location}</span>
-                          )}
-                          {project.clientName && (
-                            <span className="flex items-center gap-1">
-                              <Users className="h-3 w-3" />
-                              {project.clientName}
+              <div className="rounded-md border">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      <th className="text-left p-3 font-medium">Proyecto</th>
+                      <th className="text-left p-3 font-medium">Cliente</th>
+                      <th className="text-left p-3 font-medium">Estado</th>
+                      <th className="text-left p-3 font-medium">Progreso</th>
+                      <th className="text-left p-3 font-medium">Ubicación</th>
+                      <th className="text-right p-3 font-medium">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projects.slice(0, 10).map(project => (
+                      <tr
+                        key={project.id}
+                        className="border-b hover:bg-muted/50 transition-colors"
+                      >
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-full bg-gradient-solar flex items-center justify-center flex-shrink-0">
+                              <Sun className="h-5 w-5 text-white" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-semibold truncate">
+                                {project.name}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                ID: {project.id}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3 text-muted-foreground" />
+                            <span className="truncate">
+                              {project.clientName || "-"}
                             </span>
-                          )}
-                        </div>
-
-                        {/* Barra de progreso */}
-                        <div className="mt-2">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-muted-foreground">
-                              Progreso
-                            </span>
-                            <span className="font-medium">
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex flex-col gap-1">
+                            {getStatusBadge(project.status)}
+                            {isOverdue(
+                              project.estimatedEndDate,
+                              project.status
+                            ) && (
+                              <Badge
+                                variant="destructive"
+                                className="gap-1 w-fit"
+                              >
+                                <AlertTriangle className="h-3 w-3" />
+                                Retrasado
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[80px]">
+                              <div
+                                className="h-full bg-gradient-solar transition-all"
+                                style={{
+                                  width: `${project.progressPercentage}%`,
+                                }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium min-w-[3ch] text-right">
                               {project.progressPercentage}%
                             </span>
                           </div>
-                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-gradient-solar transition-all"
-                              style={{
-                                width: `${project.progressPercentage}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+                        </td>
+                        <td className="p-3">
+                          <span className="text-sm truncate max-w-[200px] block">
+                            {project.location || "-"}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <Link href={`/projects/${project.id}`}>
+                            <Button size="sm" variant="ghost">
+                              Ver Detalles
+                              <ArrowRight className="h-4 w-4 ml-1" />
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : (
               <div className="text-center py-12">

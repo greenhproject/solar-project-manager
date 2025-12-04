@@ -91,3 +91,15 @@
 - [x] Actualizar estado de autenticación en iframe (reload)
 - [x] Actualizar DashboardLayout y Home para usar handleLogin
 - [ ] Probar en entorno de Wix
+
+
+## Filtro de Proyectos por Hitos Asignados + Vista Tabla (4 Dic 2025)
+
+- [x] Crear helper en db.ts para obtener proyectos con hitos asignados a usuario
+- [x] Modificar procedimiento tRPC getProjects para filtrar según rol
+- [x] Usuarios normales: solo proyectos con hitos asignados
+- [x] Administradores: todos los proyectos
+- [x] Cambiar vista de Dashboard de cards a tabla
+- [x] Agregar columnas: Nombre, Cliente, Estado, Progreso, Ubicación, Acciones
+- [x] Mantener estadísticas en cards arriba de la tabla
+- [x] Probar funcionalidad completa

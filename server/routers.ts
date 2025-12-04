@@ -466,11 +466,12 @@ export const appRouter = router({
   // ============================================
   projects: router({
     list: protectedProcedure.query(async ({ ctx }) => {
-      // Administradores ven todos los proyectos, ingenieros solo los asignados
+      // Administradores ven todos los proyectos
       if (ctx.user.role === "admin") {
         return await db.getAllProjects();
       } else {
-        return await db.getProjectsByEngineerId(ctx.user.id);
+        // Usuarios normales solo ven proyectos donde tienen hitos asignados
+        return await db.getProjectsWithAssignedMilestones(ctx.user.id);
       }
     }),
 
