@@ -215,3 +215,13 @@
 - [x] Corregir envío de Authorization header en requests tRPC (agregado enabled a queries)
 - [x] Agregar loading state mientras Auth0 obtiene el token
 - [ ] Probar autenticación en Railway después del fix
+
+
+## Fix Upload a Biblioteca en Railway (4 Dic 2025)
+
+- [x] Diagnosticar problema de timeout en Cloudinary
+- [x] Sanitizar nombres de archivo (remover caracteres especiales como &)
+- [x] Agregar timeout de 2 minutos para archivos grandes
+- [x] Mejorar logs de error en storage.ts
+- [ ] Agregar validación de tamaño de archivo en frontend (opcional)
+- [ ] Probar upload con archivo PDF grande en Railway

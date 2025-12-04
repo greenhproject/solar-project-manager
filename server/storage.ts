@@ -78,6 +78,18 @@ function normalizeKey(relKey: string): string {
   return relKey.replace(/^\/+/, "");
 }
 
+function sanitizeFileName(fileName: string): string {
+  // Remover o reemplazar caracteres problemáticos para URLs y Cloudinary
+  return fileName
+    .replace(/&/g, 'and')  // & -> and
+    .replace(/#/g, '')     // Remover #
+    .replace(/\?/g, '')    // Remover ?
+    .replace(/\s+/g, '_')  // Espacios -> _
+    .replace(/[<>:"|*]/g, '')  // Remover caracteres inválidos
+    .replace(/\.+/g, '.')  // Múltiples puntos -> un punto
+    .replace(/^\.|\.$/, ''); // Remover puntos al inicio/final
+}
+
 function toFormData(
   data: Buffer | Uint8Array | string,
   contentType: string,
@@ -190,36 +202,45 @@ async function cloudinaryPut(
   }
 
   const folder = 'solar-project-manager';
-  const publicId = `${folder}/${normalizeKey(relKey)}`;
+  const sanitizedKey = sanitizeFileName(normalizeKey(relKey));
+  const publicId = `${folder}/${sanitizedKey}`;
 
   try {
     console.log('[Cloudinary] Uploading file:', {
+      originalKey: relKey,
+      sanitizedKey,
       publicId,
       resourceType,
       contentType,
       size: buffer.length,
     });
 
-    // Upload usando el SDK oficial con signed upload
-    const result = await new Promise<any>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          public_id: publicId,
-          resource_type: resourceType,
-          folder: folder,
-        },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
+    // Upload usando el SDK oficial con signed upload (con timeout de 2 minutos)
+    const result = await Promise.race([
+      new Promise<any>((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            public_id: publicId,
+            resource_type: resourceType,
+            folder: folder,
+            timeout: 120000, // 2 minutos
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
           }
-        }
-      );
+        );
 
-      // Escribir el buffer al stream
-      uploadStream.end(buffer);
-    });
+        // Escribir el buffer al stream
+        uploadStream.end(buffer);
+      }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Upload timeout after 2 minutes')), 120000)
+      )
+    ]);
 
     console.log('[Cloudinary] Upload successful:', {
       url: result.secure_url,
@@ -247,7 +268,8 @@ async function cloudinaryGet(
   const config = getCloudinaryConfig();
   
   const folder = 'solar-project-manager';
-  const publicId = `${folder}/${normalizeKey(relKey)}`;
+  const sanitizedKey = sanitizeFileName(normalizeKey(relKey));
+  const publicId = `${folder}/${sanitizedKey}`;
 
   // Construir URL pública de Cloudinary
   const url = `https://res.cloudinary.com/${config.cloudName}/raw/upload/${publicId}`;
