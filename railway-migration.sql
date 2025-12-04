@@ -2,7 +2,7 @@
 -- Ejecutar este script en la base de datos de Railway
 
 -- 1. Agregar rol ingeniero_tramites si no existe
-ALTER TABLE `user` MODIFY COLUMN `role` ENUM('admin', 'engineer', 'ingeniero_tramites') NOT NULL DEFAULT 'engineer';
+ALTER TABLE `users` MODIFY COLUMN `role` ENUM('admin', 'engineer', 'ingeniero_tramites') NOT NULL DEFAULT 'engineer';
 
 -- 2. Crear tabla cad_templates si no existe
 CREATE TABLE IF NOT EXISTS `cad_templates` (
@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `cad_templates` (
   `uploadedBy` INT NOT NULL,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (`uploadedBy`) REFERENCES `user`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`uploadedBy`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
 -- 3. Crear tabla common_documents si no existe
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS `common_documents` (
   `uploadedBy` INT NOT NULL,
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (`uploadedBy`) REFERENCES `user`(`id`) ON DELETE CASCADE
+  FOREIGN KEY (`uploadedBy`) REFERENCES `users`(`id`) ON DELETE CASCADE
 );
 
 -- 4. Crear tabla project_legalization_checklist si no existe
@@ -77,8 +77,8 @@ CREATE TABLE IF NOT EXISTS `project_legalization_checklist` (
   `createdAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY `unique_project_document` (`projectId`, `documentType`),
-  FOREIGN KEY (`projectId`) REFERENCES `project`(`id`) ON DELETE CASCADE,
-  FOREIGN KEY (`uploadedBy`) REFERENCES `user`(`id`) ON DELETE SET NULL
+  FOREIGN KEY (`projectId`) REFERENCES `projects`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`uploadedBy`) REFERENCES `users`(`id`) ON DELETE SET NULL
 );
 
 -- Verificar que las tablas se crearon correctamente
