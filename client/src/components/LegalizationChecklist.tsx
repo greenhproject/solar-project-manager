@@ -83,7 +83,7 @@ const DOCUMENT_TYPES = [
   },
   {
     value: "matricula_inversor",
-    label: "Matrícula Inversor",
+    label: "Matrícula del Constructor",
     autoLoadable: true,
     libraryType: "matricula_constructor",
   },
@@ -350,7 +350,7 @@ function AutoLoadButton({
           Auto
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Cargar desde Biblioteca</DialogTitle>
           <DialogDescription>
@@ -365,12 +365,17 @@ function AutoLoadButton({
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un documento" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="max-h-[200px]">
                   {commonDocs.map((doc) => (
                     <SelectItem key={doc.id} value={doc.id.toString()}>
-                      {doc.fileName}
-                      {doc.marca && ` - ${doc.marca}`}
-                      {doc.modelo && ` ${doc.modelo}`}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{doc.fileName}</span>
+                        {(doc.marca || doc.modelo) && (
+                          <span className="text-xs text-muted-foreground">
+                            {doc.marca} {doc.modelo}
+                          </span>
+                        )}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -383,13 +388,14 @@ function AutoLoadButton({
             </p>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
             Cancelar
           </Button>
           <Button
             onClick={handleAutoLoad}
             disabled={!selectedDoc || upsertMutation.isPending}
+            className="w-full sm:w-auto"
           >
             {upsertMutation.isPending ? "Cargando..." : "Cargar Documento"}
           </Button>

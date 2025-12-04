@@ -197,3 +197,11 @@
 - [x] Probar página de Trámites sin errores
 - [x] Verificar tab de Plantillas CAD
 - [x] Verificar tab de Documentos Comunes
+
+
+## Correcciones Checklist de Legalización (4 Dic 2025)
+
+- [x] Corregir responsive del modal "Cargar desde Biblioteca" en móviles
+- [x] Cambiar "Matrícula del Inversor" por "Matrícula del Constructor" en checklist
+- [x] Verificar que todos los nombres de documentos sean correctos
+- [x] Probar modal en diferentes tamaños de pantalla
