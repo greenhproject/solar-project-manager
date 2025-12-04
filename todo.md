@@ -243,3 +243,15 @@
 - [x] Actualizar tipo en db.ts updateUserRole (línea 562)
 - [x] Verificar que no haya otros procedimientos con validación de rol
 - [ ] Probar cambio de rol en Railway
+
+
+## Fix Permisos Acceso Proyectos Ingeniero Trámites (4 Dic 2025)
+
+- [x] Diagnosticar por qué projects.getById muestra "Proyecto no encontrado"
+- [x] Comprender que ingeniero_tramites debe acceder solo a proyectos con hitos asignados
+- [x] Revertir cambios de permisos globales (no deben ver todos los proyectos)
+- [x] Crear función userHasAssignedMilestonesInProject en db.ts
+- [x] Actualizar projects.getById para verificar hitos asignados
+- [x] Actualizar projects.update para verificar hitos asignados
+- [x] Actualizar projects.loadMilestonesFromTemplate para verificar hitos asignados
+- [ ] Probar acceso con Santiago Bravo en Railway
