@@ -87,11 +87,18 @@ export default function TramitesYDiseno() {
     potencia: "",
   });
 
-  // Queries
+  // Verificar si Auth0 está listo (si está configurado)
+  const isAuth0Ready = !isUsingAuth0 || (auth0.isAuthenticated && !auth0.isLoading);
+  
+  // Queries - solo ejecutar cuando Auth0 esté listo (si aplica)
   const { data: cadTemplates, isLoading: loadingCAD } =
-    trpc.cadTemplates.list.useQuery(cadFilters);
+    trpc.cadTemplates.list.useQuery(cadFilters, {
+      enabled: isAuth0Ready, // Esperar a que Auth0 termine de cargar
+    });
   const { data: commonDocs, isLoading: loadingDocs } =
-    trpc.commonDocuments.list.useQuery(docFilters);
+    trpc.commonDocuments.list.useQuery(docFilters, {
+      enabled: isAuth0Ready, // Esperar a que Auth0 termine de cargar
+    });
 
   // Mutations
   const deleteCadMutation = trpc.cadTemplates.delete.useMutation({
@@ -114,6 +121,22 @@ export default function TramitesYDiseno() {
     },
   });
 
+  // Mostrar loading mientras Auth0 carga
+  if (isUsingAuth0 && auth0.isLoading) {
+    return (
+      <div className="container py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Cargando...</CardTitle>
+            <CardDescription>
+              Verificando autenticación...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+  
   // Verificar permisos
   if (user?.role !== "admin" && user?.role !== "ingeniero_tramites") {
     return (

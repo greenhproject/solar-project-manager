@@ -205,3 +205,13 @@
 - [x] Cambiar "Matrícula del Inversor" por "Matrícula del Constructor" en checklist
 - [x] Verificar que todos los nombres de documentos sean correctos
 - [x] Probar modal en diferentes tamaños de pantalla
+
+
+## Error Auth0 en Railway (4 Dic 2025)
+
+- [x] Analizar logs de Railway: "Missing Auth0 token" y error 403
+- [x] Revisar cómo TramitesYDiseno.tsx envía el token de Auth0
+- [x] Verificar que useAuth0Custom esté funcionando correctamente
+- [x] Corregir envío de Authorization header en requests tRPC (agregado enabled a queries)
+- [x] Agregar loading state mientras Auth0 obtiene el token
+- [ ] Probar autenticación en Railway después del fix
