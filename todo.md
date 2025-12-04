@@ -188,3 +188,12 @@
 - [x] Probar carga del módulo de Trámites sin errores
 - [x] Verificar checklist de legalización en proyecto
 - [x] Verificar página de Trámites y Diseño
+
+
+## Fix Schema cad_templates (4 Dic 2025)
+- [x] Verificar columnas de tabla SQL cad_templates
+- [x] Comparar con schema Drizzle
+- [x] Corregir discrepancia entre SQL y Drizzle (agregadas columnas: modeloInversor, marcaPaneles, tags)
+- [x] Probar página de Trámites sin errores
+- [x] Verificar tab de Plantillas CAD
+- [x] Verificar tab de Documentos Comunes
