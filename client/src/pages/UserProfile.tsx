@@ -102,10 +102,16 @@ export default function UserProfile() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!isEditing) {
+      return; // No hacer nada si no está en modo edición
+    }
+
     if (!name.trim()) {
       toast.error("El nombre es requerido");
       return;
     }
+
+    console.log('[UserProfile] Submitting profile update:', { name: name.trim(), email: email.trim() });
 
     updateProfile.mutate({
       name: name.trim(),

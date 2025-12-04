@@ -114,9 +114,14 @@ class Auth0Service {
         const role = auth0UserId === ADMIN_SUB ? "admin" : existingUserByEmail.role;
         
         // Usar el openId existente para el upsert, no el nuevo
+        // Solo actualizar nombre si el usuario NO tiene nombre guardado
+        const updatedName = existingUserByEmail.name && existingUserByEmail.name.trim() 
+          ? existingUserByEmail.name 
+          : (name || existingUserByEmail.name);
+        
         await db.upsertUser({
           openId: existingUserByEmail.openId!,
-          name: name || existingUserByEmail.name,
+          name: updatedName,
           email: email,
           role: role,
           lastSignedIn: new Date(),
@@ -164,9 +169,13 @@ class Auth0Service {
       const ADMIN_SUB = "google-oauth2|106723310869919984535";
       const role = auth0UserId === ADMIN_SUB ? "admin" : user.role;
       
+      // Solo actualizar nombre si el usuario NO tiene nombre guardado
+      // Esto permite que los usuarios editen su nombre sin que se sobrescriba
+      const updatedName = user.name && user.name.trim() ? user.name : (name || user.name);
+      
       await db.upsertUser({
         openId: auth0UserId,
-        name: name || user.name,
+        name: updatedName,
         email: email || user.email,
         role: role,
         lastSignedIn: new Date(),

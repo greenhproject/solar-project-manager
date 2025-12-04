@@ -127,3 +127,12 @@
 - [x] Agregar logs para debuggear datos de Auth0
 - [x] Probar que el nombre se guarde correctamente al hacer login
 - [x] Probar flujo completo de edición de perfil
+
+
+## Bug: Nombre se Sobrescribe con Email al Hacer Login (4 Dic 2025)
+
+- [x] Identificar que el problema es en auth0Service.ts
+- [x] El backend sobrescribe el nombre cada vez que el usuario hace login
+- [x] Modificar auth0Service para NO sobrescribir nombre si ya existe
+- [x] Solo actualizar nombre si viene de Auth0 Y el usuario no tiene nombre guardado
+- [x] Probar que el nombre se mantenga después de editarlo
