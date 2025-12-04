@@ -179,3 +179,12 @@
 - [ ] Actualizar documentación del proyecto
 - [ ] Guardar checkpoint versión 3.0
 - [ ] Pushear a GitHub
+
+
+## Fix Migración Base de Datos (4 Dic 2025)
+- [x] Aplicar migración de base de datos con script SQL manual
+- [x] Verificar creación de tablas: cad_templates, common_documents, project_legalization_checklist
+- [x] Reiniciar servidor de desarrollo
+- [x] Probar carga del módulo de Trámites sin errores
+- [x] Verificar checklist de legalización en proyecto
+- [x] Verificar página de Trámites y Diseño
