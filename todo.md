@@ -111,3 +111,10 @@
 - [x] Mostrar cards en móviles (< 768px)
 - [x] Mostrar tabla en desktop (>= 768px)
 - [x] Probar en diferentes tamaños de pantalla
+
+
+## Scroll Horizontal en Tabla para Tablets (4 Dic 2025)
+
+- [x] Envolver tabla en contenedor con overflow-x-auto
+- [x] Agregar min-width a tabla para forzar scroll
+- [x] Probar en tablet que la tabla tenga scroll horizontal

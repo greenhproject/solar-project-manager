@@ -327,9 +327,9 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                // Vista desktop: Tabla
-                <div className="rounded-md border">
-                  <table className="w-full">
+                // Vista desktop: Tabla con scroll horizontal
+                <div className="rounded-md border overflow-x-auto">
+                  <table className="w-full min-w-[900px]">
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="text-left p-3 font-medium">Proyecto</th>
