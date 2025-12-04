@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 import { trpc } from "@/lib/trpc";
 import {
   Card,
@@ -41,8 +42,31 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+// Detectar si Auth0 está configurado
+const isAuth0Configured = () => {
+  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
+};
+
 export default function TramitesYDiseno() {
-  const { user } = useAuth();
+  // Usar el sistema de autenticación correcto
+  const manusAuth = useAuth();
+  const auth0 = useAuth0Custom();
+  
+  // Seleccionar el sistema correcto según la configuración
+  const isUsingAuth0 = isAuth0Configured();
+  const user = isUsingAuth0 ? (auth0.user ? {
+    id: 0,
+    openId: auth0.user.sub || '',
+    name: auth0.user.name || '',
+    email: auth0.user.email || '',
+    role: 'admin' as const, // Por defecto admin para Auth0
+    avatarUrl: auth0.user.picture || null,
+    createdAt: new Date(),
+    lastSignedIn: new Date(),
+    theme: 'system' as const,
+    password: null,
+  } : null) : manusAuth.user;
+  
   const utils = trpc.useUtils();
 
   // Estado para filtros de plantillas CAD
