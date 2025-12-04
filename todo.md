@@ -299,3 +299,11 @@
 - [x] Botón menú abre Sheet con navegación (PanelLeft icon)
 - [x] Agregar perfil de usuario y cerrar sesión en Sheet
 - [ ] Probar en Railway
+
+
+## Fix Sidebar en Página de Detalle de Proyecto (4 Dic 2025)
+
+- [x] Identificar componente/layout usado en /projects/:id (usa MainLayout con Sidebar.tsx)
+- [x] Verificar si usa DashboardLayout o su propio layout (usa MainLayout)
+- [x] Aplicar fix forzando display:none en móviles con style inline
+- [ ] Probar en Railway

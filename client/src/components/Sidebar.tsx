@@ -351,13 +351,14 @@ export function Sidebar({ className }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar - Desktop */}
+      {/* Sidebar - Desktop (hidden on mobile) */}
       <aside
         className={cn(
           "hidden lg:flex lg:flex-col h-screen sticky top-0 transition-all duration-300",
           isCollapsed ? "lg:w-20" : "lg:w-72",
           className
         )}
+        style={{ display: window.innerWidth < 1024 ? 'none' : undefined }}
       >
         {sidebarContent}
       </aside>
