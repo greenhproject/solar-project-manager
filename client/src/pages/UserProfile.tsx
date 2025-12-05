@@ -643,10 +643,16 @@ export default function UserProfile() {
                 className={`px-3 py-1 rounded-full text-xs font-medium ${
                   user.role === "admin"
                     ? "bg-orange-100 text-orange-700"
+                    : user.role === "ingeniero_tramites"
+                    ? "bg-purple-100 text-purple-700"
                     : "bg-blue-100 text-blue-700"
                 }`}
               >
-                {user.role === "admin" ? "Administrador" : "Ingeniero"}
+                {user.role === "admin" 
+                  ? "Administrador" 
+                  : user.role === "ingeniero_tramites"
+                  ? "Ingeniero de Trámites"
+                  : "Ingeniero"}
               </span>
             </div>
 

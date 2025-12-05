@@ -256,25 +256,6 @@ export async function getProjectById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function userHasAssignedMilestonesInProject(
-  userId: number,
-  projectId: number
-): Promise<boolean> {
-  const db = await getDb();
-  if (!db) return false;
-  
-  const result = await db
-    .select({ id: milestones.id })
-    .from(milestones)
-    .where(and(
-      eq(milestones.projectId, projectId),
-      eq(milestones.assignedUserId, userId)
-    ))
-    .limit(1);
-  
-  return result.length > 0;
-}
-
 export async function updateProject(id: number, data: Partial<InsertProject>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

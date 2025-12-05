@@ -210,10 +210,16 @@ export function Sidebar({ className }: SidebarProps) {
                   "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium",
                   user.role === "admin"
                     ? "bg-orange-100 text-orange-700"
+                    : user.role === "ingeniero_tramites"
+                    ? "bg-purple-100 text-purple-700"
                     : "bg-blue-100 text-blue-700"
                 )}
               >
-                {user.role === "admin" ? "Admin" : "Ingeniero"}
+                {user.role === "admin" 
+                  ? "Admin" 
+                  : user.role === "ingeniero_tramites"
+                  ? "Ingeniero de Trámites"
+                  : "Ingeniero"}
               </span>
             </div>
           </button>
@@ -351,14 +357,13 @@ export function Sidebar({ className }: SidebarProps) {
         />
       )}
 
-      {/* Sidebar - Desktop (hidden on mobile) */}
+      {/* Sidebar - Desktop */}
       <aside
         className={cn(
           "hidden lg:flex lg:flex-col h-screen sticky top-0 transition-all duration-300",
           isCollapsed ? "lg:w-20" : "lg:w-72",
           className
         )}
-        style={{ display: window.innerWidth < 1024 ? 'none' : undefined }}
       >
         {sidebarContent}
       </aside>

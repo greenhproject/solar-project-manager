@@ -245,74 +245,10 @@
 - [ ] Probar cambio de rol en Railway
 
 
-## Fix Permisos Acceso Proyectos Ingeniero Trámites (4 Dic 2025)
+## Fix Visualización de Rol en Sidebar (4 Dic 2025)
 
-- [x] Diagnosticar por qué projects.getById muestra "Proyecto no encontrado"
-- [x] Comprender que ingeniero_tramites debe acceder solo a proyectos con hitos asignados
-- [x] Revertir cambios de permisos globales (no deben ver todos los proyectos)
-- [x] Crear función userHasAssignedMilestonesInProject en db.ts
-- [x] Actualizar projects.getById para verificar hitos asignados
-- [x] Actualizar projects.update para verificar hitos asignados
-- [x] Actualizar projects.loadMilestonesFromTemplate para verificar hitos asignados
-- [ ] Probar acceso con Santiago Bravo en Railway
-
-
-## Fix Hitos No Visibles para Usuario Asignado (4 Dic 2025)
-
-- [x] Diagnosticar por qué milestones.getByProject no muestra hitos
-- [x] Revisar validación de permisos en milestones.getByProject
-- [x] Actualizar milestones.getByProject para verificar hitos asignados
-- [x] Actualizar milestones.create para verificar hitos asignados
-- [x] Actualizar milestones.syncToCalendar para verificar hitos asignados
-- [ ] Probar con Santiago Bravo en Railway
-
-
-## Fix Filtrado de Hitos por Usuario (4 Dic 2025)
-
-- [x] Actualizar milestones.getByProject para filtrar solo hitos asignados al usuario
-- [x] Verificar que admin siga viendo todos los hitos (lógica implementada)
-- [ ] Probar con Santiago Bravo en Railway
-
-
-## Fix Responsive Sidebar Móviles (4 Dic 2025)
-
-- [x] Sidebar debe estar cerrado por defecto en móviles (defaultOpen={!isMobile})
-- [x] Sidebar funciona como overlay en móviles (comportamiento nativo de shadcn/ui)
-- [x] Backdrop incluido por defecto en shadcn/ui Sidebar
-- [ ] Probar en Railway con diferentes dispositivos móviles
-
-
-## Fix defaultOpen No Funciona en Móviles (4 Dic 2025)
-
-- [x] Investigar por qué defaultOpen={!isMobile} no cierra el sidebar (cookie guardaba estado)
-- [x] Implementar estado controlado con open y setOpen
-- [x] Forzar cierre en móviles con useEffect que detecta isMobile
-- [x] Sobrescribir estado guardado en cookies con lógica de useEffect
-- [ ] Probar en Railway después del despliegue (limpiar cache del navegador)
-
-
-## Solución Alternativa Sidebar Móviles (4 Dic 2025)
-
-- [x] Ocultar sidebar lateral completamente en móviles (className hidden)
-- [x] Crear Sheet modal para navegación en móviles (SheetContent side=left)
-- [x] Contenido principal a pantalla completa en móviles (SidebarInset sin sidebar)
-- [x] Botón menú abre Sheet con navegación (PanelLeft icon)
-- [x] Agregar perfil de usuario y cerrar sesión en Sheet
-- [ ] Probar en Railway
-
-
-## Fix Sidebar en Página de Detalle de Proyecto (4 Dic 2025)
-
-- [x] Identificar componente/layout usado en /projects/:id (usa MainLayout con Sidebar.tsx)
-- [x] Verificar si usa DashboardLayout o su propio layout (usa MainLayout)
-- [x] Aplicar fix forzando display:none en móviles con style inline
-- [ ] Probar en Railway
-
-
-## Fix Estadísticas Dashboard para Usuarios No-Admin (4 Dic 2025)
-
-- [x] Identificar procedimiento projects.stats en routers.ts (línea 696)
-- [x] Verificar que solo muestra datos para admin (usaba getProjectsByEngineerId)
-- [x] Actualizar para calcular estadísticas de proyectos con hitos asignados (ahora usa getProjectsWithAssignedMilestones)
-- [x] Crear tests para verificar funcionalidad (3/3 pasando)
-- [ ] Probar con Santiago Bravo en Railway (requiere asignarle hitos primero)
+- [x] Identificar código que muestra badge de rol en Sidebar (línea 216)
+- [x] Agregar caso para "ingeniero_tramites" con badge morado
+- [x] Corregir UserProfile.tsx también (línea 649)
+- [x] DashboardLayout no muestra rol, solo Sidebar y UserProfile
+- [ ] Probar en Railway con Santiago Bravo

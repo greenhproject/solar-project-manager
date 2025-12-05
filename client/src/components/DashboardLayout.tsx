@@ -7,12 +7,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -54,7 +48,6 @@ export default function DashboardLayout({
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -97,7 +90,6 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider
-      defaultOpen={!isMobile}
       style={
         {
           "--sidebar-width": `${sidebarWidth}px`,
@@ -122,20 +114,12 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
-  const { state, toggleSidebar, open, setOpen } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = menuItems.find(item => item.path === location);
   const isMobile = useIsMobile();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Force sidebar closed on mobile
-  useEffect(() => {
-    if (isMobile && open) {
-      setOpen(false);
-    }
-  }, [isMobile, open, setOpen]);
 
   useEffect(() => {
     if (isCollapsed) {
@@ -175,7 +159,7 @@ function DashboardLayoutContent({
 
   return (
     <>
-      <div className={`relative ${isMobile ? "hidden" : ""}`} ref={sidebarRef}>
+      <div className="relative" ref={sidebarRef}>
         <Sidebar
           collapsible="icon"
           className="border-r-0"
@@ -268,14 +252,7 @@ function DashboardLayoutContent({
         {isMobile && (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-lg"
-                onClick={() => setMobileMenuOpen(true)}
-              >
-                <PanelLeft className="h-5 w-5" />
-              </Button>
+              <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-1">
                   <span className="tracking-tight text-foreground">
@@ -288,69 +265,6 @@ function DashboardLayoutContent({
         )}
         <main className="flex-1 p-4">{children}</main>
       </SidebarInset>
-
-      {/* Mobile Navigation Sheet */}
-      {isMobile && (
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetContent side="left" className="w-[280px] p-0">
-            <SheetHeader className="h-16 justify-center px-4 border-b">
-              <SheetTitle className="text-left">Navegación</SheetTitle>
-            </SheetHeader>
-            <div className="flex flex-col h-[calc(100%-4rem)]">
-              <div className="flex-1 py-4">
-                {menuItems.map(item => {
-                  const isActive = location === item.path;
-                  return (
-                    <button
-                      key={item.path}
-                      onClick={() => {
-                        setLocation(item.path);
-                        setMobileMenuOpen(false);
-                      }}
-                      className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors ${
-                        isActive
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "hover:bg-accent text-foreground"
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="border-t p-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <Avatar className="h-10 w-10 border">
-                    <AvatarFallback className="text-sm font-medium">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {user?.name || "-"}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {user?.email || "-"}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-destructive hover:text-destructive"
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Cerrar Sesión
-                </Button>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
     </>
   );
 }
