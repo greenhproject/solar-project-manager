@@ -307,3 +307,12 @@
 - [x] Verificar si usa DashboardLayout o su propio layout (usa MainLayout)
 - [x] Aplicar fix forzando display:none en móviles con style inline
 - [ ] Probar en Railway
+
+
+## Fix Estadísticas Dashboard para Usuarios No-Admin (4 Dic 2025)
+
+- [x] Identificar procedimiento projects.stats en routers.ts (línea 696)
+- [x] Verificar que solo muestra datos para admin (usaba getProjectsByEngineerId)
+- [x] Actualizar para calcular estadísticas de proyectos con hitos asignados (ahora usa getProjectsWithAssignedMilestones)
+- [x] Crear tests para verificar funcionalidad (3/3 pasando)
+- [ ] Probar con Santiago Bravo en Railway (requiere asignarle hitos primero)

@@ -698,8 +698,8 @@ export const appRouter = router({
       if (ctx.user.role === "admin") {
         return await db.getProjectStats();
       } else {
-        // Para ingenieros, calcular stats de sus proyectos
-        const projects = await db.getProjectsByEngineerId(ctx.user.id);
+        // Para ingenieros e ingeniero_tramites, calcular stats de proyectos con hitos asignados
+        const projects = await db.getProjectsWithAssignedMilestones(ctx.user.id);
         const now = new Date();
         return {
           total: projects.length,
