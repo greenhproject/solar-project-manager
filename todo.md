@@ -252,3 +252,11 @@
 - [x] Corregir UserProfile.tsx también (línea 649)
 - [x] DashboardLayout no muestra rol, solo Sidebar y UserProfile
 - [ ] Probar en Railway con Santiago Bravo
+
+
+## Fix Permisos de Carga desde OpenSolar (5 Dic 2025)
+
+- [x] Identificar procedimiento que carga datos desde OpenSolar (getProjectData línea 1548)
+- [x] Verificar validación de rol (usaba adminProcedure)
+- [x] Cambiar a protectedProcedure para permitir todos los usuarios autenticados
+- [ ] Probar con usuario ingeniero en Railway

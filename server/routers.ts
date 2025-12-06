@@ -1545,7 +1545,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
     }),
 
     // Obtener datos de proyecto desde OpenSolar para auto-completar formulario
-    getProjectData: adminProcedure
+    getProjectData: protectedProcedure
       .input(z.object({ openSolarId: z.string() }))
       .query(async ({ input }) => {
         const { openSolarClient } = await import('./_core/openSolarClient');
