@@ -21,7 +21,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Search,
+  X,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { Badge } from "@/components/ui/badge";
 
@@ -58,11 +61,24 @@ export default function CalendarView() {
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
+  const [projectSearch, setProjectSearch] = useState<string>("");
 
   const { data: projects, isLoading: projectsLoading } =
     trpc.projects.list.useQuery();
   const { data: allMilestones, isLoading: milestonesLoading } =
     trpc.milestones.getAll.useQuery();
+
+  // Filtrar proyectos por búsqueda
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+    if (!projectSearch) return projects;
+    const search = projectSearch.toLowerCase();
+    return projects.filter(p => 
+      p.name.toLowerCase().includes(search) ||
+      (p.openSolarId && p.openSolarId.toString().includes(search))
+    );
+  }, [projects, projectSearch]);
 
   // Convertir proyectos y hitos a eventos del calendario
   const events: CalendarEvent[] = useMemo(() => {
@@ -71,6 +87,10 @@ export default function CalendarView() {
     // Agregar proyectos como eventos
     if (projects) {
       projects.forEach(project => {
+        // Filtrar por proyecto seleccionado
+        if (projectFilter !== "all" && project.id.toString() !== projectFilter) {
+          return;
+        }
         // Filtrar por estado si es necesario
         if (statusFilter !== "all" && project.status !== statusFilter) {
           return;
@@ -100,6 +120,10 @@ export default function CalendarView() {
     // Agregar hitos como eventos
     if (allMilestones) {
       allMilestones.forEach((milestone: any) => {
+        // Filtrar por proyecto seleccionado
+        if (projectFilter !== "all" && milestone.projectId.toString() !== projectFilter) {
+          return;
+        }
         // Filtrar por estado si es necesario
         if (statusFilter !== "all" && milestone.status !== statusFilter) {
           return;
@@ -130,7 +154,7 @@ export default function CalendarView() {
     }
 
     return calendarEvents;
-  }, [projects, allMilestones, statusFilter]);
+  }, [projects, allMilestones, statusFilter, projectFilter]);
 
   // Manejar clic en evento
   const handleSelectEvent = useCallback(
@@ -280,6 +304,79 @@ export default function CalendarView() {
       {/* Filtros */}
       <Card className="p-4">
         <div className="flex flex-wrap gap-4 items-center">
+          {/* Filtro por Proyecto con búsqueda */}
+          <div className="flex-1 min-w-[300px]">
+            <label className="text-sm font-medium mb-2 block">
+              Buscar Proyecto (nombre o ID OpenSolar)
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nombre o ID..."
+                value={projectSearch}
+                onChange={(e) => setProjectSearch(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {projectSearch && (
+                <button
+                  onClick={() => {
+                    setProjectSearch("");
+                    setProjectFilter("all");
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {/* Lista de proyectos filtrados */}
+            {projectSearch && filteredProjects.length > 0 && (
+              <div className="mt-2 max-h-48 overflow-y-auto border rounded-md bg-background shadow-lg">
+                <button
+                  onClick={() => {
+                    setProjectFilter("all");
+                    setProjectSearch("");
+                  }}
+                  className={`w-full text-left px-3 py-2 hover:bg-accent text-sm ${
+                    projectFilter === "all" ? "bg-accent" : ""
+                  }`}
+                >
+                  Todos los proyectos
+                </button>
+                {filteredProjects.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => {
+                      setProjectFilter(p.id.toString());
+                      setProjectSearch(p.name);
+                    }}
+                    className={`w-full text-left px-3 py-2 hover:bg-accent text-sm border-t ${
+                      projectFilter === p.id.toString() ? "bg-accent" : ""
+                    }`}
+                  >
+                    <div className="font-medium truncate">{p.name}</div>
+                    {p.openSolarId && (
+                      <div className="text-xs text-muted-foreground">
+                        ID OpenSolar: {p.openSolarId}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            {projectFilter !== "all" && (
+              <div className="mt-2">
+                <Badge variant="secondary" className="gap-1">
+                  Filtrado: {projects?.find(p => p.id.toString() === projectFilter)?.name}
+                  <button onClick={() => { setProjectFilter("all"); setProjectSearch(""); }}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              </div>
+            )}
+          </div>
+
+          {/* Filtro por Estado */}
           <div className="flex-1 min-w-[200px]">
             <label className="text-sm font-medium mb-2 block">
               Filtrar por Estado
@@ -355,6 +452,7 @@ export default function CalendarView() {
               events={events}
               startAccessor="start"
               endAccessor="end"
+              allDayAccessor="allDay"
               view={view}
               onView={onView}
               date={date}
