@@ -56,6 +56,76 @@ interface CalendarEvent {
   };
 }
 
+// CustomToolbar movido fuera del componente principal para evitar problemas con hooks
+function CustomToolbar({ 
+  label, 
+  onNavigate, 
+  view, 
+  onView 
+}: any) {
+  return (
+    <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onNavigate("TODAY")}
+        >
+          Hoy
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => onNavigate("PREV")}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => onNavigate("NEXT")}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+        <h2 className="text-lg font-semibold ml-2">
+          {label}
+        </h2>
+      </div>
+
+      <div className="flex gap-1">
+        <Button
+          variant={view === Views.MONTH ? "default" : "outline"}
+          size="sm"
+          onClick={() => onView(Views.MONTH)}
+        >
+          Mes
+        </Button>
+        <Button
+          variant={view === Views.WEEK ? "default" : "outline"}
+          size="sm"
+          onClick={() => onView(Views.WEEK)}
+        >
+          Semana
+        </Button>
+        <Button
+          variant={view === Views.DAY ? "default" : "outline"}
+          size="sm"
+          onClick={() => onView(Views.DAY)}
+        >
+          Día
+        </Button>
+        <Button
+          variant={view === Views.AGENDA ? "default" : "outline"}
+          size="sm"
+          onClick={() => onView(Views.AGENDA)}
+        >
+          Agenda
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function CalendarView() {
   const [, navigate] = useLocation();
   const [view, setView] = useState<View>(Views.MONTH);
@@ -63,6 +133,7 @@ export default function CalendarView() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [projectFilter, setProjectFilter] = useState<string>("all");
   const [projectSearch, setProjectSearch] = useState<string>("");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const { data: projects, isLoading: projectsLoading } =
     trpc.projects.list.useQuery();
@@ -84,40 +155,7 @@ export default function CalendarView() {
   const events: CalendarEvent[] = useMemo(() => {
     const calendarEvents: CalendarEvent[] = [];
 
-    // Agregar proyectos como eventos
-    if (projects) {
-      projects.forEach(project => {
-        // Filtrar por proyecto seleccionado
-        if (projectFilter !== "all" && project.id.toString() !== projectFilter) {
-          return;
-        }
-        // Filtrar por estado si es necesario
-        if (statusFilter !== "all" && project.status !== statusFilter) {
-          return;
-        }
-
-        // Crear fechas sin hora para eventos de todo el día
-        const startDate = new Date(project.startDate);
-        startDate.setHours(0, 0, 0, 0);
-        const endDate = new Date(project.estimatedEndDate);
-        endDate.setHours(23, 59, 59, 999);
-        
-        calendarEvents.push({
-          id: `project-${project.id}`,
-          title: `📁 ${project.name}`,
-          start: startDate,
-          end: endDate,
-          allDay: true,
-          resource: {
-            type: "project",
-            projectId: project.id,
-            status: project.status,
-          },
-        });
-      });
-    }
-
-    // Agregar hitos como eventos
+    // Agregar hitos como eventos (solo hitos, no proyectos completos)
     if (allMilestones) {
       allMilestones.forEach((milestone: any) => {
         // Filtrar por proyecto seleccionado
@@ -129,17 +167,19 @@ export default function CalendarView() {
           return;
         }
 
-        // Crear fechas sin hora para eventos de todo el día
-        const start = new Date(milestone.dueDate);
-        start.setHours(0, 0, 0, 0);
-        const end = milestone.completedDate
-          ? new Date(milestone.completedDate)
-          : new Date(milestone.dueDate);
-        end.setHours(23, 59, 59, 999);
+        // Crear fecha para evento de todo el día
+        const dueDate = new Date(milestone.dueDate);
+        // Normalizar a medianoche local
+        const start = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+        const end = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+        // Buscar nombre del proyecto
+        const project = projects?.find(p => p.id === milestone.projectId);
+        const projectName = project?.name || `Proyecto ${milestone.projectId}`;
 
         calendarEvents.push({
           id: `milestone-${milestone.id}`,
-          title: `🎯 ${milestone.name}`,
+          title: `${projectName}: ${milestone.name}`,
           start: start,
           end: end,
           allDay: true,
@@ -159,44 +199,35 @@ export default function CalendarView() {
   // Manejar clic en evento
   const handleSelectEvent = useCallback(
     (event: CalendarEvent) => {
-      if (event.resource.type === "project") {
-        navigate(`/projects/${event.resource.projectId}`);
-      } else if (event.resource.type === "milestone") {
-        navigate(`/projects/${event.resource.projectId}`);
-      }
+      navigate(`/projects/${event.resource.projectId}`);
     },
     [navigate]
   );
 
-  // Personalizar el estilo de los eventos según el tipo y estado
+  // Personalizar el estilo de los eventos según el estado
   const eventStyleGetter = useCallback((event: CalendarEvent) => {
-    const { type, status } = event.resource;
+    const { status } = event.resource;
 
     let backgroundColor = "#9CA3AF"; // Gris por defecto
     let borderColor = "#6B7280";
 
-    if (type === "project") {
-      backgroundColor = "#FF6B35"; // Naranja para proyectos
-      borderColor = "#F7B32B";
-    } else {
-      // Colores según estado del hito
-      switch (status) {
-        case "completed":
-          backgroundColor = "#10B981"; // Verde
-          borderColor = "#059669";
-          break;
-        case "in_progress":
-          backgroundColor = "#3B82F6"; // Azul
-          borderColor = "#2563EB";
-          break;
-        case "overdue":
-          backgroundColor = "#EF4444"; // Rojo
-          borderColor = "#DC2626";
-          break;
-        default:
-          backgroundColor = "#9CA3AF"; // Gris
-          borderColor = "#6B7280";
-      }
+    // Colores según estado del hito
+    switch (status) {
+      case "completed":
+        backgroundColor = "#10B981"; // Verde
+        borderColor = "#059669";
+        break;
+      case "in_progress":
+        backgroundColor = "#3B82F6"; // Azul
+        borderColor = "#2563EB";
+        break;
+      case "overdue":
+        backgroundColor = "#EF4444"; // Rojo
+        borderColor = "#DC2626";
+        break;
+      default:
+        backgroundColor = "#FF6B35"; // Naranja para pendientes
+        borderColor = "#F7B32B";
     }
 
     return {
@@ -205,13 +236,12 @@ export default function CalendarView() {
         borderColor,
         borderWidth: "2px",
         borderStyle: "solid",
-        borderRadius: "6px",
+        borderRadius: "4px",
         color: "white",
         fontWeight: "500",
-        fontSize: "13px",
-        padding: "4px 8px",
+        fontSize: "12px",
+        padding: "2px 4px",
         cursor: "pointer",
-        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1)",
       },
     };
   }, []);
@@ -225,61 +255,35 @@ export default function CalendarView() {
     setView(newView);
   }, []);
 
-  // Botones de navegación personalizados
-  const CustomToolbar = ({ label, onNavigate }: any) => {
-    return (
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onNavigate("PREV")}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <h2 className="text-xl font-semibold min-w-[200px] text-center">
-            {label}
-          </h2>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onNavigate("NEXT")}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" onClick={() => onNavigate("TODAY")}>
-            Hoy
-          </Button>
-        </div>
+  // Exportar a Excel
+  const handleExport = useCallback(() => {
+    if (events.length === 0) {
+      toast.error("No hay eventos para exportar");
+      return;
+    }
+    try {
+      // Crear fechas de rango para el mes actual
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      exportCalendarToExcel(projects || [], allMilestones || [], startOfMonth, endOfMonth);
+      toast.success("Calendario exportado exitosamente");
+    } catch (error) {
+      toast.error("Error al exportar el calendario");
+    }
+  }, [events, projects, allMilestones, date]);
 
-        <div className="flex gap-2">
-          <Button
-            variant={view === Views.MONTH ? "default" : "outline"}
-            onClick={() => setView(Views.MONTH)}
-          >
-            Mes
-          </Button>
-          <Button
-            variant={view === Views.WEEK ? "default" : "outline"}
-            onClick={() => setView(Views.WEEK)}
-          >
-            Semana
-          </Button>
-          <Button
-            variant={view === Views.DAY ? "default" : "outline"}
-            onClick={() => setView(Views.DAY)}
-          >
-            Día
-          </Button>
-          <Button
-            variant={view === Views.AGENDA ? "default" : "outline"}
-            onClick={() => setView(Views.AGENDA)}
-          >
-            Agenda
-          </Button>
-        </div>
-      </div>
-    );
+  // Seleccionar proyecto del dropdown
+  const handleSelectProject = (projectId: string, projectName: string) => {
+    setProjectFilter(projectId);
+    setProjectSearch(projectName);
+    setShowDropdown(false);
+  };
+
+  // Limpiar filtro
+  const handleClearFilter = () => {
+    setProjectFilter("all");
+    setProjectSearch("");
+    setShowDropdown(false);
   };
 
   if (projectsLoading || milestonesLoading) {
@@ -296,16 +300,16 @@ export default function CalendarView() {
         <div>
           <h1 className="text-3xl font-bold">Calendario de Proyectos</h1>
           <p className="text-muted-foreground mt-1">
-            Vista temporal de proyectos y hitos
+            Vista general de todos los hitos de proyectos
           </p>
         </div>
       </div>
 
       {/* Filtros */}
       <Card className="p-4">
-        <div className="flex flex-wrap gap-4 items-center">
+        <div className="flex flex-wrap gap-4 items-end">
           {/* Filtro por Proyecto con búsqueda */}
-          <div className="flex-1 min-w-[300px]">
+          <div className="flex-1 min-w-[280px] relative">
             <label className="text-sm font-medium mb-2 block">
               Buscar Proyecto (nombre o ID OpenSolar)
             </label>
@@ -314,29 +318,28 @@ export default function CalendarView() {
               <Input
                 placeholder="Buscar por nombre o ID..."
                 value={projectSearch}
-                onChange={(e) => setProjectSearch(e.target.value)}
+                onChange={(e) => {
+                  setProjectSearch(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => setShowDropdown(true)}
                 className="pl-9 pr-9"
               />
               {projectSearch && (
                 <button
-                  onClick={() => {
-                    setProjectSearch("");
-                    setProjectFilter("all");
-                  }}
+                  onClick={handleClearFilter}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
+            
             {/* Lista de proyectos filtrados */}
-            {projectSearch && filteredProjects.length > 0 && (
-              <div className="mt-2 max-h-48 overflow-y-auto border rounded-md bg-background shadow-lg">
+            {showDropdown && projectSearch && filteredProjects.length > 0 && (
+              <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto border rounded-md bg-background shadow-lg">
                 <button
-                  onClick={() => {
-                    setProjectFilter("all");
-                    setProjectSearch("");
-                  }}
+                  onClick={handleClearFilter}
                   className={`w-full text-left px-3 py-2 hover:bg-accent text-sm ${
                     projectFilter === "all" ? "bg-accent" : ""
                   }`}
@@ -346,10 +349,7 @@ export default function CalendarView() {
                 {filteredProjects.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => {
-                      setProjectFilter(p.id.toString());
-                      setProjectSearch(p.name);
-                    }}
+                    onClick={() => handleSelectProject(p.id.toString(), p.name)}
                     className={`w-full text-left px-3 py-2 hover:bg-accent text-sm border-t ${
                       projectFilter === p.id.toString() ? "bg-accent" : ""
                     }`}
@@ -364,11 +364,13 @@ export default function CalendarView() {
                 ))}
               </div>
             )}
+            
+            {/* Badge de proyecto filtrado */}
             {projectFilter !== "all" && (
               <div className="mt-2">
                 <Badge variant="secondary" className="gap-1">
                   Filtrado: {projects?.find(p => p.id.toString() === projectFilter)?.name}
-                  <button onClick={() => { setProjectFilter("all"); setProjectSearch(""); }}>
+                  <button onClick={handleClearFilter}>
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
@@ -377,7 +379,7 @@ export default function CalendarView() {
           </div>
 
           {/* Filtro por Estado */}
-          <div className="flex-1 min-w-[200px]">
+          <div className="min-w-[180px]">
             <label className="text-sm font-medium mb-2 block">
               Filtrar por Estado
             </label>
@@ -387,85 +389,50 @@ export default function CalendarView() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="planning">Planificación</SelectItem>
+                <SelectItem value="pending">Pendiente</SelectItem>
                 <SelectItem value="in_progress">En Progreso</SelectItem>
                 <SelectItem value="completed">Completado</SelectItem>
-                <SelectItem value="on_hold">En Espera</SelectItem>
                 <SelectItem value="overdue">Vencido</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex gap-2 items-end">
-            <Badge
-              variant="outline"
-              className="bg-orange-50 text-orange-700 border-orange-200"
-            >
-              📁 {projects?.length || 0} Proyectos
-            </Badge>
-            <Badge
-              variant="outline"
-              className="bg-blue-50 text-blue-700 border-blue-200"
-            >
-              🎯 {allMilestones?.length || 0} Hitos
-            </Badge>
-            <Button
-              variant="default"
-              onClick={() => {
-                if (projects && allMilestones) {
-                  const startOfMonth = new Date(
-                    date.getFullYear(),
-                    date.getMonth(),
-                    1
-                  );
-                  const endOfMonth = new Date(
-                    date.getFullYear(),
-                    date.getMonth() + 1,
-                    0
-                  );
-                  exportCalendarToExcel(
-                    projects,
-                    allMilestones,
-                    startOfMonth,
-                    endOfMonth
-                  );
-                  toast.success("Calendario exportado a Excel");
-                } else {
-                  toast.error("No hay datos para exportar");
-                }
-              }}
-              className="gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Exportar a Excel
-            </Button>
-          </div>
+          {/* Botón exportar */}
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Exportar
+          </Button>
+        </div>
+
+        {/* Estadísticas */}
+        <div className="flex gap-4 mt-4 text-sm text-muted-foreground">
+          <span>Total: {events.length} hitos</span>
+          {projectFilter !== "all" && (
+            <span>• Proyecto: {projects?.find(p => p.id.toString() === projectFilter)?.name}</span>
+          )}
         </div>
       </Card>
 
       {/* Calendario */}
-      <Card className="p-6">
+      <Card className="p-4">
         {events.length > 0 ? (
-          <div style={{ height: "700px" }}>
+          <div style={{ height: "600px" }}>
             <Calendar
               localizer={localizer}
               events={events}
               startAccessor="start"
               endAccessor="end"
-              allDayAccessor="allDay"
+              allDayAccessor={() => true}
               view={view}
               onView={onView}
               date={date}
               onNavigate={onNavigate}
               onSelectEvent={handleSelectEvent}
               eventPropGetter={eventStyleGetter}
-              // Configuración de horario laboral (8 AM - 5 PM)
-              min={new Date(2024, 0, 1, 8, 0, 0)}
-              max={new Date(2024, 0, 1, 17, 0, 0)}
-              // Mostrar eventos de todo el día
-              showAllEvents={true}
               components={{
-                toolbar: CustomToolbar,
+                toolbar: (props) => (
+                  <CustomToolbar {...props} view={view} onView={onView} />
+                ),
               }}
               messages={{
                 today: "Hoy",
@@ -483,21 +450,9 @@ export default function CalendarView() {
               }}
               formats={{
                 dayHeaderFormat: (date: Date) => moment(date).format("dddd D"),
-                dayRangeHeaderFormat: ({
-                  start,
-                  end,
-                }: {
-                  start: Date;
-                  end: Date;
-                }) =>
+                dayRangeHeaderFormat: ({ start, end }: { start: Date; end: Date }) =>
                   `${moment(start).format("D MMM")} - ${moment(end).format("D MMM YYYY")}`,
-                agendaHeaderFormat: ({
-                  start,
-                  end,
-                }: {
-                  start: Date;
-                  end: Date;
-                }) =>
+                agendaHeaderFormat: ({ start, end }: { start: Date; end: Date }) =>
                   `${moment(start).format("D MMM")} - ${moment(end).format("D MMM YYYY")}`,
               }}
             />
@@ -509,7 +464,10 @@ export default function CalendarView() {
               No hay eventos en el calendario
             </h3>
             <p className="text-muted-foreground">
-              Crea proyectos y agrega hitos para visualizarlos en el calendario
+              {projectFilter !== "all" 
+                ? "No hay hitos para el proyecto seleccionado"
+                : "Crea proyectos y agrega hitos para visualizarlos en el calendario"
+              }
             </p>
           </div>
         )}
@@ -518,41 +476,22 @@ export default function CalendarView() {
       {/* Leyenda */}
       <Card className="p-4">
         <h3 className="font-semibold mb-3">Leyenda</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: "#FF6B35" }}
-            ></div>
-            <span className="text-sm">Proyectos</span>
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#FF6B35" }} />
+            <span className="text-sm">Pendiente</span>
           </div>
           <div className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: "#10B981" }}
-            ></div>
-            <span className="text-sm">Completado</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: "#3B82F6" }}
-            ></div>
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#3B82F6" }} />
             <span className="text-sm">En Progreso</span>
           </div>
           <div className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: "#EF4444" }}
-            ></div>
-            <span className="text-sm">Vencido</span>
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#10B981" }} />
+            <span className="text-sm">Completado</span>
           </div>
           <div className="flex items-center gap-2">
-            <div
-              className="w-4 h-4 rounded"
-              style={{ backgroundColor: "#9CA3AF" }}
-            ></div>
-            <span className="text-sm">Pendiente</span>
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: "#EF4444" }} />
+            <span className="text-sm">Vencido</span>
           </div>
         </div>
       </Card>
