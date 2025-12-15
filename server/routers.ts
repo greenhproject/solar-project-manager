@@ -499,9 +499,16 @@ export const appRouter = router({
           });
         }
 
+        // Permitir acceso si:
+        // 1. Es admin
+        // 2. Es el ingeniero asignado al proyecto
+        // 3. Tiene hitos asignados en el proyecto
+        const hasAssignedMilestones = await db.userHasAssignedMilestones(ctx.user.id, input.id);
+        
         if (
           ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
+          project.assignedEngineerId !== ctx.user.id &&
+          !hasAssignedMilestones
         ) {
           throw new TRPCError({
             code: "FORBIDDEN",
@@ -852,18 +859,22 @@ export const appRouter = router({
           });
         }
 
-        // Verificar permisos
-        if (
-          ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
-        ) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "No tienes permiso para ver estos hitos",
-          });
+        // Admin y el ingeniero asignado al proyecto ven todos los hitos
+        if (ctx.user.role === "admin" || project.assignedEngineerId === ctx.user.id) {
+          return await db.getMilestonesByProjectId(input.projectId);
         }
 
-        return await db.getMilestonesByProjectId(input.projectId);
+        // Usuarios con hitos asignados solo ven sus hitos
+        const hasAssignedMilestones = await db.userHasAssignedMilestones(ctx.user.id, input.projectId);
+        if (hasAssignedMilestones) {
+          return await db.getMilestonesByProjectIdForUser(input.projectId, ctx.user.id);
+        }
+
+        // Sin permisos
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "No tienes permiso para ver estos hitos",
+        });
       }),
 
     create: protectedProcedure
@@ -2065,10 +2076,16 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           });
         }
 
-        // Verificar permisos
+        // Permitir acceso si:
+        // 1. Es admin
+        // 2. Es el ingeniero asignado al proyecto
+        // 3. Tiene hitos asignados en el proyecto
+        const hasAssignedMilestones = await db.userHasAssignedMilestones(ctx.user.id, input.projectId);
+        
         if (
           ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
+          project.assignedEngineerId !== ctx.user.id &&
+          !hasAssignedMilestones
         ) {
           throw new TRPCError({
             code: "FORBIDDEN",
