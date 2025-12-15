@@ -294,3 +294,11 @@
 - [x] Vista mensual como predeterminada (ya estaba configurada)
 - [x] Mejorar visualización cuando hay muchos proyectos (CSS mejorado)
 - [ ] Probar con múltiples proyectos en Railway
+
+
+## Fix Calendario All-Day + Filtro Búsqueda (15 Dic 2025)
+
+- [x] Verificar que eventos all-day funcionen correctamente (agregado allDayAccessor)
+- [x] Agregar filtro combobox con búsqueda por nombre de proyecto
+- [x] Incluir ID de OpenSolar en el filtro para fácil ubicación
+- [ ] Probar en Railway después del despliegue
