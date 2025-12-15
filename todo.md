@@ -260,3 +260,21 @@
 - [x] Verificar validación de rol (usaba adminProcedure)
 - [x] Cambiar a protectedProcedure para permitir todos los usuarios autenticados
 - [ ] Probar con usuario ingeniero en Railway
+
+
+## Fix OAuth en Producción - Usar Auth0 en lugar de Manus (5 Dic 2025)
+
+- [ ] Identificar variables de entorno de OAuth en el código
+- [ ] Verificar qué URLs están hardcodeadas vs configurables
+- [ ] Documentar variables que deben actualizarse en Railway para Auth0
+- [ ] Probar login en Railway con Auth0
+
+
+## Fix Permisos de Proyecto para Usuarios con Hitos Asignados (5 Dic 2025)
+
+- [x] Identificar procedimientos que bloquean acceso (projects.getById, milestones.getByProject, projectUpdates.getByProject)
+- [x] Crear función userHasAssignedMilestones() y getMilestonesByProjectIdForUser() en db.ts
+- [x] Modificar projects.getById para permitir acceso a usuarios con hitos asignados
+- [x] Modificar milestones.getByProject para filtrar hitos según permisos
+- [x] Modificar projectUpdates.getByProject para permitir acceso a usuarios con hitos
+- [ ] Probar con ingeniero_tramites en Railway
