@@ -17,7 +17,7 @@ import UserManagement from "./pages/UserManagement";
 import Settings from "./pages/Settings";
 import Analytics from "./pages/Analytics";
 import GanttChart from "./pages/GanttChart";
-import CalendarPage from "./pages/Calendar";
+import CalendarView from "./pages/CalendarView";
 import AdvancedAnalytics from "./pages/AdvancedAnalytics";
 import Reports from "./pages/Reports";
 import UserProfile from "./pages/UserProfile";
@@ -126,7 +126,7 @@ function Router() {
 
       <Route path="/calendar">
         <MainLayout>
-          <CalendarPage />
+          <CalendarView />
         </MainLayout>
       </Route>
 
