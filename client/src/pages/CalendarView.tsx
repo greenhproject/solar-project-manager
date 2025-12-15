@@ -44,6 +44,7 @@ interface CalendarEvent {
   title: string;
   start: Date;
   end: Date;
+  allDay: boolean;
   resource: {
     type: "project" | "milestone";
     projectId: number;
@@ -75,11 +76,18 @@ export default function CalendarView() {
           return;
         }
 
+        // Crear fechas sin hora para eventos de todo el día
+        const startDate = new Date(project.startDate);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(project.estimatedEndDate);
+        endDate.setHours(23, 59, 59, 999);
+        
         calendarEvents.push({
           id: `project-${project.id}`,
           title: `📁 ${project.name}`,
-          start: new Date(project.startDate),
-          end: new Date(project.estimatedEndDate),
+          start: startDate,
+          end: endDate,
+          allDay: true,
           resource: {
             type: "project",
             projectId: project.id,
@@ -97,16 +105,20 @@ export default function CalendarView() {
           return;
         }
 
+        // Crear fechas sin hora para eventos de todo el día
         const start = new Date(milestone.dueDate);
+        start.setHours(0, 0, 0, 0);
         const end = milestone.completedDate
           ? new Date(milestone.completedDate)
           : new Date(milestone.dueDate);
+        end.setHours(23, 59, 59, 999);
 
         calendarEvents.push({
           id: `milestone-${milestone.id}`,
           title: `🎯 ${milestone.name}`,
           start: start,
           end: end,
+          allDay: true,
           resource: {
             type: "milestone",
             projectId: milestone.projectId,
@@ -349,6 +361,11 @@ export default function CalendarView() {
               onNavigate={onNavigate}
               onSelectEvent={handleSelectEvent}
               eventPropGetter={eventStyleGetter}
+              // Configuración de horario laboral (8 AM - 5 PM)
+              min={new Date(2024, 0, 1, 8, 0, 0)}
+              max={new Date(2024, 0, 1, 17, 0, 0)}
+              // Mostrar eventos de todo el día
+              showAllEvents={true}
               components={{
                 toolbar: CustomToolbar,
               }}
