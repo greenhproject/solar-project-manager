@@ -285,3 +285,12 @@
 - [x] Identificar por qué el formulario se guarda automáticamente (botón dentro de form)
 - [x] Agregar preventDefault y stopPropagation al botón "Editar Perfil"
 - [ ] Probar edición de nombre en perfil en Railway
+
+
+## Mejora Visualización del Calendario (15 Dic 2025)
+
+- [x] Cambiar eventos a "todo el día" (all-day) en lugar de horas específicas
+- [x] Configurar horario laboral de 8:00 AM a 5:00 PM (min/max en Calendar)
+- [x] Vista mensual como predeterminada (ya estaba configurada)
+- [x] Mejorar visualización cuando hay muchos proyectos (CSS mejorado)
+- [ ] Probar con múltiples proyectos en Railway

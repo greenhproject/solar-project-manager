@@ -144,6 +144,45 @@
   background: #f7b32b;
 }
 
+/* Eventos de todo el día */
+.rbc-allday-cell {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.rbc-row-segment {
+  padding: 2px 4px;
+}
+
+.rbc-show-more {
+  background-color: #ff6b35;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rbc-show-more:hover {
+  background-color: #e55a2b;
+}
+
+/* Vista mensual mejorada */
+.rbc-month-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  min-height: 120px;
+}
+
+.rbc-row-content {
+  z-index: 4;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .rbc-header {
