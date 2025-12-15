@@ -309,7 +309,11 @@ export default function UserProfile() {
                 {!isEditing ? (
                   <Button
                     type="button"
-                    onClick={() => setIsEditing(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsEditing(true);
+                    }}
                     className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
                   >
                     Editar Perfil

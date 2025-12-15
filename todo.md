@@ -278,3 +278,10 @@
 - [x] Modificar milestones.getByProject para filtrar hitos según permisos
 - [x] Modificar projectUpdates.getByProject para permitir acceso a usuarios con hitos
 - [ ] Probar con ingeniero_tramites en Railway
+
+
+## Fix Formulario de Edición de Perfil (15 Dic 2025)
+
+- [x] Identificar por qué el formulario se guarda automáticamente (botón dentro de form)
+- [x] Agregar preventDefault y stopPropagation al botón "Editar Perfil"
+- [ ] Probar edición de nombre en perfil en Railway
