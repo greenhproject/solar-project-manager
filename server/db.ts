@@ -384,6 +384,40 @@ export async function getMilestonesByProjectId(projectId: number) {
     .orderBy(asc(milestones.orderIndex));
 }
 
+// Verificar si un usuario tiene hitos asignados en un proyecto específico
+export async function userHasAssignedMilestones(userId: number, projectId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(milestones)
+    .where(
+      and(
+        eq(milestones.projectId, projectId),
+        eq(milestones.assignedUserId, userId)
+      )
+    );
+  
+  return (result[0]?.count ?? 0) > 0;
+}
+
+// Obtener solo los hitos asignados a un usuario en un proyecto
+export async function getMilestonesByProjectIdForUser(projectId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(milestones)
+    .where(
+      and(
+        eq(milestones.projectId, projectId),
+        eq(milestones.assignedUserId, userId)
+      )
+    )
+    .orderBy(asc(milestones.orderIndex));
+}
+
 export async function getAllMilestones() {
   const db = await getDb();
   if (!db) return [];
