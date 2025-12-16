@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 import { trpc } from "@/lib/trpc";
 import {
   Card,
@@ -41,7 +41,7 @@ const projectColors = [
 ];
 
 export default function CalendarPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
   const { data: projects, isLoading: loadingProjects } =
     trpc.projects.list.useQuery();
   const { data: allMilestones, isLoading: loadingMilestones } =
