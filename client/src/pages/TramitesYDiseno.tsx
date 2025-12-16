@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 import { trpc } from "@/lib/trpc";
 import {
