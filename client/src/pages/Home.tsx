@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,7 +31,7 @@ const isManusEnvironment = () => {
 };
 
 export default function Home() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, isLoading: loading, isAuthenticated } = useUnifiedAuth();
   const [, setLocation] = useLocation();
   const useManusAuth = isManusEnvironment();
 
