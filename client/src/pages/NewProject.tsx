@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 
 export default function NewProject() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingFromOpenSolar, setIsLoadingFromOpenSolar] = useState(false);
