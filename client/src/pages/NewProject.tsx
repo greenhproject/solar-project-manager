@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 
 export default function NewProject() {
-  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingFromOpenSolar, setIsLoadingFromOpenSolar] = useState(false);
