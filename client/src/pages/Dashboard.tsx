@@ -27,7 +27,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Dashboard() {
-  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const isMobile = useIsMobile();
   const { data: stats, isLoading: statsLoading } =
     trpc.projects.stats.useQuery();
