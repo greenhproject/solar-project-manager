@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 import { useIsMobile } from "@/hooks/useMobile";
 import { trpc } from "@/lib/trpc";
 import {
@@ -27,7 +27,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Dashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
   const isMobile = useIsMobile();
   const { data: stats, isLoading: statsLoading } =
     trpc.projects.stats.useQuery();
