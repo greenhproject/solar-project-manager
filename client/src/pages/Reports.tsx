@@ -25,7 +25,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Reports() {
-  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const { data: projects } = trpc.projects.list.useQuery();
 
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
