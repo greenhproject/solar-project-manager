@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Reports() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
   const { data: projects } = trpc.projects.list.useQuery();
 
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
