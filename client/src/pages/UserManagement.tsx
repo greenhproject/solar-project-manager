@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 
 const MASTER_EMAIL = "greenhproject@gmail.com";
 
