@@ -41,7 +41,7 @@ const projectColors = [
 ];
 
 export default function CalendarPage() {
-  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const { data: projects, isLoading: loadingProjects } =
     trpc.projects.list.useQuery();
   const { data: allMilestones, isLoading: loadingMilestones } =
