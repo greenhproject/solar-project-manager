@@ -56,7 +56,7 @@ import { FileList } from "@/components/FileList";
 import LegalizationChecklist from "@/components/LegalizationChecklist";
 
 export default function ProjectDetail() {
-  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const [, params] = useRoute("/projects/:id");
   const projectId = params?.id ? parseInt(params.id) : 0;
 
