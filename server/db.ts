@@ -1495,3 +1495,72 @@ export async function initializeProjectLegalizationChecklist(projectId: number) 
     );
   }
 }
+
+
+// Obtener estadísticas de proyectos basadas en los hitos asignados al usuario
+export async function getProjectStatsForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, active: 0, completed: 0, overdue: 0 };
+  
+  const now = new Date();
+  
+  // Obtener todos los hitos asignados al usuario agrupados por proyecto
+  const userMilestones = await db
+    .select({
+      projectId: milestones.projectId,
+      isCompleted: milestones.isCompleted,
+      dueDate: milestones.dueDate,
+    })
+    .from(milestones)
+    .where(eq(milestones.assignedUserId, userId));
+  
+  if (userMilestones.length === 0) {
+    return { total: 0, active: 0, completed: 0, overdue: 0 };
+  }
+  
+  // Agrupar hitos por proyecto
+  const projectMilestones = new Map<number, { total: number; completed: number; hasOverdue: boolean }>();
+  
+  for (const milestone of userMilestones) {
+    const projectId = milestone.projectId;
+    if (!projectMilestones.has(projectId)) {
+      projectMilestones.set(projectId, { total: 0, completed: 0, hasOverdue: false });
+    }
+    
+    const stats = projectMilestones.get(projectId)!;
+    stats.total++;
+    
+    if (milestone.isCompleted) {
+      stats.completed++;
+    } else {
+      // Verificar si está vencido
+      if (milestone.dueDate && new Date(milestone.dueDate) < now) {
+        stats.hasOverdue = true;
+      }
+    }
+  }
+  
+  // Calcular estadísticas finales
+  let total = 0;
+  let active = 0;
+  let completed = 0;
+  let overdue = 0;
+  
+  for (const [_, stats] of projectMilestones) {
+    total++;
+    
+    if (stats.total === stats.completed) {
+      // Todos los hitos del usuario en este proyecto están completados
+      completed++;
+    } else {
+      // Tiene hitos pendientes
+      active++;
+      
+      if (stats.hasOverdue) {
+        overdue++;
+      }
+    }
+  }
+  
+  return { total, active, completed, overdue };
+}
