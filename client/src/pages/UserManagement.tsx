@@ -36,7 +36,7 @@ import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 const MASTER_EMAIL = "greenhproject@gmail.com";
 
 export default function UserManagement() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser } = useUnifiedAuth();
   const { data: users, isLoading, refetch } = trpc.users.list.useQuery();
   const updateRole = trpc.users.updateRole.useMutation();
   const deleteUser = trpc.users.delete.useMutation();
