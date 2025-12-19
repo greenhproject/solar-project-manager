@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/select";
 
 export default function UserProfile() {
-  const { user } = useAuth();
+  const { user } = useUnifiedAuth();
   const utils = trpc.useUtils();
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
