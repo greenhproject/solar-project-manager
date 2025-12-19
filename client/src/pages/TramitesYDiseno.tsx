@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
-import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 import { trpc } from "@/lib/trpc";
 import {
   Card,
@@ -42,30 +41,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Detectar si Auth0 está configurado
-const isAuth0Configured = () => {
-  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
-};
-
 export default function TramitesYDiseno() {
-  // Usar el sistema de autenticación correcto
-  const manusAuth = useAuth();
-  const auth0 = useAuth0Custom();
-  
-  // Seleccionar el sistema correcto según la configuración
-  const isUsingAuth0 = isAuth0Configured();
-  const user = isUsingAuth0 ? (auth0.user ? {
-    id: 0,
-    openId: auth0.user.sub || '',
-    name: auth0.user.name || '',
-    email: auth0.user.email || '',
-    role: 'admin' as const, // Por defecto admin para Auth0
-    avatarUrl: auth0.user.picture || null,
-    createdAt: new Date(),
-    lastSignedIn: new Date(),
-    theme: 'system' as const,
-    password: null,
-  } : null) : manusAuth.user;
+  // Usar el hook unificado de autenticación
+  const { user, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   
   const utils = trpc.useUtils();
 
@@ -87,17 +65,17 @@ export default function TramitesYDiseno() {
     potencia: "",
   });
 
-  // Verificar si Auth0 está listo (si está configurado)
-  const isAuth0Ready = !isUsingAuth0 || (auth0.isAuthenticated && !auth0.isLoading);
+  // Verificar si la autenticación está lista
+  const isAuthReady = isAuthenticated && !authLoading;
   
   // Queries - solo ejecutar cuando Auth0 esté listo (si aplica)
   const { data: cadTemplates, isLoading: loadingCAD } =
     trpc.cadTemplates.list.useQuery(cadFilters, {
-      enabled: isAuth0Ready, // Esperar a que Auth0 termine de cargar
+      enabled: isAuthReady, // Esperar a que la autenticación termine de cargar
     });
   const { data: commonDocs, isLoading: loadingDocs } =
     trpc.commonDocuments.list.useQuery(docFilters, {
-      enabled: isAuth0Ready, // Esperar a que Auth0 termine de cargar
+      enabled: isAuthReady, // Esperar a que la autenticación termine de cargar
     });
 
   // Mutations
@@ -121,8 +99,8 @@ export default function TramitesYDiseno() {
     },
   });
 
-  // Mostrar loading mientras Auth0 carga
-  if (isUsingAuth0 && auth0.isLoading) {
+  // Mostrar loading mientras la autenticación carga
+  if (authLoading) {
     return (
       <div className="container py-8">
         <Card>
