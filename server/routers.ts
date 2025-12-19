@@ -698,20 +698,12 @@ export const appRouter = router({
       if (ctx.user.role === "admin") {
         return await db.getProjectStats();
       } else {
-        // Para usuarios no-admin, calcular stats de proyectos donde tienen hitos asignados
-        const projects = await db.getProjectsWithAssignedMilestones(ctx.user.id);
-        const now = new Date();
-        return {
-          total: projects.length,
-          active: projects.filter(p => p.status === "in_progress").length,
-          completed: projects.filter(p => p.status === "completed").length,
-          overdue: projects.filter(
-            p =>
-              p.status !== "completed" &&
-              p.status !== "cancelled" &&
-              new Date(p.estimatedEndDate) < now
-          ).length
-        };
+        // Para usuarios no-admin, calcular stats basadas en sus hitos asignados
+        // - Total: proyectos donde tiene hitos asignados
+        // - Activos: proyectos donde tiene hitos pendientes
+        // - Completados: proyectos donde completó TODOS sus hitos asignados
+        // - Con retraso: proyectos donde tiene hitos vencidos sin completar
+        return await db.getProjectStatsForUser(ctx.user.id);
       }
     }),
 
