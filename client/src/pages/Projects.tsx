@@ -252,11 +252,11 @@ export default function Projects() {
                                 {project.progressPercentage}%
                               </span>
                             </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-gradient-solar transition-all duration-500 ease-out"
+                                className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500 ease-out"
                                 style={{
-                                  width: `${project.progressPercentage}%`,
+                                  width: `${Math.max(project.progressPercentage || 0, 0)}%`,
                                 }}
                               />
                             </div>
