@@ -1508,7 +1508,7 @@ export async function getProjectStatsForUser(userId: number) {
   const userMilestones = await db
     .select({
       projectId: milestones.projectId,
-      isCompleted: milestones.isCompleted,
+      status: milestones.status,
       dueDate: milestones.dueDate,
     })
     .from(milestones)
@@ -1519,18 +1519,18 @@ export async function getProjectStatsForUser(userId: number) {
   }
   
   // Agrupar hitos por proyecto
-  const projectMilestones = new Map<number, { total: number; completed: number; hasOverdue: boolean }>();
+  const projectMilestonesMap: Record<number, { total: number; completed: number; hasOverdue: boolean }> = {};
   
   for (const milestone of userMilestones) {
     const projectId = milestone.projectId;
-    if (!projectMilestones.has(projectId)) {
-      projectMilestones.set(projectId, { total: 0, completed: 0, hasOverdue: false });
+    if (!projectMilestonesMap[projectId]) {
+      projectMilestonesMap[projectId] = { total: 0, completed: 0, hasOverdue: false };
     }
     
-    const stats = projectMilestones.get(projectId)!;
+    const stats = projectMilestonesMap[projectId];
     stats.total++;
     
-    if (milestone.isCompleted) {
+    if (milestone.status === 'completed') {
       stats.completed++;
     } else {
       // Verificar si está vencido
@@ -1546,7 +1546,8 @@ export async function getProjectStatsForUser(userId: number) {
   let completed = 0;
   let overdue = 0;
   
-  for (const [_, stats] of projectMilestones) {
+  for (const projectId of Object.keys(projectMilestonesMap)) {
+    const stats = projectMilestonesMap[Number(projectId)];
     total++;
     
     if (stats.total === stats.completed) {
