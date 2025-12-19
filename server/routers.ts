@@ -698,8 +698,8 @@ export const appRouter = router({
       if (ctx.user.role === "admin") {
         return await db.getProjectStats();
       } else {
-        // Para ingenieros, calcular stats de sus proyectos
-        const projects = await db.getProjectsByEngineerId(ctx.user.id);
+        // Para usuarios no-admin, calcular stats de proyectos donde tienen hitos asignados
+        const projects = await db.getProjectsWithAssignedMilestones(ctx.user.id);
         const now = new Date();
         return {
           total: projects.length,
@@ -709,8 +709,9 @@ export const appRouter = router({
             p =>
               p.status !== "completed" &&
               p.status !== "cancelled" &&
-              p.estimatedEndDate < now
-          ).length        };
+              new Date(p.estimatedEndDate) < now
+          ).length
+        };
       }
     }),
 
