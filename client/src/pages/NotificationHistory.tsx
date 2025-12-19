@@ -54,7 +54,7 @@ export default function NotificationHistory() {
     "all"
   );
 
-  const { user } = useAuth();
+  const { user } = useUnifiedAuth();
 
   // Obtener todas las notificaciones
   const { data: notifications, isLoading, refetch } =
