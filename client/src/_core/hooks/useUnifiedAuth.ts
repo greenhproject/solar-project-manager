@@ -2,11 +2,15 @@
  * Hook unificado de autenticación
  * 
  * Detecta automáticamente si usar Auth0 o Manus OAuth
- * y proporciona una interfaz consistente para ambos sistemas
+ * y proporciona una interfaz consistente para ambos sistemas.
+ * 
+ * IMPORTANTE: El rol del usuario siempre se obtiene del backend (trpc.auth.me)
+ * para asegurar que refleje el rol real en la base de datos.
  */
 import { useAuth } from "./useAuth";
 import { useAuth0Custom } from "./useAuth0Custom";
 import { useMemo, useCallback } from "react";
+import { trpc } from "@/lib/trpc";
 
 // Detectar si Auth0 está configurado
 const isAuth0Configured = () => {
@@ -33,17 +37,41 @@ export function useUnifiedAuth() {
   // Determinar qué sistema usar
   const isUsingAuth0 = isAuth0Configured();
   
-  // Construir usuario unificado
+  // Obtener el usuario real del backend (incluye el rol correcto de la BD)
+  const { data: backendUser, isLoading: backendLoading } = trpc.auth.me.useQuery(undefined, {
+    // Solo ejecutar si hay alguna forma de autenticación activa
+    enabled: isUsingAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated,
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+  });
+  
+  // Construir usuario unificado - SIEMPRE usar el rol del backend
   const user: UnifiedUser | null = useMemo(() => {
+    // Si tenemos datos del backend, usarlos (tienen el rol correcto)
+    if (backendUser) {
+      return {
+        id: backendUser.id,
+        openId: backendUser.openId,
+        name: backendUser.name || backendUser.email?.split('@')[0] || 'Usuario',
+        email: backendUser.email || '',
+        role: backendUser.role as "admin" | "user" | "engineer" | "ingeniero_tramites",
+        avatarUrl: backendUser.avatarUrl || null,
+        createdAt: new Date(backendUser.createdAt),
+        lastSignedIn: new Date(backendUser.lastSignedIn),
+      };
+    }
+    
+    // Fallback mientras carga el backend
     if (isUsingAuth0) {
-      // Usar Auth0
-      if (!auth0.user) return null;
+      if (!auth0.user || !auth0.isAuthenticated) return null;
+      // Mostrar datos básicos de Auth0 mientras carga el backend
+      // El rol se actualizará cuando llegue la respuesta del backend
       return {
         id: 0,
         openId: auth0.user.sub || '',
         name: auth0.user.name || auth0.user.nickname || auth0.user.email?.split('@')[0] || 'Usuario',
         email: auth0.user.email || '',
-        role: 'admin' as const, // Por defecto admin para Auth0, se puede mejorar con roles de Auth0
+        role: 'user' as const, // Por defecto user hasta que el backend confirme
         avatarUrl: auth0.user.picture || null,
         createdAt: new Date(),
         lastSignedIn: new Date(),
@@ -52,11 +80,13 @@ export function useUnifiedAuth() {
       // Usar Manus Auth
       return manusAuth.user as UnifiedUser | null;
     }
-  }, [isUsingAuth0, auth0.user, manusAuth.user]);
+  }, [isUsingAuth0, auth0.user, auth0.isAuthenticated, manusAuth.user, backendUser]);
   
   // Estado de autenticación unificado
   const isAuthenticated = isUsingAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
-  const isLoading = isUsingAuth0 ? auth0.isLoading : manusAuth.loading;
+  const isLoading = isUsingAuth0 
+    ? (auth0.isLoading || (auth0.isAuthenticated && backendLoading))
+    : manusAuth.loading;
   
   // Función de logout unificada
   const logout = useCallback(() => {
