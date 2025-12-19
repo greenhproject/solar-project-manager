@@ -23,59 +23,25 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Separator } from "./ui/separator";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
+import { useUnifiedAuth } from "@/_core/hooks/useUnifiedAuth";
 import { NotificationBell } from "./NotificationBell";
 
 interface SidebarProps {
   className?: string;
 }
 
-// Detectar si Auth0 está configurado
-const isAuth0Configured = () => {
-  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
-};
-
 export function Sidebar({ className }: SidebarProps) {
   const [location, navigate] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  // Usar el sistema de autenticación correcto
-  const manusAuth = useAuth();
-  const auth0 = useAuth0Custom();
-  
-  // Seleccionar el sistema correcto según la configuración
-  const isUsingAuth0 = isAuth0Configured();
-  const user = isUsingAuth0 ? (auth0.user ? {
-    id: 0,
-    openId: auth0.user.sub || '',
-    name: auth0.user.name || '',
-    email: auth0.user.email || '',
-    role: 'admin' as const, // Por defecto admin para Auth0
-    avatarUrl: auth0.user.picture || null,
-    createdAt: new Date(),
-    lastSignedIn: new Date(),
-    theme: 'system' as const,
-    password: null,
-    notifyMilestoneDueSoon: true,
-    notifyMilestoneOverdue: true,
-    notifyProjectCompleted: true,
-    notifyProjectAssigned: true,
-    notificationDaysInAdvance: 2,
-  } : null) : manusAuth.user;
-  
-  const isAuthenticated = isUsingAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
+  // Usar el hook unificado que obtiene el nombre actualizado del backend
+  const { user, isAuthenticated, logout } = useUnifiedAuth();
 
   const handleLogout = () => {
     toast.success("Cerrando sesión...");
-    if (isUsingAuth0) {
-      auth0.logout();
-    } else {
-      manusAuth.logout();
-    }
+    logout();
   };
 
   const menuItems = [
