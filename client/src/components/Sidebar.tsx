@@ -17,6 +17,7 @@ import {
   Calendar,
   TrendingUp,
   FileText,
+  Clock,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -82,7 +83,7 @@ export function Sidebar({ className }: SidebarProps) {
       roles: ["admin", "engineer"],
     },
     {
-      icon: Bell,
+      icon: Clock,
       label: "Recordatorios",
       href: "/reminders",
       roles: ["admin", "engineer"],
