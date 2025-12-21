@@ -260,9 +260,14 @@ export async function calculateDashboardStats() {
   const completedMilestones = milestones.filter(
     (m: any) => m.status === "completed"
   ).length;
-  const overdueMilestones = milestones.filter(
-    (m: any) => m.status === "overdue"
-  ).length;
+  
+  // Calcular hitos vencidos: pendientes con fecha de vencimiento pasada
+  const now = new Date();
+  const overdueMilestones = milestones.filter((m: any) => {
+    if (m.status === "completed") return false;
+    const dueDate = new Date(m.dueDate);
+    return dueDate < now;
+  }).length;
 
   const averageProgress =
     projects.length > 0
