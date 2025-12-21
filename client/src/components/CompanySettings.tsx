@@ -76,8 +76,20 @@ export function CompanySettings() {
     onSuccess: (data) => {
       setLogoUrl(data.logoUrl);
       setLogoKey(data.logoKey);
-      setHasChanges(true);
-      toast.success("Logo subido exitosamente");
+      
+      // Guardar automáticamente la configuración con el nuevo logo
+      updateSettings.mutate({
+        companyName: companyName || settings?.companyName || "Mi Empresa",
+        address,
+        nit,
+        website,
+        phone,
+        email,
+        logoUrl: data.logoUrl,
+        logoKey: data.logoKey,
+      });
+      
+      toast.success("Logo subido y guardado exitosamente");
     },
     onError: (error) => {
       toast.error(error.message);
