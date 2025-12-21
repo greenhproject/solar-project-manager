@@ -24,6 +24,8 @@ import {
   cadTemplates,
   commonDocuments,
   projectLegalizationChecklist,
+  companySettings,
+  InsertCompanySettings,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -1564,4 +1566,47 @@ export async function getProjectStatsForUser(userId: number) {
   }
   
   return { total, active, completed, overdue };
+}
+
+
+// ============================================
+// CONFIGURACIÓN DE EMPRESA
+// ============================================
+
+export async function getCompanySettings() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(companySettings).limit(1);
+  return result[0] || null;
+}
+
+export async function upsertCompanySettings(data: Partial<InsertCompanySettings> & { updatedBy: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getCompanySettings();
+  
+  if (existing) {
+    await db.update(companySettings)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(companySettings.id, existing.id));
+    return { ...existing, ...data };
+  } else {
+    const result = await db.insert(companySettings).values({
+      companyName: data.companyName || "Mi Empresa",
+      address: data.address,
+      nit: data.nit,
+      website: data.website,
+      phone: data.phone,
+      email: data.email,
+      logoUrl: data.logoUrl,
+      logoKey: data.logoKey,
+      updatedBy: data.updatedBy,
+    });
+    return { id: Number(result[0].insertId), ...data };
+  }
 }
