@@ -252,3 +252,63 @@
 - [x] Corregir UserProfile.tsx también (línea 649)
 - [x] DashboardLayout no muestra rol, solo Sidebar y UserProfile
 - [ ] Probar en Railway con Santiago Bravo
+
+
+## Fix Permisos de Carga desde OpenSolar (5 Dic 2025)
+
+- [x] Identificar procedimiento que carga datos desde OpenSolar (getProjectData línea 1548)
+- [x] Verificar validación de rol (usaba adminProcedure)
+- [x] Cambiar a protectedProcedure para permitir todos los usuarios autenticados
+- [ ] Probar con usuario ingeniero en Railway
+
+
+## Fix OAuth en Producción - Usar Auth0 en lugar de Manus (5 Dic 2025)
+
+- [ ] Identificar variables de entorno de OAuth en el código
+- [ ] Verificar qué URLs están hardcodeadas vs configurables
+- [ ] Documentar variables que deben actualizarse en Railway para Auth0
+- [ ] Probar login en Railway con Auth0
+
+
+## Fix Permisos de Proyecto para Usuarios con Hitos Asignados (5 Dic 2025)
+
+- [x] Identificar procedimientos que bloquean acceso (projects.getById, milestones.getByProject, projectUpdates.getByProject)
+- [x] Crear función userHasAssignedMilestones() y getMilestonesByProjectIdForUser() en db.ts
+- [x] Modificar projects.getById para permitir acceso a usuarios con hitos asignados
+- [x] Modificar milestones.getByProject para filtrar hitos según permisos
+- [x] Modificar projectUpdates.getByProject para permitir acceso a usuarios con hitos
+- [ ] Probar con ingeniero_tramites en Railway
+
+
+## Fix Formulario de Edición de Perfil (15 Dic 2025)
+
+- [x] Identificar por qué el formulario se guarda automáticamente (botón dentro de form)
+- [x] Agregar preventDefault y stopPropagation al botón "Editar Perfil"
+- [ ] Probar edición de nombre en perfil en Railway
+
+
+## Mejora Visualización del Calendario (15 Dic 2025)
+
+- [x] Cambiar eventos a "todo el día" (all-day) en lugar de horas específicas
+- [x] Configurar horario laboral de 8:00 AM a 5:00 PM (min/max en Calendar)
+- [x] Vista mensual como predeterminada (ya estaba configurada)
+- [x] Mejorar visualización cuando hay muchos proyectos (CSS mejorado)
+- [ ] Probar con múltiples proyectos en Railway
+
+
+## Fix Calendario All-Day + Filtro Búsqueda (15 Dic 2025)
+
+- [x] Verificar que eventos all-day funcionen correctamente (agregado allDayAccessor)
+- [x] Agregar filtro combobox con búsqueda por nombre de proyecto
+- [x] Incluir ID de OpenSolar en el filtro para fácil ubicación
+- [ ] Probar en Railway después del despliegue
+
+
+## Pre-asignación de Responsables en Plantillas de Hitos (21 Dic 2025)
+
+- [x] Agregar campo defaultAssignedUserId a tabla milestone_templates
+- [x] Aplicar migración de base de datos
+- [x] Actualizar procedimientos tRPC para manejar responsable por defecto
+- [x] Agregar dropdown de usuarios en UI de plantillas (Settings.tsx)
+- [x] Modificar loadMilestonesFromTemplate para asignar responsable automáticamente
+- [ ] Probar funcionalidad completa en Railway
