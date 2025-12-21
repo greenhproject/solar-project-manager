@@ -22,13 +22,32 @@ async function getCompanyData(): Promise<CompanySettings | null> {
 }
 
 /**
+ * Carga una imagen desde URL y la convierte a base64
+ */
+async function loadImageAsBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString('base64');
+    const contentType = response.headers.get('content-type') || 'image/png';
+    return `data:${contentType};base64,${base64}`;
+  } catch (error) {
+    console.warn('Error cargando imagen:', error);
+    return null;
+  }
+}
+
+/**
  * Dibuja el encabezado del reporte con datos de la empresa
  */
-function drawCompanyHeader(
+async function drawCompanyHeader(
   doc: jsPDF,
   company: CompanySettings | null,
-  yStart: number
-): number {
+  yStart: number,
+  logoBase64: string | null
+): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 20;
   let yPos = yStart;
@@ -38,10 +57,21 @@ function drawCompanyHeader(
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, pageWidth, 45, "F");
 
-    // Logo placeholder (si existe logoUrl, se mostraría aquí)
-    // jsPDF no soporta cargar imágenes desde URL directamente sin fetch previo
-    // Por ahora mostramos un placeholder con la inicial
-    if (company.companyName) {
+    // Logo de la empresa
+    if (logoBase64) {
+      try {
+        doc.addImage(logoBase64, 'PNG', margin, 10, 24, 24);
+      } catch (error) {
+        // Si falla, mostrar placeholder
+        doc.setFillColor(255, 107, 53);
+        doc.circle(margin + 12, 22, 12, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(company.companyName?.charAt(0).toUpperCase() || 'E', margin + 8, 26);
+      }
+    } else if (company.companyName) {
+      // Placeholder con inicial si no hay logo
       doc.setFillColor(255, 107, 53);
       doc.circle(margin + 12, 22, 12, "F");
       doc.setTextColor(255, 255, 255);
@@ -131,6 +161,12 @@ export async function generateProjectReport(
 
   // Obtener datos de la empresa
   const company = await getCompanyData();
+  
+  // Cargar logo si existe
+  let logoBase64: string | null = null;
+  if (company?.logoUrl) {
+    logoBase64 = await loadImageAsBase64(company.logoUrl);
+  }
 
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -138,7 +174,7 @@ export async function generateProjectReport(
   const margin = 20;
 
   // Dibujar header con datos de empresa
-  let yPos = drawCompanyHeader(doc, company, margin);
+  let yPos = await drawCompanyHeader(doc, company, margin, logoBase64);
 
   // Helper para agregar nueva página si es necesario
   const checkPageBreak = (requiredSpace: number) => {
@@ -342,12 +378,23 @@ export async function generateProjectReport(
     doc.setFont("helvetica", "normal");
 
     milestones.forEach((milestone, index) => {
-      checkPageBreak(25);
+      // Calcular espacio necesario basado en si tiene notas/observaciones
+      const hasNotes = milestone.notes || milestone.observations;
+      const baseHeight = 22;
+      let extraHeight = 0;
+      
+      if (hasNotes) {
+        const notesText = milestone.notes || milestone.observations || '';
+        const notesLines = doc.splitTextToSize(notesText, pageWidth - 2 * margin - 30);
+        extraHeight = notesLines.length * 4 + 6;
+      }
+      
+      checkPageBreak(baseHeight + extraHeight);
 
       // Fondo alternado
       if (index % 2 === 0) {
         doc.setFillColor(250, 250, 250);
-        doc.rect(margin, yPos - 4, pageWidth - 2 * margin, 20, "F");
+        doc.rect(margin, yPos - 4, pageWidth - 2 * margin, baseHeight + extraHeight - 2, "F");
       }
 
       // Checkbox
@@ -408,12 +455,30 @@ export async function generateProjectReport(
       const dateText = `Vence: ${new Date(milestone.dueDate).toLocaleDateString("es")}`;
       doc.text(dateText, checkboxX + 10, yPos + 8);
 
+      let currentY = yPos + 13;
+      
       if (milestone.completedDate) {
         const completedText = `Completado: ${new Date(milestone.completedDate).toLocaleDateString("es")}`;
-        doc.text(completedText, checkboxX + 10, yPos + 13);
+        doc.text(completedText, checkboxX + 10, currentY);
+        currentY += 5;
       }
 
-      yPos += 22;
+      // Mostrar notas/comentarios si existen
+      if (hasNotes) {
+        const notesText = milestone.notes || milestone.observations || '';
+        doc.setFontSize(7);
+        doc.setTextColor(80, 80, 80);
+        doc.setFont("helvetica", "italic");
+        
+        // Icono de comentario (texto simple)
+        doc.text("💬", checkboxX + 10, currentY);
+        
+        // Texto del comentario
+        const notesLines = doc.splitTextToSize(notesText, pageWidth - 2 * margin - 40);
+        doc.text(notesLines, checkboxX + 18, currentY);
+      }
+
+      yPos += baseHeight + extraHeight;
     });
   } else {
     doc.setTextColor(150, 150, 150);
