@@ -16,6 +16,7 @@ export interface ProjectTypeMetric {
   count: number;
   averageDurationDays: number;
   completionRate: number;
+  averageProgress: number;
 }
 
 export interface PredictionResult {
@@ -143,11 +144,22 @@ export async function calculateProjectTypeMetrics(): Promise<
         ? Math.round((completedCount / typeProjects.length) * 100)
         : 0;
 
+    // Calcular progreso promedio de todos los proyectos del tipo
+    const totalProgress = typeProjects.reduce(
+      (sum: number, p: any) => sum + (p.progressPercentage || 0),
+      0
+    );
+    const averageProgress =
+      typeProjects.length > 0
+        ? Math.round(totalProgress / typeProjects.length)
+        : 0;
+
     metrics.push({
       projectTypeName: type.name,
       count: typeProjects.length,
       averageDurationDays: averageDuration,
       completionRate,
+      averageProgress,
     });
   }
 
