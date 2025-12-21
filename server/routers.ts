@@ -752,6 +752,7 @@ export const appRouter = router({
             dueDate: new Date(project.startDate.getTime() + (template.estimatedDurationDays || 0) * 24 * 60 * 60 * 1000),
             orderIndex: template.orderIndex,
             status: "pending",
+            assignedUserId: template.defaultAssignedUserId || null,
           });
           createdCount++;
         }
@@ -793,6 +794,7 @@ export const appRouter = router({
           description: z.string().optional(),
           orderIndex: z.number(),
           estimatedDurationDays: z.number().default(7),
+          defaultAssignedUserId: z.number().nullable().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -807,6 +809,7 @@ export const appRouter = router({
           description: z.string().optional(),
           orderIndex: z.number().optional(),
           estimatedDurationDays: z.number().optional(),
+          defaultAssignedUserId: z.number().nullable().optional(),
           isActive: z.boolean().optional(),
         })
       )
