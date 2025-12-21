@@ -1,11 +1,123 @@
 import { jsPDF } from "jspdf";
-import type { Project, Milestone } from "../drizzle/schema";
+import type { Project, Milestone, CompanySettings } from "../drizzle/schema";
+import * as db from "./db";
 
 interface ProjectReportData {
   project: Project;
   milestones: Milestone[];
   projectType?: { name: string; color: string | null };
   assignedEngineer?: { name: string | null; email: string | null };
+}
+
+/**
+ * Obtiene los datos de la empresa para el encabezado de reportes
+ */
+async function getCompanyData(): Promise<CompanySettings | null> {
+  try {
+    return await db.getCompanySettings();
+  } catch (error) {
+    console.warn("No se pudieron obtener los datos de la empresa:", error);
+    return null;
+  }
+}
+
+/**
+ * Dibuja el encabezado del reporte con datos de la empresa
+ */
+function drawCompanyHeader(
+  doc: jsPDF,
+  company: CompanySettings | null,
+  yStart: number
+): number {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 20;
+  let yPos = yStart;
+
+  if (company) {
+    // Fondo del header
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageWidth, 45, "F");
+
+    // Logo placeholder (si existe logoUrl, se mostraría aquí)
+    // jsPDF no soporta cargar imágenes desde URL directamente sin fetch previo
+    // Por ahora mostramos un placeholder con la inicial
+    if (company.companyName) {
+      doc.setFillColor(255, 107, 53);
+      doc.circle(margin + 12, 22, 12, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(company.companyName.charAt(0).toUpperCase(), margin + 8, 26);
+    }
+
+    // Nombre de la empresa
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text(company.companyName, margin + 30, 18);
+
+    // Información adicional
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 100, 100);
+
+    let infoY = 24;
+    const infoX = margin + 30;
+
+    if (company.nit) {
+      doc.text(`NIT: ${company.nit}`, infoX, infoY);
+      infoY += 4;
+    }
+
+    if (company.address) {
+      const addressLines = doc.splitTextToSize(company.address, 100);
+      doc.text(addressLines[0], infoX, infoY);
+      infoY += 4;
+    }
+
+    // Contacto en la parte derecha
+    const rightX = pageWidth - margin;
+    let rightY = 14;
+
+    if (company.phone) {
+      doc.text(company.phone, rightX, rightY, { align: "right" });
+      rightY += 4;
+    }
+
+    if (company.email) {
+      doc.text(company.email, rightX, rightY, { align: "right" });
+      rightY += 4;
+    }
+
+    if (company.website) {
+      doc.setTextColor(255, 107, 53);
+      doc.text(company.website, rightX, rightY, { align: "right" });
+    }
+
+    // Línea separadora
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.5);
+    doc.line(margin, 40, pageWidth - margin, 40);
+
+    yPos = 50;
+  } else {
+    // Header por defecto sin datos de empresa
+    doc.setFillColor(255, 107, 53);
+    doc.rect(0, 0, pageWidth, 40, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("Reporte Ejecutivo", margin, 25);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text("Proyecto Solar", margin, 33);
+
+    yPos = 55;
+  }
+
+  return yPos;
 }
 
 /**
@@ -17,11 +129,16 @@ export async function generateProjectReport(
 ): Promise<Buffer> {
   const { project, milestones, projectType, assignedEngineer } = data;
 
+  // Obtener datos de la empresa
+  const company = await getCompanyData();
+
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
-  let yPos = margin;
+
+  // Dibujar header con datos de empresa
+  let yPos = drawCompanyHeader(doc, company, margin);
 
   // Helper para agregar nueva página si es necesario
   const checkPageBreak = (requiredSpace: number) => {
@@ -34,21 +151,19 @@ export async function generateProjectReport(
   };
 
   // ============================================
-  // HEADER
+  // TÍTULO DEL REPORTE
   // ============================================
-  doc.setFillColor(255, 107, 53); // Color naranja solar
-  doc.rect(0, 0, pageWidth, 40, "F");
+  if (company) {
+    doc.setFillColor(255, 107, 53);
+    doc.rect(margin, yPos, pageWidth - 2 * margin, 25, "F");
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.setFont("helvetica", "bold");
-  doc.text("Reporte Ejecutivo", margin, 25);
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Reporte Ejecutivo de Proyecto", margin + 10, yPos + 16);
 
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  doc.text("Proyecto Solar", margin, 33);
-
-  yPos = 55;
+    yPos += 35;
+  }
 
   // ============================================
   // INFORMACIÓN DEL PROYECTO
@@ -176,6 +291,7 @@ export async function generateProjectReport(
 
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
   doc.text("Progreso General", margin + 10, yPos + 12);
 
   doc.setFontSize(32);
@@ -272,7 +388,7 @@ export async function generateProjectReport(
       // Estado
       doc.setFontSize(8);
       const statusX = pageWidth - margin - 40;
-      const statusMap: Record<
+      const milestoneStatusMap: Record<
         string,
         { label: string; color: [number, number, number] }
       > = {
@@ -281,7 +397,7 @@ export async function generateProjectReport(
         completed: { label: "Completado", color: [21, 184, 105] },
         overdue: { label: "Vencido", color: [244, 67, 54] },
       };
-      const status = statusMap[milestone.status] || statusMap.pending;
+      const status = milestoneStatusMap[milestone.status] || milestoneStatusMap.pending;
       doc.setTextColor(...status.color);
       doc.text(status.label, statusX, yPos + 2);
 
@@ -377,7 +493,10 @@ export async function generateProjectReport(
     doc.setTextColor(150, 150, 150);
     doc.setFont("helvetica", "normal");
 
-    const footerText = `Solar Project Manager - GreenH | Generado el ${new Date().toLocaleDateString("es")}`;
+    // Footer con datos de empresa si existen
+    const footerText = company
+      ? `${company.companyName}${company.website ? ` | ${company.website}` : ""} | Generado el ${new Date().toLocaleDateString("es")}`
+      : `Solar Project Manager - GreenH | Generado el ${new Date().toLocaleDateString("es")}`;
     doc.text(footerText, margin, pageHeight - 10);
 
     const pageText = `Página ${i} de ${totalPages}`;
