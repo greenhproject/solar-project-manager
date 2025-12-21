@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { Plus, Edit, Trash2, FolderKanban, ListTodo, Building2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CompanySettings } from "./CompanySettings";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export function SystemConfiguration() {
   const utils = trpc.useUtils();
