@@ -45,12 +45,14 @@ export function SystemConfiguration() {
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateOrder, setTemplateOrder] = useState(1);
   const [templateDuration, setTemplateDuration] = useState(7);
+  const [templateDefaultAssignedUserId, setTemplateDefaultAssignedUserId] = useState<number | null>(null);
 
   // Queries
   const { data: projectTypes = [], isLoading: loadingTypes } =
     trpc.projectTypes.list.useQuery();
   const { data: milestoneTemplates = [], isLoading: loadingTemplates } =
     trpc.milestoneTemplates.list.useQuery();
+  const { data: users = [] } = trpc.users.list.useQuery();
 
   // Mutations para tipos de proyectos
   const createProjectType = trpc.projectTypes.create.useMutation({
@@ -128,6 +130,7 @@ export function SystemConfiguration() {
     setTemplateDescription("");
     setTemplateOrder(1);
     setTemplateDuration(7);
+    setTemplateDefaultAssignedUserId(null);
   };
 
   const handleSaveProjectType = () => {
@@ -176,6 +179,7 @@ export function SystemConfiguration() {
         description: templateDescription,
         orderIndex: templateOrder,
         estimatedDurationDays: templateDuration,
+        defaultAssignedUserId: templateDefaultAssignedUserId,
       });
     } else {
       createTemplate.mutate({
@@ -184,6 +188,7 @@ export function SystemConfiguration() {
         description: templateDescription,
         orderIndex: templateOrder,
         estimatedDurationDays: templateDuration,
+        defaultAssignedUserId: templateDefaultAssignedUserId,
       });
     }
   };
@@ -195,6 +200,7 @@ export function SystemConfiguration() {
     setTemplateDescription(template.description || "");
     setTemplateOrder(template.orderIndex);
     setTemplateDuration(template.estimatedDurationDays || 7);
+    setTemplateDefaultAssignedUserId(template.defaultAssignedUserId || null);
     setTemplateDialog(true);
   };
 
@@ -427,6 +433,28 @@ export function SystemConfiguration() {
                           placeholder="Describe este hito..."
                           rows={3}
                         />
+                      </div>
+                      <div>
+                        <Label htmlFor="t-assigned-user">Responsable por Defecto (Opcional)</Label>
+                        <select
+                          id="t-assigned-user"
+                          className="w-full p-2 border rounded-md"
+                          value={templateDefaultAssignedUserId || "none"}
+                          onChange={e => {
+                            const value = e.target.value;
+                            setTemplateDefaultAssignedUserId(value === "none" ? null : Number(value));
+                          }}
+                        >
+                          <option value="none">Sin asignar</option>
+                          {users.map((user: any) => (
+                            <option key={user.id} value={user.id}>
+                              {user.name} ({user.role === "admin" ? "Admin" : user.role === "ingeniero_tramites" ? "Ing. Trámites" : "Ingeniero"})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Al cargar hitos desde esta plantilla, se asignará automáticamente este responsable
+                        </p>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
