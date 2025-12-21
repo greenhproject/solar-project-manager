@@ -21,11 +21,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, FolderKanban, ListTodo } from "lucide-react";
+import { Plus, Edit, Trash2, FolderKanban, ListTodo, Building2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CompanySettings } from "./CompanySettings";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function SystemConfiguration() {
   const utils = trpc.useUtils();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   // Estados para tipos de proyectos
   const [projectTypeDialog, setProjectTypeDialog] = useState(false);
@@ -217,7 +221,7 @@ export function SystemConfiguration() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="project-types" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
           <TabsTrigger value="project-types">
             <FolderKanban className="w-4 h-4 mr-2" />
             Tipos de Proyectos
@@ -226,6 +230,12 @@ export function SystemConfiguration() {
             <ListTodo className="w-4 h-4 mr-2" />
             Plantillas de Hitos
           </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="company">
+              <Building2 className="w-4 h-4 mr-2" />
+              Empresa
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="project-types" className="space-y-4">
@@ -568,6 +578,13 @@ export function SystemConfiguration() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Tab de Configuración de Empresa (solo admin) */}
+        {isAdmin && (
+          <TabsContent value="company" className="space-y-4">
+            <CompanySettings />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
