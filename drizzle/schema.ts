@@ -110,6 +110,7 @@ export const milestoneTemplates = mysqlTable("milestone_templates", {
   description: text("description"),
   orderIndex: int("orderIndex").notNull(), // Orden de aparición
   estimatedDurationDays: int("estimatedDurationDays").default(7),
+  defaultAssignedUserId: int("defaultAssignedUserId"), // Responsable por defecto
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
