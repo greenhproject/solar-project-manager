@@ -167,11 +167,12 @@ export async function calculateProjectTypeMetrics(): Promise<
 }
 
 /**
- * Predecir fechas de finalización usando datos históricos
+ * Predecir fechas de finalización usando progreso actual y datos históricos
  */
 export async function predictProjectCompletion(): Promise<PredictionResult[]> {
   const activeProjects = await db.getActiveProjects();
   const allProjects = await db.getAllProjects();
+  const projectTypes = await db.getAllProjectTypes();
   const predictions: PredictionResult[] = [];
 
   for (const project of activeProjects) {
@@ -183,23 +184,24 @@ export async function predictProjectCompletion(): Promise<PredictionResult[]> {
         p.actualEndDate
     );
 
-    if (similarProjects.length === 0) {
-      // Sin datos históricos, usar estimación original
-      continue;
+    // Calcular duración promedio de proyectos similares (si hay)
+    let averageDuration = 0;
+    if (similarProjects.length > 0) {
+      let totalDuration = 0;
+      similarProjects.forEach((p: any) => {
+        const start = new Date(p.startDate);
+        const end = new Date(p.actualEndDate!);
+        const days = Math.ceil(
+          (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
+        );
+        totalDuration += days;
+      });
+      averageDuration = totalDuration / similarProjects.length;
+    } else {
+      // Usar duración estimada del tipo de proyecto
+      const projectType = projectTypes.find((t: any) => t.id === project.projectTypeId);
+      averageDuration = projectType?.estimatedDurationDays || 30;
     }
-
-    // Calcular duración promedio de proyectos similares
-    let totalDuration = 0;
-    similarProjects.forEach((p: any) => {
-      const start = new Date(p.startDate);
-      const end = new Date(p.actualEndDate!);
-      const days = Math.ceil(
-        (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
-      );
-      totalDuration += days;
-    });
-
-    const averageDuration = totalDuration / similarProjects.length;
 
     // Calcular progreso actual del proyecto
     const projectStart = new Date(project.startDate);
@@ -212,11 +214,11 @@ export async function predictProjectCompletion(): Promise<PredictionResult[]> {
     const progress = project.progressPercentage || 0;
     let predictedTotalDays: number;
 
-    if (progress > 0) {
-      // Usar progreso actual para estimar
+    if (progress > 5) {
+      // Usar progreso actual para estimar (solo si hay progreso significativo)
       predictedTotalDays = Math.round((daysElapsed / progress) * 100);
     } else {
-      // Usar promedio histórico
+      // Usar promedio histórico o duración estimada del tipo
       predictedTotalDays = Math.round(averageDuration);
     }
 
@@ -229,11 +231,15 @@ export async function predictProjectCompletion(): Promise<PredictionResult[]> {
         (24 * 60 * 60 * 1000)
     );
 
-    // Calcular confianza basada en cantidad de datos históricos
-    const confidence = Math.min(
-      100,
-      Math.round((similarProjects.length / 5) * 100)
-    );
+    // Calcular confianza basada en progreso y datos históricos
+    let confidence = 30; // Base confidence
+    if (similarProjects.length > 0) {
+      confidence += Math.min(40, similarProjects.length * 10); // +10% por cada proyecto similar, max 40%
+    }
+    if (progress > 20) {
+      confidence += Math.min(30, Math.round(progress / 3)); // +1% por cada 3% de progreso, max 30%
+    }
+    confidence = Math.min(100, confidence);
 
     predictions.push({
       projectId: project.id,
