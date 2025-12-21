@@ -1,5 +1,37 @@
 import * as XLSX from "xlsx";
 
+interface CompanyInfo {
+  companyName?: string;
+  nit?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+}
+
+/**
+ * Agrega encabezado de empresa a los datos del Excel
+ */
+function addCompanyHeader(data: any[][], company?: CompanyInfo | null): any[][] {
+  if (!company || !company.companyName) {
+    return data;
+  }
+
+  const header = [
+    [company.companyName],
+    company.nit ? [`NIT: ${company.nit}`] : [],
+    company.address ? [company.address] : [],
+    [
+      [company.phone, company.email, company.website]
+        .filter(Boolean)
+        .join(" | ")
+    ].filter(v => v),
+    [], // Línea en blanco
+  ].filter(row => row.length > 0);
+
+  return [...header, ...data];
+}
+
 /**
  * Exportar datos del diagrama de Gantt a Excel
  */
@@ -7,13 +39,14 @@ export function exportGanttToExcel(
   projectName: string,
   milestones: any[],
   projectStartDate: Date,
-  projectEndDate: Date
+  projectEndDate: Date,
+  company?: CompanyInfo | null
 ) {
   // Crear workbook
   const wb = XLSX.utils.book_new();
 
   // Preparar datos para la hoja
-  const data = [
+  let data: any[][] = [
     ["CRONOGRAMA DE ACTIVIDADES"],
     ["PROYECTO", projectName],
     ["FECHA INICIO", projectStartDate.toLocaleDateString("es-ES")],
@@ -21,6 +54,9 @@ export function exportGanttToExcel(
     [],
     ["TAREA", "ESTADO", "DÍAS", "PROGRESO", "INICIO", "FINAL", "NOTAS"],
   ];
+
+  // Agregar encabezado de empresa
+  data = addCompanyHeader(data, company);
 
   // Agregar hitos
   milestones.forEach(milestone => {
@@ -78,10 +114,6 @@ export function exportGanttToExcel(
     { wch: 30 }, // NOTAS
   ];
 
-  // Aplicar formato condicional (colores según estado)
-  // Nota: xlsx no soporta estilos avanzados, pero podemos agregar comentarios
-  // Para ver colores en Excel, el usuario puede aplicar formato condicional manualmente
-
   // Agregar hoja al workbook
   XLSX.utils.book_append_sheet(wb, ws, "Cronograma");
 
@@ -97,12 +129,13 @@ export function exportCalendarToExcel(
   projects: any[],
   milestones: any[],
   startDate: Date,
-  endDate: Date
+  endDate: Date,
+  company?: CompanyInfo | null
 ) {
   const wb = XLSX.utils.book_new();
 
   // Hoja 1: Resumen de Proyectos
-  const projectData = [
+  let projectData: any[][] = [
     ["RESUMEN DE PROYECTOS"],
     [
       "PERÍODO",
@@ -111,6 +144,9 @@ export function exportCalendarToExcel(
     [],
     ["PROYECTO", "TIPO", "ESTADO", "FECHA INICIO", "FECHA FIN", "PROGRESO"],
   ];
+
+  // Agregar encabezado de empresa
+  projectData = addCompanyHeader(projectData, company);
 
   projects.forEach(project => {
     const statusText =
@@ -146,7 +182,7 @@ export function exportCalendarToExcel(
   XLSX.utils.book_append_sheet(wb, wsProjects, "Proyectos");
 
   // Hoja 2: Hitos
-  const milestoneData = [
+  let milestoneData: any[][] = [
     ["HITOS DEL PERÍODO"],
     [
       "PERÍODO",
@@ -155,6 +191,9 @@ export function exportCalendarToExcel(
     [],
     ["HITO", "PROYECTO", "ESTADO", "FECHA VENCIMIENTO", "FECHA COMPLETADO"],
   ];
+
+  // Agregar encabezado de empresa
+  milestoneData = addCompanyHeader(milestoneData, company);
 
   milestones.forEach(milestone => {
     const project = projects.find(p => p.id === milestone.projectId);
@@ -200,12 +239,13 @@ export function exportCalendarToExcel(
 export function exportProjectReport(
   project: any,
   milestones: any[],
-  attachments: any[]
+  attachments: any[],
+  company?: CompanyInfo | null
 ) {
   const wb = XLSX.utils.book_new();
 
   // Hoja 1: Información del Proyecto
-  const projectInfo = [
+  let projectInfo: any[][] = [
     ["REPORTE DE PROYECTO"],
     [],
     ["Nombre", project.name],
@@ -224,6 +264,9 @@ export function exportProjectReport(
     ["HITOS"],
     ["Nombre", "Estado", "Fecha Vencimiento", "Completado", "Notas"],
   ];
+
+  // Agregar encabezado de empresa
+  projectInfo = addCompanyHeader(projectInfo, company);
 
   milestones.forEach(milestone => {
     const statusText =
@@ -253,11 +296,14 @@ export function exportProjectReport(
 
   // Hoja 2: Archivos Adjuntos (si existen)
   if (attachments && attachments.length > 0) {
-    const attachmentData = [
+    let attachmentData: any[][] = [
       ["ARCHIVOS ADJUNTOS"],
       [],
       ["Nombre", "Tipo", "Fecha de Subida", "URL"],
     ];
+
+    // Agregar encabezado de empresa
+    attachmentData = addCompanyHeader(attachmentData, company);
 
     attachments.forEach(attachment => {
       attachmentData.push([
