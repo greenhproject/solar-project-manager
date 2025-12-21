@@ -319,3 +319,13 @@
 - [x] Corregir cálculos de hitos vencidos (ahora cuenta pendientes con fecha pasada)
 - [x] Verificar gráficos de velocidad del equipo y tasa de completación
 - [ ] Probar en Railway después del despliegue
+
+## Configuración de Datos de Empresa (21 Dic 2025)
+
+- [x] Crear tabla company_settings en base de datos
+- [x] Crear procedimientos tRPC para guardar/obtener configuración
+- [x] Crear formulario de empresa en Configuración (solo admin)
+- [x] Subir logo a S3
+- [x] Integrar datos de empresa en reportes PDF
+- [x] Integrar datos de empresa en reportes Excel
+- [ ] Probar funcionalidad completa en Railway
