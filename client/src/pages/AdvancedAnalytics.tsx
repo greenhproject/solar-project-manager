@@ -18,9 +18,6 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -28,8 +25,6 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-
-const COLORS = ["#FF6B35", "#F7931E", "#FDC830", "#37B7C3", "#088395"];
 
 export default function AdvancedAnalytics() {
   const { data: velocity, isLoading: loadingVelocity } =
@@ -190,37 +185,28 @@ export default function AdvancedAnalytics() {
           </CardContent>
         </Card>
 
-        {/* Tasa de Completación */}
+        {/* Progreso Promedio por Tipo */}
         <Card>
           <CardHeader>
-            <CardTitle>Tasa de Completación por Tipo</CardTitle>
+            <CardTitle>Progreso Promedio por Tipo</CardTitle>
             <CardDescription>
-              Porcentaje de proyectos completados vs totales
+              Porcentaje de avance promedio de proyectos por tipo
             </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={typeMetrics || []}
-                  dataKey="completionRate"
-                  nameKey="projectTypeName"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={entry =>
-                    `${entry.projectTypeName}: ${entry.completionRate}%`
-                  }
-                >
-                  {(typeMetrics || []).map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
+              <BarChart data={typeMetrics || []} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" domain={[0, 100]} />
+                <YAxis dataKey="projectTypeName" type="category" width={120} />
+                <Tooltip formatter={(value: number) => `${value}%`} />
+                <Bar
+                  dataKey="averageProgress"
+                  fill="#37B7C3"
+                  name="Progreso Promedio"
+                  radius={[0, 4, 4, 0]}
+                />
+              </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
