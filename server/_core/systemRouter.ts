@@ -78,8 +78,8 @@ export const systemRouter = router({
         throw new Error("Solo se permiten archivos PNG o JPG");
       }
       
-      const ext = input.mimeType === "image/png" ? "png" : "jpg";
-      const fileKey = `company/logo-${Date.now()}.${ext}`;
+      // Generar key sin extensión (Cloudinary la agrega automáticamente)
+      const fileKey = `company/logo-${Date.now()}`;
       
       const { url } = await storagePut(fileKey, buffer, input.mimeType);
       
