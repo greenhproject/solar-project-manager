@@ -543,3 +543,32 @@ export const projectLegalizationChecklist = mysqlTable("project_legalization_che
 
 export type ProjectLegalizationChecklist = typeof projectLegalizationChecklist.$inferSelect;
 export type InsertProjectLegalizationChecklist = typeof projectLegalizationChecklist.$inferInsert;
+
+
+/**
+ * Configuración de la empresa
+ * Datos que aparecen en encabezados de reportes PDF/Excel
+ * Solo modificable por administradores
+ */
+export const companySettings = mysqlTable("company_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Datos de la empresa
+  companyName: varchar("companyName", { length: 255 }).notNull(),
+  address: text("address"),
+  nit: varchar("nit", { length: 50 }),
+  website: varchar("website", { length: 255 }),
+  phone: varchar("phone", { length: 50 }),
+  email: varchar("email", { length: 320 }),
+  
+  // Logo de la empresa
+  logoUrl: text("logoUrl"), // URL del logo en S3
+  logoKey: varchar("logoKey", { length: 500 }), // S3 key para el logo
+  
+  // Auditoría
+  updatedBy: int("updatedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CompanySettings = typeof companySettings.$inferSelect;
+export type InsertCompanySettings = typeof companySettings.$inferInsert;
