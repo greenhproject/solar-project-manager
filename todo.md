@@ -312,3 +312,10 @@
 - [x] Agregar dropdown de usuarios en UI de plantillas (Settings.tsx)
 - [x] Modificar loadMilestonesFromTemplate para asignar responsable automáticamente
 - [ ] Probar funcionalidad completa en Railway
+
+## Bug: Análisis Avanzado no muestra datos (21 Dic 2025)
+
+- [x] Revisar queries del backend para análisis avanzado
+- [x] Corregir cálculos de hitos vencidos (ahora cuenta pendientes con fecha pasada)
+- [x] Verificar gráficos de velocidad del equipo y tasa de completación
+- [ ] Probar en Railway después del despliegue
