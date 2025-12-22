@@ -221,30 +221,33 @@ export function SystemConfiguration() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="project-types" className="w-full">
-        <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'}`}>
-          <TabsTrigger value="project-types">
-            <FolderKanban className="w-4 h-4 mr-2" />
-            Tipos de Proyectos
-          </TabsTrigger>
-          <TabsTrigger value="milestone-templates">
-            <ListTodo className="w-4 h-4 mr-2" />
-            Plantillas de Hitos
-          </TabsTrigger>
-          {isAdmin && (
-            <TabsTrigger value="company">
-              <Building2 className="w-4 h-4 mr-2" />
-              Empresa
+        {/* Tabs con scroll horizontal en móviles */}
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full gap-1 p-1" style={{ gridTemplateColumns: isAdmin ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)' }}>
+            <TabsTrigger value="project-types" className="whitespace-nowrap px-3 py-2 text-xs sm:text-sm">
+              <FolderKanban className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden xs:inline">Tipos de </span>Proyectos
             </TabsTrigger>
-          )}
-        </TabsList>
+            <TabsTrigger value="milestone-templates" className="whitespace-nowrap px-3 py-2 text-xs sm:text-sm">
+              <ListTodo className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden xs:inline">Plantillas de </span>Hitos
+            </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="company" className="whitespace-nowrap px-3 py-2 text-xs sm:text-sm">
+                <Building2 className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                Empresa
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
 
-        <TabsContent value="project-types" className="space-y-4">
+        <TabsContent value="project-types" className="space-y-4 mt-4">
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                  <CardTitle>Tipos de Proyectos</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-lg sm:text-xl">Tipos de Proyectos</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Define las categorías de proyectos solares que tu equipo
                     gestiona
                   </CardDescription>
@@ -254,7 +257,7 @@ export function SystemConfiguration() {
                   onOpenChange={setProjectTypeDialog}
                 >
                   <DialogTrigger asChild>
-                    <Button onClick={resetProjectTypeForm}>
+                    <Button onClick={resetProjectTypeForm} size="sm" className="w-full sm:w-auto">
                       <Plus className="w-4 h-4 mr-2" />
                       Nuevo Tipo
                     </Button>
@@ -338,26 +341,27 @@ export function SystemConfiguration() {
                 {projectTypes.map((type: any) => (
                   <div
                     key={type.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-accent/50 transition-colors gap-2"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
                       <div
-                        className="w-4 h-4 rounded"
+                        className="w-4 h-4 rounded flex-shrink-0 mt-1 sm:mt-0"
                         style={{ backgroundColor: type.color }}
                       />
-                      <div>
-                        <h4 className="font-medium">{type.name}</h4>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0">
+                        <h4 className="font-medium text-sm sm:text-base truncate">{type.name}</h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                           {type.description || "Sin descripción"}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Duración estimada: {type.estimatedDurationDays} días
+                          Duración: {type.estimatedDurationDays} días
                         </p>
                       </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="h-8 w-8 self-end sm:self-center flex-shrink-0"
                       onClick={() => handleEditProjectType(type)}
                     >
                       <Edit className="w-4 h-4" />
@@ -374,19 +378,19 @@ export function SystemConfiguration() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="milestone-templates" className="space-y-4">
+        <TabsContent value="milestone-templates" className="space-y-4 mt-4">
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                  <CardTitle>Plantillas de Hitos</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-lg sm:text-xl">Plantillas de Hitos</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Define hitos predeterminados para cada tipo de proyecto
                   </CardDescription>
                 </div>
                 <Dialog open={templateDialog} onOpenChange={setTemplateDialog}>
                   <DialogTrigger asChild>
-                    <Button onClick={resetTemplateForm}>
+                    <Button onClick={resetTemplateForm} size="sm" className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
                       <Plus className="w-4 h-4 mr-2" />
                       Nueva Plantilla
                     </Button>
@@ -516,34 +520,35 @@ export function SystemConfiguration() {
                   );
 
                   return (
-                    <div key={type.id} className="border rounded-lg p-4">
-                      <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <div key={type.id} className="border rounded-lg p-3 sm:p-4">
+                      <h4 className="font-medium mb-3 flex items-center gap-2 text-sm sm:text-base">
                         <div
-                          className="w-3 h-3 rounded"
+                          className="w-3 h-3 rounded flex-shrink-0"
                           style={{ backgroundColor: type.color }}
                         />
-                        {type.name}
+                        <span className="truncate">{type.name}</span>
                       </h4>
-                      <div className="space-y-2 pl-5">
+                      <div className="space-y-2 pl-2 sm:pl-5">
                         {templates.length > 0 ? (
                           templates.map((template: any) => (
                             <div
                               key={template.id}
-                              className="flex items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors"
+                              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors gap-2"
                             >
-                              <div>
-                                <p className="font-medium text-sm">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">
                                   {template.orderIndex}. {template.name}
                                 </p>
-                                <p className="text-xs text-muted-foreground">
+                                <p className="text-xs text-muted-foreground line-clamp-2">
                                   {template.description || "Sin descripción"} •{" "}
                                   {template.estimatedDurationDays} días
                                 </p>
                               </div>
-                              <div className="flex gap-1">
+                              <div className="flex gap-1 self-end sm:self-center flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  className="h-8 w-8"
                                   onClick={() => handleEditTemplate(template)}
                                 >
                                   <Edit className="w-4 h-4" />
@@ -551,6 +556,7 @@ export function SystemConfiguration() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
+                                  className="h-8 w-8"
                                   onClick={() =>
                                     handleDeleteTemplate(template.id)
                                   }
