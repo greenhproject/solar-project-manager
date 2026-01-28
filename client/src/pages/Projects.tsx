@@ -20,7 +20,8 @@ import {
   Users,
   MapPin,
   CheckCircle2,
-  Circle,
+  ArrowLeft,
+  Clock,
 } from "lucide-react";
 import {
   Tooltip,
@@ -28,16 +29,35 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link } from "wouter";
-import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
+import { Link, useLocation } from "wouter";
+import { useState, useEffect, useMemo } from "react";
+import { differenceInDays } from "date-fns";
 
 export default function Projects() {
   const { user, isAuthenticated } = useAuth();
   const { data: projects, isLoading } = trpc.projects.list.useQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [location, setLocation] = useLocation();
+
+  // Leer filtro desde URL al cargar
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const filter = params.get("filter");
+    if (filter) {
+      setStatusFilter(filter);
+    }
+  }, []);
+
+  // Actualizar URL cuando cambia el filtro
+  const handleFilterChange = (value: string) => {
+    setStatusFilter(value);
+    if (value === "all") {
+      setLocation("/projects");
+    } else {
+      setLocation(`/projects?filter=${value}`);
+    }
+  };
 
   if (!isAuthenticated || !user) {
     return (
@@ -94,18 +114,65 @@ export default function Projects() {
     );
   };
 
-  // Filtrar proyectos
-  const filteredProjects = projects?.filter(project => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.clientName?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Calcular días de retraso
+  const getDaysOverdue = (estimatedEndDate: Date) => {
+    const today = new Date();
+    const endDate = new Date(estimatedEndDate);
+    return differenceInDays(today, endDate);
+  };
 
-    const matchesStatus =
-      statusFilter === "all" || project.status === statusFilter;
+  // Obtener título según el filtro
+  const getFilterTitle = () => {
+    switch (statusFilter) {
+      case "overdue":
+        return "Proyectos Con Retraso";
+      case "in_progress":
+        return "Proyectos En Progreso";
+      case "completed":
+        return "Proyectos Completados";
+      case "planning":
+        return "Proyectos En Planificación";
+      case "on_hold":
+        return "Proyectos En Espera";
+      case "cancelled":
+        return "Proyectos Cancelados";
+      default:
+        return "Todos los Proyectos";
+    }
+  };
 
-    return matchesSearch && matchesStatus;
-  });
+  // Filtrar y ordenar proyectos
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+
+    let filtered = projects.filter(project => {
+      const matchesSearch =
+        project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.clientName?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Filtro especial para "overdue" (con retraso)
+      if (statusFilter === "overdue") {
+        return matchesSearch && isOverdue(project.estimatedEndDate, project.status);
+      }
+
+      const matchesStatus =
+        statusFilter === "all" || project.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+
+    // Ordenar por días de retraso (del más retrasado al menos) si es filtro overdue
+    if (statusFilter === "overdue") {
+      filtered.sort((a, b) => {
+        const daysA = getDaysOverdue(a.estimatedEndDate);
+        const daysB = getDaysOverdue(b.estimatedEndDate);
+        return daysB - daysA; // Mayor retraso primero
+      });
+    }
+
+    return filtered;
+  }, [projects, searchTerm, statusFilter]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -113,18 +180,28 @@ export default function Projects() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-4xl font-bold">Proyectos</h1>
-            <p className="text-muted-foreground mt-2">
-              {user.role === "admin"
-                ? "Gestiona todos los proyectos del sistema"
-                : "Tus proyectos asignados"}
+            <div className="flex items-center gap-3 mb-2">
+              <Link href="/dashboard">
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              </Link>
+              <h1 className="text-3xl md:text-4xl font-bold">{getFilterTitle()}</h1>
+            </div>
+            <p className="text-muted-foreground ml-11">
+              {statusFilter === "overdue" ? (
+                <span className="text-destructive font-medium">
+                  {filteredProjects.length} proyecto(s) requieren atención urgente
+                </span>
+              ) : user.role === "admin" ? (
+                "Gestiona todos los proyectos del sistema"
+              ) : (
+                "Tus proyectos asignados"
+              )}
             </p>
           </div>
 
           <div className="flex gap-2">
-            <Link href="/dashboard">
-              <Button variant="outline">Volver al Dashboard</Button>
-            </Link>
             {(user.role === "admin" || user.role === "engineer") && (
               <Link href="/projects/new">
                 <Button className="gap-2">
@@ -150,13 +227,19 @@ export default function Projects() {
                 />
               </div>
 
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={handleFilterChange}>
                 <SelectTrigger className="w-full md:w-[200px]">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="overdue">
+                    <span className="flex items-center gap-2">
+                      <AlertTriangle className="h-3 w-3 text-destructive" />
+                      Con Retraso
+                    </span>
+                  </SelectItem>
                   <SelectItem value="planning">Planificación</SelectItem>
                   <SelectItem value="in_progress">En Progreso</SelectItem>
                   <SelectItem value="on_hold">En Espera</SelectItem>
@@ -185,124 +268,129 @@ export default function Projects() {
           </div>
         ) : filteredProjects && filteredProjects.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProjects.map(project => (
-              <Link key={project.id} href={`/projects/${project.id}`}>
-                <Card className="h-full hover:shadow-apple-lg transition-all cursor-pointer group">
-                  <CardHeader>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="h-12 w-12 rounded-lg bg-gradient-solar flex items-center justify-center flex-shrink-0">
-                        <Sun className="h-6 w-6 text-white" />
+            {filteredProjects.map(project => {
+              const daysOverdue = isOverdue(project.estimatedEndDate, project.status) 
+                ? getDaysOverdue(project.estimatedEndDate) 
+                : 0;
+              
+              return (
+                <Link key={project.id} href={`/projects/${project.id}`}>
+                  <Card className={`h-full hover:shadow-apple-lg transition-all cursor-pointer group ${
+                    statusFilter === "overdue" ? "border-destructive/30" : ""
+                  }`}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="h-12 w-12 rounded-lg bg-gradient-solar flex items-center justify-center flex-shrink-0">
+                          <Sun className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex flex-col gap-1 items-end">
+                          {getStatusBadge(project.status)}
+                          {daysOverdue > 0 && (
+                            <Badge
+                              variant="destructive"
+                              className="gap-1 text-xs"
+                            >
+                              <Clock className="h-3 w-3" />
+                              {daysOverdue} días de retraso
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-1 items-end">
-                        {getStatusBadge(project.status)}
-                        {isOverdue(
-                          project.estimatedEndDate,
-                          project.status
-                        ) && (
-                          <Badge
-                            variant="destructive"
-                            className="gap-1 text-xs"
-                          >
-                            <AlertTriangle className="h-3 w-3" />
-                            Retrasado
-                          </Badge>
+
+                      <CardTitle className="group-hover:text-primary transition-colors">
+                        {project.name}
+                      </CardTitle>
+
+                      {project.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                          {project.description}
+                        </p>
+                      )}
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      {/* Información del proyecto */}
+                      <div className="space-y-2 text-sm">
+                        {project.location && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="h-4 w-4" />
+                            <span className="truncate">{project.location}</span>
+                          </div>
+                        )}
+
+                        {project.clientName && (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            <span className="truncate">{project.clientName}</span>
+                          </div>
                         )}
                       </div>
-                    </div>
 
-                    <CardTitle className="group-hover:text-primary transition-colors">
-                      {project.name}
-                    </CardTitle>
+                      {/* Barra de progreso */}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="cursor-help">
+                              <div className="flex items-center justify-between text-xs mb-2">
+                                <span className="text-muted-foreground">
+                                  Progreso
+                                </span>
+                                <span className="font-semibold">
+                                  {project.progressPercentage}%
+                                </span>
+                              </div>
+                              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-solar transition-all duration-500 ease-out"
+                                  style={{
+                                    width: `${project.progressPercentage}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <div className="space-y-2">
+                              <p className="font-semibold text-sm">
+                                Estado del Proyecto
+                              </p>
+                              <div className="flex items-center gap-2 text-xs">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                                <span>
+                                  Progreso: {project.progressPercentage}%
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Haz clic en el proyecto para ver el desglose
+                                completo de hitos
+                              </p>
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
 
-                    {project.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
-                        {project.description}
-                      </p>
-                    )}
-                  </CardHeader>
-
-                  <CardContent className="space-y-4">
-                    {/* Información del proyecto */}
-                    <div className="space-y-2 text-sm">
-                      {project.location && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="h-4 w-4" />
-                          <span className="truncate">{project.location}</span>
+                      {/* Fechas */}
+                      <div className="text-xs text-muted-foreground pt-2 border-t">
+                        <div className="flex justify-between">
+                          <span>Inicio:</span>
+                          <span>
+                            {new Date(project.startDate).toLocaleDateString("es")}
+                          </span>
                         </div>
-                      )}
-
-                      {project.clientName && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span className="truncate">{project.clientName}</span>
+                        <div className={`flex justify-between mt-1 ${daysOverdue > 0 ? "text-destructive font-medium" : ""}`}>
+                          <span>Estimado:</span>
+                          <span>
+                            {new Date(
+                              project.estimatedEndDate
+                            ).toLocaleDateString("es")}
+                          </span>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Barra de progreso */}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="cursor-help">
-                            <div className="flex items-center justify-between text-xs mb-2">
-                              <span className="text-muted-foreground">
-                                Progreso
-                              </span>
-                              <span className="font-semibold">
-                                {project.progressPercentage}%
-                              </span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-solar transition-all duration-500 ease-out"
-                                style={{
-                                  width: `${project.progressPercentage}%`,
-                                }}
-                              />
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          <div className="space-y-2">
-                            <p className="font-semibold text-sm">
-                              Estado del Proyecto
-                            </p>
-                            <div className="flex items-center gap-2 text-xs">
-                              <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                              <span>
-                                Progreso: {project.progressPercentage}%
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                              Haz clic en el proyecto para ver el desglose
-                              completo de hitos
-                            </p>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    {/* Fechas */}
-                    <div className="text-xs text-muted-foreground pt-2 border-t">
-                      <div className="flex justify-between">
-                        <span>Inicio:</span>
-                        <span>
-                          {new Date(project.startDate).toLocaleDateString("es")}
-                        </span>
                       </div>
-                      <div className="flex justify-between mt-1">
-                        <span>Estimado:</span>
-                        <span>
-                          {new Date(
-                            project.estimatedEndDate
-                          ).toLocaleDateString("es")}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         ) : (
           <Card>
@@ -316,6 +404,11 @@ export default function Projects() {
                   ? "Intenta ajustar los filtros de búsqueda"
                   : "Aún no hay proyectos creados"}
               </p>
+              {statusFilter !== "all" && (
+                <Button variant="outline" onClick={() => handleFilterChange("all")}>
+                  Ver todos los proyectos
+                </Button>
+              )}
               {user.role === "admin" &&
                 !searchTerm &&
                 statusFilter === "all" && (

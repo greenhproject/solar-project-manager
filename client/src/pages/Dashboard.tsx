@@ -105,77 +105,89 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Clickeables para filtrar */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="shadow-apple hover:shadow-apple-lg transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Proyectos
-              </CardTitle>
-              <Sun className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-3xl font-bold">{stats?.total || 0}</div>
-              )}
-            </CardContent>
-          </Card>
+          <Link href="/projects?filter=all">
+            <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02]">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Proyectos
+                </CardTitle>
+                <Sun className="h-5 w-5 text-primary" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-3xl font-bold">{stats?.total || 0}</div>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">Click para ver todos</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="shadow-apple hover:shadow-apple-lg transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                En Progreso
-              </CardTitle>
-              <TrendingUp className="h-5 w-5 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-3xl font-bold text-blue-500">
-                  {stats?.active || 0}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <Link href="/projects?filter=in_progress">
+            <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02]">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  En Progreso
+                </CardTitle>
+                <TrendingUp className="h-5 w-5 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-3xl font-bold text-blue-500">
+                    {stats?.active || 0}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">Click para ver detalles</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="shadow-apple hover:shadow-apple-lg transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Completados
-              </CardTitle>
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-3xl font-bold text-green-500">
-                  {stats?.completed || 0}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <Link href="/projects?filter=completed">
+            <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02]">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Completados
+                </CardTitle>
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-3xl font-bold text-green-500">
+                    {stats?.completed || 0}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground mt-1">Click para ver detalles</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="shadow-apple hover:shadow-apple-lg transition-all">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Con Retraso
-              </CardTitle>
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <div className="text-3xl font-bold text-destructive">
-                  {stats?.overdue || 0}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <Link href="/projects?filter=overdue">
+            <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02] border-destructive/20">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Con Retraso
+                </CardTitle>
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <Skeleton className="h-8 w-20" />
+                ) : (
+                  <div className="text-3xl font-bold text-destructive">
+                    {stats?.overdue || 0}
+                  </div>
+                )}
+                <p className="text-xs text-destructive/70 mt-1">Click para ver urgentes</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Recordatorios Pendientes */}

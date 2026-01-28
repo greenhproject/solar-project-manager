@@ -302,3 +302,13 @@
 - [x] Agregar filtro combobox con búsqueda por nombre de proyecto
 - [x] Incluir ID de OpenSolar en el filtro para fácil ubicación
 - [ ] Probar en Railway después del despliegue
+
+
+## Navegación desde Tarjetas del Dashboard (28 Ene 2026)
+
+- [x] Hacer tarjetas de estadísticas clickeables en Dashboard
+- [x] Navegar a vista filtrada de proyectos según tarjeta clickeada
+- [x] Ordenar proyectos "Con Retraso" del más retrasado al menos
+- [x] Mostrar días de retraso en la vista filtrada
+- [x] Agregar botón para volver al dashboard
+- [ ] Probar funcionalidad completa
