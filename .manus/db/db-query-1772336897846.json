@@ -1,0 +1,40 @@
+{
+  "query": "SELECT * FROM users;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT * FROM users;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "LcjfjWmLEGzFVhjrWcCCW2",
+      "name": "Green House Project",
+      "email": "greenhproject@gmail.com",
+      "loginMethod": "google",
+      "role": "admin",
+      "jobTitle": "NULL",
+      "createdAt": "2025-11-26 22:16:45",
+      "updatedAt": "2026-03-01 03:48:01",
+      "lastSignedIn": "2026-03-01 03:48:02",
+      "password": "NULL",
+      "avatarUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663169336317/i9L9SEfcrUSsT5mzwNhmmi/avatars/1-1764552308144.plain",
+      "theme": "system"
+    },
+    {
+      "id": "930021",
+      "openId": "PkNCYsWFXoBw8EXcV59k7F",
+      "name": "proyectos",
+      "email": "proyectos@greenhproject.com",
+      "loginMethod": "email",
+      "role": "engineer",
+      "jobTitle": "NULL",
+      "createdAt": "2025-11-28 22:34:55",
+      "updatedAt": "2025-11-28 23:50:55",
+      "lastSignedIn": "2025-11-28 23:50:55",
+      "password": "NULL",
+      "avatarUrl": "NULL",
+      "theme": "system"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tjobTitle\tcreatedAt\tupdatedAt\tlastSignedIn\tpassword\tavatarUrl\ttheme\n1\tLcjfjWmLEGzFVhjrWcCCW2\tGreen House Project\tgreenhproject@gmail.com\tgoogle\tadmin\tNULL\t2025-11-26 22:16:45\t2026-03-01 03:48:01\t2026-03-01 03:48:02\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663169336317/i9L9SEfcrUSsT5mzwNhmmi/avatars/1-1764552308144.plain\tsystem\n930021\tPkNCYsWFXoBw8EXcV59k7F\tproyectos\tproyectos@greenhproject.com\temail\tengineer\tNULL\t2025-11-28 22:34:55\t2025-11-28 23:50:55\t2025-11-28 23:50:55\tNULL\tNULL\tsystem\n",
+  "stderr": "",
+  "execution_time_ms": 51
+}

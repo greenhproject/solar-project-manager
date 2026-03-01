@@ -316,11 +316,24 @@
 
 ## Corrección flujo Auth0 completo (28 Feb 2026)
 
-- [ ] Revisar flujo actual de autenticación (frontend y backend)
-- [ ] Corregir login para usar Auth0 exclusivamente (no Manus OAuth)
-- [ ] Corregir logout para redirigir al dashboard/login y no a oauth.manus.im
-- [ ] Corregir registro para que entre directamente después de registrarse
-- [ ] Evaluar si eliminar botón "Registrarse" (Auth0 maneja registro)
-- [ ] Corregir sesión expirada (pantalla "acceso restringido")
-- [ ] Asegurar que al cerrar sesión se limpie completamente y requiera re-autenticación
+- [x] Revisar flujo actual de autenticación (frontend y backend)
+- [x] Corregir login para usar Auth0 exclusivamente (no Manus OAuth)
+- [x] Corregir logout para cerrar sesión en Auth0 y redirigir al home
+- [x] Corregir registro para redirigir a Auth0 signup
+- [x] Home.tsx usa Auth0 para login/registro cuando está configurado
+- [x] Corregir sesión expirada - MainLayout muestra botón de re-autenticación
+- [x] Sidebar usa datos reales del backend (meQuery) para rol correcto
+- [x] main.tsx no redirige a Manus OAuth en error 401
+- [x] Push a GitHub para Railway (commit c9bf30f)
+
+
+## Fix Dashboard usuarios no-admin (28 Feb 2026)
+
+- [x] Corregir menú lateral para ingeniero_tramites (ya tenía Dashboard, Proyectos, Calendario, etc. en Sidebar.tsx)
+- [x] Corregir métricas del dashboard que muestran 0 para usuarios no-admin (stats ahora combina proyectos por hitos asignados + asignación directa)
+- [x] Corregir milestones.getAll para incluir proyectos por hitos asignados (no solo assignedEngineerId)
+- [x] Corregir milestones.overdue para incluir proyectos por hitos asignados
+- [x] Corregir milestones.getByProject para que ingeniero_tramites vea todos los hitos del proyecto
+- [x] Agregar notificaciones en menú lateral para usuarios no-admin (NotificationBell ya estaba para todos los autenticados)
+- [x] Verificar que todos los roles tengan acceso a las funciones básicas (tests creados en ingeniero-tramites.test.ts)
 - [ ] Push a GitHub para Railway

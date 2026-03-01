@@ -698,19 +698,30 @@ export const appRouter = router({
       if (ctx.user.role === "admin") {
         return await db.getProjectStats();
       } else {
-        // Para ingenieros, calcular stats de sus proyectos
-        const projects = await db.getProjectsByEngineerId(ctx.user.id);
+        // Para ingenieros y otros roles, calcular stats basados en hitos asignados
+        // Primero intentar por hitos asignados (más preciso)
+        const projectsByMilestones = await db.getProjectsWithAssignedMilestones(ctx.user.id);
+        // También incluir proyectos asignados directamente
+        const projectsByEngineer = await db.getProjectsByEngineerId(ctx.user.id);
+        
+        // Combinar ambas listas sin duplicados
+        const projectMap = new Map<number, typeof projectsByMilestones[0]>();
+        for (const p of projectsByMilestones) projectMap.set(p.id, p);
+        for (const p of projectsByEngineer) projectMap.set(p.id, p);
+        const allUserProjects = Array.from(projectMap.values());
+        
         const now = new Date();
         return {
-          total: projects.length,
-          active: projects.filter(p => p.status === "in_progress").length,
-          completed: projects.filter(p => p.status === "completed").length,
-          overdue: projects.filter(
+          total: allUserProjects.length,
+          active: allUserProjects.filter(p => p.status === "in_progress").length,
+          completed: allUserProjects.filter(p => p.status === "completed").length,
+          overdue: allUserProjects.filter(
             p =>
               p.status !== "completed" &&
               p.status !== "cancelled" &&
               p.estimatedEndDate < now
-          ).length        };
+          ).length,
+        };
       }
     }),
 
@@ -838,11 +849,15 @@ export const appRouter = router({
     getAll: protectedProcedure.query(async ({ ctx }) => {
       const allMilestones = await db.getAllMilestones();
 
-      // Si es ingeniero, filtrar solo los hitos de sus proyectos
+      // Si no es admin, filtrar solo los hitos de sus proyectos
       if (ctx.user.role !== "admin") {
-        const userProjects = await db.getProjectsByEngineerId(ctx.user.id);
-        const userProjectIds = userProjects.map(p => p.id);
-        return allMilestones.filter(m => userProjectIds.includes(m.projectId));
+        // Obtener proyectos por hitos asignados Y por asignación directa
+        const projectsByMilestones = await db.getProjectsWithAssignedMilestones(ctx.user.id);
+        const projectsByEngineer = await db.getProjectsByEngineerId(ctx.user.id);
+        const userProjectIds = new Set<number>();
+        for (const p of projectsByMilestones) userProjectIds.add(p.id);
+        for (const p of projectsByEngineer) userProjectIds.add(p.id);
+        return allMilestones.filter(m => userProjectIds.has(m.projectId));
       }
 
       return allMilestones;
@@ -864,10 +879,10 @@ export const appRouter = router({
           return await db.getMilestonesByProjectId(input.projectId);
         }
 
-        // Usuarios con hitos asignados solo ven sus hitos
+        // Usuarios con hitos asignados pueden ver todos los hitos del proyecto
         const hasAssignedMilestones = await db.userHasAssignedMilestones(ctx.user.id, input.projectId);
         if (hasAssignedMilestones) {
-          return await db.getMilestonesByProjectIdForUser(input.projectId, ctx.user.id);
+          return await db.getMilestonesByProjectId(input.projectId);
         }
 
         // Sin permisos
@@ -1047,12 +1062,16 @@ export const appRouter = router({
     overdue: protectedProcedure.query(async ({ ctx }) => {
       const overdueMilestones = await db.getOverdueMilestones();
 
-      // Filtrar por permisos si es ingeniero
+      // Filtrar por permisos si es ingeniero o ingeniero_tramites
       if (ctx.user.role !== "admin") {
-        const userProjects = await db.getProjectsByEngineerId(ctx.user.id);
-        const userProjectIds = userProjects.map(p => p.id);
+        // Obtener proyectos por hitos asignados Y por asignación directa
+        const projectsByMilestones = await db.getProjectsWithAssignedMilestones(ctx.user.id);
+        const projectsByEngineer = await db.getProjectsByEngineerId(ctx.user.id);
+        const userProjectIds = new Set<number>();
+        for (const p of projectsByMilestones) userProjectIds.add(p.id);
+        for (const p of projectsByEngineer) userProjectIds.add(p.id);
         return overdueMilestones.filter(m =>
-          userProjectIds.includes(m.projectId)
+          userProjectIds.has(m.projectId)
         );
       }
 
