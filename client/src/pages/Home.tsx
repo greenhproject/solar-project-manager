@@ -1,8 +1,8 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -18,12 +18,16 @@ import {
   Shield,
   BarChart3,
 } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useEffect } from "react";
+
+// Detectar si Auth0 está configurado
+const isAuth0Configured = () => {
+  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
+};
 
 // Detectar si estamos en entorno Manus verificando el dominio actual
 const isManusEnvironment = () => {
-  // Verificar si el dominio actual es de Manus (*.manus.space o *.manusvm.computer)
   const hostname = window.location.hostname;
   return (
     hostname.includes("manus.space") || hostname.includes("manusvm.computer")
@@ -31,16 +35,22 @@ const isManusEnvironment = () => {
 };
 
 export default function Home() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const manusAuth = useAuth();
+  const auth0 = useAuth0Custom();
   const [, setLocation] = useLocation();
-  const useManusAuth = isManusEnvironment();
+  
+  const useAuth0 = isAuth0Configured();
+  const useManusAuth = isManusEnvironment() && !useAuth0;
+  
+  const isAuthenticated = useAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
+  const loading = useAuth0 ? auth0.isLoading : manusAuth.loading;
 
   // Redirigir al dashboard si ya está autenticado
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isAuthenticated) {
       window.location.href = "/dashboard";
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated]);
 
   if (loading) {
     return (
@@ -51,6 +61,27 @@ export default function Home() {
       </div>
     );
   }
+
+  const handleLoginClick = () => {
+    if (useAuth0) {
+      auth0.login();
+    } else if (useManusAuth) {
+      handleLogin(getLoginUrl());
+    } else {
+      setLocation("/login");
+    }
+  };
+
+  const handleSignupClick = () => {
+    if (useAuth0) {
+      // Auth0 maneja el registro directamente con screen_hint: 'signup'
+      auth0.signup();
+    } else if (useManusAuth) {
+      handleLogin(getLoginUrl());
+    } else {
+      setLocation("/register");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -65,19 +96,14 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-4">
-            {useManusAuth ? (
-              <Button onClick={() => handleLogin(getLoginUrl())}>
-                Iniciar Sesión
+            <Button variant="ghost" onClick={handleLoginClick}>
+              Iniciar Sesión
+            </Button>
+            {/* Solo mostrar botón de Registrarse si NO estamos en Manus (donde no tiene sentido) */}
+            {!useManusAuth && (
+              <Button onClick={handleSignupClick}>
+                Registrarse
               </Button>
-            ) : (
-              <>
-                <Button variant="ghost" onClick={() => setLocation("/login")}>
-                  Iniciar Sesión
-                </Button>
-                <Button onClick={() => setLocation("/register")}>
-                  Registrarse
-                </Button>
-              </>
             )}
           </div>
         </div>
@@ -109,25 +135,14 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {useManusAuth ? (
-              <Button 
-                size="lg" 
-                className="gap-2 text-lg px-8"
-                onClick={() => handleLogin(getLoginUrl())}
-              >
-                <Sun className="h-5 w-5" />
-                Comenzar Ahora
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                className="gap-2 text-lg px-8"
-                onClick={() => setLocation("/register")}
-              >
-                <Sun className="h-5 w-5" />
-                Comenzar Ahora
-              </Button>
-            )}
+            <Button
+              size="lg"
+              className="gap-2 text-lg px-8"
+              onClick={handleLoginClick}
+            >
+              <Sun className="h-5 w-5" />
+              Comenzar Ahora
+            </Button>
           </div>
         </div>
       </section>

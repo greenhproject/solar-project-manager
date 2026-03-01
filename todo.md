@@ -312,3 +312,15 @@
 - [x] Mostrar días de retraso en la vista filtrada
 - [x] Agregar botón para volver al dashboard
 - [ ] Probar funcionalidad completa
+
+
+## Corrección flujo Auth0 completo (28 Feb 2026)
+
+- [ ] Revisar flujo actual de autenticación (frontend y backend)
+- [ ] Corregir login para usar Auth0 exclusivamente (no Manus OAuth)
+- [ ] Corregir logout para redirigir al dashboard/login y no a oauth.manus.im
+- [ ] Corregir registro para que entre directamente después de registrarse
+- [ ] Evaluar si eliminar botón "Registrarse" (Auth0 maneja registro)
+- [ ] Corregir sesión expirada (pantalla "acceso restringido")
+- [ ] Asegurar que al cerrar sesión se limpie completamente y requiera re-autenticación
+- [ ] Push a GitHub para Railway

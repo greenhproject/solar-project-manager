@@ -47,25 +47,18 @@ export function Sidebar({ className }: SidebarProps) {
   const manusAuth = useAuth();
   const auth0 = useAuth0Custom();
   
+  // Obtener el usuario real del backend via tRPC (tiene el rol correcto de la BD)
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  
   // Seleccionar el sistema correcto según la configuración
   const isUsingAuth0 = isAuth0Configured();
-  const user = isUsingAuth0 ? (auth0.user ? {
-    id: 0,
-    openId: auth0.user.sub || '',
-    name: auth0.user.name || '',
-    email: auth0.user.email || '',
-    role: 'admin' as const, // Por defecto admin para Auth0
-    avatarUrl: auth0.user.picture || null,
-    createdAt: new Date(),
-    lastSignedIn: new Date(),
-    theme: 'system' as const,
-    password: null,
-    notifyMilestoneDueSoon: true,
-    notifyMilestoneOverdue: true,
-    notifyProjectCompleted: true,
-    notifyProjectAssigned: true,
-    notificationDaysInAdvance: 2,
-  } : null) : manusAuth.user;
+  
+  // Siempre usar los datos del backend (meQuery) para obtener el rol correcto
+  // El auth0.user solo tiene datos de Auth0 (no el rol de la BD)
+  const user = meQuery.data ?? manusAuth.user ?? null;
   
   const isAuthenticated = isUsingAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
 
@@ -195,7 +188,7 @@ export function Sidebar({ className }: SidebarProps) {
             className="w-full flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm border border-orange-100/50 hover:shadow-md hover:border-orange-200 transition-all cursor-pointer"
           >
             <Avatar className="h-10 w-10 border-2 border-orange-200 flex-shrink-0">
-              <AvatarImage src={user.avatarUrl || undefined} />
+              <AvatarImage src={user.avatarUrl || (isUsingAuth0 ? auth0.user?.picture : undefined) || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>
@@ -235,7 +228,7 @@ export function Sidebar({ className }: SidebarProps) {
             title="Ver perfil"
           >
             <Avatar className="h-10 w-10 border-2 border-orange-200">
-              <AvatarImage src={user.avatarUrl || undefined} />
+              <AvatarImage src={user.avatarUrl || (isUsingAuth0 ? auth0.user?.picture : undefined) || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>

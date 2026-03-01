@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Sun, Mail, Lock, User, Loader2 } from "lucide-react";
+import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
+
+// Detectar si Auth0 está configurado
+const isAuth0Configured = () => {
+  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
+};
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -22,8 +28,35 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const auth0 = useAuth0Custom();
 
   const utils = trpc.useUtils();
+
+  // Si Auth0 está configurado, redirigir directamente a Auth0 signup
+  useEffect(() => {
+    if (isAuth0Configured()) {
+      auth0.signup();
+    }
+  }, []);
+
+  // Si Auth0 está configurado y el usuario ya está autenticado, ir al dashboard
+  useEffect(() => {
+    if (isAuth0Configured() && auth0.isAuthenticated) {
+      setLocation("/dashboard");
+    }
+  }, [auth0.isAuthenticated, setLocation]);
+
+  // Si Auth0 está configurado, mostrar pantalla de carga mientras redirige
+  if (isAuth0Configured()) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirigiendo al registro...</p>
+        </div>
+      </div>
+    );
+  }
   
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: async (data) => {
@@ -40,8 +73,8 @@ export default function Register() {
       // Invalidar queries para forzar refetch con el nuevo token
       await utils.auth.me.invalidate();
       
-      // Redireccionar sin recargar la página
-      setLocation("/");
+      // Redireccionar al dashboard
+      setLocation("/dashboard");
     },
     onError: error => {
       toast.error("Error al crear cuenta", {

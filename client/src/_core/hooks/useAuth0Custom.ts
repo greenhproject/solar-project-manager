@@ -1,15 +1,19 @@
 /**
  * Hook personalizado para Auth0
  * 
- * Proporciona una interfaz simplificada para la autenticación con Auth0
+ * Proporciona una interfaz simplificada para la autenticación con Auth0.
+ * - Login: Redirige a Auth0 para autenticación
+ * - Signup: Redirige a Auth0 con screen_hint: 'signup'
+ * - Logout: Cierra sesión en Auth0 completamente y redirige a la home page
+ * - Token: Se renueva automáticamente con refresh tokens
  */
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export function useAuth0Custom() {
   // Intentar usar Auth0, pero manejar el caso cuando no está configurado
-  let auth0Context;
+  let auth0Context: any;
   try {
     auth0Context = useAuth0();
   } catch (error) {
@@ -40,7 +44,10 @@ export function useAuth0Custom() {
     const getToken = async () => {
       if (isAuthenticated) {
         try {
-          const token = await getAccessTokenSilently();
+          const token = await getAccessTokenSilently({
+            // Forzar renovación si el token está por expirar
+            cacheMode: 'on',
+          });
           setAccessToken(token);
           // Guardar el token en localStorage para usarlo en las peticiones
           localStorage.setItem('auth_token', token);
@@ -55,8 +62,20 @@ export function useAuth0Custom() {
           // Usar name, nickname o email como fallback
           const userName = user?.name || user?.nickname || user?.email?.split('@')[0] || 'Usuario';
           localStorage.setItem('auth_user_name', userName);
-        } catch (error) {
+        } catch (error: any) {
           console.error('[Auth0] Error getting access token:', error);
+          
+          // Si el error es de login_required o consent_required, 
+          // el refresh token expiró, necesitamos re-autenticar
+          if (error?.error === 'login_required' || error?.error === 'consent_required') {
+            console.log('[Auth0] Token expired, clearing and redirecting to login');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user_email');
+            localStorage.removeItem('auth_user_name');
+            loginWithRedirect({
+              appState: { returnTo: '/dashboard' },
+            });
+          }
         }
       } else {
         setAccessToken(null);
@@ -65,25 +84,69 @@ export function useAuth0Custom() {
     };
 
     getToken();
-  }, [isAuthenticated, getAccessTokenSilently]);
+  }, [isAuthenticated, getAccessTokenSilently, user, loginWithRedirect]);
 
-  const login = () => {
-    loginWithRedirect();
-  };
+  // Renovar token periódicamente (cada 5 minutos)
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
-  const logout = () => {
-    // Limpiar token del localStorage
+    const interval = setInterval(async () => {
+      try {
+        const token = await getAccessTokenSilently({
+          cacheMode: 'off', // Forzar renovación
+        });
+        localStorage.setItem('auth_token', token);
+        setAccessToken(token);
+        console.log('[Auth0] Token renewed successfully');
+      } catch (error: any) {
+        console.error('[Auth0] Token renewal failed:', error);
+        if (error?.error === 'login_required') {
+          clearInterval(interval);
+          localStorage.removeItem('auth_token');
+          loginWithRedirect({
+            appState: { returnTo: '/dashboard' },
+          });
+        }
+      }
+    }, 5 * 60 * 1000); // Cada 5 minutos
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, getAccessTokenSilently, loginWithRedirect]);
+
+  const login = useCallback(() => {
+    loginWithRedirect({
+      appState: {
+        returnTo: '/dashboard',
+      },
+    });
+  }, [loginWithRedirect]);
+
+  const signup = useCallback(() => {
+    loginWithRedirect({
+      authorizationParams: {
+        screen_hint: 'signup',
+      },
+      appState: {
+        returnTo: '/dashboard',
+      },
+    });
+  }, [loginWithRedirect]);
+
+  const logout = useCallback(() => {
+    // Limpiar tokens del localStorage
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user_email');
     localStorage.removeItem('auth_user_name');
+    localStorage.removeItem('manus-runtime-user-info');
     
-    // Cerrar sesión de Auth0 y redirigir a la página de login
+    // Cerrar sesión de Auth0 completamente y redirigir a la página principal
+    // Esto fuerza al usuario a re-autenticarse explícitamente
     auth0Logout({
       logoutParams: {
-        returnTo: `${window.location.origin}/login`,
+        returnTo: window.location.origin,
       },
     });
-  };
+  }, [auth0Logout]);
 
   return {
     isAuthenticated,
@@ -91,6 +154,7 @@ export function useAuth0Custom() {
     user,
     accessToken,
     login,
+    signup,
     logout,
   };
 }

@@ -1,7 +1,8 @@
 /**
  * Proveedor de Auth0 para la aplicación React
  * 
- * Este componente envuelve la aplicación y proporciona el contexto de autenticación
+ * Este componente envuelve la aplicación y proporciona el contexto de autenticación.
+ * Después del login exitoso, redirige automáticamente al dashboard.
  * 
  * Dominio correcto: dev-s1tr6aqjujd8goqu.us.auth0.com
  */
@@ -18,15 +19,23 @@ export function Auth0ProviderWrapper({ children }: Auth0ProviderWrapperProps) {
   const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID || '';
   const audience = import.meta.env.VITE_AUTH0_AUDIENCE || '';
 
-  // Determinar la URL de redirección basada en el entorno
-  const redirectUri = window.location.origin;
-
   // Si no hay configuración de Auth0, renderizar children sin el provider
   // Esto permite que la app funcione en Manus con Manus OAuth
   if (!domain || !clientId) {
     console.log('[Auth0] No configuration found. Using Manus OAuth or JWT authentication.');
     return <>{children}</>;
   }
+
+  // Callback URL para Auth0 - debe ser la raíz para que Auth0 pueda procesar el callback
+  // Luego el onRedirectCallback se encarga de redirigir al dashboard
+  const redirectUri = window.location.origin;
+
+  const onRedirectCallback = (appState: any) => {
+    // Después del login exitoso, redirigir al returnTo guardado o al dashboard
+    const returnTo = appState?.returnTo || '/dashboard';
+    console.log('[Auth0] Redirect callback, navigating to:', returnTo);
+    window.location.href = returnTo;
+  };
 
   return (
     <Auth0Provider
@@ -37,8 +46,9 @@ export function Auth0ProviderWrapper({ children }: Auth0ProviderWrapperProps) {
         audience: audience,
         scope: 'openid profile email',
       }}
-      cacheLocation="localstorage" // Usar localStorage para persistir la sesión
-      useRefreshTokens={true} // Usar refresh tokens para mantener la sesión
+      cacheLocation="localstorage"
+      useRefreshTokens={true}
+      onRedirectCallback={onRedirectCallback}
     >
       {children}
     </Auth0Provider>

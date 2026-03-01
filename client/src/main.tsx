@@ -5,21 +5,40 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
-import { getLoginUrl } from "./const";
 import "./index.css";
 import { Auth0ProviderWrapper } from "./_core/Auth0Provider";
 
 const queryClient = new QueryClient();
 
+// Detectar si Auth0 está configurado
+const isAuth0Configured = () => {
+  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
+};
+
+// Flag para evitar múltiples redirecciones simultáneas
+let isRedirecting = false;
+
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
+  if (isRedirecting) return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
 
   if (!isUnauthorized) return;
 
-  window.location.href = getLoginUrl();
+  // Si Auth0 está configurado, NO redirigir a Manus OAuth
+  // El MainLayout se encargará de mostrar la pantalla de sesión expirada
+  if (isAuth0Configured()) {
+    console.log('[Auth] Session expired with Auth0 - MainLayout will handle re-auth');
+    // No redirigir automáticamente, dejar que MainLayout maneje el error
+    // Solo limpiar el token corrupto
+    localStorage.removeItem('auth_token');
+  } else {
+    // Fallback para Manus OAuth - redirigir a login
+    isRedirecting = true;
+    window.location.href = '/login';
+  }
 };
 
 queryClient.getQueryCache().subscribe(event => {
