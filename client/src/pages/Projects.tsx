@@ -1,5 +1,5 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { useTimezone } from "@/hooks/useTimezone";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   ArrowLeft,
   Clock,
+  Loader2,
 } from "lucide-react";
 import {
   Tooltip,
@@ -34,7 +35,12 @@ import { useState, useEffect, useMemo } from "react";
 import { differenceInDays } from "date-fns";
 
 export default function Projects() {
-  const { user, isAuthenticated } = useAuth();
+  const { formatDate: tzFormatDate } = useTimezone();
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   const { data: projects, isLoading } = trpc.projects.list.useQuery();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -59,14 +65,13 @@ export default function Projects() {
     }
   };
 
-  if (!isAuthenticated || !user) {
+  if (meQuery.isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Acceso Restringido</CardTitle>
-          </CardHeader>
-        </Card>
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
+          <p className="text-gray-600">Cargando proyectos...</p>
+        </div>
       </div>
     );
   }
@@ -106,11 +111,11 @@ export default function Projects() {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const isOverdue = (estimatedEndDate: Date, status: string) => {
+  const isOverdue = (project: { estimatedEndDate: Date; status: string; hasOverdueMilestones?: boolean }) => {
     return (
-      status !== "completed" &&
-      status !== "cancelled" &&
-      new Date(estimatedEndDate) < new Date()
+      project.status !== "completed" &&
+      project.status !== "cancelled" &&
+      (new Date(project.estimatedEndDate) < new Date() || project.hasOverdueMilestones === true)
     );
   };
 
@@ -153,7 +158,7 @@ export default function Projects() {
 
       // Filtro especial para "overdue" (con retraso)
       if (statusFilter === "overdue") {
-        return matchesSearch && isOverdue(project.estimatedEndDate, project.status);
+        return matchesSearch && isOverdue(project);
       }
 
       const matchesStatus =
@@ -253,7 +258,7 @@ export default function Projects() {
 
         {/* Lista de Proyectos */}
         {isLoading ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map(i => (
               <Card key={i} className="animate-pulse">
                 <CardHeader>
@@ -267,9 +272,10 @@ export default function Projects() {
             ))}
           </div>
         ) : filteredProjects && filteredProjects.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {filteredProjects.map(project => {
-              const daysOverdue = isOverdue(project.estimatedEndDate, project.status) 
+              const projectIsOverdue = isOverdue(project);
+              const daysOverdue = projectIsOverdue 
                 ? getDaysOverdue(project.estimatedEndDate) 
                 : 0;
               
@@ -278,10 +284,10 @@ export default function Projects() {
                   <Card className={`h-full hover:shadow-apple-lg transition-all cursor-pointer group ${
                     statusFilter === "overdue" ? "border-destructive/30" : ""
                   }`}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="h-12 w-12 rounded-lg bg-gradient-solar flex items-center justify-center flex-shrink-0">
-                          <Sun className="h-6 w-6 text-white" />
+                    <CardHeader className="p-3 sm:p-6">
+                      <div className="flex items-start justify-between mb-2 gap-2">
+                        <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-lg bg-gradient-solar flex items-center justify-center flex-shrink-0">
+                          <Sun className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
                         <div className="flex flex-col gap-1 items-end">
                           {getStatusBadge(project.status)}
@@ -297,20 +303,20 @@ export default function Projects() {
                         </div>
                       </div>
 
-                      <CardTitle className="group-hover:text-primary transition-colors">
+                      <CardTitle className="group-hover:text-primary transition-colors text-sm sm:text-base lg:text-lg break-words">
                         {project.name}
                       </CardTitle>
 
                       {project.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 mt-1 sm:mt-2">
                           {project.description}
                         </p>
                       )}
                     </CardHeader>
 
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-6">
                       {/* Información del proyecto */}
-                      <div className="space-y-2 text-sm">
+                      <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                         {project.location && (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <MapPin className="h-4 w-4" />
@@ -370,19 +376,17 @@ export default function Projects() {
                       </TooltipProvider>
 
                       {/* Fechas */}
-                      <div className="text-xs text-muted-foreground pt-2 border-t">
+                      <div className="text-[10px] sm:text-xs text-muted-foreground pt-2 border-t">
                         <div className="flex justify-between">
                           <span>Inicio:</span>
                           <span>
-                            {new Date(project.startDate).toLocaleDateString("es")}
+                            {tzFormatDate(project.startDate)}
                           </span>
                         </div>
                         <div className={`flex justify-between mt-1 ${daysOverdue > 0 ? "text-destructive font-medium" : ""}`}>
                           <span>Estimado:</span>
                           <span>
-                            {new Date(
-                              project.estimatedEndDate
-                            ).toLocaleDateString("es")}
+                            {tzFormatDate(project.estimatedEndDate)}
                           </span>
                         </div>
                       </div>

@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,11 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 
 export default function NewProject() {
-  const { user, isAuthenticated } = useAuth();
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingFromOpenSolar, setIsLoadingFromOpenSolar] = useState(false);
@@ -48,7 +52,18 @@ export default function NewProject() {
     clientPhone: "",
   });
 
-  if (!isAuthenticated || !user || (user.role !== "admin" && user.role !== "engineer")) {
+  if (meQuery.isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent mx-auto" />
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role !== "admin" && user.role !== "engineer") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -141,7 +156,7 @@ export default function NewProject() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container py-8 max-w-4xl">
+      <div className="container py-4 sm:py-6 lg:py-8 max-w-4xl">
         <div className="mb-6">
           <Button
             variant="ghost"
@@ -155,7 +170,7 @@ export default function NewProject() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-3xl">Crear Nuevo Proyecto</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl">Crear Nuevo Proyecto</CardTitle>
             <CardDescription>
               Completa la información del proyecto solar
             </CardDescription>

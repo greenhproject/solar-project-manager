@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+
 import { trpc } from "@/lib/trpc";
 import {
   Card,
@@ -41,20 +41,23 @@ const projectColors = [
 ];
 
 export default function CalendarPage() {
-  const { user, isAuthenticated } = useAuth();
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   const { data: projects, isLoading: loadingProjects } =
     trpc.projects.list.useQuery();
   const { data: allMilestones, isLoading: loadingMilestones } =
     trpc.milestones.getAll.useQuery();
 
-  if (!isAuthenticated || !user) {
+  if (meQuery.isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Acceso Restringido</CardTitle>
-          </CardHeader>
-        </Card>
+        <div className="text-center space-y-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent mx-auto" />
+          <p className="text-gray-600">Cargando calendario...</p>
+        </div>
       </div>
     );
   }
@@ -117,7 +120,7 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container py-8 space-y-8">
+      <div className="container py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -127,7 +130,7 @@ export default function CalendarPage() {
               </button>
             </Link>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-solar bg-clip-text text-transparent">
+              <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold bg-gradient-solar bg-clip-text text-transparent">
                 Calendario de Hitos
               </h1>
               <p className="text-muted-foreground mt-1">
@@ -199,7 +202,7 @@ export default function CalendarPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold">
                 {allMilestones?.length || 0}
               </div>
             </CardContent>
@@ -212,7 +215,7 @@ export default function CalendarPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-500">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-500">
                 {allMilestones?.filter(m => m.status === "completed").length ||
                   0}
               </div>
@@ -226,7 +229,7 @@ export default function CalendarPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-orange-500">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-500">
                 {allMilestones?.filter(m => m.status !== "completed").length ||
                   0}
               </div>

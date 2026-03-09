@@ -1,13 +1,38 @@
 /**
- * Servicio de envío de emails usando Resend
+ * Servicio de envío de emails con configuración dinámica
+ * Soporta Resend, SendGrid y SMTP genérico
+ * La configuración se obtiene de la tabla email_config en la BD
  */
 
-import { Resend } from 'resend';
+import { getEmailConfig } from "./db";
+import { getConfiguredTimezone } from "./timezone";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Cache de configuración (se refresca cada 5 minutos)
+let cachedConfig: any = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
-// Email del remitente (debe estar verificado en Resend)
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+async function getConfig() {
+  const now = Date.now();
+  if (cachedConfig && now - cacheTimestamp < CACHE_TTL) {
+    return cachedConfig;
+  }
+  try {
+    cachedConfig = await getEmailConfig();
+    cacheTimestamp = now;
+  } catch (e) {
+    console.warn("[Email] No se pudo obtener configuración de email:", e);
+  }
+  return cachedConfig;
+}
+
+/**
+ * Invalida el cache de configuración (llamar después de actualizar config)
+ */
+export function invalidateEmailConfigCache() {
+  cachedConfig = null;
+  cacheTimestamp = 0;
+}
 
 interface EmailOptions {
   to: string;
@@ -16,33 +41,167 @@ interface EmailOptions {
 }
 
 /**
- * Envía un email usando Resend
+ * Envía un email usando el proveedor configurado por el admin
  */
 export async function sendEmail({ to, subject, html }: EmailOptions): Promise<boolean> {
-  if (!process.env.RESEND_API_KEY) {
-    console.warn('[Email] RESEND_API_KEY not configured, skipping email');
+  const config = await getConfig();
+
+  if (!config || !config.isActive || !config.enableEmailNotifications) {
+    console.warn("[Email] Servicio de email no configurado o desactivado");
     return false;
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    switch (config.provider) {
+      case "resend":
+        return await sendViaResend(config, to, subject, html);
+      case "sendgrid":
+        return await sendViaSendGrid(config, to, subject, html);
+      case "smtp":
+        return await sendViaSMTP(config, to, subject, html);
+      default:
+        console.error("[Email] Proveedor no soportado:", config.provider);
+        return false;
+    }
+  } catch (error) {
+    console.error("[Email] Error al enviar email:", error);
+    return false;
+  }
+}
+
+/**
+ * Enviar via Resend API
+ */
+async function sendViaResend(
+  config: any,
+  to: string,
+  subject: string,
+  html: string
+): Promise<boolean> {
+  if (!config.apiKey) {
+    console.error("[Email] Resend API Key no configurada");
+    return false;
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify({
+      from: `${config.fromName} <${config.fromEmail}>`,
       to: [to],
+      subject,
+      html,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("[Email] Resend error:", error);
+    return false;
+  }
+
+  const data = await response.json();
+  console.log("[Email] Resend email enviado:", data.id);
+  return true;
+}
+
+/**
+ * Enviar via SendGrid API
+ */
+async function sendViaSendGrid(
+  config: any,
+  to: string,
+  subject: string,
+  html: string
+): Promise<boolean> {
+  if (!config.apiKey) {
+    console.error("[Email] SendGrid API Key no configurada");
+    return false;
+  }
+
+  const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.apiKey}`,
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: config.fromEmail, name: config.fromName },
+      subject,
+      content: [{ type: "text/html", value: html }],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("[Email] SendGrid error:", error);
+    return false;
+  }
+
+  console.log("[Email] SendGrid email enviado a:", to);
+  return true;
+}
+
+/**
+ * Enviar via SMTP genérico
+ */
+async function sendViaSMTP(
+  config: any,
+  to: string,
+  subject: string,
+  html: string
+): Promise<boolean> {
+  // SMTP requiere nodemailer - se importa dinámicamente
+  try {
+    const nodemailer = await import("nodemailer");
+    
+    const transporter = nodemailer.default.createTransport({
+      host: config.smtpHost,
+      port: config.smtpPort || 587,
+      secure: config.smtpSecure || false,
+      auth: {
+        user: config.smtpUser,
+        pass: config.smtpPassword,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"${config.fromName}" <${config.fromEmail}>`,
+      to,
       subject,
       html,
     });
 
-    if (error) {
-      console.error('[Email] Error sending email:', error);
-      return false;
-    }
-
-    console.log('[Email] Email sent successfully:', data?.id);
+    console.log("[Email] SMTP email enviado a:", to);
     return true;
   } catch (error) {
-    console.error('[Email] Exception sending email:', error);
+    console.error("[Email] SMTP error:", error);
     return false;
   }
+}
+
+/**
+ * Enviar email de prueba para verificar la configuración
+ */
+export async function sendTestEmail(to: string): Promise<boolean> {
+  const content = getEmailTemplate(`
+    <div class="alert alert-success">
+      <h2 style="margin-top: 0;">✅ Email de Prueba</h2>
+      <p>Este es un email de prueba para verificar la configuración del servicio de correo.</p>
+      <p><strong>Fecha:</strong> ${new Date().toLocaleString("es-CO", { timeZone: await getConfiguredTimezone() })}</p>
+    </div>
+    <p>Si recibes este email, la configuración del servicio de correo está funcionando correctamente.</p>
+  `);
+
+  return sendEmail({
+    to,
+    subject: "✅ Email de Prueba - Solar Project Manager",
+    html: content,
+  });
 }
 
 /**
@@ -127,15 +286,15 @@ function getEmailTemplate(content: string): string {
 <body>
   <div class="container">
     <div class="header">
-      <h1>🌞 Solar Project Manager</h1>
-      <p style="margin: 5px 0 0 0; color: #666;">GreenH Project</p>
+      <h1>☀️ Solar Project Manager</h1>
+      <p style="margin: 5px 0 0 0; color: #666;">Green House Project</p>
     </div>
     <div class="content">
       ${content}
     </div>
     <div class="footer">
       <p>Este es un email automático del Solar Project Manager.</p>
-      <p>© ${new Date().getFullYear()} GreenH Project. Todos los derechos reservados.</p>
+      <p>© ${new Date().getFullYear()} Green House Project. Todos los derechos reservados.</p>
     </div>
   </div>
 </body>
@@ -144,71 +303,67 @@ function getEmailTemplate(content: string): string {
 }
 
 /**
- * Email para hito próximo a vencer
+ * Email de recordatorio de hito (unificado para próximo a vencer y vencido)
  */
-export async function sendMilestoneDueSoonEmail(
-  to: string,
-  milestoneName: string,
-  projectName: string,
-  dueDate: Date,
-  daysUntil: number
-): Promise<boolean> {
-  const content = `
-    <div class="alert alert-warning">
-      <h2 style="margin-top: 0;">⏰ Hito Próximo a Vencer</h2>
-      <p><strong>Proyecto:</strong> ${projectName}</p>
-      <p><strong>Hito:</strong> ${milestoneName}</p>
-      <p><strong>Fecha de vencimiento:</strong> ${dueDate.toLocaleDateString('es-ES', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })}</p>
-      <p><strong>Tiempo restante:</strong> ${daysUntil} ${daysUntil === 1 ? 'día' : 'días'}</p>
-    </div>
-    <p>Este es un recordatorio de que el hito <strong>"${milestoneName}"</strong> del proyecto <strong>"${projectName}"</strong> vence pronto.</p>
-    <p>Por favor, asegúrate de completarlo a tiempo.</p>
-  `;
+export async function sendMilestoneReminderEmail(params: {
+  toEmail: string;
+  toName: string;
+  milestoneName: string;
+  projectName: string;
+  dueDate: Date;
+  type: "due_soon" | "overdue";
+}): Promise<boolean> {
+  const { toEmail, toName, milestoneName, projectName, dueDate, type } = params;
+  const { getNowInConfiguredTimezone: getNow } = await import("./timezone");
+  const now = await getNow();
+  const diffMs = type === "overdue"
+    ? now.getTime() - dueDate.getTime()
+    : dueDate.getTime() - now.getTime();
+  const days = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 
-  return sendEmail({
-    to,
-    subject: `⏰ Recordatorio: ${milestoneName} vence en ${daysUntil} ${daysUntil === 1 ? 'día' : 'días'}`,
-    html: getEmailTemplate(content),
-  });
-}
+  if (type === "overdue") {
+    const content = getEmailTemplate(`
+      <div class="alert alert-danger">
+        <h2 style="margin-top: 0;">🚨 Hito Vencido</h2>
+        <p><strong>Proyecto:</strong> ${projectName}</p>
+        <p><strong>Hito:</strong> ${milestoneName}</p>
+        <p><strong>Fecha de vencimiento:</strong> ${dueDate.toLocaleDateString('es-CO', { 
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: await getConfiguredTimezone() 
+        })}</p>
+        <p><strong>Días de retraso:</strong> ${days} ${days === 1 ? 'día' : 'días'}</p>
+      </div>
+      <p>Hola <strong>${toName}</strong>,</p>
+      <p>El hito <strong>"${milestoneName}"</strong> del proyecto <strong>"${projectName}"</strong> está vencido.</p>
+      <p>Por favor, actualiza el estado del hito lo antes posible.</p>
+    `);
 
-/**
- * Email para hito vencido
- */
-export async function sendMilestoneOverdueEmail(
-  to: string,
-  milestoneName: string,
-  projectName: string,
-  dueDate: Date,
-  daysOverdue: number
-): Promise<boolean> {
-  const content = `
-    <div class="alert alert-danger">
-      <h2 style="margin-top: 0;">🚨 Hito Vencido</h2>
-      <p><strong>Proyecto:</strong> ${projectName}</p>
-      <p><strong>Hito:</strong> ${milestoneName}</p>
-      <p><strong>Fecha de vencimiento:</strong> ${dueDate.toLocaleDateString('es-ES', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })}</p>
-      <p><strong>Días de retraso:</strong> ${daysOverdue} ${daysOverdue === 1 ? 'día' : 'días'}</p>
-    </div>
-    <p>El hito <strong>"${milestoneName}"</strong> del proyecto <strong>"${projectName}"</strong> está vencido.</p>
-    <p>Por favor, actualiza el estado del hito lo antes posible.</p>
-  `;
+    return sendEmail({
+      to: toEmail,
+      subject: `🚨 Alerta: ${milestoneName} está vencido (${days} ${days === 1 ? 'día' : 'días'})`,
+      html: content,
+    });
+  } else {
+    const content = getEmailTemplate(`
+      <div class="alert alert-warning">
+        <h2 style="margin-top: 0;">⏰ Hito Próximo a Vencer</h2>
+        <p><strong>Proyecto:</strong> ${projectName}</p>
+        <p><strong>Hito:</strong> ${milestoneName}</p>
+        <p><strong>Fecha de vencimiento:</strong> ${dueDate.toLocaleDateString('es-CO', { 
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: await getConfiguredTimezone() 
+        })}</p>
+        <p><strong>Tiempo restante:</strong> ${days} ${days === 1 ? 'día' : 'días'}</p>
+      </div>
+      <p>Hola <strong>${toName}</strong>,</p>
+      <p>Este es un recordatorio de que el hito <strong>"${milestoneName}"</strong> del proyecto <strong>"${projectName}"</strong> vence pronto.</p>
+      <p>Por favor, asegúrate de completarlo a tiempo.</p>
+    `);
 
-  return sendEmail({
-    to,
-    subject: `🚨 Alerta: ${milestoneName} está vencido (${daysOverdue} ${daysOverdue === 1 ? 'día' : 'días'})`,
-    html: getEmailTemplate(content),
-  });
+    return sendEmail({
+      to: toEmail,
+      subject: `⏰ Recordatorio: ${milestoneName} vence en ${days} ${days === 1 ? 'día' : 'días'}`,
+      html: content,
+    });
+  }
 }
 
 /**
@@ -220,7 +375,7 @@ export async function sendProjectCompletedEmail(
   location: string,
   durationDays: number
 ): Promise<boolean> {
-  const content = `
+  const content = getEmailTemplate(`
     <div class="alert alert-success">
       <h2 style="margin-top: 0;">🎉 ¡Proyecto Completado!</h2>
       <p><strong>Proyecto:</strong> ${projectName}</p>
@@ -229,12 +384,12 @@ export async function sendProjectCompletedEmail(
     </div>
     <p>¡Felicidades! El proyecto <strong>"${projectName}"</strong> ha alcanzado el 100% de completitud.</p>
     <p>Todos los hitos han sido completados exitosamente.</p>
-  `;
+  `);
 
   return sendEmail({
     to,
     subject: `🎉 ¡Proyecto Completado! - ${projectName}`,
-    html: getEmailTemplate(content),
+    html: content,
   });
 }
 
@@ -248,54 +403,24 @@ export async function sendProjectAssignedEmail(
   location: string,
   startDate: Date
 ): Promise<boolean> {
-  const content = `
+  const content = getEmailTemplate(`
     <div class="alert alert-info">
       <h2 style="margin-top: 0;">📋 Nuevo Proyecto Asignado</h2>
       <p><strong>Ingeniero:</strong> ${engineerName}</p>
       <p><strong>Proyecto:</strong> ${projectName}</p>
       <p><strong>Ubicación:</strong> ${location || 'No especificada'}</p>
-      <p><strong>Fecha de inicio:</strong> ${startDate.toLocaleDateString('es-ES', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+      <p><strong>Fecha de inicio:</strong> ${startDate.toLocaleDateString('es-CO', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: await getConfiguredTimezone() 
       })}</p>
     </div>
     <p>Se te ha asignado el proyecto <strong>"${projectName}"</strong>.</p>
     <p>Por favor, revisa los detalles y hitos del proyecto en el sistema.</p>
-  `;
+  `);
 
   return sendEmail({
     to,
     subject: `📋 Nuevo Proyecto Asignado: ${projectName}`,
-    html: getEmailTemplate(content),
-  });
-}
-
-/**
- * Email para actualización de proyecto
- */
-export async function sendProjectUpdateEmail(
-  to: string,
-  projectName: string,
-  updateTitle: string,
-  updateDescription: string,
-  createdBy: string
-): Promise<boolean> {
-  const content = `
-    <div class="alert alert-info">
-      <h2 style="margin-top: 0;">📝 Actualización de Proyecto</h2>
-      <p><strong>Proyecto:</strong> ${projectName}</p>
-      <p><strong>Actualización:</strong> ${updateTitle}</p>
-      <p><strong>Creado por:</strong> ${createdBy}</p>
-    </div>
-    <p>${updateDescription}</p>
-  `;
-
-  return sendEmail({
-    to,
-    subject: `📝 Actualización: ${projectName} - ${updateTitle}`,
-    html: getEmailTemplate(content),
+    html: content,
   });
 }
 
@@ -315,16 +440,16 @@ export async function sendGenericNotificationEmail(
     success: '✅',
   };
 
-  const content = `
+  const content = getEmailTemplate(`
     <div class="alert alert-${type}">
       <h2 style="margin-top: 0;">${icons[type]} ${title}</h2>
     </div>
     <p>${message}</p>
-  `;
+  `);
 
   return sendEmail({
     to,
     subject: `${icons[type]} ${title}`,
-    html: getEmailTemplate(content),
+    html: content,
   });
 }

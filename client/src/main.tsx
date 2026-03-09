@@ -1,3 +1,31 @@
+// ============================================================
+// Monkey-patch removeChild & insertBefore to prevent crashes
+// caused by Google Translate (and similar browser extensions)
+// that modify the DOM outside of React's control.
+// See: https://github.com/facebook/react/issues/11538
+// ============================================================
+if (typeof Node !== 'undefined' && Node.prototype) {
+  const originalRemoveChild = Node.prototype.removeChild;
+  // @ts-ignore - monkey patching native method
+  Node.prototype.removeChild = function <T extends Node>(child: T): T {
+    if (child.parentNode !== this) {
+      console.warn('[DOM Patch] Cannot remove a child from a different parent — likely caused by Google Translate or a browser extension.');
+      return child;
+    }
+    return originalRemoveChild.apply(this, [child]) as T;
+  };
+
+  const originalInsertBefore = Node.prototype.insertBefore;
+  // @ts-ignore - monkey patching native method
+  Node.prototype.insertBefore = function <T extends Node>(newNode: T, referenceNode: Node | null): T {
+    if (referenceNode && referenceNode.parentNode !== this) {
+      console.warn('[DOM Patch] Cannot insert before a reference node from a different parent — likely caused by Google Translate or a browser extension.');
+      return newNode;
+    }
+    return originalInsertBefore.apply(this, [newNode, referenceNode]) as T;
+  };
+}
+
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from "@shared/const";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

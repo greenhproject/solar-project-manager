@@ -336,4 +336,152 @@
 - [x] Corregir milestones.getByProject para que ingeniero_tramites vea todos los hitos del proyecto
 - [x] Agregar notificaciones en menú lateral para usuarios no-admin (NotificationBell ya estaba para todos los autenticados)
 - [x] Verificar que todos los roles tengan acceso a las funciones básicas (tests creados en ingeniero-tramites.test.ts)
+- [x] Push a GitHub para Railway (commit 69fbcf2)
+
+
+## Fix Sidebar y Overdue para ingeniero_tramites en Railway (28 Feb 2026)
+
+- [x] Corregir Sidebar: solo muestra "Trámites y Diseño" para ingeniero_tramites, faltan Dashboard, Proyectos, Calendario, Recordatorios, Notificaciones, Asistente IA, Análisis
+- [x] Corregir NotificationBell: campana ya estaba funcional para todos los autenticados
+- [x] Corregir "Con Retraso" muestra 0 - ahora calcula overdue por hitos vencidos además de fecha del proyecto
+- [x] Push a GitHub para Railway (commit bfcb7d7)
+
+
+## Fix Filtro Overdue en Página de Proyectos (28 Feb 2026)
+
+- [x] El filtro "overdue" en Projects.tsx solo compara estimatedEndDate, no hitos vencidos
+- [x] Agregar flag hasOverdueMilestones al listado de proyectos desde el backend
+- [x] Actualizar filtro en frontend para usar el nuevo flag
+- [x] Push a GitHub para Railway (commit aebf068)
+
+
+## Fix Hitos: ingeniero_tramites ve todos los hitos en vez de solo los asignados (28 Feb 2026)
+
+- [x] Revertir milestones.getByProject para que ingeniero_tramites solo vea sus hitos asignados (no todos los del proyecto)
+- [x] Push a GitHub para Railway (commit 6d124ca)
+
+
+## Fix Recordatorios para ingeniero_tramites (1 Mar 2026)
+
+- [x] Backend: filtrar milestones.overdue y reminders.overdue/upcoming para que ingeniero_tramites solo vea hitos donde es responsable (assignedUserId)
+- [x] Frontend: agregar enlace directo al proyecto al hacer clic en cada recordatorio
+- [x] Frontend: permitir reprogramar fecha del hito con justificación obligatoria (queda como nota en project_updates)
+- [x] Ordenar por días de vencimiento (más urgente primero) - ya estaba ordenado por dueDate ASC
+- [x] Push a GitHub para Railway (commit eab9a7c)
+
+
+## Módulo de Notificaciones funcional (1 Mar 2026)
+
+- [x] Backend: crear procedimiento para generar notificaciones automáticas por hitos próximos a vencer y vencidos
+- [ ] Backend: crear tabla email_config para configuración dinámica de proveedor - [x] Backend: crear tabla email_config para configuración dinámica de proveedor de email desde admin
+- [x] Backend: actualizar emailService.ts para usar configuración dinámica (Resend, SendGrid, SMTP genérico)
+- [x] Backend: integrar envío de email con copia al admin configurable para trazabilidad
+- [x] Frontend: auto-generar notificaciones al cargar la página (todos los roles)
+- [x] Frontend: crear página de Configuración de Email en admin (/settings/email)
+- [x] Push a GitHub para Railway (commit 537c67e)
+
+
+## Corregir nombre de la empresa (1 Mar 2026)
+
+- [x] Reemplazar "GreenH Project" por "Green House Project" en toda la interfaz y templates de email (8 archivos corregidos)
+- [x] Push a GitHub para Railway (commit 02a1c3c)
+
+
+## Fix lógica Con Retraso para usuarios no-admin (1 Mar 2026)
+
+- [x] stats.overdue: filtra overdueMilestones por assignedUserId del usuario actual antes de contar
+- [x] hasOverdueMilestones en projects.list: filtra por usuario actual para roles no-admin, admin ve todo
+- [x] Push a GitHub para Railway (commit 3306eca)
+
+
+## Fix vista detalle proyecto: hitos visibles para usuarios no-admin (1 Mar 2026)
+
+- [x] milestones.getByProject: solo admin ve todos los hitos, engineer e ingeniero_tramites solo ven sus hitos asignados
+- [x] milestones.getAll: filtrar por assignedUserId para no-admin
+- [x] milestones.overdue: filtrar por assignedUserId para no-admin
+- [x] reminders.overdue y upcoming: filtrar por assignedUserId para no-admin
+- [x] stats.overdue: solo contar por hitos vencidos del usuario (no por assignedEngineerId)
+- [x] projects.list hasOverdueMilestones: ya estaba correcto para no-admin
+- [x] Push a GitHub para Railway (commit 032911d)
+
+
+## Bug: NotFoundError removeChild al navegar entre páginas (1 Mar 2026)
+
+- [x] Investigar causa del error "Failed to execute 'removeChild' on 'Node'" al navegar
+- [x] Corregir el error en el código
+- [x] Push a GitHub para Railway (commit 0b98ce3)
+
+
+## Bug: NotFoundError removeChild persiste en producción (3 Mar 2026)
+
+- [x] Investigar causa profunda: Google Translate modifica el DOM y React pierde track de nodos
+- [x] Verificar que commit anterior fue desplegado en Railway (confirmado: 0b98ce3)
+- [x] Aplicar monkey-patch de Node.removeChild y Node.insertBefore (solución oficial React #11538)
+- [x] Mover script Umami de body a head para evitar conflictos con React DOM
+- [x] Actualizar ErrorBoundary con auto-recuperación para errores de traducción
+- [x] Push a GitHub para Railway (commit 6979a61)
+
+
+## Fix Zona Horaria - Configuración desde Admin (4 Mar 2026)
+
+### Backend
+- [x] Agregar tabla app_settings en schema para configuración global (timezone, etc.)
+- [x] Crear helper server/timezone.ts con getNowInConfiguredTimezone() y cache de 5 min
+- [x] Actualizar db.ts: getOverdueMilestones, getUpcomingMilestones, getDelayedProjects, getProjectStats
+- [x] Actualizar routers.ts: completedDate, reschedule, milestone assignment email
+- [x] Actualizar emailService.ts: todas las fechas en emails usan timezone configurada
+- [x] Crear router appSettings.getTimezone y appSettings.setTimezone (admin only)
+
+### Frontend
+- [x] Crear componente TimezoneSettings con reloj en tiempo real y selector
+- [x] Dropdown con 20 zonas horarias LATAM + internacionales
+- [x] Crear hook useTimezone con formatDate, formatDateTime, formatRelative
+- [x] Actualizar 10 páginas: Dashboard, Projects, ProjectDetail, Reminders, GanttChart, AdvancedAnalytics, NotificationHistory, EmailConfig, UserProfile, UserManagement
+- [x] Sección de Zona Horaria integrada en Settings de admin
+
+### Despliegue
+- [x] Push a GitHub para Railway (commit 0a981cb)
+
+
+## Fix: Zona Horaria no aparece en Settings de producción (4 Mar 2026)
+
+- [x] Verificar que el commit de timezone fue desplegado - errores TS impedían build en Railway
+- [x] Verificar que Settings.tsx incluye el componente TimezoneSettings (confirmado OK)
+- [x] Corregir errores TS: import getDb, tipos null, ts-expect-error, ctx.user.email nullable
+- [x] Push corrección a GitHub (commit a447b3a)
+
+## Feature: Responsable por defecto en plantillas de hitos (4 Mar 2026)
+
+- [x] Agregar campo defaultAssignedUserId a tabla milestone_templates en schema
+- [x] Actualizar procedimientos tRPC create/update de plantillas para incluir responsable
+- [x] Agregar selector de responsable en UI de plantillas de hitos (SystemConfiguration.tsx)
+- [x] Al usar plantilla, precargar el responsable asignado en el hito (2 ubicaciones en routers.ts)
+- [x] Mostrar responsable asignado en lista de plantillas con icono de usuario
+- [x] Push a GitHub para Railway (commit a447b3a)
+
+
+## Fix: Responsive pésimo en móvil + Dashboard muestra 0 retrasos (4 Mar 2026)
+
+### Responsive
+- [x] MainLayout: padding top para hamburger menu en móvil (pt-14)
+- [x] Dashboard: grid-cols-2 en móvil, tamaños de texto responsivos
+- [x] Projects: card headers, iconos y texto más pequeños en móvil
+- [x] Reminders: layout responsivo corregido
+- [x] 13 páginas: text sizes responsivos (text-xl sm:text-2xl lg:text-3xl)
+- [x] 13 páginas: container padding responsivo (py-4 sm:py-6 lg:py-8)
+
+### Dashboard vs Proyectos - Conteo de retrasos
+- [x] Causa: getProjectStats solo comparaba estimatedEndDate, no hitos vencidos
+- [x] Fix: getProjectStats ahora cuenta overdue = fecha vencida OR hitos vencidos
+- [x] Admin ve panorama global correcto
+- [x] Push a GitHub para Railway (commit e4d3ebd)
+
+
+## Feature: Admin puede eliminar hitos de un proyecto (9 Mar 2026)
+
+- [x] Backend: crear procedimiento tRPC milestones.delete (solo admin)
+- [x] Backend: eliminar datos relacionados (reminders, project_updates del hito) antes de borrar el hito
+- [x] Frontend: agregar botón de eliminar hito en ProjectDetail con confirmación
+- [x] Frontend: diálogo de confirmación con nombre del hito antes de eliminar
+- [x] Tests: crear test para verificar que admin puede eliminar y no-admin no puede
 - [ ] Push a GitHub para Railway

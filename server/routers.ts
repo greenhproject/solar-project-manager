@@ -19,6 +19,7 @@ import {
 } from "./openSolarIntegration";
 import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
+import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -477,13 +478,33 @@ export const appRouter = router({
   // ============================================
   projects: router({
     list: protectedProcedure.query(async ({ ctx }) => {
+      let projectList;
       // Administradores ven todos los proyectos
       if (ctx.user.role === "admin") {
-        return await db.getAllProjects();
+        projectList = await db.getAllProjects();
       } else {
         // Usuarios normales solo ven proyectos donde tienen hitos asignados
-        return await db.getProjectsWithAssignedMilestones(ctx.user.id);
+        projectList = await db.getProjectsWithAssignedMilestones(ctx.user.id);
       }
+      
+      // Obtener hitos vencidos para marcar proyectos con retraso por hitos
+      const overdueMilestones = await db.getOverdueMilestones();
+      
+      // Para admin: mostrar todos los hitos vencidos
+      // Para otros roles: filtrar solo hitos vencidos asignados al usuario actual
+      const relevantOverdueMilestones = ctx.user.role === "admin"
+        ? overdueMilestones
+        : overdueMilestones.filter(m => m.assignedUserId === ctx.user.id);
+      
+      const projectIdsWithOverdueMilestones = new Set(
+        relevantOverdueMilestones.map(m => m.projectId)
+      );
+      
+      // Agregar flag hasOverdueMilestones a cada proyecto
+      return projectList.map(p => ({
+        ...p,
+        hasOverdueMilestones: projectIdsWithOverdueMilestones.has(p.id),
+      }));
     }),
 
     getById: protectedProcedure
@@ -568,6 +589,7 @@ export const appRouter = router({
               status: "pending",
               orderIndex: template.orderIndex,
               weight: 1,
+              assignedUserId: template.defaultAssignedUserId || null,
             });
           }
 
@@ -710,17 +732,29 @@ export const appRouter = router({
         for (const p of projectsByEngineer) projectMap.set(p.id, p);
         const allUserProjects = Array.from(projectMap.values());
         
-        const now = new Date();
+        // getOverdueMilestones ya usa getNowInConfiguredTimezone internamente
+        const overdueMilestones = await db.getOverdueMilestones();
+        const userOverdueMilestones = overdueMilestones.filter(
+          m => m.assignedUserId === ctx.user.id
+        );
+        const projectIdsWithUserOverdueMilestones = new Set(
+          userOverdueMilestones.map(m => m.projectId)
+        );
+        
+        // Un proyecto está "overdue" para este usuario SOLO si tiene hitos
+        // vencidos ASIGNADOS A ESTE USUARIO (no por fecha del proyecto)
+        const overdueCount = allUserProjects.filter(
+          p =>
+            p.status !== "completed" &&
+            p.status !== "cancelled" &&
+            projectIdsWithUserOverdueMilestones.has(p.id)
+        ).length;
+        
         return {
           total: allUserProjects.length,
           active: allUserProjects.filter(p => p.status === "in_progress").length,
           completed: allUserProjects.filter(p => p.status === "completed").length,
-          overdue: allUserProjects.filter(
-            p =>
-              p.status !== "completed" &&
-              p.status !== "cancelled" &&
-              p.estimatedEndDate < now
-          ).length,
+          overdue: overdueCount,
         };
       }
     }),
@@ -770,6 +804,7 @@ export const appRouter = router({
             dueDate: new Date(project.startDate.getTime() + (template.estimatedDurationDays || 0) * 24 * 60 * 60 * 1000),
             orderIndex: template.orderIndex,
             status: "pending",
+            assignedUserId: template.defaultAssignedUserId || null,
           });
           createdCount++;
         }
@@ -811,6 +846,7 @@ export const appRouter = router({
           description: z.string().optional(),
           orderIndex: z.number(),
           estimatedDurationDays: z.number().default(7),
+          defaultAssignedUserId: z.number().nullable().optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -825,6 +861,7 @@ export const appRouter = router({
           description: z.string().optional(),
           orderIndex: z.number().optional(),
           estimatedDurationDays: z.number().optional(),
+          defaultAssignedUserId: z.number().nullable().optional(),
           isActive: z.boolean().optional(),
         })
       )
@@ -849,15 +886,9 @@ export const appRouter = router({
     getAll: protectedProcedure.query(async ({ ctx }) => {
       const allMilestones = await db.getAllMilestones();
 
-      // Si no es admin, filtrar solo los hitos de sus proyectos
+      // Si no es admin, filtrar solo los hitos ASIGNADOS al usuario (no todos los del proyecto)
       if (ctx.user.role !== "admin") {
-        // Obtener proyectos por hitos asignados Y por asignación directa
-        const projectsByMilestones = await db.getProjectsWithAssignedMilestones(ctx.user.id);
-        const projectsByEngineer = await db.getProjectsByEngineerId(ctx.user.id);
-        const userProjectIds = new Set<number>();
-        for (const p of projectsByMilestones) userProjectIds.add(p.id);
-        for (const p of projectsByEngineer) userProjectIds.add(p.id);
-        return allMilestones.filter(m => userProjectIds.has(m.projectId));
+        return allMilestones.filter(m => m.assignedUserId === ctx.user.id);
       }
 
       return allMilestones;
@@ -874,22 +905,13 @@ export const appRouter = router({
           });
         }
 
-        // Admin y el ingeniero asignado al proyecto ven todos los hitos
-        if (ctx.user.role === "admin" || project.assignedEngineerId === ctx.user.id) {
+        // Solo admin ve todos los hitos del proyecto
+        if (ctx.user.role === "admin") {
           return await db.getMilestonesByProjectId(input.projectId);
         }
 
-        // Usuarios con hitos asignados pueden ver todos los hitos del proyecto
-        const hasAssignedMilestones = await db.userHasAssignedMilestones(ctx.user.id, input.projectId);
-        if (hasAssignedMilestones) {
-          return await db.getMilestonesByProjectId(input.projectId);
-        }
-
-        // Sin permisos
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "No tienes permiso para ver estos hitos",
-        });
+        // Todos los demás roles (engineer, ingeniero_tramites, etc.) solo ven sus hitos asignados
+        return await db.getMilestonesByProjectIdForUser(input.projectId, ctx.user.id);
       }),
 
     create: protectedProcedure
@@ -995,9 +1017,9 @@ export const appRouter = router({
             dependencies.length > 0 ? JSON.stringify(dependencies) : null;
         }
 
-        // Si se marca como completado y no hay completedDate, usar fecha actual
+        // Si se marca como completado y no hay completedDate, usar fecha actual (zona horaria configurada)
         if (updateData.status === "completed" && !updateData.completedDate) {
-          updateData.completedDate = new Date();
+          updateData.completedDate = await getNowInConfiguredTimezone();
         }
 
         // Obtener el hito para saber su projectId
@@ -1059,20 +1081,63 @@ export const appRouter = router({
         return { success: true, projectId: milestone.projectId };
       }),
 
+    // Solicitar reprogramación de fecha con justificación (para roles no-admin)
+    requestReschedule: protectedProcedure
+      .input(
+        z.object({
+          milestoneId: z.number(),
+          newDueDate: z.date(),
+          justification: z.string().min(5, "La justificación debe tener al menos 5 caracteres"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const milestone = await db.getMilestoneById(input.milestoneId);
+        if (!milestone) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Hito no encontrado",
+          });
+        }
+
+        // Verificar que el usuario sea el responsable del hito o admin
+        if (ctx.user.role !== "admin" && milestone.assignedUserId !== ctx.user.id) {
+          const project = await db.getProjectById(milestone.projectId);
+          if (!project || project.assignedEngineerId !== ctx.user.id) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "No tienes permiso para reprogramar este hito",
+            });
+          }
+        }
+
+        const oldDueDate = milestone.dueDate;
+
+        // Actualizar la fecha del hito
+        await db.updateMilestone(input.milestoneId, {
+          dueDate: input.newDueDate,
+        });
+
+        // Registrar la reprogramación como nota en project_updates
+        await db.createProjectUpdate({
+          projectId: milestone.projectId,
+          updateType: "note_added",
+          title: `Hito reprogramado: ${milestone.name}`,
+          description: `${ctx.user.name || "Usuario"} reprogramó la fecha del hito "${milestone.name}" de ${oldDueDate ? new Date(oldDueDate).toLocaleDateString("es-CO", { timeZone: await getConfiguredTimezone() }) : "sin fecha"} a ${input.newDueDate.toLocaleDateString("es-CO", { timeZone: await getConfiguredTimezone() })}. Justificación: ${input.justification}`,
+          oldValue: oldDueDate ? JSON.stringify({ dueDate: oldDueDate }) : null,
+          newValue: JSON.stringify({ dueDate: input.newDueDate }),
+          createdBy: ctx.user.id,
+        });
+
+        return { success: true, projectId: milestone.projectId };
+      }),
+
     overdue: protectedProcedure.query(async ({ ctx }) => {
       const overdueMilestones = await db.getOverdueMilestones();
 
-      // Filtrar por permisos si es ingeniero o ingeniero_tramites
+      // Filtrar por permisos según rol
       if (ctx.user.role !== "admin") {
-        // Obtener proyectos por hitos asignados Y por asignación directa
-        const projectsByMilestones = await db.getProjectsWithAssignedMilestones(ctx.user.id);
-        const projectsByEngineer = await db.getProjectsByEngineerId(ctx.user.id);
-        const userProjectIds = new Set<number>();
-        for (const p of projectsByMilestones) userProjectIds.add(p.id);
-        for (const p of projectsByEngineer) userProjectIds.add(p.id);
-        return overdueMilestones.filter(m =>
-          userProjectIds.has(m.projectId)
-        );
+        // Todos los roles no-admin solo ven hitos vencidos ASIGNADOS a ellos
+        return overdueMilestones.filter(m => m.assignedUserId === ctx.user.id);
       }
 
       return overdueMilestones;
@@ -1234,7 +1299,7 @@ export const appRouter = router({
                   <ul>
                     <li><strong>Proyecto:</strong> ${project.name}</li>
                     <li><strong>Hito:</strong> ${milestone.name}</li>
-                    <li><strong>Fecha de vencimiento:</strong> ${new Date(milestone.dueDate).toLocaleDateString('es-ES')}</li>
+                    <li><strong>Fecha de vencimiento:</strong> ${new Date(milestone.dueDate).toLocaleDateString('es-CO', { timeZone: await getConfiguredTimezone() })}</li>
                     ${milestone.description ? `<li><strong>Descripción:</strong> ${milestone.description}</li>` : ''}
                   </ul>
                   <p>Por favor, revisa los detalles en el sistema.</p>
@@ -1319,6 +1384,48 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const milestone = await db.getMilestoneById(input.id);
+        if (!milestone) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Hito no encontrado",
+          });
+        }
+
+        const project = await db.getProjectById(milestone.projectId);
+
+        // Intentar eliminar el evento de Google Calendar si existe
+        if (milestone.googleCalendarEventId) {
+          try {
+            const { deleteCalendarEvent } = await import("./googleCalendar");
+            await deleteCalendarEvent(milestone.googleCalendarEventId);
+          } catch (error) {
+            console.error("[Milestone] Error deleting Google Calendar event:", error);
+          }
+        }
+
+        // Eliminar el hito y sus datos relacionados (reminders)
+        await db.deleteMilestone(input.id);
+
+        // Registrar la eliminación en el historial del proyecto
+        await db.createProjectUpdate({
+          projectId: milestone.projectId,
+          updateType: "note_added",
+          title: "Hito eliminado",
+          description: `El administrador ${ctx.user.name || "Admin"} eliminó el hito "${milestone.name}" del proyecto "${project?.name || "Desconocido"}"`,
+          createdBy: ctx.user.id,
+        });
+
+        // Recalcular progreso del proyecto
+        const { recalculateProjectProgress } = await import("./progressCalculator");
+        await recalculateProjectProgress(milestone.projectId);
+
+        return { success: true, projectId: milestone.projectId };
+      }),
   }),
 
   // ============================================
@@ -1342,13 +1449,29 @@ export const appRouter = router({
           })
           .optional()
       )
-      .query(async ({ input }) => {
-        return await db.getUpcomingMilestones(input?.daysAhead || 7);
+      .query(async ({ input, ctx }) => {
+        const allUpcoming = await db.getUpcomingMilestones(input?.daysAhead || 7);
+        
+        // Filtrar por permisos según rol
+        if (ctx.user.role !== "admin") {
+          // Todos los roles no-admin solo ven hitos próximos ASIGNADOS a ellos
+          return allUpcoming.filter(m => m.assignedUserId === ctx.user.id);
+        }
+        
+        return allUpcoming;
       }),
 
     // Obtener hitos vencidos
-    overdue: protectedProcedure.query(async () => {
-      return await db.getOverdueMilestones();
+    overdue: protectedProcedure.query(async ({ ctx }) => {
+      const allOverdue = await db.getOverdueMilestones();
+      
+      // Filtrar por permisos según rol
+      if (ctx.user.role !== "admin") {
+        // Todos los roles no-admin solo ven hitos vencidos ASIGNADOS a ellos
+        return allOverdue.filter(m => m.assignedUserId === ctx.user.id);
+      }
+      
+      return allOverdue;
     }),
 
     create: protectedProcedure
@@ -1397,7 +1520,7 @@ export const appRouter = router({
 
       // Preparar contexto para el LLM
       const context = `
-Análisis de Proyectos Solares - GreenH Project
+Análisis de Proyectos Solares - Green House Project
 
 Estadísticas Generales:
 - Total de proyectos: ${stats.total}
@@ -1474,7 +1597,7 @@ Pregunta del usuario: ${input.question}
             {
               role: "system",
               content:
-                "Eres un asistente experto en gestión de proyectos solares de GreenH Project. Responde preguntas de forma clara, concisa y profesional en español. Usa los datos proporcionados para dar respuestas precisas.",
+                "Eres un asistente experto en gestión de proyectos solares de Green House Project. Responde preguntas de forma clara, concisa y profesional en español. Usa los datos proporcionados para dar respuestas precisas.",
             },
             {
               role: "user",
@@ -1499,7 +1622,7 @@ Pregunta del usuario: ${input.question}
 
       // Generar análisis con IA
       const context = `
-Análisis de Proyectos Solares - GreenH Project
+Análisis de Proyectos Solares - Green House Project
 
 Estadísticas Generales:
 - Total de proyectos: ${stats.total}
@@ -2005,37 +2128,41 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         return await db.updateNotificationSettings(ctx.user.id, input);
       }),
 
-    // Verificar y crear notificaciones automáticas (hitos próximos y vencidos)
+    // Verificar y crear notificaciones automáticas para el usuario actual
     checkAndCreateAutoNotifications: protectedProcedure.mutation(
       async ({ ctx }) => {
-        // Solo administradores pueden ejecutar esto manualmente
-        if (ctx.user.role !== "admin") {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: "Solo administradores pueden ejecutar esta acción",
-          });
-        }
-
         const {
           getUpcomingMilestones,
           getOverdueMilestones,
           createMilestoneDueSoonNotification,
           createMilestoneOverdueNotification,
+          getUserNotifications,
         } = await import("./db");
 
         let upcomingCount = 0;
         let overdueCount = 0;
 
         try {
-          // Obtener hitos próximos a vencer (2 días)
-          const upcomingMilestones = await getUpcomingMilestones(2);
+          // Obtener notificaciones existentes del usuario para evitar duplicados
+          const existingNotifications = await getUserNotifications(ctx.user.id, 200, false);
+          const existingTitles = new Set(existingNotifications.map(n => n.title));
+
+          // Obtener hitos próximos a vencer (3 días)
+          const upcomingMilestones = await getUpcomingMilestones(3);
 
           for (const milestone of upcomingMilestones) {
-            // Notificar al ingeniero asignado, o al admin si no hay ingeniero
-            const targetUserId = milestone.assignedEngineerId || ctx.user.id;
+            // Notificar al responsable del hito (assignedUserId) o al ingeniero del proyecto
+            const targetUserId = milestone.assignedUserId || milestone.assignedEngineerId;
+            
+            // Solo crear notificación si es para el usuario actual
+            if (targetUserId !== ctx.user.id) continue;
+            
+            // Evitar duplicados
+            const title = `Hito próximo a vencer: ${milestone.milestoneName}`;
+            if (existingTitles.has(title)) continue;
             
             await createMilestoneDueSoonNotification(
-              targetUserId,
+              ctx.user.id,
               milestone.milestoneId,
               milestone.projectId,
               milestone.milestoneName,
@@ -2049,11 +2176,18 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           const overdueMilestones = await getOverdueMilestones();
 
           for (const milestone of overdueMilestones) {
-            // Notificar al ingeniero asignado, o al admin si no hay ingeniero
-            const targetUserId = milestone.assignedEngineerId || ctx.user.id;
+            // Notificar al responsable del hito (assignedUserId) o al ingeniero del proyecto
+            const targetUserId = milestone.assignedUserId || milestone.assignedEngineerId;
+            
+            // Solo crear notificación si es para el usuario actual
+            if (targetUserId !== ctx.user.id) continue;
+            
+            // Evitar duplicados
+            const title = `Hito vencido: ${milestone.milestoneName}`;
+            if (existingTitles.has(title)) continue;
             
             await createMilestoneOverdueNotification(
-              targetUserId,
+              ctx.user.id,
               milestone.milestoneId,
               milestone.projectId,
               milestone.milestoneName,
@@ -2078,6 +2212,65 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         }
       }
     ),
+
+    // Enviar email de recordatorio para hitos próximos/vencidos
+    sendEmailReminder: protectedProcedure
+      .input(
+        z.object({
+          notificationId: z.number(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        try {
+          // Obtener la notificación para extraer los datos
+          const notification = await db.getNotificationById(input.notificationId);
+          if (!notification) {
+            return { success: false };
+          }
+
+          const { sendMilestoneReminderEmail } = await import("./emailService");
+          const { getEmailConfig } = await import("./db");
+
+          // Determinar tipo
+          const type = notification.type === "milestone_overdue" ? "overdue" as const : "due_soon" as const;
+
+          // Enviar al usuario actual
+          const sent = await sendMilestoneReminderEmail({
+            toEmail: ctx.user.email || "",
+            toName: ctx.user.name || "Usuario",
+            milestoneName: notification.title,
+            projectName: notification.message,
+            dueDate: new Date(notification.sentAt),
+            type,
+          });
+
+          if (!sent) {
+            return { success: false };
+          }
+
+          // Enviar copia al admin si está configurado
+          try {
+            const emailConfig = await getEmailConfig();
+            if (emailConfig?.sendCopyToAdmin && emailConfig.adminEmail) {
+              await sendMilestoneReminderEmail({
+                toEmail: emailConfig.adminEmail,
+                toName: "Administrador",
+                milestoneName: notification.title,
+                projectName: notification.message,
+                dueDate: new Date(notification.sentAt),
+                type,
+              });
+            }
+          } catch (e) {
+            console.warn("No se pudo enviar copia al admin:", e);
+          }
+
+          return { success: true };
+        } catch (error) {
+          console.error("Error al enviar email de recordatorio:", error);
+          return { success: false };
+        }
+      }),
   }),
 
   // ============================================
@@ -2397,6 +2590,121 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
 
         await db.deleteLegalizationChecklistItem(input.id);
         return { success: true };
+      }),
+  }),
+
+  // ============================================
+  // CONFIGURACIÓN DE EMAIL (ADMIN)
+  // ============================================
+  emailConfig: router({
+    // Obtener configuración actual
+    get: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== "admin") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo administradores pueden ver la configuración de email",
+        });
+      }
+      return await db.getEmailConfig();
+    }),
+
+    // Actualizar configuración
+    update: protectedProcedure
+      .input(
+        z.object({
+          provider: z.enum(["resend", "sendgrid", "smtp"]),
+          apiKey: z.string().nullable().optional(),
+          smtpHost: z.string().nullable().optional(),
+          smtpPort: z.number().nullable().optional(),
+          smtpUser: z.string().nullable().optional(),
+          smtpPassword: z.string().nullable().optional(),
+          smtpSecure: z.boolean().optional(),
+          fromEmail: z.string().email(),
+          fromName: z.string(),
+          enableEmailNotifications: z.boolean(),
+          sendCopyToAdmin: z.boolean(),
+          adminEmail: z.string().email().nullable().optional(),
+          isActive: z.boolean(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Solo administradores pueden modificar la configuración de email",
+          });
+        }
+
+        // Invalidar cache del servicio de email
+        const { invalidateEmailConfigCache } = await import("./emailService");
+        invalidateEmailConfigCache();
+
+        return await db.upsertEmailConfig({
+          ...input,
+          updatedBy: ctx.user.id,
+        });
+      }),
+
+    // Enviar email de prueba
+    sendTest: protectedProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Solo administradores pueden enviar emails de prueba",
+          });
+        }
+
+        const { invalidateEmailConfigCache, sendTestEmail } = await import("./emailService");
+        invalidateEmailConfigCache();
+
+        const success = await sendTestEmail(input.email);
+
+        if (success) {
+          const config = await db.getEmailConfig();
+          if (config) {
+            await db.updateEmailConfigTestDate(config.id);
+          }
+        }
+
+        return { success };
+      }),
+  }),
+
+  // ============================================
+  // CONFIGURACIÓN DE ZONA HORARIA (ADMIN)
+  // ============================================
+  appSettings: router({
+    // Obtener zona horaria configurada (público para todos los usuarios autenticados)
+    getTimezone: protectedProcedure.query(async () => {
+      const tz = await getConfiguredTimezone();
+      return { timezone: tz, timezones: LATIN_AMERICA_TIMEZONES };
+    }),
+
+    // Actualizar zona horaria (solo admin)
+    setTimezone: adminProcedure
+      .input(z.object({ timezone: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        // Validar que sea una zona horaria válida
+        try {
+          Intl.DateTimeFormat(undefined, { timeZone: input.timezone });
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Zona horaria inválida: ${input.timezone}`,
+          });
+        }
+
+        const success = await saveTimezone(input.timezone, ctx.user.id);
+        if (!success) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al guardar la zona horaria",
+          });
+        }
+
+        return { success: true, timezone: input.timezone };
       }),
   }),
 });

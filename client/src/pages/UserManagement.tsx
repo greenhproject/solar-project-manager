@@ -31,12 +31,18 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useTimezone } from "@/hooks/useTimezone";
+
 
 const MASTER_EMAIL = "greenhproject@gmail.com";
 
 export default function UserManagement() {
-  const { user: currentUser } = useAuth();
+  const { formatRelative: tzFormatRelative } = useTimezone();
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const currentUser = meQuery.data ?? null;
   const { data: users, isLoading, refetch } = trpc.users.list.useQuery();
   const updateRole = trpc.users.updateRole.useMutation();
   const deleteUser = trpc.users.delete.useMutation();
@@ -86,7 +92,7 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
           Gestión de Usuarios
         </h1>
         <p className="text-gray-600 mt-2">
@@ -99,13 +105,13 @@ export default function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Total Usuarios</CardDescription>
-            <CardTitle className="text-3xl">{users?.length || 0}</CardTitle>
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl">{users?.length || 0}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Administradores</CardDescription>
-            <CardTitle className="text-3xl text-orange-600">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-orange-600">
               {adminUsers.length}
             </CardTitle>
           </CardHeader>
@@ -113,7 +119,7 @@ export default function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Ingenieros</CardDescription>
-            <CardTitle className="text-3xl text-blue-600">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-blue-600">
               {engineerUsers.length}
             </CardTitle>
           </CardHeader>
@@ -162,10 +168,7 @@ export default function UserManagement() {
                         <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                           <span>
                             Último acceso:{" "}
-                            {formatDistanceToNow(new Date(user.lastSignedIn), {
-                              addSuffix: true,
-                              locale: es,
-                            })}
+                            {tzFormatRelative(user.lastSignedIn)}
                           </span>
                         </div>
                       </div>
@@ -297,10 +300,7 @@ export default function UserManagement() {
                           <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                             <span>
                               Último acceso:{" "}
-                              {formatDistanceToNow(
-                                new Date(user.lastSignedIn),
-                                { addSuffix: true, locale: es }
-                              )}
+                              {tzFormatRelative(user.lastSignedIn)}
                             </span>
                           </div>
                         </div>

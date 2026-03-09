@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,11 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default function Reports() {
-  const { user, isAuthenticated } = useAuth();
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   const { data: projects } = trpc.projects.list.useQuery();
 
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
@@ -40,14 +44,13 @@ export default function Reports() {
 
   const generatePDF = trpc.reports.generateProjectPDF.useMutation();
 
-  if (!isAuthenticated || !user) {
+  if (meQuery.isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Acceso Restringido</CardTitle>
-          </CardHeader>
-        </Card>
+        <div className="text-center space-y-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent mx-auto" />
+          <p className="text-gray-600">Cargando reportes...</p>
+        </div>
       </div>
     );
   }
@@ -114,7 +117,7 @@ export default function Reports() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container py-8 space-y-8">
+      <div className="container py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -124,7 +127,7 @@ export default function Reports() {
               </button>
             </Link>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-solar bg-clip-text text-transparent">
+              <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold bg-gradient-solar bg-clip-text text-transparent">
                 Generador de Reportes
               </h1>
               <p className="text-muted-foreground mt-1">

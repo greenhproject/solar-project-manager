@@ -249,7 +249,7 @@ export default function AIAssistant() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
               <Sparkles className="h-8 w-8 text-orange-500" />
               Asistente de IA
             </h1>

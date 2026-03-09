@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
+
 import { trpc } from "@/lib/trpc";
 import {
   Card,
@@ -42,30 +41,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// Detectar si Auth0 está configurado
-const isAuth0Configured = () => {
-  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
-};
-
 export default function TramitesYDiseno() {
-  // Usar el sistema de autenticación correcto
-  const manusAuth = useAuth();
-  const auth0 = useAuth0Custom();
-  
-  // Seleccionar el sistema correcto según la configuración
-  const isUsingAuth0 = isAuth0Configured();
-  const user = isUsingAuth0 ? (auth0.user ? {
-    id: 0,
-    openId: auth0.user.sub || '',
-    name: auth0.user.name || '',
-    email: auth0.user.email || '',
-    role: 'admin' as const, // Por defecto admin para Auth0
-    avatarUrl: auth0.user.picture || null,
-    createdAt: new Date(),
-    lastSignedIn: new Date(),
-    theme: 'system' as const,
-    password: null,
-  } : null) : manusAuth.user;
+  // Usar trpc.auth.me para obtener el usuario real del backend
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   
   const utils = trpc.useUtils();
 
@@ -87,17 +69,16 @@ export default function TramitesYDiseno() {
     potencia: "",
   });
 
-  // Verificar si Auth0 está listo (si está configurado)
-  const isAuth0Ready = !isUsingAuth0 || (auth0.isAuthenticated && !auth0.isLoading);
+  // Queries - solo ejecutar cuando el usuario esté autenticado
+  const isReady = !!user;
   
-  // Queries - solo ejecutar cuando Auth0 esté listo (si aplica)
   const { data: cadTemplates, isLoading: loadingCAD } =
     trpc.cadTemplates.list.useQuery(cadFilters, {
-      enabled: isAuth0Ready, // Esperar a que Auth0 termine de cargar
+      enabled: isReady,
     });
   const { data: commonDocs, isLoading: loadingDocs } =
     trpc.commonDocuments.list.useQuery(docFilters, {
-      enabled: isAuth0Ready, // Esperar a que Auth0 termine de cargar
+      enabled: isReady,
     });
 
   // Mutations
@@ -121,10 +102,10 @@ export default function TramitesYDiseno() {
     },
   });
 
-  // Mostrar loading mientras Auth0 carga
-  if (isUsingAuth0 && auth0.isLoading) {
+  // Mostrar loading mientras se verifica la autenticación
+  if (meQuery.isLoading || !user) {
     return (
-      <div className="container py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <Card>
           <CardHeader>
             <CardTitle>Cargando...</CardTitle>
@@ -140,7 +121,7 @@ export default function TramitesYDiseno() {
   // Verificar permisos
   if (user?.role !== "admin" && user?.role !== "ingeniero_tramites") {
     return (
-      <div className="container py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <Card>
           <CardHeader>
             <CardTitle>Acceso Denegado</CardTitle>
@@ -155,9 +136,9 @@ export default function TramitesYDiseno() {
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-4 sm:py-6 lg:py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
           Trámites y Diseño
         </h1>
         <p className="text-muted-foreground mt-2">

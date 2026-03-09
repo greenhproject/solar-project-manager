@@ -28,6 +28,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TramitesYDiseno from "./pages/TramitesYDiseno";
+import EmailConfigPage from "./pages/EmailConfig";
 
 function Router() {
   return (
@@ -145,6 +146,12 @@ function Router() {
       <Route path="/tramites">
         <MainLayout>
           <TramitesYDiseno />
+        </MainLayout>
+      </Route>
+
+      <Route path="/settings/email">
+        <MainLayout>
+          <EmailConfigPage />
         </MainLayout>
       </Route>
 

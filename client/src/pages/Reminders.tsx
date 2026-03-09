@@ -9,6 +9,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
   Bell,
   Check,
   Clock,
@@ -17,14 +28,27 @@ import {
   Calendar,
   MapPin,
   CheckCircle2,
+  ExternalLink,
+  CalendarClock,
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow, format, differenceInDays } from "date-fns";
-import { es } from "date-fns/locale";
+import { differenceInDays } from "date-fns";
 import { useLocation } from "wouter";
+import { useState } from "react";
+import { useTimezone } from "@/hooks/useTimezone";
 
 export default function Reminders() {
   const [, setLocation] = useLocation();
+  const { formatDate: tzFormatDate } = useTimezone();
+  const [rescheduleDialog, setRescheduleDialog] = useState<{
+    open: boolean;
+    milestoneId: number;
+    milestoneName: string;
+    projectId: number;
+    currentDueDate: string;
+  } | null>(null);
+  const [newDueDate, setNewDueDate] = useState("");
+  const [justification, setJustification] = useState("");
 
   const {
     data: upcomingMilestones,
@@ -39,6 +63,7 @@ export default function Reminders() {
   } = trpc.reminders.overdue.useQuery();
 
   const updateMilestone = trpc.milestones.update.useMutation();
+  const requestReschedule = trpc.milestones.requestReschedule.useMutation();
 
   const handleMarkAsCompleted = async (milestoneId: number, milestoneName: string) => {
     try {
@@ -52,6 +77,51 @@ export default function Reminders() {
     } catch (error) {
       toast.error("Error al actualizar hito");
     }
+  };
+
+  const handleReschedule = async () => {
+    if (!rescheduleDialog || !newDueDate || !justification) {
+      toast.error("Debes completar la nueva fecha y la justificación");
+      return;
+    }
+
+    if (justification.length < 5) {
+      toast.error("La justificación debe tener al menos 5 caracteres");
+      return;
+    }
+
+    try {
+      await requestReschedule.mutateAsync({
+        milestoneId: rescheduleDialog.milestoneId,
+        newDueDate: new Date(newDueDate),
+        justification,
+      });
+      toast.success(`Hito "${rescheduleDialog.milestoneName}" reprogramado exitosamente`);
+      setRescheduleDialog(null);
+      setNewDueDate("");
+      setJustification("");
+      refetchUpcoming();
+      refetchOverdue();
+    } catch (error: any) {
+      toast.error(error?.message || "Error al reprogramar hito");
+    }
+  };
+
+  const openRescheduleDialog = (milestone: {
+    milestoneId: number;
+    milestoneName: string;
+    projectId: number;
+    dueDate: string | Date;
+  }) => {
+    setRescheduleDialog({
+      open: true,
+      milestoneId: milestone.milestoneId,
+      milestoneName: milestone.milestoneName,
+      projectId: milestone.projectId,
+      currentDueDate: tzFormatDate(milestone.dueDate),
+    });
+    setNewDueDate("");
+    setJustification("");
   };
 
   const isLoading = loadingUpcoming || loadingOverdue;
@@ -95,14 +165,16 @@ export default function Reminders() {
               return (
                 <Card
                   key={milestone.milestoneId}
-                  className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow"
+                  className="border-l-4 border-l-red-500 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setLocation(`/projects/${milestone.projectId}`)}
                 >
                   <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
+                      <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-2 break-words">
                             {milestone.milestoneName}
+                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
                           </CardTitle>
                           <Badge variant="destructive" className="gap-1">
                             <AlertCircle className="h-3 w-3" />
@@ -117,13 +189,10 @@ export default function Reminders() {
                         )}
 
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <button
-                            onClick={() => setLocation(`/projects/${milestone.projectId}`)}
-                            className="flex items-center gap-1 hover:text-orange-600 transition-colors"
-                          >
+                          <span className="flex items-center gap-1 font-medium text-orange-600">
                             <MapPin className="h-4 w-4" />
-                            <span className="font-medium">{milestone.projectName}</span>
-                          </button>
+                            {milestone.projectName}
+                          </span>
 
                           {milestone.projectLocation && (
                             <span className="flex items-center gap-1">
@@ -134,25 +203,40 @@ export default function Reminders() {
 
                           <span className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            Vencía: {format(new Date(milestone.dueDate), "dd/MM/yyyy", { locale: es })}
+                            Vencía: {tzFormatDate(milestone.dueDate)}
                           </span>
                         </div>
                       </div>
 
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          handleMarkAsCompleted(
-                            milestone.milestoneId,
-                            milestone.milestoneName
-                          )
-                        }
-                        disabled={updateMilestone.isPending}
-                        className="gap-2 bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Completar
-                      </Button>
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsCompleted(
+                              milestone.milestoneId,
+                              milestone.milestoneName
+                            );
+                          }}
+                          disabled={updateMilestone.isPending}
+                          className="gap-2 bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Completar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openRescheduleDialog(milestone);
+                          }}
+                          className="gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+                        >
+                          <CalendarClock className="h-4 w-4" />
+                          Reprogramar
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                 </Card>
@@ -163,9 +247,9 @@ export default function Reminders() {
       )}
 
       {/* Hitos Próximos a Vencer */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <Bell className="h-5 w-5 text-orange-500" />
+      <div className="space-y-3 sm:space-y-4">
+        <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 flex items-center gap-2">
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
           Próximos a Vencer ({upcomingMilestones?.length || 0})
         </h2>
 
@@ -177,7 +261,7 @@ export default function Reminders() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-3 sm:gap-4">
             {upcomingMilestones.map((milestone) => {
               const daysUntilDue = differenceInDays(
                 new Date(milestone.dueDate),
@@ -201,14 +285,16 @@ export default function Reminders() {
               return (
                 <Card
                   key={milestone.milestoneId}
-                  className={`border-l-4 ${urgencyColor} hover:shadow-md transition-shadow`}
+                  className={`border-l-4 ${urgencyColor} hover:shadow-md transition-shadow cursor-pointer`}
+                  onClick={() => setLocation(`/projects/${milestone.projectId}`)}
                 >
                   <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-lg">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
+                      <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-2 break-words">
                             {milestone.milestoneName}
+                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
                           </CardTitle>
                           <Badge variant={badgeVariant} className="gap-1">
                             <Clock className="h-3 w-3" />
@@ -227,13 +313,10 @@ export default function Reminders() {
                         )}
 
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <button
-                            onClick={() => setLocation(`/projects/${milestone.projectId}`)}
-                            className="flex items-center gap-1 hover:text-orange-600 transition-colors"
-                          >
+                          <span className="flex items-center gap-1 font-medium text-orange-600">
                             <MapPin className="h-4 w-4" />
-                            <span className="font-medium">{milestone.projectName}</span>
-                          </button>
+                            {milestone.projectName}
+                          </span>
 
                           {milestone.projectLocation && (
                             <span className="flex items-center gap-1">
@@ -244,26 +327,41 @@ export default function Reminders() {
 
                           <span className="flex items-center gap-1">
                             <Calendar className="h-4 w-4" />
-                            {format(new Date(milestone.dueDate), "dd/MM/yyyy", { locale: es })}
+                            {tzFormatDate(milestone.dueDate)}
                           </span>
                         </div>
                       </div>
 
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() =>
-                          handleMarkAsCompleted(
-                            milestone.milestoneId,
-                            milestone.milestoneName
-                          )
-                        }
-                        disabled={updateMilestone.isPending}
-                        className="gap-2"
-                      >
-                        <Check className="h-4 w-4" />
-                        Completar
-                      </Button>
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsCompleted(
+                              milestone.milestoneId,
+                              milestone.milestoneName
+                            );
+                          }}
+                          disabled={updateMilestone.isPending}
+                          className="gap-2"
+                        >
+                          <Check className="h-4 w-4" />
+                          Completar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openRescheduleDialog(milestone);
+                          }}
+                          className="gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+                        >
+                          <CalendarClock className="h-4 w-4" />
+                          Reprogramar
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
                 </Card>
@@ -285,6 +383,85 @@ export default function Reminders() {
           </CardContent>
         </Card>
       )}
+
+      {/* Dialog de Reprogramación */}
+      <Dialog
+        open={!!rescheduleDialog?.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRescheduleDialog(null);
+            setNewDueDate("");
+            setJustification("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-orange-500" />
+              Reprogramar Hito
+            </DialogTitle>
+            <DialogDescription>
+              Reprogramar <strong>"{rescheduleDialog?.milestoneName}"</strong>
+              <br />
+              Fecha actual de vencimiento: <strong>{rescheduleDialog?.currentDueDate}</strong>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="newDueDate">Nueva fecha de vencimiento</Label>
+              <Input
+                id="newDueDate"
+                type="date"
+                value={newDueDate}
+                onChange={(e) => setNewDueDate(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="justification">
+                Justificación <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="justification"
+                placeholder="Explica por qué se necesita reprogramar este hito..."
+                value={justification}
+                onChange={(e) => setJustification(e.target.value)}
+                rows={3}
+              />
+              <p className="text-xs text-gray-500">
+                Esta justificación quedará registrada como nota del proyecto y será visible para administradores e ingenieros.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRescheduleDialog(null);
+                setNewDueDate("");
+                setJustification("");
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleReschedule}
+              disabled={!newDueDate || !justification || requestReschedule.isPending}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {requestReschedule.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <CalendarClock className="h-4 w-4 mr-2" />
+              )}
+              Reprogramar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

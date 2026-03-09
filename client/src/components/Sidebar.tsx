@@ -4,6 +4,7 @@ import {
   FolderKanban,
   Users,
   Bell,
+  Mail,
   Settings,
   LogOut,
   Menu,
@@ -115,7 +116,7 @@ export function Sidebar({ className }: SidebarProps) {
       roles: ["admin", "engineer", "ingeniero_tramites"],
     },
     {
-      icon: Bell,
+      icon: Mail,
       label: "Notificaciones",
       href: "/notifications",
       roles: ["admin", "engineer", "ingeniero_tramites"],
@@ -165,7 +166,7 @@ export function Sidebar({ className }: SidebarProps) {
               <h2 className="font-bold text-lg bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent truncate">
                 Solar Manager
               </h2>
-              <p className="text-xs text-gray-500 truncate">GreenH Project</p>
+              <p className="text-xs text-gray-500 truncate">Green House Project</p>
             </div>
           )}
           {isAuthenticated && <NotificationBell />}
@@ -308,7 +309,7 @@ export function Sidebar({ className }: SidebarProps) {
         </Button>
         {!isCollapsed && (
           <p className="text-xs text-center text-gray-400 pt-2">
-            v2.0.0 • GreenH Project
+            v2.0.0 • Green House Project
           </p>
         )}
       </div>

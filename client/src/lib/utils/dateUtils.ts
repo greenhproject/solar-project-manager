@@ -1,6 +1,10 @@
 /**
  * Utilidades compartidas para manejo de fechas
  * Centraliza funciones reutilizables relacionadas con fechas y tiempos
+ * 
+ * NOTA: Estas funciones usan la zona horaria del navegador por defecto.
+ * Para usar la zona horaria configurada en la app, usa el hook useTimezone().
+ * Las funciones con sufijo "Tz" aceptan un parámetro de zona horaria.
  */
 
 import {
@@ -151,4 +155,54 @@ export function isValidDate(dateString: string): boolean {
   } catch {
     return false;
   }
+}
+
+// ============================================
+// FUNCIONES CON SOPORTE DE ZONA HORARIA
+// ============================================
+
+/**
+ * Formatea una fecha usando una zona horaria específica
+ * @param date - Fecha a formatear
+ * @param timezone - Zona horaria IANA (ej: "America/Bogota")
+ * @param options - Opciones adicionales de Intl.DateTimeFormat
+ */
+export function formatDateTz(
+  date: Date | string | null,
+  timezone: string,
+  options?: Intl.DateTimeFormatOptions
+): string {
+  if (!date) return "-";
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) return "-";
+  
+  return dateObj.toLocaleDateString("es-CO", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    ...options,
+  });
+}
+
+/**
+ * Formatea una fecha con hora usando una zona horaria específica
+ */
+export function formatDateTimeTz(
+  date: Date | string | null,
+  timezone: string
+): string {
+  if (!date) return "-";
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) return "-";
+  
+  return dateObj.toLocaleString("es-CO", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 }

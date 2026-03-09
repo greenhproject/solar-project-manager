@@ -377,7 +377,7 @@ export async function generateProjectReport(
     doc.setTextColor(150, 150, 150);
     doc.setFont("helvetica", "normal");
 
-    const footerText = `Solar Project Manager - GreenH | Generado el ${new Date().toLocaleDateString("es")}`;
+    const footerText = `Solar Project Manager - Green House Project | Generado el ${new Date().toLocaleDateString("es")}`;
     doc.text(footerText, margin, pageHeight - 10);
 
     const pageText = `Página ${i} de ${totalPages}`;

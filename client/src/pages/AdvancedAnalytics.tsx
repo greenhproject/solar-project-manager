@@ -13,6 +13,7 @@ import {
   Target,
   AlertTriangle,
 } from "lucide-react";
+import { useTimezone } from "@/hooks/useTimezone";
 import {
   LineChart,
   Line,
@@ -32,6 +33,7 @@ import {
 const COLORS = ["#FF6B35", "#F7931E", "#FDC830", "#37B7C3", "#088395"];
 
 export default function AdvancedAnalytics() {
+  const { formatDate: tzFormatDate } = useTimezone();
   const { data: velocity, isLoading: loadingVelocity } =
     trpc.analytics.teamVelocity.useQuery();
   const { data: typeMetrics, isLoading: loadingTypes } =
@@ -50,9 +52,9 @@ export default function AdvancedAnalytics() {
   }
 
   return (
-    <div className="container py-8 space-y-6">
+    <div className="container py-4 sm:py-6 lg:py-8 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Análisis Avanzado</h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Análisis Avanzado</h1>
         <p className="text-muted-foreground mt-1">
           Métricas predictivas y análisis de rendimiento del equipo
         </p>
@@ -247,15 +249,11 @@ export default function AdvancedAnalytics() {
                     <div className="flex gap-4 text-sm text-muted-foreground">
                       <span>
                         Estimado:{" "}
-                        {new Date(
-                          prediction.estimatedEndDate
-                        ).toLocaleDateString("es-ES")}
+                        {tzFormatDate(prediction.estimatedEndDate)}
                       </span>
                       <span>
                         Predicho:{" "}
-                        {new Date(
-                          prediction.predictedEndDate
-                        ).toLocaleDateString("es-ES")}
+                        {tzFormatDate(prediction.predictedEndDate)}
                       </span>
                     </div>
                   </div>

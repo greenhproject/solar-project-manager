@@ -110,6 +110,7 @@ export const milestoneTemplates = mysqlTable("milestone_templates", {
   description: text("description"),
   orderIndex: int("orderIndex").notNull(), // Orden de aparición
   estimatedDurationDays: int("estimatedDurationDays").default(7),
+  defaultAssignedUserId: int("defaultAssignedUserId"), // Responsable por defecto al usar la plantilla
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -542,3 +543,74 @@ export const projectLegalizationChecklist = mysqlTable("project_legalization_che
 
 export type ProjectLegalizationChecklist = typeof projectLegalizationChecklist.$inferSelect;
 export type InsertProjectLegalizationChecklist = typeof projectLegalizationChecklist.$inferInsert;
+
+
+/**
+ * Configuración de proveedor de email
+ * Permite al administrador configurar el servicio de envío de correos
+ * desde el panel de administración (Resend, SendGrid, SMTP genérico)
+ */
+export const emailConfig = mysqlTable("email_config", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Proveedor de email
+  provider: mysqlEnum("provider", ["resend", "sendgrid", "smtp"]).notNull().default("resend"),
+  
+  // Credenciales
+  apiKey: text("apiKey"), // API Key para Resend o SendGrid
+  
+  // Configuración SMTP (solo si provider = "smtp")
+  smtpHost: varchar("smtpHost", { length: 255 }),
+  smtpPort: int("smtpPort"),
+  smtpUser: varchar("smtpUser", { length: 255 }),
+  smtpPassword: text("smtpPassword"),
+  smtpSecure: boolean("smtpSecure").default(true),
+  
+  // Remitente
+  fromEmail: varchar("fromEmail", { length: 255 }).notNull().default("admin@greenhproject.com"),
+  fromName: varchar("fromName", { length: 255 }).notNull().default("Solar Project Manager"),
+  
+  // Opciones
+  enableEmailNotifications: boolean("enableEmailNotifications").default(true).notNull(),
+  sendCopyToAdmin: boolean("sendCopyToAdmin").default(true).notNull(),
+  adminEmail: varchar("adminEmail", { length: 255 }).default("admin@greenhproject.com"),
+  
+  // Estado
+  isActive: boolean("isActive").default(false).notNull(),
+  lastTestedAt: timestamp("lastTestedAt"),
+  
+  // Auditoría
+  updatedBy: int("updatedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailConfig = typeof emailConfig.$inferSelect;
+export type InsertEmailConfig = typeof emailConfig.$inferInsert;
+
+
+/**
+ * Configuración global de la aplicación
+ * Almacena parámetros configurables como zona horaria, idioma, etc.
+ * Se usa una tabla clave-valor para flexibilidad
+ */
+export const appSettings = mysqlTable("app_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Clave de configuración (ej: "timezone", "language", "company_name")
+  settingKey: varchar("settingKey", { length: 100 }).notNull().unique(),
+  
+  // Valor de configuración
+  settingValue: text("settingValue").notNull(),
+  
+  // Descripción para UI
+  description: text("description"),
+  
+  // Auditoría
+  updatedBy: int("updatedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AppSetting = typeof appSettings.$inferSelect;
+export type InsertAppSetting = typeof appSettings.$inferInsert;

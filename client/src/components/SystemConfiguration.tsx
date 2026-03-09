@@ -21,7 +21,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, FolderKanban, ListTodo } from "lucide-react";
+import { Plus, Edit, Trash2, FolderKanban, ListTodo, User } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function SystemConfiguration() {
@@ -45,12 +45,19 @@ export function SystemConfiguration() {
   const [templateDescription, setTemplateDescription] = useState("");
   const [templateOrder, setTemplateOrder] = useState(1);
   const [templateDuration, setTemplateDuration] = useState(7);
+  const [templateAssignedUserId, setTemplateAssignedUserId] = useState<number | null>(null);
 
   // Queries
   const { data: projectTypes = [], isLoading: loadingTypes } =
     trpc.projectTypes.list.useQuery();
   const { data: milestoneTemplates = [], isLoading: loadingTemplates } =
     trpc.milestoneTemplates.list.useQuery();
+  const { data: allUsers = [] } = trpc.users.list.useQuery();
+
+  // Filtrar usuarios con roles de ingeniería
+  const engineers = allUsers.filter(
+    (u: any) => u.role === "engineer" || u.role === "ingeniero_tramites" || u.role === "admin"
+  );
 
   // Mutations para tipos de proyectos
   const createProjectType = trpc.projectTypes.create.useMutation({
@@ -128,6 +135,7 @@ export function SystemConfiguration() {
     setTemplateDescription("");
     setTemplateOrder(1);
     setTemplateDuration(7);
+    setTemplateAssignedUserId(null);
   };
 
   const handleSaveProjectType = () => {
@@ -176,6 +184,7 @@ export function SystemConfiguration() {
         description: templateDescription,
         orderIndex: templateOrder,
         estimatedDurationDays: templateDuration,
+        defaultAssignedUserId: templateAssignedUserId,
       });
     } else {
       createTemplate.mutate({
@@ -184,6 +193,7 @@ export function SystemConfiguration() {
         description: templateDescription,
         orderIndex: templateOrder,
         estimatedDurationDays: templateDuration,
+        defaultAssignedUserId: templateAssignedUserId,
       });
     }
   };
@@ -195,6 +205,7 @@ export function SystemConfiguration() {
     setTemplateDescription(template.description || "");
     setTemplateOrder(template.orderIndex);
     setTemplateDuration(template.estimatedDurationDays || 7);
+    setTemplateAssignedUserId(template.defaultAssignedUserId || null);
     setTemplateDialog(true);
   };
 
@@ -202,6 +213,13 @@ export function SystemConfiguration() {
     if (confirm("¿Estás seguro de eliminar esta plantilla?")) {
       deleteTemplate.mutate({ id });
     }
+  };
+
+  // Helper para obtener nombre de usuario por ID
+  const getUserName = (userId: number | null) => {
+    if (!userId) return null;
+    const user = allUsers.find((u: any) => u.id === userId);
+    return user ? (user.name || user.email || `Usuario #${userId}`) : null;
   };
 
   if (loadingTypes || loadingTemplates) {
@@ -318,11 +336,11 @@ export function SystemConfiguration() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {projectTypes.map((type: any) => (
                   <div
                     key={type.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div
@@ -330,12 +348,10 @@ export function SystemConfiguration() {
                         style={{ backgroundColor: type.color }}
                       />
                       <div>
-                        <h4 className="font-medium">{type.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {type.description || "Sin descripción"}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Duración estimada: {type.estimatedDurationDays} días
+                        <p className="font-medium">{type.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {type.description || "Sin descripción"} •{" "}
+                          {type.estimatedDurationDays} días
                         </p>
                       </div>
                     </div>
@@ -350,7 +366,7 @@ export function SystemConfiguration() {
                 ))}
                 {projectTypes.length === 0 && (
                   <p className="text-center text-muted-foreground py-8">
-                    No hay tipos de proyectos configurados
+                    No hay tipos de proyectos creados
                   </p>
                 )}
               </div>
@@ -365,17 +381,21 @@ export function SystemConfiguration() {
                 <div>
                   <CardTitle>Plantillas de Hitos</CardTitle>
                   <CardDescription>
-                    Define hitos predeterminados para cada tipo de proyecto
+                    Define los hitos predeterminados para cada tipo de proyecto.
+                    Puedes asignar un responsable por defecto que se precargará al crear nuevos proyectos.
                   </CardDescription>
                 </div>
-                <Dialog open={templateDialog} onOpenChange={setTemplateDialog}>
+                <Dialog
+                  open={templateDialog}
+                  onOpenChange={setTemplateDialog}
+                >
                   <DialogTrigger asChild>
                     <Button onClick={resetTemplateForm}>
                       <Plus className="w-4 h-4 mr-2" />
                       Nueva Plantilla
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-lg">
                     <DialogHeader>
                       <DialogTitle>
                         {editingTemplate
@@ -384,7 +404,7 @@ export function SystemConfiguration() {
                       </DialogTitle>
                       <DialogDescription>
                         Define un hito que se agregará automáticamente a nuevos
-                        proyectos
+                        proyectos. El responsable asignado se precargará por defecto.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -394,7 +414,7 @@ export function SystemConfiguration() {
                         </Label>
                         <select
                           id="t-project-type"
-                          className="w-full p-2 border rounded-md"
+                          className="w-full p-2 border rounded-md bg-background text-foreground"
                           value={templateProjectType || ""}
                           onChange={e =>
                             setTemplateProjectType(Number(e.target.value))
@@ -454,6 +474,33 @@ export function SystemConfiguration() {
                           />
                         </div>
                       </div>
+                      {/* Selector de responsable por defecto */}
+                      <div>
+                        <Label htmlFor="t-assigned-user" className="flex items-center gap-2">
+                          <User className="w-4 h-4" />
+                          Responsable por Defecto
+                        </Label>
+                        <select
+                          id="t-assigned-user"
+                          className="w-full p-2 border rounded-md bg-background text-foreground mt-1"
+                          value={templateAssignedUserId || ""}
+                          onChange={e =>
+                            setTemplateAssignedUserId(
+                              e.target.value ? Number(e.target.value) : null
+                            )
+                          }
+                        >
+                          <option value="">Sin asignar (se asignará manualmente)</option>
+                          {engineers.map((user: any) => (
+                            <option key={user.id} value={user.id}>
+                              {user.name || user.email} ({user.role === "admin" ? "Admin" : user.role === "engineer" ? "Ingeniero" : "Ing. Trámites"})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Este usuario será asignado automáticamente como responsable del hito al crear un nuevo proyecto con esta plantilla.
+                        </p>
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button
@@ -493,7 +540,7 @@ export function SystemConfiguration() {
                               key={template.id}
                               className="flex items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors"
                             >
-                              <div>
+                              <div className="flex-1">
                                 <p className="font-medium text-sm">
                                   {template.orderIndex}. {template.name}
                                 </p>
@@ -501,6 +548,12 @@ export function SystemConfiguration() {
                                   {template.description || "Sin descripción"} •{" "}
                                   {template.estimatedDurationDays} días
                                 </p>
+                                {template.defaultAssignedUserId && (
+                                  <p className="text-xs text-primary flex items-center gap-1 mt-1">
+                                    <User className="w-3 h-3" />
+                                    Responsable: {getUserName(template.defaultAssignedUserId) || "Usuario no encontrado"}
+                                  </p>
+                                )}
                               </div>
                               <div className="flex gap-1">
                                 <Button

@@ -80,7 +80,7 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
               Solar Project Manager
             </h1>
-            <p className="text-gray-600 mt-2">GreenH Project</p>
+            <p className="text-gray-600 mt-2">Green House Project</p>
           </div>
           <p className="text-gray-500 max-w-md">
             Inicia sesión para acceder al sistema de gestión de proyectos
@@ -170,7 +170,7 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="lg:p-8 p-4 pb-20 lg:pb-8">{children}</div>
+        <div className="p-3 pt-14 sm:p-4 sm:pt-14 lg:p-8 lg:pt-8 pb-20 lg:pb-8">{children}</div>
       </main>
     </div>
   );
@@ -217,7 +217,7 @@ function MainLayoutManus({ children }: MainLayoutProps) {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
               Solar Project Manager
             </h1>
-            <p className="text-gray-600 mt-2">GreenH Project</p>
+            <p className="text-gray-600 mt-2">Green House Project</p>
           </div>
           <p className="text-gray-500 max-w-md">
             Inicia sesión para acceder al sistema de gestión de proyectos
@@ -242,7 +242,7 @@ function MainLayoutManus({ children }: MainLayoutProps) {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="lg:p-8 p-4 pb-20 lg:pb-8">{children}</div>
+        <div className="p-3 pt-14 sm:p-4 sm:pt-14 lg:p-8 lg:pt-8 pb-20 lg:pb-8">{children}</div>
       </main>
     </div>
   );

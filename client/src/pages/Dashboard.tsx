@@ -1,4 +1,3 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { useIsMobile } from "@/hooks/useMobile";
 import { trpc } from "@/lib/trpc";
 import {
@@ -21,13 +20,21 @@ import {
   ArrowRight,
   Calendar,
   Users,
+  Loader2,
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { useTimezone } from "@/hooks/useTimezone";
 
 export default function Dashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const { formatDate: tzFormatDate, formatRelative: tzFormatRelative } = useTimezone();
+  // Usar meQuery del backend para obtener el usuario real (con rol correcto de la BD)
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   const isMobile = useIsMobile();
   const { data: stats, isLoading: statsLoading } =
     trpc.projects.stats.useQuery();
@@ -35,17 +42,13 @@ export default function Dashboard() {
     trpc.projects.list.useQuery();
   const { data: reminders } = trpc.reminders.unread.useQuery();
 
-  if (!isAuthenticated || !user) {
+  if (meQuery.isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Acceso Restringido</CardTitle>
-            <CardDescription>
-              Debes iniciar sesión para acceder al dashboard
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
+          <p className="text-gray-600">Cargando dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -75,18 +78,18 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container py-8 space-y-8 animate-fade-in">
+      <div className="container py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in">
         {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-solar bg-clip-text text-transparent">
+        <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-solar bg-clip-text text-transparent">
               Dashboard Solar
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2 truncate">
               Bienvenido, {user.name || user.email}
               {user.role === "admin" && (
                 <Badge variant="default" className="ml-2">
-                  Administrador
+                  Admin
                 </Badge>
               )}
             </p>
@@ -95,8 +98,8 @@ export default function Dashboard() {
           {(user.role === "admin" || user.role === "engineer") && (
             <Link href="/projects/new">
               <Button
-                size="lg"
-                className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple-lg hover:shadow-xl transition-all"
+                size={isMobile ? "default" : "lg"}
+                className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple-lg hover:shadow-xl transition-all w-full sm:w-auto"
               >
                 <Plus className="h-5 w-5" />
                 Nuevo Proyecto
@@ -106,85 +109,85 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Cards - Clickeables para filtrar */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 lg:grid-cols-4">
           <Link href="/projects?filter=all">
             <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02]">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Proyectos
+              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 space-y-0">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                  Total
                 </CardTitle>
-                <Sun className="h-5 w-5 text-primary" />
+                <Sun className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-7 sm:h-8 w-16 sm:w-20" />
                 ) : (
-                  <div className="text-3xl font-bold">{stats?.total || 0}</div>
+                  <div className="text-2xl sm:text-3xl font-bold">{stats?.total || 0}</div>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">Click para ver todos</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">Click para ver todos</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/projects?filter=in_progress">
             <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02]">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 space-y-0">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                   En Progreso
                 </CardTitle>
-                <TrendingUp className="h-5 w-5 text-blue-500" />
+                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-7 sm:h-8 w-16 sm:w-20" />
                 ) : (
-                  <div className="text-3xl font-bold text-blue-500">
+                  <div className="text-2xl sm:text-3xl font-bold text-blue-500">
                     {stats?.active || 0}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">Click para ver detalles</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">Click para ver detalles</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/projects?filter=completed">
             <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02]">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 space-y-0">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Completados
                 </CardTitle>
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-7 sm:h-8 w-16 sm:w-20" />
                 ) : (
-                  <div className="text-3xl font-bold text-green-500">
+                  <div className="text-2xl sm:text-3xl font-bold text-green-500">
                     {stats?.completed || 0}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground mt-1">Click para ver detalles</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 hidden sm:block">Click para ver detalles</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link href="/projects?filter=overdue">
             <Card className="shadow-apple hover:shadow-apple-lg transition-all cursor-pointer hover:scale-[1.02] border-destructive/20">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 sm:pb-2 space-y-0">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                   Con Retraso
                 </CardTitle>
-                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-destructive" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 {statsLoading ? (
-                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-7 sm:h-8 w-16 sm:w-20" />
                 ) : (
-                  <div className="text-3xl font-bold text-destructive">
+                  <div className="text-2xl sm:text-3xl font-bold text-destructive">
                     {stats?.overdue || 0}
                   </div>
                 )}
-                <p className="text-xs text-destructive/70 mt-1">Click para ver urgentes</p>
+                <p className="text-[10px] sm:text-xs text-destructive/70 mt-1 hidden sm:block">Click para ver urgentes</p>
               </CardContent>
             </Card>
           </Link>
@@ -215,10 +218,7 @@ export default function Dashboard() {
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(reminder.reminderDate), {
-                          addSuffix: true,
-                          locale: es,
-                        })}
+                        {tzFormatRelative(reminder.reminderDate)}
                       </p>
                     </div>
                   </div>
@@ -230,26 +230,26 @@ export default function Dashboard() {
 
         {/* Proyectos Recientes */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Proyectos Recientes</CardTitle>
-              <CardDescription>
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-lg sm:text-xl">Proyectos Recientes</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 {user.role === "admin"
                   ? "Todos los proyectos del sistema"
                   : "Tus proyectos asignados"}
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              {(user.role === "admin" || user.role === "engineer") && (
+            <div className="flex gap-2 flex-shrink-0">
+              {(user.role === "admin" || user.role === "engineer") && !isMobile && (
                 <Link href="/projects/new">
-                  <Button className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
+                  <Button size="sm" className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
                     <Plus className="h-4 w-4" />
                     Nuevo Proyecto
                   </Button>
                 </Link>
               )}
               <Link href="/projects">
-                <Button variant="ghost" className="gap-2">
+                <Button variant="ghost" size="sm" className="gap-1">
                   Ver Todos
                   <ArrowRight className="h-4 w-4" />
                 </Button>

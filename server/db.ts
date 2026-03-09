@@ -24,8 +24,11 @@ import {
   cadTemplates,
   commonDocuments,
   projectLegalizationChecklist,
+  emailConfig,
+  appSettings,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { getNowInConfiguredTimezone } from "./timezone";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -275,9 +278,34 @@ export async function getProjectStats() {
   const db = await getDb();
   if (!db) return { total: 0, active: 0, completed: 0, overdue: 0 };
 
-  const now = new Date();
+  const now = new Date(); // Usar Date real para comparación con timestamps de BD
   const allProjects = await db.select().from(projects);
 
+  // Obtener hitos vencidos para contar proyectos con retraso
+  // (misma lógica que la página de Proyectos)
+  const overdueMilestonesList = await db
+    .select({
+      projectId: milestones.projectId,
+    })
+    .from(milestones)
+    .where(
+      and(
+        lte(milestones.dueDate, now),
+        or(
+          eq(milestones.status, "pending"),
+          eq(milestones.status, "in_progress")
+        )
+      )
+    );
+
+  const projectIdsWithOverdueMilestones = new Set(
+    overdueMilestonesList.map(m => m.projectId)
+  );
+
+  // Un proyecto está "overdue" si:
+  // 1. Su fecha estimada de fin ya pasó, O
+  // 2. Tiene hitos vencidos (pendientes o en progreso)
+  // Y no está completado ni cancelado
   return {
     total: allProjects.length,
     active: allProjects.filter(p => p.status === "in_progress").length,
@@ -286,7 +314,7 @@ export async function getProjectStats() {
       p =>
         p.status !== "completed" &&
         p.status !== "cancelled" &&
-        p.estimatedEndDate < now
+        (p.estimatedEndDate < now || projectIdsWithOverdueMilestones.has(p.id))
     ).length,
   };
 }
@@ -433,10 +461,21 @@ export async function updateMilestone(
   await db.update(milestones).set(data).where(eq(milestones.id, id));
 }
 
+export async function deleteMilestone(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Eliminar recordatorios asociados al hito
+  await db.delete(reminders).where(eq(reminders.milestoneId, id));
+
+  // Eliminar el hito
+  await db.delete(milestones).where(eq(milestones.id, id));
+}
+
 export async function getOverdueMilestones() {
   const db = await getDb();
   if (!db) return [];
-  const now = new Date();
+  const now = await getNowInConfiguredTimezone();
 
   return await db
     .select({
@@ -449,6 +488,7 @@ export async function getOverdueMilestones() {
       projectName: projects.name,
       projectLocation: projects.location,
       assignedEngineerId: projects.assignedEngineerId,
+      assignedUserId: milestones.assignedUserId,
     })
     .from(milestones)
     .innerJoin(projects, eq(milestones.projectId, projects.id))
@@ -467,8 +507,8 @@ export async function getOverdueMilestones() {
 export async function getUpcomingMilestones(daysAhead: number = 7) {
   const db = await getDb();
   if (!db) return [];
-  const now = new Date();
-  const futureDate = new Date();
+  const now = await getNowInConfiguredTimezone();
+  const futureDate = new Date(now.getTime());
   futureDate.setDate(futureDate.getDate() + daysAhead);
 
   return await db
@@ -482,6 +522,7 @@ export async function getUpcomingMilestones(daysAhead: number = 7) {
       projectName: projects.name,
       projectLocation: projects.location,
       assignedEngineerId: projects.assignedEngineerId,
+      assignedUserId: milestones.assignedUserId,
     })
     .from(milestones)
     .innerJoin(projects, eq(milestones.projectId, projects.id))
@@ -785,7 +826,7 @@ export async function getDelayedProjects() {
   const db = await getDb();
   if (!db) return [];
 
-  const now = new Date();
+  const now = await getNowInConfiguredTimezone();
 
   const results = await db
     .select({
@@ -1494,4 +1535,73 @@ export async function initializeProjectLegalizationChecklist(projectId: number) 
       }))
     );
   }
+}
+
+
+// ============================================
+// CONFIGURACIÓN DE EMAIL
+// ============================================
+
+/**
+ * Obtener la configuración de email activa
+ * Solo debe haber una fila en la tabla
+ */
+export async function getEmailConfig() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const configs = await db.select().from(emailConfig).limit(1);
+  return configs[0] || null;
+}
+
+/**
+ * Crear o actualizar la configuración de email
+ */
+export async function upsertEmailConfig(config: {
+  provider: "resend" | "sendgrid" | "smtp";
+  apiKey?: string | null;
+  smtpHost?: string | null;
+  smtpPort?: number | null;
+  smtpUser?: string | null;
+  smtpPassword?: string | null;
+  smtpSecure?: boolean;
+  fromEmail: string;
+  fromName: string;
+  enableEmailNotifications: boolean;
+  sendCopyToAdmin: boolean;
+  adminEmail?: string | null;
+  isActive: boolean;
+  updatedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const existing = await getEmailConfig();
+
+  if (existing) {
+    await db
+      .update(emailConfig)
+      .set({
+        ...config,
+        updatedAt: new Date(),
+      })
+      .where(eq(emailConfig.id, existing.id));
+  } else {
+    await db.insert(emailConfig).values(config);
+  }
+
+  return await getEmailConfig();
+}
+
+/**
+ * Actualizar la fecha del último test de email
+ */
+export async function updateEmailConfigTestDate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(emailConfig)
+    .set({ lastTestedAt: new Date() })
+    .where(eq(emailConfig.id, id));
 }

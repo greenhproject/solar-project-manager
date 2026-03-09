@@ -15,8 +15,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Calendar, ZoomIn, ZoomOut, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { useTimezone } from "@/hooks/useTimezone";
 
 export default function GanttChart() {
+  const { formatDate: tzFormatDate } = useTimezone();
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.Month);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
     null
@@ -163,7 +165,7 @@ export default function GanttChart() {
 
   if (!projects || projects.length === 0) {
     return (
-      <div className="container py-8">
+      <div className="container py-4 sm:py-6 lg:py-8">
         <Card className="p-8 text-center">
           <Calendar className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold mb-2">
@@ -180,7 +182,7 @@ export default function GanttChart() {
   const selectedProject = projects?.find(p => p.id === selectedProjectId);
 
   return (
-    <div className="container py-8 space-y-6 max-w-full">
+    <div className="container py-4 sm:py-6 lg:py-8 space-y-6 max-w-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Diagrama de Gantt</h1>
@@ -300,14 +302,14 @@ export default function GanttChart() {
                     <div className="flex justify-between">
                       <span>Vencimiento:</span>
                       <span className="font-medium">
-                        {dueDate.toLocaleDateString("es-ES")}
+                        {tzFormatDate(dueDate)}
                       </span>
                     </div>
                     {completedDate && (
                       <div className="flex justify-between">
                         <span>Completado:</span>
                         <span className="font-medium">
-                          {completedDate.toLocaleDateString("es-ES")}
+                          {tzFormatDate(completedDate)}
                         </span>
                       </div>
                     )}

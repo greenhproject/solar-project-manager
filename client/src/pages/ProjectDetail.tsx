@@ -1,4 +1,4 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -51,12 +51,18 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useTimezone } from "@/hooks/useTimezone";
 import { FileUpload } from "@/components/FileUpload";
 import { FileList } from "@/components/FileList";
 import LegalizationChecklist from "@/components/LegalizationChecklist";
 
 export default function ProjectDetail() {
-  const { user, isAuthenticated } = useAuth();
+  const { formatDate: tzFormatDate } = useTimezone();
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   const [, params] = useRoute("/projects/:id");
   const projectId = params?.id ? parseInt(params.id) : 0;
 
@@ -93,15 +99,16 @@ export default function ProjectDetail() {
   const syncToCalendar = trpc.milestones.syncToCalendar.useMutation();
   const assignResponsible = trpc.milestones.assignResponsible.useMutation();
   const updateDueDate = trpc.milestones.updateDueDate.useMutation();
+  const deleteMilestone = trpc.milestones.delete.useMutation();
+  const [milestoneToDelete, setMilestoneToDelete] = useState<{ id: number; name: string } | null>(null);
 
-  if (!isAuthenticated || !user) {
+  if (meQuery.isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>Acceso Restringido</CardTitle>
-          </CardHeader>
-        </Card>
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
+          <p className="text-gray-600">Cargando proyecto...</p>
+        </div>
       </div>
     );
   }
@@ -410,26 +417,20 @@ export default function ProjectDetail() {
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Inicio:</span>
                 <span className="font-medium">
-                  {format(new Date(project.startDate), "dd MMM yyyy", {
-                    locale: es,
-                  })}
+                  {tzFormatDate(project.startDate, { day: "2-digit", month: "short", year: "numeric" })}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Estimado:</span>
                 <span className="font-medium">
-                  {format(new Date(project.estimatedEndDate), "dd MMM yyyy", {
-                    locale: es,
-                  })}
+                  {tzFormatDate(project.estimatedEndDate, { day: "2-digit", month: "short", year: "numeric" })}
                 </span>
               </div>
               {project.actualEndDate && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Finalizado:</span>
                   <span className="font-medium">
-                    {format(new Date(project.actualEndDate), "dd MMM yyyy", {
-                      locale: es,
-                    })}
+                    {tzFormatDate(project.actualEndDate, { day: "2-digit", month: "short", year: "numeric" })}
                   </span>
                 </div>
               )}
@@ -681,21 +682,13 @@ export default function ProjectDetail() {
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               Vence:{" "}
-                              {format(
-                                new Date(milestone.dueDate),
-                                "dd MMM yyyy",
-                                { locale: es }
-                              )}
+                              {tzFormatDate(milestone.dueDate, { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
                             {milestone.completedDate && (
                               <span className="flex items-center gap-1 text-green-600">
                                 <CheckCircle2 className="h-3 w-3" />
                                 Completado:{" "}
-                                {format(
-                                  new Date(milestone.completedDate),
-                                  "dd MMM yyyy",
-                                  { locale: es }
-                                )}
+                                {tzFormatDate(milestone.completedDate, { day: "2-digit", month: "short", year: "numeric" })}
                               </span>
                             )}
                             {(milestone as any).googleCalendarEventId && (
@@ -733,35 +726,49 @@ export default function ProjectDetail() {
                             />
                           </div>
 
-                          {/* Botón de sincronización manual */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-2 gap-2"
-                            onClick={async () => {
-                              try {
-                                toast.info("Sincronizando con Google Calendar...");
-                                const result = await syncToCalendar.mutateAsync({
-                                  id: milestone.id,
-                                });
-                                toast.success(result.message);
-                                // Refrescar hitos para mostrar el indicador actualizado
-                                await refetchMilestones();
-                              } catch (error: any) {
-                                toast.error(error.message || "Error al sincronizar con Google Calendar");
-                              }
-                            }}
-                            disabled={syncToCalendar.isPending}
-                          >
-                            {syncToCalendar.isPending ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Calendar className="h-3 w-3" />
+                          {/* Botones de acción */}
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-2"
+                              onClick={async () => {
+                                try {
+                                  toast.info("Sincronizando con Google Calendar...");
+                                  const result = await syncToCalendar.mutateAsync({
+                                    id: milestone.id,
+                                  });
+                                  toast.success(result.message);
+                                  await refetchMilestones();
+                                } catch (error: any) {
+                                  toast.error(error.message || "Error al sincronizar con Google Calendar");
+                                }
+                              }}
+                              disabled={syncToCalendar.isPending}
+                            >
+                              {syncToCalendar.isPending ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Calendar className="h-3 w-3" />
+                              )}
+                              {(milestone as any).googleCalendarEventId
+                                ? "Resincronizar"
+                                : "Sincronizar con Calendar"}
+                            </Button>
+
+                            {/* Botón eliminar hito - solo admin */}
+                            {user?.role === "admin" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                onClick={() => setMilestoneToDelete({ id: milestone.id, name: milestone.name })}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Eliminar
+                              </Button>
                             )}
-                            {(milestone as any).googleCalendarEventId
-                              ? "Resincronizar"
-                              : "Sincronizar con Calendar"}
-                          </Button>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -954,6 +961,50 @@ export default function ProjectDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Diálogo de confirmación para eliminar hito */}
+      <Dialog open={!!milestoneToDelete} onOpenChange={(open) => !open && setMilestoneToDelete(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Eliminar Hito</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseas eliminar el hito <strong className="text-foreground">"{milestoneToDelete?.name}"</strong>? Esta acción no se puede deshacer y se eliminarán también los recordatorios asociados.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setMilestoneToDelete(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMilestone.isPending}
+              onClick={async () => {
+                if (!milestoneToDelete) return;
+                try {
+                  await deleteMilestone.mutateAsync({ id: milestoneToDelete.id });
+                  toast.success(`Hito "${milestoneToDelete.name}" eliminado exitosamente`);
+                  setMilestoneToDelete(null);
+                  await refetchMilestones();
+                  await refetch(); // Refrescar proyecto para actualizar progreso
+                  utils.projects.list.invalidate();
+                } catch (error: any) {
+                  toast.error(error.message || "Error al eliminar el hito");
+                }
+              }}
+            >
+              {deleteMilestone.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Trash2 className="h-4 w-4 mr-2" />
+              )}
+              Eliminar Hito
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

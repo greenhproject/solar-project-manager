@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useTimezone } from "@/hooks/useTimezone";
+
 import {
   Card,
   CardContent,
@@ -38,7 +39,12 @@ import {
 } from "@/components/ui/select";
 
 export default function UserProfile() {
-  const { user } = useAuth();
+  const { formatDate: tzFormatDate } = useTimezone();
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const user = meQuery.data ?? null;
   const utils = trpc.useUtils();
   const [name, setName] = useState(user?.name || "");
   const [email, setEmail] = useState(user?.email || "");
@@ -676,11 +682,7 @@ export default function UserProfile() {
                 <span>Miembro desde:</span>
               </div>
               <span className="text-sm font-medium text-gray-900">
-                {new Date(user.createdAt).toLocaleDateString("es-ES", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {tzFormatDate(user.createdAt, { year: "numeric", month: "long", day: "numeric" })}
               </span>
             </div>
           </CardContent>

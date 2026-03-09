@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
 
 type Theme = "light" | "dark" | "system";
 type ResolvedTheme = "light" | "dark";
@@ -17,7 +16,6 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const { user } = useAuth();
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>("light");
 
@@ -52,15 +50,17 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     return () => mediaQuery.removeEventListener("change", updateResolvedTheme);
   }, [theme]);
 
-  // Sincronizar con el tema del usuario desde la base de datos
+  // Sincronizar con el tema guardado en localStorage
   useEffect(() => {
-    if (user?.theme) {
-      setThemeState(user.theme);
+    const savedTheme = localStorage.getItem('user-theme') as Theme | null;
+    if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+      setThemeState(savedTheme);
     }
-  }, [user?.theme]);
+  }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
+    localStorage.setItem('user-theme', newTheme);
   };
 
   return (

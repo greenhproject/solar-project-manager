@@ -28,7 +28,49 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+async function runAutoMigrations() {
+  try {
+    const { drizzle } = await import("drizzle-orm/mysql2");
+    const mysql = await import("mysql2/promise");
+    const pool = mysql.createPool(process.env.DATABASE_URL!);
+    const conn = await pool.getConnection();
+    
+    // Create email_config table if not exists
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS email_config (
+        id int AUTO_INCREMENT PRIMARY KEY,
+        provider varchar(20) NOT NULL DEFAULT 'resend',
+        apiKey text,
+        smtpHost varchar(255),
+        smtpPort int DEFAULT 587,
+        smtpUser varchar(255),
+        smtpPassword text,
+        smtpSecure boolean DEFAULT true,
+        fromEmail varchar(255) NOT NULL DEFAULT 'admin@greenhproject.com',
+        fromName varchar(255) NOT NULL DEFAULT 'Solar Project Manager',
+        enableEmailNotifications boolean DEFAULT true,
+        sendCopyToAdmin boolean DEFAULT true,
+        adminEmail varchar(255),
+        isActive boolean DEFAULT false,
+        lastTestedAt timestamp NULL,
+        updatedBy int,
+        createdAt timestamp DEFAULT CURRENT_TIMESTAMP,
+        updatedAt timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    
+    conn.release();
+    await pool.end();
+    console.log("[AutoMigration] email_config table verified");
+  } catch (error) {
+    console.warn("[AutoMigration] Warning:", (error as Error).message);
+  }
+}
+
 async function startServer() {
+  // Run auto-migrations before starting the server
+  await runAutoMigrations();
+
   const app = express();
   const server = createServer(app);
 

@@ -120,7 +120,7 @@ export function showNotification(
   }
 
   const defaultOptions: NotificationOptions = {
-    icon: "/icon.png", // Logo de GreenH Project
+    icon: "/icon.png", // Logo de Green House Project
     badge: "/icon.png",
     requireInteraction: false,
     ...options,
