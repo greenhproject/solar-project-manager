@@ -1,0 +1,9 @@
+{
+  "query": "DELETE FROM project_updates WHERE projectId IN (SELECT id FROM projects WHERE openSolarId = '888');\nDELETE FROM projects WHERE openSolarId = '888';\nDELETE FROM webhook_logs WHERE modelId IN (888, 999);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute DELETE FROM project_updates WHERE projectId IN (SELECT id FROM projects WHERE openSolarId = '888');\nDELETE FROM projects WHERE openSolarId = '888';\nDELETE FROM webhook_logs WHERE modelId IN (888, 999);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 86
+}

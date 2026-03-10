@@ -614,3 +614,39 @@ export const appSettings = mysqlTable("app_settings", {
 
 export type AppSetting = typeof appSettings.$inferSelect;
 export type InsertAppSetting = typeof appSettings.$inferInsert;
+
+/**
+ * Logs de webhooks recibidos de OpenSolar
+ * Registra cada webhook para auditoría y debugging
+ */
+export const webhookLogs = mysqlTable("webhook_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Datos del webhook
+  source: varchar("source", { length: 50 }).notNull().default("opensolar"),
+  event: varchar("event", { length: 50 }).notNull(), // CREATE, UPDATE, DELETE
+  model: varchar("model", { length: 50 }).notNull(), // Project, Contact, Event
+  modelId: int("modelId"), // ID del modelo en OpenSolar
+  eventId: int("eventId"), // ID del evento en OpenSolar
+  
+  // Resultado del procesamiento
+  action: varchar("action", { length: 100 }), // created_project, updated_project, ignored_not_sold, etc.
+  status: mysqlEnum("status", ["processed", "ignored", "error"]).default("processed").notNull(),
+  message: text("message"),
+  errorDetails: text("errorDetails"),
+  
+  // Proyecto relacionado en nuestro sistema (si aplica)
+  projectId: int("projectId"),
+  
+  // Payload completo para debugging
+  payload: text("payload"), // JSON completo del webhook
+  
+  // Metadata
+  receivedAt: timestamp("receivedAt").defaultNow().notNull(),
+}, table => ({
+  sourceIdx: index("source_idx").on(table.source),
+  statusIdx: index("status_idx").on(table.status),
+}));
+
+export type WebhookLog = typeof webhookLogs.$inferSelect;
+export type InsertWebhookLog = typeof webhookLogs.$inferInsert;

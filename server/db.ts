@@ -26,6 +26,8 @@ import {
   projectLegalizationChecklist,
   emailConfig,
   appSettings,
+  webhookLogs,
+  InsertWebhookLog,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { getNowInConfiguredTimezone } from "./timezone";
@@ -1604,4 +1606,68 @@ export async function updateEmailConfigTestDate(id: number) {
     .update(emailConfig)
     .set({ lastTestedAt: new Date() })
     .where(eq(emailConfig.id, id));
+}
+
+// ============================================
+// WEBHOOK LOGS
+// ============================================
+
+/**
+ * Registrar un webhook recibido
+ */
+export async function createWebhookLog(data: InsertWebhookLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(webhookLogs).values(data);
+  return result;
+}
+
+/**
+ * Obtener logs de webhooks recientes
+ */
+export async function getWebhookLogs(limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(webhookLogs)
+    .orderBy(desc(webhookLogs.receivedAt))
+    .limit(limit);
+}
+
+// ============================================
+// BUSCAR PROYECTO POR OPENSOLAR ID
+// ============================================
+
+/**
+ * Buscar un proyecto por su ID de OpenSolar
+ */
+export async function getProjectByOpenSolarId(openSolarId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const results = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.openSolarId, openSolarId))
+    .limit(1);
+  return results[0] || null;
+}
+
+/**
+ * Actualizar datos de un proyecto desde OpenSolar (solo campos sincronizables)
+ */
+export async function updateProjectFromOpenSolar(
+  projectId: number,
+  data: {
+    name?: string;
+    location?: string;
+    clientName?: string;
+    clientEmail?: string;
+    clientPhone?: string;
+    description?: string;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(projects).set(data).where(eq(projects.id, projectId));
 }

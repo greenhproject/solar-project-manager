@@ -13,4 +13,5 @@ export const ENV = {
   openSolarEmail: process.env.OPENSOLAR_EMAIL ?? "",
   openSolarPassword: process.env.OPENSOLAR_PASSWORD ?? "",
   openSolarOrgId: process.env.OPENSOLAR_ORG_ID ?? "",
+  openSolarWebhookSecret: process.env.OPENSOLAR_WEBHOOK_SECRET ?? "greenhproject-2025",
 };

@@ -1817,6 +1817,13 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           syncedBy: ctx.user.id,
         });
       }),
+
+    // Obtener logs de webhooks recibidos
+    webhookLogs: adminProcedure
+      .input(z.object({ limit: z.number().default(50) }))
+      .query(async ({ input }) => {
+        return await db.getWebhookLogs(input.limit);
+      }),
   }),
 
   // ============================================

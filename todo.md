@@ -502,3 +502,16 @@
 - [x] Frontend: Reemplazar llamada tRPC syncToCalendar por apertura de URL de Google Calendar
 - [x] Frontend: Generar URL con datos del hito (título, descripción, fecha, ubicación)
 - [x] Frontend: Abrir en nueva pestaña para que el usuario confirme en su Google Calendar
+
+
+## Feature: Webhook OpenSolar - Solo Proyectos Vendidos (10 Mar 2026)
+- [x] Backend: Crear endpoint POST /api/webhook/opensolar en Express
+- [x] Backend: Validar header X-Webhook-Secret para seguridad
+- [x] Backend: Detectar evento "Project Marked as Sold" (event_type 103 o sold_date) → crear proyecto en Solar Manager
+- [x] Backend: Procesar UPDATE solo si el proyecto ya existe (ya vendido) en Solar Manager
+- [x] Backend: Crear tabla webhook_logs para historial de webhooks recibidos
+- [x] Backend: Registrar cada webhook recibido en webhook_logs
+- [x] Frontend: Mostrar logs de webhooks en Configuración con componente WebhookLogs
+- [x] Tests: 8 tests pasaron (funciones DB + handler)
+- [x] Config: OPENSOLAR_WEBHOOK_SECRET en env.ts (default: greenhproject-2025)
+- [ ] Push a GitHub para Railway

@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `webhook_logs` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `source` varchar(50) NOT NULL DEFAULT 'opensolar',\n  `event` varchar(50) NOT NULL,\n  `model` varchar(50) NOT NULL,\n  `modelId` int,\n  `eventId` int,\n  `action` varchar(100),\n  `status` enum('processed','ignored','error') NOT NULL DEFAULT 'processed',\n  `message` text,\n  `errorDetails` text,\n  `projectId` int,\n  `payload` text,\n  `receivedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  INDEX `source_idx` (`source`),\n  INDEX `status_idx` (`status`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute CREATE TABLE IF NOT EXISTS `webhook_logs` (\n  `id` int AUTO_INCREMENT PRIMARY KEY,\n  `source` varchar(50) NOT NULL DEFAULT 'opensolar',\n  `event` varchar(50) NOT NULL,\n  `model` varchar(50) NOT NULL,\n  `modelId` int,\n  `eventId` int,\n  `action` varchar(100),\n  `status` enum('processed','ignored','error') NOT NULL DEFAULT 'processed',\n  `message` text,\n  `errorDetails` text,\n  `projectId` int,\n  `payload` text,\n  `receivedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  INDEX `source_idx` (`source`),\n  INDEX `status_idx` (`status`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 642
+}

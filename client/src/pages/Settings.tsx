@@ -6,11 +6,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, Wrench, Bell, Mail, ChevronRight, Globe } from "lucide-react";
+import { Settings as SettingsIcon, Wrench, Bell, Mail, ChevronRight, Globe, Webhook } from "lucide-react";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { SystemConfiguration } from "@/components/SystemConfiguration";
 import { AutoNotificationsManager } from "@/components/AutoNotificationsManager";
 import { TimezoneSettings } from "@/components/TimezoneSettings";
+import { WebhookLogs } from "@/components/WebhookLogs";
 import { useLocation } from "wouter";
 
 export default function Settings() {
@@ -73,6 +74,15 @@ export default function Settings() {
           <NotificationSettings />
           <AutoNotificationsManager />
         </div>
+      </div>
+
+      {/* Webhooks de OpenSolar */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Webhook className="h-5 w-5 text-primary" />
+          Webhooks de OpenSolar
+        </h2>
+        <WebhookLogs />
       </div>
 
       {/* Configuración del Sistema */}
