@@ -45,6 +45,7 @@ import {
   Trash2,
   Loader2,
   Edit,
+  ExternalLink,
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useState } from "react";
@@ -96,7 +97,26 @@ export default function ProjectDetail() {
   const generatePDF = trpc.reports.generateProjectPDF.useMutation();
   const syncProject = trpc.sync.syncProject.useMutation();
   const loadMilestonesFromTemplate = trpc.projects.loadMilestonesFromTemplate.useMutation();
-  const syncToCalendar = trpc.milestones.syncToCalendar.useMutation();
+  // Google Calendar URL helper - abre el evento en el calendar personal del usuario
+  const openGoogleCalendar = (milestone: any) => {
+    const startDate = new Date(milestone.dueDate);
+    // Formato: YYYYMMDDTHHMMSSZ
+    const formatGCalDate = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    const endDate = new Date(startDate);
+    endDate.setHours(endDate.getHours() + 1);
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: `📅 ${project?.name || 'Proyecto'} - ${milestone.name}`,
+      dates: `${formatGCalDate(startDate)}/${formatGCalDate(endDate)}`,
+      details: milestone.description || `Hito del proyecto ${project?.name || ''}`,
+      location: project?.location || '',
+    });
+
+    const url = `https://calendar.google.com/calendar/render?${params.toString()}`;
+    window.open(url, '_blank');
+    toast.success('Google Calendar abierto. Confirma el evento en la pestaña.');
+  };
   const assignResponsible = trpc.milestones.assignResponsible.useMutation();
   const updateDueDate = trpc.milestones.updateDueDate.useMutation();
   const deleteMilestone = trpc.milestones.delete.useMutation();
@@ -732,28 +752,11 @@ export default function ProjectDetail() {
                               variant="outline"
                               size="sm"
                               className="gap-2"
-                              onClick={async () => {
-                                try {
-                                  toast.info("Sincronizando con Google Calendar...");
-                                  const result = await syncToCalendar.mutateAsync({
-                                    id: milestone.id,
-                                  });
-                                  toast.success(result.message);
-                                  await refetchMilestones();
-                                } catch (error: any) {
-                                  toast.error(error.message || "Error al sincronizar con Google Calendar");
-                                }
-                              }}
-                              disabled={syncToCalendar.isPending}
+                              onClick={() => openGoogleCalendar(milestone)}
                             >
-                              {syncToCalendar.isPending ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <Calendar className="h-3 w-3" />
-                              )}
-                              {(milestone as any).googleCalendarEventId
-                                ? "Resincronizar"
-                                : "Sincronizar con Calendar"}
+                              <Calendar className="h-3 w-3" />
+                              <ExternalLink className="h-3 w-3" />
+                              Agregar a mi Calendar
                             </Button>
 
                             {/* Botón eliminar hito - solo admin */}

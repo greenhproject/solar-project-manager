@@ -491,4 +491,14 @@
 - [x] Crear script scripts/migrate-production.mjs para migraciones no-interactivas
 - [x] Actualizar railway.json para usar migrate-production.mjs en vez de db:push
 - [x] Actualizar nixpacks.toml para usar migrate-production.mjs
-- [ ] Push a GitHub para Railway
+- [x] Push a GitHub para Railway (commit 81b0f04)
+
+## Bug: Railway ignora railway.json buildCommand (10 Mar 2026)
+- [ ] Investigar: Railway usa config del servicio en vez de railway.json
+- [ ] Solución: Railway tiene buildCommand configurado en el servicio que sobreescribe railway.json
+- [ ] Alternativa: Modificar nixpacks.toml que es lo que Railway realmente usa
+
+## Feature: Google Calendar URL scheme - sincronizar hitos al calendar personal del usuario (10 Mar 2026)
+- [x] Frontend: Reemplazar llamada tRPC syncToCalendar por apertura de URL de Google Calendar
+- [x] Frontend: Generar URL con datos del hito (título, descripción, fecha, ubicación)
+- [x] Frontend: Abrir en nueva pestaña para que el usuario confirme en su Google Calendar
