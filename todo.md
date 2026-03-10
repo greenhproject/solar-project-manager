@@ -484,4 +484,11 @@
 - [x] Frontend: agregar botón de eliminar hito en ProjectDetail con confirmación
 - [x] Frontend: diálogo de confirmación con nombre del hito antes de eliminar
 - [x] Tests: crear test para verificar que admin puede eliminar y no-admin no puede
+- [x] Push a GitHub para Railway (commit ef26c8a)
+
+## Fix: Deploy Railway falla por drizzle-kit push interactivo (10 Mar 2026)
+- [x] Diagnosticar: drizzle-kit push pregunta si app_settings es nueva o rename de company_settings
+- [x] Crear script scripts/migrate-production.mjs para migraciones no-interactivas
+- [x] Actualizar railway.json para usar migrate-production.mjs en vez de db:push
+- [x] Actualizar nixpacks.toml para usar migrate-production.mjs
 - [ ] Push a GitHub para Railway
