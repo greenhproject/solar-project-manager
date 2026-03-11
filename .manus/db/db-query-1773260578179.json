@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, name, progressPercentage FROM projects ORDER BY id DESC LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT id, name, progressPercentage FROM projects ORDER BY id DESC LIMIT 10",
+  "rows": [
+    {
+      "id": "90001",
+      "name": "Proyecto para Eliminar Test",
+      "progressPercentage": "0"
+    },
+    {
+      "id": "60001",
+      "name": "Proyecto Test Progreso",
+      "progressPercentage": "0"
+    },
+    {
+      "id": "30003",
+      "name": "Proyecto Test Progreso",
+      "progressPercentage": "0"
+    },
+    {
+      "id": "30002",
+      "name": "Proyecto Test Progreso",
+      "progressPercentage": "0"
+    },
+    {
+      "id": "30001",
+      "name": "proyecto de prueba 2",
+      "progressPercentage": "100"
+    },
+    {
+      "id": "1",
+      "name": "proyecto de prueba",
+      "progressPercentage": "11"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tprogressPercentage\n90001\tProyecto para Eliminar Test\t0\n60001\tProyecto Test Progreso\t0\n30003\tProyecto Test Progreso\t0\n30002\tProyecto Test Progreso\t0\n30001\tproyecto de prueba 2\t100\n1\tproyecto de prueba\t11\n",
+  "stderr": "",
+  "execution_time_ms": 795
+}

@@ -310,8 +310,11 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                               <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-gradient-solar transition-all"
-                                  style={{ width: `${project.progressPercentage}%` }}
+                                  className="h-full rounded-full transition-all"
+                                  style={{ 
+                                    width: `${Math.max(project.progressPercentage, 0)}%`,
+                                    background: 'linear-gradient(135deg, oklch(0.65 0.19 45) 0%, oklch(0.75 0.15 65) 100%)'
+                                  }}
                                 />
                               </div>
                               <span className="text-sm font-medium">
@@ -402,10 +405,11 @@ export default function Dashboard() {
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden min-w-[80px]">
                               <div
-                                className="h-full bg-gradient-solar transition-all"
-                                style={{
-                                  width: `${project.progressPercentage}%`,
-                                }}
+                                className="h-full rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.max(project.progressPercentage, 0)}%`,
+                                    background: 'linear-gradient(135deg, oklch(0.65 0.19 45) 0%, oklch(0.75 0.15 65) 100%)'
+                                  }}
                               />
                             </div>
                             <span className="text-sm font-medium min-w-[3ch] text-right">

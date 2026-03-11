@@ -347,9 +347,10 @@ export default function Projects() {
                               </div>
                               <div className="h-2 bg-muted rounded-full overflow-hidden">
                                 <div
-                                  className="h-full bg-gradient-solar transition-all duration-500 ease-out"
+                                  className="h-full rounded-full transition-all duration-500 ease-out"
                                   style={{
-                                    width: `${project.progressPercentage}%`,
+                                    width: `${Math.max(project.progressPercentage, 0)}%`,
+                                    background: 'linear-gradient(135deg, oklch(0.65 0.19 45) 0%, oklch(0.75 0.15 65) 100%)'
                                   }}
                                 />
                               </div>

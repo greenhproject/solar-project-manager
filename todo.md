@@ -519,4 +519,9 @@
 ## Bug: Ingenieros no pueden subir archivos en carpeta del proyecto (11 Mar 2026)
 - [x] Investigar endpoint de subida de archivos y permisos por rol
 - [x] Corregir permisos para que ingenieros e ingenieros de trámites puedan subir archivos
-- [ ] Verificar y hacer push a GitHub
+- [x] Verificar y hacer push a GitHub (commit 4628472)
+
+## Bug: Barra de progreso no se llena visualmente (11 Mar 2026)
+- [x] Investigar componente Progress/barra de progreso en tarjetas de proyecto
+- [x] Corregir para que el ancho de la barra refleje el porcentaje (inline gradient en Dashboard, Projects, Progress component)
+- [ ] Push a GitHub
