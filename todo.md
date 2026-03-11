@@ -514,4 +514,9 @@
 - [x] Frontend: Mostrar logs de webhooks en Configuración con componente WebhookLogs
 - [x] Tests: 8 tests pasaron (funciones DB + handler)
 - [x] Config: OPENSOLAR_WEBHOOK_SECRET en env.ts (default: greenhproject-2025)
-- [ ] Push a GitHub para Railway
+- [x] Push a GitHub para Railway (commit 9fbe27a)
+
+## Bug: Ingenieros no pueden subir archivos en carpeta del proyecto (11 Mar 2026)
+- [x] Investigar endpoint de subida de archivos y permisos por rol
+- [x] Corregir permisos para que ingenieros e ingenieros de trámites puedan subir archivos
+- [ ] Verificar y hacer push a GitHub

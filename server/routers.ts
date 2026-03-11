@@ -663,9 +663,10 @@ export const appRouter = router({
           });
         }
 
-        // Solo admin puede actualizar, o el ingeniero asignado puede actualizar ciertos campos
+        // Admin, ingeniero asignado, o ingeniero de trámites pueden actualizar
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
           project.assignedEngineerId !== ctx.user.id
         ) {
           throw new TRPCError({
@@ -935,9 +936,10 @@ export const appRouter = router({
           });
         }
 
-        // Solo admin o ingeniero asignado pueden crear hitos
+        // Admin, ingeniero asignado, o ingeniero de trámites pueden crear hitos
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
           project.assignedEngineerId !== ctx.user.id
         ) {
           throw new TRPCError({
@@ -1099,8 +1101,8 @@ export const appRouter = router({
           });
         }
 
-        // Verificar que el usuario sea el responsable del hito o admin
-        if (ctx.user.role !== "admin" && milestone.assignedUserId !== ctx.user.id) {
+        // Verificar que el usuario sea el responsable del hito, admin, o ingeniero de trámites
+        if (ctx.user.role !== "admin" && ctx.user.role !== "ingeniero_tramites" && milestone.assignedUserId !== ctx.user.id) {
           const project = await db.getProjectById(milestone.projectId);
           if (!project || project.assignedEngineerId !== ctx.user.id) {
             throw new TRPCError({
@@ -1172,6 +1174,7 @@ export const appRouter = router({
         // Verificar permisos
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
           project.assignedEngineerId !== ctx.user.id
         ) {
           throw new TRPCError({
@@ -1267,9 +1270,10 @@ export const appRouter = router({
           });
         }
 
-        // Verificar permisos (solo admin o ingeniero asignado)
+        // Verificar permisos (admin, ingeniero asignado, o ingeniero de trámites)
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
           project.assignedEngineerId !== ctx.user.id
         ) {
           throw new TRPCError({
@@ -1344,6 +1348,7 @@ export const appRouter = router({
         // Verificar permisos
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
           project.assignedEngineerId !== ctx.user.id
         ) {
           throw new TRPCError({
@@ -1844,6 +1849,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         // Verificar permisos
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
           project.assignedEngineerId !== ctx.user.id
         ) {
           throw new TRPCError({
@@ -1953,11 +1959,9 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           });
         }
 
-        // Verificar permisos
-        if (
-          ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
-        ) {
+        // Verificar permisos: admin, engineer e ingeniero_tramites pueden subir archivos
+        // Todos los miembros del equipo pueden subir archivos a cualquier proyecto
+        if (!ctx.user.role || !['admin', 'engineer', 'ingeniero_tramites'].includes(ctx.user.role)) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "No tienes permiso para subir archivos a este proyecto",
@@ -1991,11 +1995,8 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           });
         }
 
-        // Verificar permisos
-        if (
-          ctx.user.role !== "admin" &&
-          project.assignedEngineerId !== ctx.user.id
-        ) {
+        // Verificar permisos: admin, engineer e ingeniero_tramites pueden ver archivos
+        if (!ctx.user.role || !['admin', 'engineer', 'ingeniero_tramites'].includes(ctx.user.role)) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "No tienes permiso para ver archivos de este proyecto",
