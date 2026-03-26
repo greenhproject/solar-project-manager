@@ -52,13 +52,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
-import { useTimezone } from "@/hooks/useTimezone";
+import { useTimezone, fromDateInputValue } from "@/hooks/useTimezone";
 import { FileUpload } from "@/components/FileUpload";
 import { FileList } from "@/components/FileList";
 import LegalizationChecklist from "@/components/LegalizationChecklist";
 
 export default function ProjectDetail() {
-  const { formatDate: tzFormatDate } = useTimezone();
+  const { formatDate: tzFormatDate, toDateInputValue } = useTimezone();
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
@@ -225,7 +225,7 @@ export default function ProjectDetail() {
         projectId,
         name: newMilestone.name,
         description: newMilestone.description || undefined,
-        dueDate: new Date(newMilestone.dueDate),
+        dueDate: fromDateInputValue(newMilestone.dueDate),
         orderIndex: existingMilestones.length + 1,
         weight: 1,
       });
@@ -680,13 +680,13 @@ export default function ProjectDetail() {
                               <Input
                                 type="date"
                                 className="h-8 text-xs"
-                                value={format(new Date(milestone.dueDate), "yyyy-MM-dd")}
+                                value={toDateInputValue(milestone.dueDate)}
                                 onChange={async (e) => {
                                   if (!e.target.value) return;
                                   try {
                                     await updateDueDate.mutateAsync({
                                       milestoneId: milestone.id,
-                                      dueDate: new Date(e.target.value),
+                                      dueDate: fromDateInputValue(e.target.value),
                                     });
                                     toast.success("Fecha actualizada correctamente");
                                     await refetchMilestones();

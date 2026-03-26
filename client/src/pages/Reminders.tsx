@@ -35,7 +35,7 @@ import { toast } from "sonner";
 import { differenceInDays } from "date-fns";
 import { useLocation } from "wouter";
 import { useState } from "react";
-import { useTimezone } from "@/hooks/useTimezone";
+import { useTimezone, fromDateInputValue } from "@/hooks/useTimezone";
 
 export default function Reminders() {
   const [, setLocation] = useLocation();
@@ -93,7 +93,7 @@ export default function Reminders() {
     try {
       await requestReschedule.mutateAsync({
         milestoneId: rescheduleDialog.milestoneId,
-        newDueDate: new Date(newDueDate),
+        newDueDate: fromDateInputValue(newDueDate),
         justification,
       });
       toast.success(`Hito "${rescheduleDialog.milestoneName}" reprogramado exitosamente`);

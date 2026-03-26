@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { toLocalDateString } from "@/hooks/useTimezone";
 
 export default function EditProject() {
   const [, params] = useRoute("/projects/:id/edit");
@@ -47,8 +47,8 @@ export default function EditProject() {
         name: project.name,
         description: project.description || "",
         projectTypeId: project.projectTypeId,
-        startDate: format(new Date(project.startDate), "yyyy-MM-dd"),
-        estimatedEndDate: format(new Date(project.estimatedEndDate), "yyyy-MM-dd"),
+        startDate: toLocalDateString(project.startDate),
+        estimatedEndDate: toLocalDateString(project.estimatedEndDate),
         location: project.location || "",
         clientName: project.clientName || "",
         clientEmail: project.clientEmail || "",

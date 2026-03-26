@@ -144,6 +144,23 @@ export function useTimezone() {
         day: "numeric",
       });
     },
+    /**
+     * Convierte una fecha a formato "yyyy-MM-dd" en la zona horaria configurada.
+     * Útil para poblar inputs type="date" sin desfase.
+     */
+    toDateInputValue: (date: Date | string | null): string => {
+      if (!date) return "";
+      const dateObj = typeof date === "string" ? new Date(date) : date;
+      if (isNaN(dateObj.getTime())) return "";
+
+      const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone: timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+      return formatter.format(dateObj);
+    },
   }), [timezone]);
 
   return {
@@ -151,6 +168,40 @@ export function useTimezone() {
     isLoading,
     ...utils,
   };
+}
+
+/**
+ * Convierte una fecha (Date o string ISO) a formato "yyyy-MM-dd" en la zona horaria configurada.
+ * Útil para poblar inputs type="date" sin desfase de timezone.
+ */
+export function toLocalDateString(
+  date: Date | string | null,
+  timezone: string = DEFAULT_TIMEZONE
+): string {
+  if (!date) return "";
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(dateObj.getTime())) return "";
+
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  // en-CA locale produces yyyy-MM-dd format natively
+  return formatter.format(dateObj);
+}
+
+/**
+ * Convierte un string "yyyy-MM-dd" de un input type="date" a un Date
+ * interpretado como mediodía UTC, evitando el desfase de un día
+ * que ocurre cuando new Date("yyyy-MM-dd") se interpreta como medianoche UTC.
+ */
+export function fromDateInputValue(dateString: string): Date {
+  // Agregar T12:00:00 para que se interprete como mediodía UTC
+  // Esto evita que en zonas horarias negativas (como America/Bogota UTC-5)
+  // la fecha se desplace al día anterior
+  return new Date(dateString + "T12:00:00");
 }
 
 /**

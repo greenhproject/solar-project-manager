@@ -524,4 +524,16 @@
 ## Bug: Barra de progreso no se llena visualmente (11 Mar 2026)
 - [x] Investigar componente Progress/barra de progreso en tarjetas de proyecto
 - [x] Corregir para que el ancho de la barra refleje el porcentaje (inline gradient en Dashboard, Projects, Progress component)
+- [x] Push a GitHub (commit 311d176)
+
+## Bug: Desfase de un día al seleccionar fecha de hito (26 Mar 2026)
+- [x] Investigar cómo se manejan las fechas al seleccionar en el DatePicker de hitos
+- [x] Corregir el desfase de timezone que causa que la fecha se muestre un día después
+- [x] Crear funciones utilitarias fromDateInputValue() y toLocalDateString() en useTimezone.ts
+- [x] Aplicar corrección en ProjectDetail.tsx (crear hito + editar fecha)
+- [x] Aplicar corrección en NewProject.tsx (crear proyecto)
+- [x] Aplicar corrección en Reminders.tsx (reprogramar hito)
+- [x] Aplicar corrección en EditProject.tsx (mostrar fechas de proyecto)
+- [x] 16 tests pasando (date-utils.test.ts)
+- [ ] Verificar la corrección en el navegador
 - [ ] Push a GitHub

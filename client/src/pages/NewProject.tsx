@@ -22,6 +22,7 @@ import { useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
+import { fromDateInputValue } from "@/hooks/useTimezone";
 
 export default function NewProject() {
   const meQuery = trpc.auth.me.useQuery(undefined, {
@@ -103,8 +104,8 @@ export default function NewProject() {
             ? parseInt(formData.assignedEngineerId)
             : undefined,
         openSolarId: formData.openSolarId || undefined,
-        startDate: new Date(formData.startDate),
-        estimatedEndDate: new Date(formData.estimatedEndDate),
+        startDate: fromDateInputValue(formData.startDate),
+        estimatedEndDate: fromDateInputValue(formData.estimatedEndDate),
         location: formData.location || undefined,
         clientName: formData.clientName || undefined,
         clientEmail: formData.clientEmail || undefined,
