@@ -36,6 +36,9 @@ import {
   Loader2,
   FileEdit,
   Send,
+  Trash2,
+  Eye,
+  FileCheck,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -168,8 +171,8 @@ export default function LegalizationChecklist({
   }
 
   const completedCount = checklist?.filter((item) => item.isCompleted).length || 0;
-  const totalCount = DOCUMENT_TYPES.length;
-  const progressPercentage = Math.round((completedCount / totalCount) * 100);
+  const totalCount = checklist?.length || 0;
+  const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
     <Card>
@@ -208,6 +211,8 @@ export default function LegalizationChecklist({
             const item = checklist?.find(
               (c) => c.documentType === docType.value
             );
+            // Solo mostrar si el item existe en el checklist (no fue eliminado)
+            if (!item) return null;
             return (
               <ChecklistItem
                 key={docType.value}
@@ -245,8 +250,24 @@ function ChecklistItem({ projectId, docType, item, onUpdate }: ChecklistItemProp
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [autoLoadDialogOpen, setAutoLoadDialogOpen] = useState(false);
 
+  const deleteMutation = trpc.legalizationChecklist.delete.useMutation({
+    onSuccess: () => {
+      toast.success(`"${docType.label}" eliminado del checklist`);
+      onUpdate();
+    },
+    onError: () => {
+      toast.error("Error al eliminar del checklist");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!item?.id) return;
+    if (!confirm(`¿Eliminar "${docType.label}" del checklist? Esta acción no se puede deshacer.`)) return;
+    deleteMutation.mutate({ id: item.id });
+  };
+
   return (
-    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+    <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors group">
       <div className="flex items-center gap-3 flex-1">
         {item?.isCompleted ? (
           <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
@@ -291,6 +312,20 @@ function ChecklistItem({ projectId, docType, item, onUpdate }: ChecklistItemProp
           documentLabel={docType.label}
           onUpdate={onUpdate}
         />
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={handleDelete}
+          disabled={deleteMutation.isPending}
+          title="Eliminar del checklist"
+        >
+          {deleteMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
+        </Button>
       </div>
     </div>
   );
@@ -593,8 +628,20 @@ function DownloadAllButton({
 // ==========================================
 function DynamicDocumentsSection({ projectId }: { projectId: number }) {
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+  const utils = trpc.useUtils();
 
   const { data: templates } = trpc.dynamicDocuments.listTemplates.useQuery({});
+  const { data: generatedDocs } = trpc.dynamicDocuments.getGeneratedDocs.useQuery({ projectId });
+
+  const deleteGenDocMutation = trpc.dynamicDocuments.deleteGeneratedDoc.useMutation({
+    onSuccess: () => {
+      toast.success("Documento eliminado");
+      utils.dynamicDocuments.getGeneratedDocs.invalidate({ projectId });
+    },
+    onError: () => {
+      toast.error("Error al eliminar documento");
+    },
+  });
 
   if (!templates || templates.length === 0) return null;
 
@@ -613,30 +660,96 @@ function DynamicDocumentsSection({ projectId }: { projectId: number }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {templates.map((template) => (
-            <div
-              key={template.id}
-              className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center gap-3 flex-1">
-                <FileEdit className="h-5 w-5 text-orange-500 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-sm">{template.name}</p>
-                  {template.description && (
-                    <p className="text-xs text-muted-foreground">{template.description}</p>
-                  )}
+          {templates.map((template) => {
+            // Buscar documentos generados para esta plantilla
+            const templateGenDocs = generatedDocs?.filter((d) => d.templateId === template.id) || [];
+            return (
+              <div key={template.id} className="space-y-1">
+                <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3 flex-1">
+                    <FileEdit className="h-5 w-5 text-orange-500 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-sm">{template.name}</p>
+                      {template.description && (
+                        <p className="text-xs text-muted-foreground">{template.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {templateGenDocs.length > 0 && (
+                      <Badge variant="outline" className="text-xs text-green-500 border-green-500/30">
+                        <FileCheck className="h-3 w-3 mr-1" />
+                        {templateGenDocs.length} generado{templateGenDocs.length > 1 ? "s" : ""}
+                      </Badge>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setSelectedTemplateId(template.id)}
+                    >
+                      <Send className="h-4 w-4 mr-1" />
+                      Generar
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Mostrar documentos generados debajo de la plantilla */}
+                {templateGenDocs.map((genDoc) => (
+                  <div
+                    key={genDoc.id}
+                    className="flex items-center justify-between p-2 pl-10 border rounded-lg bg-green-500/5 border-green-500/20"
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <FileCheck className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-sm">{genDoc.fileName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Generado el {new Date(genDoc.createdAt).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => window.open(genDoc.fileUrl, "_blank")}
+                        title="Ver documento"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          const a = document.createElement("a");
+                          a.href = genDoc.fileUrl;
+                          a.download = genDoc.fileName;
+                          a.click();
+                        }}
+                        title="Descargar"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-red-500"
+                        onClick={() => {
+                          if (confirm("¿Eliminar este documento generado?")) {
+                            deleteGenDocMutation.mutate({ id: genDoc.id });
+                          }
+                        }}
+                        disabled={deleteGenDocMutation.isPending}
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setSelectedTemplateId(template.id)}
-              >
-                <Send className="h-4 w-4 mr-1" />
-                Generar
-              </Button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
 
@@ -701,13 +814,13 @@ function GenerateDynamicDocDialog({
     }
   }, [template?.fields, project]);
 
+  const utils = trpc.useUtils();
+
   const generateMutation = trpc.dynamicDocuments.generateDocument.useMutation({
     onSuccess: (result) => {
-      toast.success("Documento generado exitosamente");
-      // Open the generated document
-      if (result.fileUrl) {
-        window.open(result.fileUrl, "_blank");
-      }
+      toast.success("Documento generado exitosamente. Queda cargado en la sección.");
+      // Invalidar la lista de documentos generados para que aparezca el nuevo
+      utils.dynamicDocuments.getGeneratedDocs.invalidate({ projectId });
       onOpenChange(false);
       setFieldValues({});
     },

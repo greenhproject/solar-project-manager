@@ -635,4 +635,12 @@
 - [x] Scroll funciona correctamente - overflow-y-auto en body, header/footer fijos
 - [x] Header compacto con badge y X sin superposición
 - [x] Reescrito completamente sin DialogContent de shadcn (custom fixed modal)
+- [x] Push a GitHub (commit cde1650)
+
+## Mejora: Checklist de Legalización + Docs Dinámicos (09 Abr 2026)
+- [x] Backend: endpoint legalizationChecklist.delete ya existía
+- [x] Frontend: botón de eliminar (papelera) en cada item del checklist (group-hover)
+- [x] Confirmación antes de eliminar un item (window.confirm)
+- [x] Frontend: sección de Documentos Dinámicos muestra docs generados con badge verde, botones ver/descargar/eliminar
+- [x] Frontend: al generar documento, se invalida la query y aparece inmediatamente en la sección
 - [ ] Push a GitHub
