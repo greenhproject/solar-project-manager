@@ -611,4 +611,11 @@
 - [x] Integrar el editor visual con el botón "Campos" existente (reemplaza FieldEditorDialog por VisualFieldEditor)
 - [x] Auto-detectar marcadores al abrir editor y crear campos automáticamente
 - [x] Tests unitarios para parseDocument (3 tests pasando)
+- [x] Push a GitHub (commit 33a469d)
+
+## Fix: Botón 'Ver' descarga en lugar de mostrar vista previa (09 Abr 2026)
+- [x] Cambiar botón 'Ver/Versión' para abrir modal de vista previa del documento Word dentro de la app
+- [x] Corregir etiqueta del botón (aparece como 'Versión' en producción, debería ser 'Ver')
+- [x] Mostrar contenido renderizado del Word con marcadores resaltados en el modal
+- [x] Componente DocumentPreviewDialog creado con vista tipo "papel" y marcadores en naranja
 - [ ] Push a GitHub

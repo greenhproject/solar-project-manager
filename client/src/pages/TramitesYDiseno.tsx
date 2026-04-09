@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { VisualFieldEditor } from "@/components/VisualFieldEditor";
+import { DocumentPreviewDialog } from "@/components/DocumentPreviewDialog";
 
 import { trpc } from "@/lib/trpc";
 import {
@@ -860,6 +861,7 @@ function DynamicDocumentsTab() {
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [showFieldEditor, setShowFieldEditor] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const { data: templates, isLoading } = trpc.dynamicDocuments.listTemplates.useQuery({});
 
@@ -929,7 +931,10 @@ function DynamicDocumentsTab() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => window.open(template.fileUrl, "_blank")}
+                    onClick={() => {
+                      setSelectedTemplate(template.id);
+                      setShowPreview(true);
+                    }}
                   >
                     <Eye className="mr-1 h-4 w-4" />
                     Ver
@@ -964,12 +969,26 @@ function DynamicDocumentsTab() {
       <UploadDynamicTemplateDialog open={showUpload} onOpenChange={setShowUpload} />
 
       {/* Dialog: Editor Visual de Campos Dinámicos */}
-      {selectedTemplate && (
+      {selectedTemplate && showFieldEditor && (
         <VisualFieldEditor
           templateId={selectedTemplate}
           open={showFieldEditor}
           onOpenChange={(open) => {
             setShowFieldEditor(open);
+            if (!open) setSelectedTemplate(null);
+          }}
+        />
+      )}
+
+      {/* Dialog: Vista previa del documento */}
+      {selectedTemplate && showPreview && (
+        <DocumentPreviewDialog
+          templateId={selectedTemplate}
+          templateName={templates?.find((t) => t.id === selectedTemplate)?.name || ""}
+          fileUrl={templates?.find((t) => t.id === selectedTemplate)?.fileUrl || ""}
+          open={showPreview}
+          onOpenChange={(open) => {
+            setShowPreview(open);
             if (!open) setSelectedTemplate(null);
           }}
         />
