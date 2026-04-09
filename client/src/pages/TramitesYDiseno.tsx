@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { VisualFieldEditor } from "@/components/VisualFieldEditor";
 
 import { trpc } from "@/lib/trpc";
 import {
@@ -962,9 +963,9 @@ function DynamicDocumentsTab() {
       {/* Dialog: Subir nueva plantilla */}
       <UploadDynamicTemplateDialog open={showUpload} onOpenChange={setShowUpload} />
 
-      {/* Dialog: Configurar campos dinámicos */}
+      {/* Dialog: Editor Visual de Campos Dinámicos */}
       {selectedTemplate && (
-        <FieldEditorDialog
+        <VisualFieldEditor
           templateId={selectedTemplate}
           open={showFieldEditor}
           onOpenChange={(open) => {

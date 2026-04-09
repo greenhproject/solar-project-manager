@@ -2862,6 +2862,55 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         return { ...template, fields };
       }),
 
+    // Parsear documento Word: extraer HTML y detectar marcadores {{...}}
+    parseDocument: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const template = await db.getDynamicDocTemplateById(input.id);
+        if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Plantilla no encontrada" });
+
+        try {
+          // Download the file from S3
+          const response = await fetch(template.fileUrl);
+          if (!response.ok) throw new Error("No se pudo descargar el archivo");
+          const arrayBuffer = await response.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+
+          // Convert docx to HTML using mammoth
+          const mammoth = await import("mammoth");
+          const result = await mammoth.default.convertToHtml({ buffer });
+          const html = result.value;
+
+          // Extract raw text for marker detection
+          const textResult = await mammoth.default.extractRawText({ buffer });
+          const rawText = textResult.value;
+
+          // Detect all {{...}} markers in the document
+          const markerRegex = /\{\{([^}]+)\}\}/g;
+          const markers: string[] = [];
+          let match;
+          while ((match = markerRegex.exec(rawText)) !== null) {
+            const key = match[1].trim();
+            if (!markers.includes(key)) {
+              markers.push(key);
+            }
+          }
+
+          return {
+            html,
+            rawText,
+            markers,
+            warnings: result.messages.map((m: any) => m.message),
+          };
+        } catch (err: any) {
+          console.error("[parseDocument] Error:", err.message);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Error al parsear el documento Word: " + err.message,
+          });
+        }
+      }),
+
     // Crear plantilla dinámica (subir archivo Word)
     createTemplate: tramitesProcedure
       .input(z.object({

@@ -602,4 +602,13 @@
 - [x] Solución: agregar CREATE TABLE IF NOT EXISTS para las 3 tablas dinámicas en runAutoMigrations() de server/_core/index.ts
 - [x] Verificar INSERT con Drizzle ORM funciona correctamente en desarrollo
 - [x] TypeScript compila sin errores
-- [ ] Push a GitHub y verificar en producción
+- [x] Push a GitHub (commit a836fa1) y verificar en producción
+
+## Feature: Editor Visual de Campos Dinámicos (09 Abr 2026)
+- [x] Backend: endpoint parseDocument para extraer HTML del Word con mammoth y detectar marcadores {{...}}
+- [x] Frontend: visor visual del documento con marcadores resaltados (verde=configurado, rojo=sin configurar, naranja=seleccionado)
+- [x] Frontend: panel lateral con tarjetas expandibles para configurar cada campo (tipo, etiqueta, requerido, mapeo, valor por defecto)
+- [x] Integrar el editor visual con el botón "Campos" existente (reemplaza FieldEditorDialog por VisualFieldEditor)
+- [x] Auto-detectar marcadores al abrir editor y crear campos automáticamente
+- [x] Tests unitarios para parseDocument (3 tests pasando)
+- [ ] Push a GitHub
