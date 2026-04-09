@@ -16,6 +16,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -121,6 +122,14 @@ export default function ProjectDetail() {
   const updateDueDate = trpc.milestones.updateDueDate.useMutation();
   const deleteMilestone = trpc.milestones.delete.useMutation();
   const [milestoneToDelete, setMilestoneToDelete] = useState<{ id: number; name: string } | null>(null);
+
+  // Estado para el diálogo de confirmación de cascada de fechas
+  const [cascadeDialog, setCascadeDialog] = useState<{
+    open: boolean;
+    milestoneId: number;
+    milestoneName: string;
+    newDate: string; // valor del input date (yyyy-MM-dd)
+  } | null>(null);
 
   if (meQuery.isLoading || !user) {
     return (
@@ -681,18 +690,15 @@ export default function ProjectDetail() {
                                 type="date"
                                 className="h-8 text-xs"
                                 value={toDateInputValue(milestone.dueDate)}
-                                onChange={async (e) => {
+                                onChange={(e) => {
                                   if (!e.target.value) return;
-                                  try {
-                                    await updateDueDate.mutateAsync({
-                                      milestoneId: milestone.id,
-                                      dueDate: fromDateInputValue(e.target.value),
-                                    });
-                                    toast.success("Fecha actualizada correctamente");
-                                    await refetchMilestones();
-                                  } catch (error: any) {
-                                    toast.error(error.message || "Error al actualizar fecha");
-                                  }
+                                  // Abrir diálogo de confirmación para cascada
+                                  setCascadeDialog({
+                                    open: true,
+                                    milestoneId: milestone.id,
+                                    milestoneName: milestone.name,
+                                    newDate: e.target.value,
+                                  });
                                 }}
                               />
                             </div>
@@ -1006,6 +1012,93 @@ export default function ProjectDetail() {
               Eliminar Hito
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo de confirmación para cascada de fechas */}
+      <Dialog
+        open={!!cascadeDialog?.open}
+        onOpenChange={(open) => !open && setCascadeDialog(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-orange-500" />
+              Actualizar fecha de hito
+            </DialogTitle>
+            <DialogDescription className="text-left">
+              Estás cambiando la fecha del hito <strong className="text-foreground">"{cascadeDialog?.milestoneName}"</strong>.
+              ¿Deseas recalcular automáticamente las fechas de todos los hitos siguientes según los tiempos de la plantilla?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground space-y-1">
+            <p className="flex items-center gap-2">
+              <RefreshCw className="h-4 w-4 text-orange-500 shrink-0" />
+              <span><strong>Recalcular todos:</strong> Ajusta las fechas de los hitos siguientes en cascada usando los días de duración de la plantilla.</span>
+            </p>
+            <p className="flex items-center gap-2">
+              <Edit className="h-4 w-4 text-blue-500 shrink-0" />
+              <span><strong>Solo este hito:</strong> Cambia únicamente la fecha de este hito sin afectar los demás.</span>
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              disabled={updateDueDate.isPending}
+              onClick={async () => {
+                if (!cascadeDialog) return;
+                try {
+                  await updateDueDate.mutateAsync({
+                    milestoneId: cascadeDialog.milestoneId,
+                    dueDate: fromDateInputValue(cascadeDialog.newDate),
+                    cascadeSubsequent: false,
+                  });
+                  toast.success("Fecha actualizada (solo este hito)");
+                  setCascadeDialog(null);
+                  await refetchMilestones();
+                } catch (error: any) {
+                  toast.error(error.message || "Error al actualizar fecha");
+                }
+              }}
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Solo este hito
+            </Button>
+            <Button
+              className="flex-1 bg-orange-500 hover:bg-orange-600"
+              disabled={updateDueDate.isPending}
+              onClick={async () => {
+                if (!cascadeDialog) return;
+                try {
+                  const result = await updateDueDate.mutateAsync({
+                    milestoneId: cascadeDialog.milestoneId,
+                    dueDate: fromDateInputValue(cascadeDialog.newDate),
+                    cascadeSubsequent: true,
+                  });
+                  if (result.cascadedCount && result.cascadedCount > 0) {
+                    toast.success(
+                      `Fecha actualizada. Se recalcularon ${result.cascadedCount} hito(s) siguientes en cascada.`,
+                      { duration: 4000 }
+                    );
+                  } else {
+                    toast.success("Fecha actualizada correctamente");
+                  }
+                  setCascadeDialog(null);
+                  await refetchMilestones();
+                } catch (error: any) {
+                  toast.error(error.message || "Error al actualizar fecha");
+                }
+              }}
+            >
+              {updateDueDate.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Recalcular todos
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

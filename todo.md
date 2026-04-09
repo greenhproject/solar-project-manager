@@ -537,3 +537,14 @@
 - [x] 16 tests pasando (date-utils.test.ts)
 - [ ] Verificar la corrección en el navegador
 - [ ] Push a GitHub
+
+## Mejora: Cascada automática de fechas al actualizar un hito (09 Abr 2026)
+- [x] Investigar esquema de plantillas (milestoneTemplates) y duración en días
+- [x] Implementar lógica de cascada en el servidor: al cambiar fecha de un hito, recalcular fechas de hitos siguientes
+- [x] Usar los días de duración de la plantilla para calcular las nuevas fechas
+- [x] Agregar diálogo de confirmación antes de aplicar cascada automática de fechas
+- [x] Dar opción al usuario: "Solo este hito" vs "Recalcular todos los siguientes"
+- [x] Actualizar frontend para reflejar la cascada y dar feedback al usuario
+- [x] 23 tests pasando (cascade-dates.test.ts + date-utils.test.ts)
+- [x] Verificar en el navegador
+- [x] Push a GitHub (commit 7d456b7b)
