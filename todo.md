@@ -582,4 +582,9 @@
 - [x] UI para llenar campos dinámicos con auto-fill de datos del proyecto y descargar documento
 - [x] 17 tests pasando (dynamic-docs.test.ts)
 - [x] 0 errores TypeScript
-- [ ] Push a GitHub para Railway
+- [x] Push a GitHub para Railway (commit e972723)
+
+## Fix: Responsive pestañas Trámites y Diseño (09 Abr 2026)
+- [x] Corregir pestañas superpuestas en móvil (flex + overflow-x-auto + text-xs/truncate)
+- [x] Corregir headers de cards para responsive (flex-col en móvil, flex-row en desktop)
+- [ ] Push a GitHub
