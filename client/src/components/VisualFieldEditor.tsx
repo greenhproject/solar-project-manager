@@ -10,15 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
   FileEdit,
@@ -32,8 +24,6 @@ import {
   ChevronRight,
   Loader2,
   Zap,
-  FileText,
-  Download,
 } from "lucide-react";
 
 type DynamicField = {
@@ -94,7 +84,6 @@ export function VisualFieldEditor({
   const [fields, setFields] = useState<DynamicField[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
-  // On mobile, default to "fields" tab; on desktop, "split"
   const [activeTab, setActiveTab] = useState<"document" | "fields">("fields");
   const docViewerRef = useRef<HTMLDivElement>(null);
 
@@ -240,45 +229,64 @@ export function VisualFieldEditor({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[96vw] w-[1100px] max-h-[94vh] h-[94vh] p-0 flex flex-col overflow-hidden gap-0">
-        {/* ========== HEADER ========== */}
-        <div className="shrink-0 px-4 sm:px-6 pt-4 pb-3 border-b space-y-3">
-          {/* Title row */}
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <DialogTitle className="text-base sm:text-lg flex items-center gap-2">
-                <FileEdit className="h-5 w-5 text-orange-500 shrink-0" />
-                <span className="truncate">Editor Visual de Campos</span>
-              </DialogTitle>
-              <DialogDescription className="mt-1 text-xs sm:text-sm truncate">
-                {template?.name || "Cargando..."}
-              </DialogDescription>
-            </div>
+  if (!open) return null;
 
-            {/* Status badge */}
-            {parsedDoc && (
-              <Badge
-                variant={markerStatus.configured === markerStatus.total ? "default" : "secondary"}
-                className={`shrink-0 text-xs ${
-                  markerStatus.configured === markerStatus.total ? "bg-green-600 text-white" : ""
-                }`}
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Modal container - uses fixed dimensions with proper constraints */}
+      <div
+        className="relative bg-background border rounded-xl shadow-2xl flex flex-col"
+        style={{
+          width: "min(94vw, 700px)",
+          height: "min(92vh, 800px)",
+        }}
+      >
+        {/* ========== HEADER (fixed) ========== */}
+        <div className="flex-shrink-0 px-4 pt-4 pb-3 border-b">
+          {/* Title + close + badge */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <FileEdit className="h-5 w-5 text-orange-500 flex-shrink-0" />
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold truncate">Editor Visual de Campos</h2>
+                <p className="text-xs text-muted-foreground truncate">{template?.name || "..."}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {parsedDoc && (
+                <Badge
+                  variant={markerStatus.configured === markerStatus.total ? "default" : "secondary"}
+                  className={`text-[10px] px-2 py-0.5 ${
+                    markerStatus.configured === markerStatus.total ? "bg-green-600 text-white" : ""
+                  }`}
+                >
+                  {markerStatus.configured === markerStatus.total ? (
+                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                  ) : (
+                    <AlertCircle className="mr-1 h-3 w-3" />
+                  )}
+                  {markerStatus.configured}/{markerStatus.total}
+                </Badge>
+              )}
+              <button
+                onClick={() => onOpenChange(false)}
+                className="h-7 w-7 flex items-center justify-center rounded-md hover:bg-muted transition-colors"
               >
-                {markerStatus.configured === markerStatus.total ? (
-                  <CheckCircle2 className="mr-1 h-3 w-3" />
-                ) : (
-                  <AlertCircle className="mr-1 h-3 w-3" />
-                )}
-                {markerStatus.configured}/{markerStatus.total}
-              </Badge>
-            )}
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {/* Tab switcher */}
           <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
             <button
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 activeTab === "document"
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -286,10 +294,10 @@ export function VisualFieldEditor({
               onClick={() => setActiveTab("document")}
             >
               <Eye className="h-3.5 w-3.5" />
-              <span>Documento</span>
+              Documento
             </button>
             <button
-              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 activeTab === "fields"
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -297,115 +305,105 @@ export function VisualFieldEditor({
               onClick={() => setActiveTab("fields")}
             >
               <Settings2 className="h-3.5 w-3.5" />
-              <span>Campos ({fields.length})</span>
+              Campos ({fields.length})
             </button>
           </div>
         </div>
 
-        {/* ========== BODY ========== */}
-        <div className="flex-1 overflow-hidden relative">
-          {/* Document Tab */}
-          <div
-            className={`absolute inset-0 flex flex-col transition-opacity duration-200 ${
-              activeTab === "document" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-            }`}
-          >
-            {/* Legend bar */}
-            <div className="shrink-0 px-4 py-2 bg-muted/30 border-b flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span className="text-xs text-muted-foreground font-medium">Marcadores:</span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#22c55e" }} />
-                Configurado
-              </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#ef4444" }} />
-                Sin configurar
-              </span>
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#f97316" }} />
-                Seleccionado
-              </span>
-            </div>
+        {/* ========== SCROLLABLE BODY ========== */}
+        <div className="flex-1 overflow-y-auto overscroll-contain">
+          {activeTab === "document" && (
+            <div>
+              {/* Legend */}
+              <div className="sticky top-0 z-10 px-4 py-2 bg-muted/50 border-b flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="text-[10px] text-muted-foreground font-medium">Marcadores:</span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: "#22c55e" }} />
+                  Configurado
+                </span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: "#ef4444" }} />
+                  Sin configurar
+                </span>
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: "#f97316" }} />
+                  Seleccionado
+                </span>
+              </div>
 
-            {/* Document content */}
-            <ScrollArea className="flex-1">
+              {/* Document content */}
               {isParsing ? (
-                <div className="flex items-center justify-center py-20">
+                <div className="flex items-center justify-center py-16">
                   <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-orange-500" />
-                    <p className="text-sm text-muted-foreground">Analizando documento...</p>
+                    <Loader2 className="h-7 w-7 animate-spin mx-auto mb-3 text-orange-500" />
+                    <p className="text-xs text-muted-foreground">Analizando documento...</p>
                   </div>
                 </div>
               ) : parseError ? (
-                <div className="flex items-center justify-center py-20">
-                  <div className="text-center px-4">
-                    <AlertCircle className="h-8 w-8 mx-auto mb-3 text-destructive" />
-                    <p className="text-sm text-destructive">Error al parsear el documento</p>
-                    <p className="text-xs text-muted-foreground mt-1">{parseError.message}</p>
+                <div className="flex items-center justify-center py-16 px-4">
+                  <div className="text-center">
+                    <AlertCircle className="h-7 w-7 mx-auto mb-3 text-destructive" />
+                    <p className="text-xs text-destructive">Error al parsear el documento</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{parseError.message}</p>
                   </div>
                 </div>
               ) : (
-                <div className="p-4 sm:p-6">
+                <div className="p-3">
                   <div
                     ref={docViewerRef}
-                    className="bg-white rounded-lg shadow-md border p-6 sm:p-8 mx-auto"
+                    className="bg-white rounded-lg shadow border p-4 mx-auto"
                     onClick={handleDocClick}
                     dangerouslySetInnerHTML={{ __html: highlightedHtml }}
                     style={{
                       fontFamily: "'Times New Roman', 'Georgia', serif",
-                      fontSize: "13px",
-                      lineHeight: "1.7",
+                      fontSize: "12px",
+                      lineHeight: "1.6",
                       color: "#1a1a1a",
-                      maxWidth: "800px",
+                      maxWidth: "100%",
                       wordBreak: "break-word",
                       overflowWrap: "break-word",
                     }}
                   />
-                  <p className="text-center text-xs text-muted-foreground mt-4">
-                    Haz clic en un marcador resaltado para configurar ese campo
+                  <p className="text-center text-[10px] text-muted-foreground mt-3">
+                    Haz clic en un marcador para configurar ese campo
                   </p>
                 </div>
               )}
-            </ScrollArea>
-          </div>
-
-          {/* Fields Tab */}
-          <div
-            className={`absolute inset-0 flex flex-col transition-opacity duration-200 ${
-              activeTab === "fields" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-            }`}
-          >
-            {/* Fields toolbar */}
-            <div className="shrink-0 px-4 py-2 bg-muted/30 border-b flex items-center justify-between gap-2">
-              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
-                {fields.length} campo(s) configurado(s)
-              </span>
-              {markerStatus.unconfigured.length > 0 && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    markerStatus.unconfigured.forEach((key) => addField(key));
-                  }}
-                >
-                  <Zap className="mr-1 h-3 w-3" />
-                  Auto-detectar ({markerStatus.unconfigured.length})
-                </Button>
-              )}
             </div>
+          )}
 
-            {/* Fields list */}
-            <ScrollArea className="flex-1">
-              <div className="p-3 sm:p-4 space-y-2">
+          {activeTab === "fields" && (
+            <div>
+              {/* Fields toolbar */}
+              <div className="sticky top-0 z-10 px-4 py-2 bg-muted/50 border-b flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted-foreground">
+                  {fields.length} campo(s)
+                </span>
+                {markerStatus.unconfigured.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-6 text-[10px] px-2"
+                    onClick={() => {
+                      markerStatus.unconfigured.forEach((key) => addField(key));
+                    }}
+                  >
+                    <Zap className="mr-1 h-3 w-3" />
+                    Auto-detectar ({markerStatus.unconfigured.length})
+                  </Button>
+                )}
+              </div>
+
+              {/* Fields list */}
+              <div className="p-3 space-y-2">
                 {fields.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg px-4">
-                    <Settings2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm font-medium">No hay campos configurados</p>
-                    <p className="text-xs mt-1">
+                  <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg px-4">
+                    <Settings2 className="h-7 w-7 mx-auto mb-2 opacity-30" />
+                    <p className="text-xs font-medium">No hay campos configurados</p>
+                    <p className="text-[10px] mt-1">
                       {parsedDoc?.markers && parsedDoc.markers.length > 0
-                        ? `Se detectaron ${parsedDoc.markers.length} marcadores. Usa "Auto-detectar" para agregarlos.`
-                        : 'Agrega campos manualmente o sube un documento con marcadores {{campo}}.'}
+                        ? `Se detectaron ${parsedDoc.markers.length} marcadores. Usa "Auto-detectar".`
+                        : "Agrega campos manualmente o sube un documento con marcadores {{campo}}."}
                     </p>
                   </div>
                 ) : (
@@ -434,45 +432,40 @@ export function VisualFieldEditor({
                   Agregar Campo Manual
                 </Button>
               </div>
-            </ScrollArea>
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* ========== FOOTER ========== */}
-        <div className="shrink-0 px-4 sm:px-6 py-3 border-t flex items-center justify-between bg-muted/20 gap-2">
-          <div className="text-xs text-muted-foreground min-w-0">
+        {/* ========== FOOTER (fixed) ========== */}
+        <div className="flex-shrink-0 px-4 py-2.5 border-t flex items-center justify-between bg-muted/20 gap-2">
+          <div className="text-[10px] text-muted-foreground min-w-0">
             {hasChanges ? (
               <span className="text-orange-500 font-medium">Cambios sin guardar</span>
             ) : (
-              <span className="hidden sm:inline">Todos los cambios guardados</span>
+              <span>Guardado</span>
             )}
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>
             <Button
               size="sm"
+              className="h-7 text-xs"
               onClick={handleSave}
               disabled={saveMutation.isPending || !hasChanges}
             >
               {saveMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  <span className="hidden sm:inline">Guardando...</span>
-                  <span className="sm:hidden">...</span>
-                </>
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
               ) : (
-                <>
-                  <Save className="mr-1.5 h-3.5 w-3.5" />
-                  Guardar
-                </>
+                <Save className="mr-1 h-3 w-3" />
               )}
+              Guardar
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }
 
@@ -511,28 +504,28 @@ function FieldCard({
     >
       {/* Header row */}
       <div
-        className="flex items-center gap-2 p-3 cursor-pointer"
+        className="flex items-center gap-2 p-2.5 cursor-pointer"
         onClick={() => {
           setIsExpanded(!isExpanded);
           onFocus();
         }}
       >
         <ChevronRight
-          className={`h-4 w-4 shrink-0 transition-transform text-muted-foreground ${
+          className={`h-3.5 w-3.5 flex-shrink-0 transition-transform text-muted-foreground ${
             isExpanded ? "rotate-90" : ""
           }`}
         />
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium truncate">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs font-medium truncate">
               {field.fieldLabel || "(Sin etiqueta)"}
             </span>
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-mono">
+            <Badge variant="outline" className="text-[9px] px-1 py-0 flex-shrink-0 font-mono">
               {`{{${field.fieldKey || "?"}}}`}
             </Badge>
           </div>
-          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             <span className="text-[10px] text-muted-foreground">
               {FIELD_TYPE_LABELS[field.fieldType] || field.fieldType}
             </span>
@@ -553,53 +546,51 @@ function FieldCard({
           </div>
         </div>
 
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-7 w-7 p-0 shrink-0"
+        <button
+          className="h-6 w-6 flex items-center justify-center rounded hover:bg-destructive/10 transition-colors flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation();
             onRemove();
           }}
         >
-          <X className="h-3.5 w-3.5" />
-        </Button>
+          <X className="h-3 w-3 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Expanded details */}
       {isExpanded && (
-        <div className="px-3 pb-3 pt-1 border-t space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="px-3 pb-3 pt-1 border-t space-y-2.5">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-[11px] text-muted-foreground">Etiqueta</Label>
+              <Label className="text-[10px] text-muted-foreground">Etiqueta</Label>
               <Input
                 value={field.fieldLabel}
                 onChange={(e) => onUpdate({ fieldLabel: e.target.value })}
                 placeholder="Nombre del Cliente"
-                className="h-8 text-sm"
+                className="h-7 text-xs"
               />
             </div>
             <div>
-              <Label className="text-[11px] text-muted-foreground">
+              <Label className="text-[10px] text-muted-foreground">
                 Clave <span className="font-mono">{`{{clave}}`}</span>
               </Label>
               <Input
                 value={field.fieldKey}
                 onChange={(e) => onUpdate({ fieldKey: e.target.value })}
                 placeholder="nombre_cliente"
-                className="h-8 text-sm font-mono"
+                className="h-7 text-xs font-mono"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-[11px] text-muted-foreground">Tipo de campo</Label>
+              <Label className="text-[10px] text-muted-foreground">Tipo de campo</Label>
               <Select
                 value={field.fieldType}
                 onValueChange={(v) => onUpdate({ fieldType: v as DynamicField["fieldType"] })}
               >
-                <SelectTrigger className="h-8 text-sm">
+                <SelectTrigger className="h-7 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -612,26 +603,26 @@ function FieldCard({
               </Select>
             </div>
             <div>
-              <Label className="text-[11px] text-muted-foreground">Valor por defecto</Label>
+              <Label className="text-[10px] text-muted-foreground">Valor por defecto</Label>
               <Input
                 value={field.defaultValue || ""}
                 onChange={(e) => onUpdate({ defaultValue: e.target.value })}
                 placeholder="Opcional"
-                className="h-8 text-sm"
+                className="h-7 text-xs"
               />
             </div>
           </div>
 
           {field.fieldType === "project" && (
             <div>
-              <Label className="text-[11px] text-muted-foreground">
+              <Label className="text-[10px] text-muted-foreground">
                 Mapeo automático del proyecto
               </Label>
               <Select
                 value={field.projectMapping || "none"}
                 onValueChange={(v) => onUpdate({ projectMapping: v === "none" ? undefined : v })}
               >
-                <SelectTrigger className="h-8 text-sm">
+                <SelectTrigger className="h-7 text-xs">
                   <SelectValue placeholder="Selecciona campo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -648,19 +639,19 @@ function FieldCard({
 
           {field.fieldType === "select" && (
             <div>
-              <Label className="text-[11px] text-muted-foreground">
+              <Label className="text-[10px] text-muted-foreground">
                 Opciones (separadas por coma)
               </Label>
               <Input
                 value={field.options || ""}
                 onChange={(e) => onUpdate({ options: e.target.value })}
                 placeholder="Opción 1, Opción 2, Opción 3"
-                className="h-8 text-sm"
+                className="h-7 text-xs"
               />
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-0.5">
             <input
               type="checkbox"
               checked={field.isRequired}
@@ -668,7 +659,7 @@ function FieldCard({
               className="rounded"
               id={`required-${id}`}
             />
-            <Label htmlFor={`required-${id}`} className="text-xs cursor-pointer">
+            <Label htmlFor={`required-${id}`} className="text-[10px] cursor-pointer">
               Campo obligatorio
             </Label>
           </div>

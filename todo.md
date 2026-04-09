@@ -627,4 +627,12 @@
 - [x] Los campos muestran "No encontrado" - era correcto, los campos del test sí están en el documento
 - [x] Mejorar el layout general - dialog fullscreen con tabs, footer fijo, scroll independiente
 - [x] DocumentPreviewDialog también mejorado con responsive
+- [x] Push a GitHub (commit f239da5)
+
+## Fix: Responsive del Editor Visual SIGUE MAL en producción (09 Abr 2026)
+- [x] Vista dividida eliminada - reescrito como custom modal con tabs exclusivos
+- [x] Texto del documento se muestra completo con word-break y overflow-wrap
+- [x] Scroll funciona correctamente - overflow-y-auto en body, header/footer fijos
+- [x] Header compacto con badge y X sin superposición
+- [x] Reescrito completamente sin DialogContent de shadcn (custom fixed modal)
 - [ ] Push a GitHub
