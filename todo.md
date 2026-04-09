@@ -650,4 +650,17 @@
 - [x] Modificar endpoint generateDocument para convertir el .docx generado a .pdf con LibreOffice
 - [x] Guardar el PDF en S3 en lugar del Word (con fallback a Word si LibreOffice no disponible)
 - [x] Actualizar nixpacks.toml con libreoffice-still para producción
+- [x] Push a GitHub (commit 74567be)
+
+## Mejora: Rediseño completo de la sección Calendario (09 Abr 2026)
+- [x] Eliminar la lista caótica de badges de proyectos - reemplazada por dropdown de filtro compacto
+- [x] Rediseñar el calendario con interfaz moderna, limpia y profesional
+- [x] Mejorar la visualización de eventos con bordes de color por proyecto y hover effects
+- [x] Filtro de proyectos como dropdown elegante con checkboxes de color y conteo de hitos
+- [x] Efectos profesionales: transiciones CSS, hover en celdas, slide-in del panel lateral
+- [x] Vista de día con horario de trabajo 8:00-17:00
+- [x] Panel lateral con detalle del evento: estado, fecha, proyecto, botón "Ver proyecto"
+- [x] Panel mobile como bottom sheet para pantallas pequeñas
+- [x] Mini-stats en header: total hitos, completados, pendientes, hoy
+- [x] CSS completamente reescrito con variables CSS para dark/light mode
 - [ ] Push a GitHub
