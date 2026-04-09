@@ -2875,19 +2875,35 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         mimeType: z.string(),
       }))
       .mutation(async ({ input, ctx }) => {
-        const { fileData, fileKey, ...rest } = input;
+        const { fileData, fileKey: rawFileKey, ...rest } = input;
+        // Sanitize file key: remove spaces and special chars
+        const fileKey = rawFileKey.replace(/\s+/g, '_');
         const buffer = Buffer.from(fileData, "base64");
+        
+        // Upload to S3
         const { storagePut } = await import("./storage");
-        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        let url: string;
+        try {
+          const result = await storagePut(fileKey, buffer, input.mimeType);
+          url = result.url;
+        } catch (err: any) {
+          console.error('[createTemplate] S3 upload error:', err.message);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Error al subir el archivo. Intenta de nuevo." });
+        }
 
-        const templateId = await db.createDynamicDocTemplate({
-          ...rest,
-          fileKey,
-          fileUrl: url,
-          uploadedBy: ctx.user.id,
-        });
-
-        return { success: true, templateId };
+        // Save to database
+        try {
+          const templateId = await db.createDynamicDocTemplate({
+            ...rest,
+            fileKey,
+            fileUrl: url,
+            uploadedBy: ctx.user.id,
+          });
+          return { success: true, templateId };
+        } catch (err: any) {
+          console.error('[createTemplate] DB insert error:', err.message);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Error al guardar la plantilla en la base de datos. Intenta de nuevo." });
+        }
       }),
 
     // Actualizar plantilla

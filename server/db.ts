@@ -1759,8 +1759,32 @@ export async function createDynamicDocTemplate(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(dynamicDocTemplates).values(data);
-  return result[0].insertId;
+  try {
+    const result = await db.insert(dynamicDocTemplates).values({
+      name: data.name,
+      description: data.description || null,
+      category: data.category || null,
+      fileName: data.fileName,
+      fileKey: data.fileKey,
+      fileUrl: data.fileUrl,
+      fileSize: data.fileSize,
+      mimeType: data.mimeType.substring(0, 100), // Ensure it fits in varchar(100)
+      uploadedBy: data.uploadedBy,
+    });
+    return result[0].insertId;
+  } catch (error: any) {
+    console.error('[createDynamicDocTemplate] Insert error:', error.message);
+    console.error('[createDynamicDocTemplate] Data:', JSON.stringify({
+      name: data.name,
+      fileName: data.fileName,
+      fileKey: data.fileKey?.substring(0, 50),
+      fileUrl: data.fileUrl?.substring(0, 50),
+      fileSize: data.fileSize,
+      mimeType: data.mimeType,
+      uploadedBy: data.uploadedBy,
+    }));
+    throw error;
+  }
 }
 
 export async function updateDynamicDocTemplate(id: number, data: Partial<{
