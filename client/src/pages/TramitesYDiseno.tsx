@@ -148,23 +148,23 @@ export default function TramitesYDiseno() {
           Trámites y Diseño
         </h1>
         <p className="text-muted-foreground mt-2">
-          Gestión de plantillas CAD y documentos comunes para legalización
+          Gestión de plantillas CAD y documentos comunes para legalización.
         </p>
       </div>
 
       <Tabs defaultValue="cad" className="w-full">
-        <TabsList className="grid w-full max-w-lg grid-cols-3">
-          <TabsTrigger value="cad">
-            <FileCode className="mr-2 h-4 w-4" />
-            Plantillas CAD
+        <TabsList className="flex w-full max-w-lg overflow-x-auto">
+          <TabsTrigger value="cad" className="flex-1 min-w-0 text-xs sm:text-sm px-2 sm:px-3">
+            <FileCode className="mr-1 sm:mr-2 h-4 w-4 shrink-0" />
+            <span className="truncate">Plantillas CAD</span>
           </TabsTrigger>
-          <TabsTrigger value="docs">
-            <FileCheck className="mr-2 h-4 w-4" />
-            Documentos Comunes
+          <TabsTrigger value="docs" className="flex-1 min-w-0 text-xs sm:text-sm px-2 sm:px-3">
+            <FileCheck className="mr-1 sm:mr-2 h-4 w-4 shrink-0" />
+            <span className="truncate">Docs Comunes</span>
           </TabsTrigger>
-          <TabsTrigger value="dynamic">
-            <FileEdit className="mr-2 h-4 w-4" />
-            Docs Dinámicos
+          <TabsTrigger value="dynamic" className="flex-1 min-w-0 text-xs sm:text-sm px-2 sm:px-3">
+            <FileEdit className="mr-1 sm:mr-2 h-4 w-4 shrink-0" />
+            <span className="truncate">Docs Dinámicos</span>
           </TabsTrigger>
         </TabsList>
 
@@ -172,10 +172,10 @@ export default function TramitesYDiseno() {
         <TabsContent value="cad" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle>Plantillas CAD</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Plantillas CAD</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Biblioteca de planos prediseñados para agilizar el diseño
                   </CardDescription>
                 </div>
@@ -326,10 +326,10 @@ export default function TramitesYDiseno() {
         <TabsContent value="docs" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle>Documentos Comunes</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Documentos Comunes</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Biblioteca de certificados, manuales y matrículas
                   </CardDescription>
                 </div>
@@ -873,14 +873,14 @@ function DynamicDocumentsTab() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <CardTitle>Documentos Dinámicos</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-base sm:text-lg">Documentos Dinámicos</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Sube plantillas Word con campos dinámicos tipo {"{{nombre}}"}, {"{{cedula}}"}, etc. para generar documentos personalizados por proyecto.
             </CardDescription>
           </div>
-          <Button onClick={() => setShowUpload(true)}>
+          <Button onClick={() => setShowUpload(true)} className="w-full sm:w-auto shrink-0">
             <Plus className="mr-2 h-4 w-4" />
             Nueva Plantilla
           </Button>
@@ -894,7 +894,7 @@ function DynamicDocumentsTab() {
             {templates.map((template) => (
               <div
                 key={template.id}
-                className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border"
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-muted/30 rounded-lg border gap-3"
               >
                 <div className="flex items-center gap-3 flex-1">
                   <FileEdit className="h-8 w-8 text-orange-500 shrink-0" />
