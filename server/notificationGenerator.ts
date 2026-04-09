@@ -3,7 +3,7 @@
  */
 
 import * as db from "./db";
-import { sendMilestoneDueSoonEmail, sendMilestoneOverdueEmail } from "./emailService";
+import { sendMilestoneReminderEmail } from "./emailService";
 
 /**
  * Genera notificaciones para hitos próximos a vencer (3 días antes)
@@ -41,13 +41,14 @@ export async function generateUpcomingMilestoneNotifications() {
       try {
         const engineer = await db.getUserById(milestone.assignedEngineerId);
         if (engineer?.email) {
-          await sendMilestoneDueSoonEmail(
-            engineer.email,
-            milestone.milestoneName,
-            milestone.projectName,
-            new Date(milestone.dueDate),
-            daysUntil
-          );
+          await sendMilestoneReminderEmail({
+            toEmail: engineer.email,
+            toName: engineer.name || engineer.email,
+            milestoneName: milestone.milestoneName,
+            projectName: milestone.projectName,
+            dueDate: new Date(milestone.dueDate),
+            type: "due_soon",
+          });
           console.log(`[NotificationGenerator] Email sent to ${engineer.email} for upcoming milestone`);
         }
       } catch (error) {
@@ -99,13 +100,14 @@ export async function generateOverdueMilestoneNotifications() {
       try {
         const engineer = await db.getUserById(milestone.assignedEngineerId);
         if (engineer?.email) {
-          await sendMilestoneOverdueEmail(
-            engineer.email,
-            milestone.milestoneName,
-            milestone.projectName,
-            new Date(milestone.dueDate),
-            daysOverdue
-          );
+          await sendMilestoneReminderEmail({
+            toEmail: engineer.email,
+            toName: engineer.name || engineer.email,
+            milestoneName: milestone.milestoneName,
+            projectName: milestone.projectName,
+            dueDate: new Date(milestone.dueDate),
+            type: "overdue",
+          });
           console.log(`[NotificationGenerator] Email sent to ${engineer.email} for overdue milestone`);
         }
       } catch (error) {

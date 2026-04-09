@@ -93,17 +93,7 @@ export default function AIAssistant() {
       const analysisText =
         typeof response.data.analysis === "string"
           ? response.data.analysis
-          : Array.isArray(response.data.analysis)
-            ? response.data.analysis
-                .map((item: any) =>
-                  typeof item === "string"
-                    ? item
-                    : "text" in item
-                      ? item.text
-                      : JSON.stringify(item)
-                )
-                .join("\n")
-            : JSON.stringify(response.data.analysis);
+          : JSON.stringify(response.data.analysis);
 
       const assistantMessage: Message = {
         role: "assistant",
@@ -141,17 +131,7 @@ export default function AIAssistant() {
         const reportText =
           typeof response.reportContent === "string"
             ? response.reportContent
-            : Array.isArray(response.reportContent)
-              ? response.reportContent
-                  .map((item: any) =>
-                    typeof item === "string"
-                      ? item
-                      : "text" in item
-                        ? item.text
-                        : JSON.stringify(item)
-                  )
-                  .join("\n")
-              : JSON.stringify(response.reportContent);
+            : JSON.stringify(response.reportContent);
 
         // Crear blob con el contenido Markdown
         const blob = new Blob([reportText], {
@@ -205,17 +185,7 @@ export default function AIAssistant() {
       const answerText =
         typeof response.answer === "string"
           ? response.answer
-          : Array.isArray(response.answer)
-            ? response.answer
-                .map((item: any) =>
-                  typeof item === "string"
-                    ? item
-                    : "text" in item
-                      ? item.text
-                      : JSON.stringify(item)
-                )
-                .join("\n")
-            : JSON.stringify(response.answer);
+          : JSON.stringify(response.answer);
       
       const assistantMessage: Message = {
         role: "assistant",

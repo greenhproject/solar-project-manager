@@ -558,5 +558,13 @@
 - [x] Integrar drag & drop en plantillas de hitos (Settings/SystemConfiguration)
 - [x] Integrar drag & drop en hitos dentro de cada proyecto (ProjectDetail)
 - [x] 10 tests pasando (reorder.test.ts)
-- [ ] Verificar funcionalidad en el navegador
-- [ ] Push a GitHub para Railway
+- [x] Verificar funcionalidad en el navegador
+- [x] Push a GitHub para Railway (commit fdd5811)
+
+## Fix: Errores de TypeScript y push a GitHub (09 Abr 2026)
+- [x] Corregir errores TS en AIAssistant.tsx (Property 'map' does not exist on type 'never')
+- [x] Corregir errores TS en NotificationHistory.tsx (Property 'created' does not exist + notificationId)
+- [x] Corregir error TS en emailService.ts (instalar nodemailer + @types/nodemailer)
+- [x] Corregir errores TS en notificationGenerator.ts (usar sendMilestoneReminderEmail con params correctos)
+- [x] Verificar compilación limpia (0 errores TS)
+- [ ] Push a GitHub para Railway con drag & drop incluido
