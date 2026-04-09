@@ -373,6 +373,21 @@ export async function updateMilestoneTemplate(
     .where(eq(milestoneTemplates.id, id));
 }
 
+/**
+ * Reordena las plantillas de hitos actualizando el orderIndex de cada una.
+ * @param orderedIds - Array de IDs en el nuevo orden deseado
+ */
+export async function reorderMilestoneTemplates(orderedIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  for (let i = 0; i < orderedIds.length; i++) {
+    await db
+      .update(milestoneTemplates)
+      .set({ orderIndex: i + 1 })
+      .where(eq(milestoneTemplates.id, orderedIds[i]));
+  }
+}
+
 export async function deleteMilestoneTemplate(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -461,6 +476,27 @@ export async function updateMilestone(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(milestones).set(data).where(eq(milestones.id, id));
+}
+
+/**
+ * Reordena los hitos de un proyecto actualizando el orderIndex de cada uno.
+ * @param projectId - ID del proyecto
+ * @param orderedIds - Array de IDs de hitos en el nuevo orden deseado
+ */
+export async function reorderMilestones(projectId: number, orderedIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  for (let i = 0; i < orderedIds.length; i++) {
+    await db
+      .update(milestones)
+      .set({ orderIndex: i + 1 })
+      .where(
+        and(
+          eq(milestones.id, orderedIds[i]),
+          eq(milestones.projectId, projectId)
+        )
+      );
+  }
 }
 
 export async function deleteMilestone(id: number) {

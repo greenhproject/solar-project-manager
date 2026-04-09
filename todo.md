@@ -548,3 +548,15 @@
 - [x] 23 tests pasando (cascade-dates.test.ts + date-utils.test.ts)
 - [x] Verificar en el navegador
 - [x] Push a GitHub (commit 7d456b7b)
+
+## Mejora: Drag & Drop para reordenar hitos en plantillas Y en proyectos (09 Abr 2026)
+- [x] Investigar la UI actual de plantillas de hitos (Settings) y hitos de proyecto (ProjectDetail)
+- [x] Instalar librería de drag & drop (@dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities)
+- [x] Crear componente reutilizable SortableList.tsx con drag & drop
+- [x] Implementar endpoint de reordenamiento de plantillas (reorderMilestoneTemplates)
+- [x] Implementar endpoint de reordenamiento de hitos de proyecto (reorderMilestones)
+- [x] Integrar drag & drop en plantillas de hitos (Settings/SystemConfiguration)
+- [x] Integrar drag & drop en hitos dentro de cada proyecto (ProjectDetail)
+- [x] 10 tests pasando (reorder.test.ts)
+- [ ] Verificar funcionalidad en el navegador
+- [ ] Push a GitHub para Railway
