@@ -594,4 +594,12 @@
 - [x] Sanitizar fileKey reemplazando espacios por guiones bajos
 - [x] Agregar mejor manejo de errores con try/catch y mensajes claros
 - [x] Verificar subida exitosa en entorno de desarrollo
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit cf8cc8f)
+
+## Fix: Error 500 al subir plantilla dinámica en producción (09 Abr 2026)
+- [x] Investigar mismatch entre schema Drizzle y tabla real en BD producción
+- [x] Causa raíz: tablas dynamic_doc_* no existían en BD de producción (migración manual nunca se ejecutó en Railway)
+- [x] Solución: agregar CREATE TABLE IF NOT EXISTS para las 3 tablas dinámicas en runAutoMigrations() de server/_core/index.ts
+- [x] Verificar INSERT con Drizzle ORM funciona correctamente en desarrollo
+- [x] TypeScript compila sin errores
+- [ ] Push a GitHub y verificar en producción
