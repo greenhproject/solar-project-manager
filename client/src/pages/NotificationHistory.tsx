@@ -77,8 +77,9 @@ export default function NotificationHistory() {
   const generateNotifications =
     trpc.notifications.checkAndCreateAutoNotifications.useMutation({
       onSuccess: (data) => {
-        if (data.created > 0) {
-          toast.success(`${data.created} nueva(s) notificación(es) generada(s)`);
+        const totalCreated = (data.upcomingCount || 0) + (data.overdueCount || 0);
+        if (totalCreated > 0) {
+          toast.success(`${totalCreated} nueva(s) notificación(es) generada(s)`);
         }
         refetch();
       },
@@ -460,7 +461,7 @@ export default function NotificationHistory() {
                     }`}
                     onClick={() => {
                       if (!notif.isRead) {
-                        markAsRead.mutate({ notificationId: notif.id });
+                        markAsRead.mutate({ id: notif.id });
                       }
                     }}
                   >
