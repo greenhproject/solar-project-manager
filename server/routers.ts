@@ -872,6 +872,18 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    reorder: adminProcedure
+      .input(
+        z.object({
+          projectTypeId: z.number(),
+          orderedIds: z.array(z.number()),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await db.reorderMilestoneTemplates(input.orderedIds);
+        return { success: true };
+      }),
+
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
@@ -1469,6 +1481,38 @@ export const appRouter = router({
         }
 
         return { success: true, cascadedCount };
+      }),
+
+    reorder: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.number(),
+          orderedIds: z.array(z.number()),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        // Solo admin, ingeniero asignado o ingeniero de trámites pueden reordenar
+        if (
+          ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para reordenar hitos en este proyecto",
+          });
+        }
+
+        await db.reorderMilestones(input.projectId, input.orderedIds);
+        return { success: true };
       }),
 
     delete: adminProcedure

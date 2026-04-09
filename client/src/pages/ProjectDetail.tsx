@@ -57,6 +57,7 @@ import { useTimezone, fromDateInputValue } from "@/hooks/useTimezone";
 import { FileUpload } from "@/components/FileUpload";
 import { FileList } from "@/components/FileList";
 import LegalizationChecklist from "@/components/LegalizationChecklist";
+import { SortableList } from "@/components/SortableList";
 
 export default function ProjectDetail() {
   const { formatDate: tzFormatDate, toDateInputValue } = useTimezone();
@@ -121,6 +122,15 @@ export default function ProjectDetail() {
   const assignResponsible = trpc.milestones.assignResponsible.useMutation();
   const updateDueDate = trpc.milestones.updateDueDate.useMutation();
   const deleteMilestone = trpc.milestones.delete.useMutation();
+  const reorderMilestones = trpc.milestones.reorder.useMutation({
+    onSuccess: () => {
+      refetchMilestones();
+      toast.success("Orden de hitos actualizado");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al reordenar hitos");
+    },
+  });
   const [milestoneToDelete, setMilestoneToDelete] = useState<{ id: number; name: string } | null>(null);
 
   // Estado para el diálogo de confirmación de cascada de fechas
@@ -611,12 +621,18 @@ export default function ProjectDetail() {
             </div>
 
             {milestones && milestones.length > 0 ? (
-              <div className="space-y-3">
-                {milestones.map(milestone => (
-                  <Card
-                    key={milestone.id}
-                    className="hover:shadow-apple transition-all"
-                  >
+              <SortableList
+                items={milestones}
+                getItemId={(m) => m.id}
+                onReorder={(newOrder) => {
+                  reorderMilestones.mutate({
+                    projectId,
+                    orderedIds: newOrder.map((m) => m.id),
+                  });
+                }}
+                className="space-y-3"
+                renderItem={(milestone) => (
+                  <Card className="hover:shadow-apple transition-all">
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4">
                         <button
@@ -692,7 +708,6 @@ export default function ProjectDetail() {
                                 value={toDateInputValue(milestone.dueDate)}
                                 onChange={(e) => {
                                   if (!e.target.value) return;
-                                  // Abrir diálogo de confirmación para cascada
                                   setCascadeDialog({
                                     open: true,
                                     milestoneId: milestone.id,
@@ -782,8 +797,23 @@ export default function ProjectDetail() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                )}
+                renderOverlay={(milestone) => (
+                  <Card className="shadow-lg">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        {milestone.status === "completed" ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-muted-foreground" />
+                        )}
+                        <span className="font-semibold">{milestone.name}</span>
+                        {getMilestoneStatusBadge(milestone.status)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              />
             ) : (
               <Card>
                 <CardContent className="py-12 text-center">

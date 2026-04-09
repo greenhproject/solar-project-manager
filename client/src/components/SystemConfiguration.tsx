@@ -21,8 +21,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, FolderKanban, ListTodo, User } from "lucide-react";
+import { Plus, Edit, Trash2, FolderKanban, ListTodo, User, GripVertical } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SortableList } from "@/components/SortableList";
 
 export function SystemConfiguration() {
   const utils = trpc.useUtils();
@@ -113,6 +114,16 @@ export function SystemConfiguration() {
     onSuccess: () => {
       utils.milestoneTemplates.list.invalidate();
       toast.success("Plantilla de hito eliminada exitosamente");
+    },
+    onError: error => {
+      toast.error(error.message);
+    },
+  });
+
+  const reorderTemplates = trpc.milestoneTemplates.reorder.useMutation({
+    onSuccess: () => {
+      utils.milestoneTemplates.list.invalidate();
+      toast.success("Orden de hitos actualizado");
     },
     onError: error => {
       toast.error(error.message);
@@ -533,48 +544,65 @@ export function SystemConfiguration() {
                         />
                         {type.name}
                       </h4>
-                      <div className="space-y-2 pl-5">
+                      <div className="space-y-2 pl-2">
                         {templates.length > 0 ? (
-                          templates.map((template: any) => (
-                            <div
-                              key={template.id}
-                              className="flex items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors"
-                            >
-                              <div className="flex-1">
-                                <p className="font-medium text-sm">
-                                  {template.orderIndex}. {template.name}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {template.description || "Sin descripción"} •{" "}
-                                  {template.estimatedDurationDays} días
-                                </p>
-                                {template.defaultAssignedUserId && (
-                                  <p className="text-xs text-primary flex items-center gap-1 mt-1">
-                                    <User className="w-3 h-3" />
-                                    Responsable: {getUserName(template.defaultAssignedUserId) || "Usuario no encontrado"}
+                          <SortableList
+                            items={[...templates].sort((a: any, b: any) => a.orderIndex - b.orderIndex)}
+                            getItemId={(t: any) => t.id}
+                            onReorder={(newOrder) => {
+                              const orderedIds = newOrder.map((t: any) => t.id);
+                              reorderTemplates.mutate({
+                                projectTypeId: type.id,
+                                orderedIds,
+                              });
+                            }}
+                            className="space-y-2"
+                            renderItem={(template: any, index: number) => (
+                              <div className="flex items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors bg-card">
+                                <div className="flex-1">
+                                  <p className="font-medium text-sm">
+                                    {index + 1}. {template.name}
                                   </p>
-                                )}
+                                  <p className="text-xs text-muted-foreground">
+                                    {template.description || "Sin descripción"} •{" "}
+                                    {template.estimatedDurationDays} días
+                                  </p>
+                                  {template.defaultAssignedUserId && (
+                                    <p className="text-xs text-primary flex items-center gap-1 mt-1">
+                                      <User className="w-3 h-3" />
+                                      Responsable: {getUserName(template.defaultAssignedUserId) || "Usuario no encontrado"}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEditTemplate(template)}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() =>
+                                      handleDeleteTemplate(template.id)
+                                    }
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleEditTemplate(template)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleDeleteTemplate(template.id)
-                                  }
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
+                            )}
+                            renderOverlay={(template: any) => (
+                              <div className="flex items-center justify-between p-3 border rounded bg-card">
+                                <div className="flex items-center gap-2">
+                                  <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                  <p className="font-medium text-sm">{template.name}</p>
+                                </div>
                               </div>
-                            </div>
-                          ))
+                            )}
+                          />
                         ) : (
                           <p className="text-sm text-muted-foreground italic">
                             No hay plantillas de hitos para este tipo
