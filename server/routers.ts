@@ -1324,6 +1324,7 @@ export const appRouter = router({
         z.object({
           milestoneId: z.number(),
           dueDate: z.date(),
+          cascadeSubsequent: z.boolean().default(true), // Cascada automática por defecto
         })
       )
       .mutation(async ({ input, ctx }) => {
@@ -1357,7 +1358,7 @@ export const appRouter = router({
           });
         }
 
-        // Actualizar fecha de vencimiento
+        // Actualizar fecha de vencimiento del hito seleccionado
         await db.updateMilestone(input.milestoneId, {
           dueDate: input.dueDate,
         });
@@ -1383,11 +1384,91 @@ export const appRouter = router({
               "[Milestone] Error updating Google Calendar event:",
               error
             );
-            // No fallar la actualización si falla la sincronización
           }
         }
 
-        return { success: true };
+        // === CASCADA AUTOMÁTICA DE FECHAS ===
+        // Recalcular fechas de hitos siguientes usando duración de plantillas
+        let cascadedCount = 0;
+        if (input.cascadeSubsequent) {
+          try {
+            // Obtener todos los hitos del proyecto ordenados por orderIndex
+            const allMilestones = await db.getMilestonesByProjectId(milestone.projectId);
+
+            // Obtener plantillas del tipo de proyecto para conocer la duración de cada hito
+            const templates = await db.getMilestoneTemplatesByProjectType(project.projectTypeId);
+
+            // Crear un mapa de orderIndex -> estimatedDurationDays desde las plantillas
+            const durationByOrder = new Map<number, number>();
+            for (const tmpl of templates) {
+              durationByOrder.set(tmpl.orderIndex, tmpl.estimatedDurationDays || 7);
+            }
+
+            // Filtrar solo los hitos con orderIndex mayor al hito editado
+            // y que no estén completados (no mover hitos ya terminados)
+            const subsequentMilestones = allMilestones.filter(
+              (m) => m.orderIndex > milestone.orderIndex && m.status !== "completed"
+            );
+
+            // Ordenar por orderIndex ascendente
+            subsequentMilestones.sort((a, b) => a.orderIndex - b.orderIndex);
+
+            // Calcular fechas en cascada: cada hito empieza donde termina el anterior
+            let previousDueDate = new Date(input.dueDate);
+
+            for (const subsequentMilestone of subsequentMilestones) {
+              // Obtener la duración de este hito desde la plantilla
+              const durationDays = durationByOrder.get(subsequentMilestone.orderIndex) || 7;
+
+              // La nueva fecha = fecha del hito anterior + duración en días de este hito
+              const newDueDate = new Date(previousDueDate);
+              newDueDate.setDate(newDueDate.getDate() + durationDays);
+
+              // Actualizar el hito
+              await db.updateMilestone(subsequentMilestone.id, {
+                dueDate: newDueDate,
+              });
+
+              // Sincronizar con Google Calendar si existe eventId
+              if (subsequentMilestone.googleCalendarEventId) {
+                try {
+                  const { updateCalendarEvent, toRFC3339, createEndDate } =
+                    await import("./googleCalendarClient");
+
+                  await updateCalendarEvent({
+                    event_id: subsequentMilestone.googleCalendarEventId,
+                    summary: `📅 ${project.name} - ${subsequentMilestone.name}`,
+                    description:
+                      subsequentMilestone.description || `Hito del proyecto ${project.name}`,
+                    start_time: toRFC3339(newDueDate),
+                    end_time: toRFC3339(createEndDate(newDueDate)),
+                    location: project.location || undefined,
+                    reminders: [1440, 60],
+                  });
+                } catch (calError) {
+                  console.error(
+                    `[Milestone Cascade] Error updating Google Calendar for milestone ${subsequentMilestone.id}:`,
+                    calError
+                  );
+                }
+              }
+
+              cascadedCount++;
+              previousDueDate = newDueDate;
+            }
+
+            if (cascadedCount > 0) {
+              console.log(
+                `[Milestone Cascade] Updated ${cascadedCount} subsequent milestones for project ${project.id}`
+              );
+            }
+          } catch (cascadeError) {
+            console.error("[Milestone Cascade] Error during cascade update:", cascadeError);
+            // No fallar la actualización principal si falla la cascada
+          }
+        }
+
+        return { success: true, cascadedCount };
       }),
 
     delete: adminProcedure
