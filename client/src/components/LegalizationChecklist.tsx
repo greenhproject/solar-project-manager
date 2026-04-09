@@ -34,7 +34,10 @@ import {
   FileText,
   Package,
   Loader2,
+  FileEdit,
+  Send,
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -219,6 +222,9 @@ export default function LegalizationChecklist({
           })}
         </div>
       </CardContent>
+
+      {/* Sección de Documentos Dinámicos */}
+      <DynamicDocumentsSection projectId={projectId} />
     </Card>
   );
 }
@@ -578,5 +584,258 @@ function DownloadAllButton({
         </>
       )}
     </Button>
+  );
+}
+
+
+// ==========================================
+// Sección de Documentos Dinámicos en Legalización
+// ==========================================
+function DynamicDocumentsSection({ projectId }: { projectId: number }) {
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
+
+  const { data: templates } = trpc.dynamicDocuments.listTemplates.useQuery({});
+
+  if (!templates || templates.length === 0) return null;
+
+  return (
+    <>
+      <CardHeader className="border-t">
+        <div>
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileEdit className="h-5 w-5 text-orange-500" />
+            Documentos Dinámicos
+          </CardTitle>
+          <CardDescription>
+            Genera documentos personalizados a partir de plantillas con campos dinámicos
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {templates.map((template) => (
+            <div
+              key={template.id}
+              className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3 flex-1">
+                <FileEdit className="h-5 w-5 text-orange-500 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-sm">{template.name}</p>
+                  {template.description && (
+                    <p className="text-xs text-muted-foreground">{template.description}</p>
+                  )}
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSelectedTemplateId(template.id)}
+              >
+                <Send className="h-4 w-4 mr-1" />
+                Generar
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+
+      {selectedTemplateId && (
+        <GenerateDynamicDocDialog
+          templateId={selectedTemplateId}
+          projectId={projectId}
+          open={!!selectedTemplateId}
+          onOpenChange={(open) => {
+            if (!open) setSelectedTemplateId(null);
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+// ==========================================
+// Dialog: Generar Documento Dinámico
+// ==========================================
+function GenerateDynamicDocDialog({
+  templateId,
+  projectId,
+  open,
+  onOpenChange,
+}: {
+  templateId: number;
+  projectId: number;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const { data: template } = trpc.dynamicDocuments.getTemplate.useQuery(
+    { id: templateId },
+    { enabled: open }
+  );
+
+  // Get project data for auto-fill
+  const { data: project } = trpc.projects.getById.useQuery(
+    { id: projectId },
+    { enabled: open }
+  );
+
+  // Auto-fill project-mapped fields when template and project data load
+  useEffect(() => {
+    if (template?.fields && project) {
+      const autoValues: Record<string, string> = {};
+      for (const field of template.fields) {
+        if (field.fieldType === "project" && field.projectMapping) {
+          const mapping = field.projectMapping;
+          const projectData = project as Record<string, any>;
+          if (projectData[mapping]) {
+            autoValues[field.fieldKey] = String(projectData[mapping]);
+          }
+        } else if (field.defaultValue) {
+          autoValues[field.fieldKey] = field.defaultValue;
+        }
+      }
+      setFieldValues((prev) => ({ ...autoValues, ...prev }));
+    }
+  }, [template?.fields, project]);
+
+  const generateMutation = trpc.dynamicDocuments.generateDocument.useMutation({
+    onSuccess: (result) => {
+      toast.success("Documento generado exitosamente");
+      // Open the generated document
+      if (result.fileUrl) {
+        window.open(result.fileUrl, "_blank");
+      }
+      onOpenChange(false);
+      setFieldValues({});
+    },
+    onError: (err) => {
+      toast.error(err.message || "Error al generar documento");
+    },
+  });
+
+  const handleGenerate = () => {
+    // Validate required fields
+    if (template?.fields) {
+      for (const field of template.fields) {
+        if (field.isRequired && !fieldValues[field.fieldKey]) {
+          toast.error(`El campo "${field.fieldLabel}" es obligatorio`);
+          return;
+        }
+      }
+    }
+
+    generateMutation.mutate({
+      templateId,
+      projectId,
+      fieldValues,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Generar: {template?.name}</DialogTitle>
+          <DialogDescription>
+            Completa los campos dinámicos para generar el documento personalizado.
+            Los campos con datos del proyecto se rellenan automáticamente.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {template?.fields && template.fields.length > 0 ? (
+            template.fields
+              .sort((a, b) => a.orderIndex - b.orderIndex)
+              .map((field) => (
+                <div key={field.fieldKey}>
+                  <Label className="text-sm">
+                    {field.fieldLabel}
+                    {field.isRequired && <span className="text-red-500 ml-1">*</span>}
+                    {field.fieldType === "project" && (
+                      <Badge variant="outline" className="ml-2 text-xs">Auto</Badge>
+                    )}
+                  </Label>
+                  {field.fieldType === "select" && field.options ? (
+                    <Select
+                      value={fieldValues[field.fieldKey] || ""}
+                      onValueChange={(v) =>
+                        setFieldValues({ ...fieldValues, [field.fieldKey]: v })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona una opción" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options.split(",").map((opt) => (
+                          <SelectItem key={opt.trim()} value={opt.trim()}>
+                            {opt.trim()}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : field.fieldType === "date" ? (
+                    <Input
+                      type="date"
+                      value={fieldValues[field.fieldKey] || ""}
+                      onChange={(e) =>
+                        setFieldValues({ ...fieldValues, [field.fieldKey]: e.target.value })
+                      }
+                    />
+                  ) : field.fieldType === "number" ? (
+                    <Input
+                      type="number"
+                      value={fieldValues[field.fieldKey] || ""}
+                      onChange={(e) =>
+                        setFieldValues({ ...fieldValues, [field.fieldKey]: e.target.value })
+                      }
+                      placeholder={field.defaultValue || ""}
+                    />
+                  ) : (
+                    <Input
+                      value={fieldValues[field.fieldKey] || ""}
+                      onChange={(e) =>
+                        setFieldValues({ ...fieldValues, [field.fieldKey]: e.target.value })
+                      }
+                      placeholder={field.defaultValue || `Ingresa ${field.fieldLabel.toLowerCase()}`}
+                    />
+                  )}
+                </div>
+              ))
+          ) : (
+            <div className="text-center py-6 text-muted-foreground border-2 border-dashed rounded-lg">
+              <p>No hay campos configurados para esta plantilla.</p>
+              <p className="text-xs mt-1">
+                Ve a Trámites y Diseño {">"} Docs Dinámicos {">"} Campos para configurarlos.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleGenerate}
+            disabled={generateMutation.isPending || !template?.fields?.length}
+          >
+            {generateMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generando...
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Generar Documento
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { trpc } from "@/lib/trpc";
 import {
@@ -38,7 +38,13 @@ import {
   FileCode,
   FileCheck,
   Plus,
+  FileEdit,
+  Settings2,
+  Eye,
+  GripVertical,
+  X,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 export default function TramitesYDiseno() {
@@ -147,7 +153,7 @@ export default function TramitesYDiseno() {
       </div>
 
       <Tabs defaultValue="cad" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="cad">
             <FileCode className="mr-2 h-4 w-4" />
             Plantillas CAD
@@ -155,6 +161,10 @@ export default function TramitesYDiseno() {
           <TabsTrigger value="docs">
             <FileCheck className="mr-2 h-4 w-4" />
             Documentos Comunes
+          </TabsTrigger>
+          <TabsTrigger value="dynamic">
+            <FileEdit className="mr-2 h-4 w-4" />
+            Docs Dinámicos
           </TabsTrigger>
         </TabsList>
 
@@ -471,6 +481,10 @@ export default function TramitesYDiseno() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+        {/* TAB: Documentos Dinámicos */}
+        <TabsContent value="dynamic" className="space-y-4">
+          <DynamicDocumentsTab />
         </TabsContent>
       </Tabs>
     </div>
@@ -829,6 +843,496 @@ function UploadCommonDocDialog() {
             disabled={uploadMutation.isPending}
           >
             {uploadMutation.isPending ? "Subiendo..." : "Subir Documento"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+// ==========================================
+// Tab: Documentos Dinámicos
+// ==========================================
+function DynamicDocumentsTab() {
+  const utils = trpc.useUtils();
+  const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
+  const [showFieldEditor, setShowFieldEditor] = useState(false);
+
+  const { data: templates, isLoading } = trpc.dynamicDocuments.listTemplates.useQuery({});
+
+  const deleteMutation = trpc.dynamicDocuments.deleteTemplate.useMutation({
+    onSuccess: () => {
+      toast.success("Plantilla eliminada");
+      utils.dynamicDocuments.listTemplates.invalidate();
+    },
+    onError: () => toast.error("Error al eliminar plantilla"),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Documentos Dinámicos</CardTitle>
+            <CardDescription>
+              Sube plantillas Word con campos dinámicos tipo {"{{nombre}}"}, {"{{cedula}}"}, etc. para generar documentos personalizados por proyecto.
+            </CardDescription>
+          </div>
+          <Button onClick={() => setShowUpload(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva Plantilla
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="text-center py-8 text-muted-foreground">Cargando plantillas...</div>
+        ) : templates && templates.length > 0 ? (
+          <div className="space-y-3">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border"
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  <FileEdit className="h-8 w-8 text-orange-500 shrink-0" />
+                  <div className="min-w-0">
+                    <h4 className="font-semibold truncate">{template.name}</h4>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {template.description || template.fileName}
+                    </p>
+                    <div className="flex gap-2 mt-1">
+                      {template.category && (
+                        <Badge variant="secondary" className="text-xs">{template.category}</Badge>
+                      )}
+                      <Badge variant="outline" className="text-xs">
+                        {template.mimeType.includes("word") ? "Word" : "PDF"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedTemplate(template.id);
+                      setShowFieldEditor(true);
+                    }}
+                  >
+                    <Settings2 className="mr-1 h-4 w-4" />
+                    Campos
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(template.fileUrl, "_blank")}
+                  >
+                    <Eye className="mr-1 h-4 w-4" />
+                    Ver
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => {
+                      if (confirm("¿Eliminar esta plantilla?")) {
+                        deleteMutation.mutate({ id: template.id });
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileEdit className="h-12 w-12 mx-auto mb-4 opacity-30" />
+            <p className="text-lg font-medium">No hay plantillas dinámicas</p>
+            <p className="text-sm mt-1">
+              Sube una plantilla Word (.docx) con campos como {"{{nombre}}"}, {"{{cedula}}"} para empezar.
+            </p>
+          </div>
+        )}
+      </CardContent>
+
+      {/* Dialog: Subir nueva plantilla */}
+      <UploadDynamicTemplateDialog open={showUpload} onOpenChange={setShowUpload} />
+
+      {/* Dialog: Configurar campos dinámicos */}
+      {selectedTemplate && (
+        <FieldEditorDialog
+          templateId={selectedTemplate}
+          open={showFieldEditor}
+          onOpenChange={(open) => {
+            setShowFieldEditor(open);
+            if (!open) setSelectedTemplate(null);
+          }}
+        />
+      )}
+    </Card>
+  );
+}
+
+// ==========================================
+// Dialog: Subir Plantilla Dinámica
+// ==========================================
+function UploadDynamicTemplateDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+
+  const utils = trpc.useUtils();
+  const uploadMutation = trpc.dynamicDocuments.createTemplate.useMutation({
+    onSuccess: () => {
+      toast.success("Plantilla dinámica subida exitosamente");
+      onOpenChange(false);
+      setFile(null);
+      setName("");
+      setDescription("");
+      setCategory("");
+      utils.dynamicDocuments.listTemplates.invalidate();
+    },
+    onError: (err) => toast.error(err.message || "Error al subir plantilla"),
+  });
+
+  const handleSubmit = async () => {
+    if (!file || !name) {
+      toast.error("Nombre y archivo son requeridos");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string;
+      const fileData = base64.split(",")[1];
+
+      uploadMutation.mutate({
+        name,
+        description: description || undefined,
+        category: category || undefined,
+        fileName: file.name,
+        fileKey: `dynamic-templates/${Date.now()}-${file.name}`,
+        fileData,
+        fileSize: file.size,
+        mimeType: file.type,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Subir Plantilla Dinámica</DialogTitle>
+          <DialogDescription>
+            Sube un archivo Word (.docx) con campos dinámicos usando la sintaxis {"{{campo}}"}.
+            Ejemplo: {"{{nombre_cliente}}"}, {"{{cedula}}"}, {"{{direccion}}"}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label>Nombre de la plantilla *</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Carta de autorización RETIE"
+            />
+          </div>
+          <div>
+            <Label>Categoría</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona una categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tramites">Trámites</SelectItem>
+                <SelectItem value="legalizacion">Legalización</SelectItem>
+                <SelectItem value="contratos">Contratos</SelectItem>
+                <SelectItem value="autorizaciones">Autorizaciones</SelectItem>
+                <SelectItem value="certificados">Certificados</SelectItem>
+                <SelectItem value="otros">Otros</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Descripción</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Descripción de la plantilla y su uso..."
+            />
+          </div>
+          <div>
+            <Label>Archivo Word (.docx) *</Label>
+            <Input
+              type="file"
+              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Usa {"{{campo}}"} en el documento para los campos dinámicos. Ej: {"{{nombre_cliente}}"}
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={handleSubmit} disabled={uploadMutation.isPending}>
+            {uploadMutation.isPending ? "Subiendo..." : "Subir Plantilla"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ==========================================
+// Dialog: Editor de Campos Dinámicos
+// ==========================================
+type DynamicField = {
+  fieldKey: string;
+  fieldLabel: string;
+  fieldType: "text" | "number" | "date" | "select" | "project";
+  options?: string;
+  projectMapping?: string;
+  defaultValue?: string;
+  orderIndex: number;
+  isRequired: boolean;
+};
+
+const PROJECT_MAPPINGS = [
+  { value: "clientName", label: "Nombre del cliente" },
+  { value: "clientEmail", label: "Email del cliente" },
+  { value: "clientPhone", label: "Teléfono del cliente" },
+  { value: "location", label: "Dirección/Ubicación" },
+  { value: "name", label: "Nombre del proyecto" },
+  { value: "description", label: "Descripción del proyecto" },
+];
+
+function FieldEditorDialog({ templateId, open, onOpenChange }: { templateId: number; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const utils = trpc.useUtils();
+  const { data: template } = trpc.dynamicDocuments.getTemplate.useQuery(
+    { id: templateId },
+    { enabled: open }
+  );
+
+  const [fields, setFields] = useState<DynamicField[]>([]);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Sync fields from server
+  useEffect(() => {
+    if (template?.fields) {
+      setFields(
+        template.fields.map((f) => ({
+          fieldKey: f.fieldKey,
+          fieldLabel: f.fieldLabel,
+          fieldType: f.fieldType as DynamicField["fieldType"],
+          options: f.options || undefined,
+          projectMapping: f.projectMapping || undefined,
+          defaultValue: f.defaultValue || undefined,
+          orderIndex: f.orderIndex,
+          isRequired: f.isRequired,
+        }))
+      );
+      setHasChanges(false);
+    }
+  }, [template?.fields]);
+
+  const saveMutation = trpc.dynamicDocuments.saveFields.useMutation({
+    onSuccess: () => {
+      toast.success("Campos guardados exitosamente");
+      setHasChanges(false);
+      utils.dynamicDocuments.getTemplate.invalidate({ id: templateId });
+    },
+    onError: (err) => toast.error(err.message || "Error al guardar campos"),
+  });
+
+  const addField = () => {
+    setFields([
+      ...fields,
+      {
+        fieldKey: "",
+        fieldLabel: "",
+        fieldType: "text",
+        orderIndex: fields.length,
+        isRequired: true,
+      },
+    ]);
+    setHasChanges(true);
+  };
+
+  const removeField = (index: number) => {
+    setFields(fields.filter((_, i) => i !== index));
+    setHasChanges(true);
+  };
+
+  const updateField = (index: number, updates: Partial<DynamicField>) => {
+    const newFields = [...fields];
+    newFields[index] = { ...newFields[index], ...updates };
+    // Auto-generate fieldKey from fieldLabel
+    if (updates.fieldLabel && !newFields[index].fieldKey) {
+      newFields[index].fieldKey = updates.fieldLabel
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_|_$/g, "");
+    }
+    setFields(newFields);
+    setHasChanges(true);
+  };
+
+  const handleSave = () => {
+    // Validate
+    for (const field of fields) {
+      if (!field.fieldKey || !field.fieldLabel) {
+        toast.error("Todos los campos deben tener clave y etiqueta");
+        return;
+      }
+    }
+    saveMutation.mutate({
+      templateId,
+      fields: fields.map((f, i) => ({ ...f, orderIndex: i })),
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Configurar Campos Dinámicos</DialogTitle>
+          <DialogDescription>
+            {template?.name} — Define los campos que se rellenarán al generar el documento.
+            La clave del campo debe coincidir con {"{{clave}}"} en la plantilla Word.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          {fields.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+              <Settings2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
+              <p>No hay campos configurados. Agrega campos dinámicos.</p>
+            </div>
+          ) : (
+            fields.map((field, index) => (
+              <div key={index} className="p-3 bg-muted/30 rounded-lg border space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Campo #{index + 1}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeField(index)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Etiqueta (visible al usuario)</Label>
+                    <Input
+                      value={field.fieldLabel}
+                      onChange={(e) => updateField(index, { fieldLabel: e.target.value })}
+                      placeholder="Ej: Nombre del Cliente"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Clave en plantilla {"{{clave}}"}</Label>
+                    <Input
+                      value={field.fieldKey}
+                      onChange={(e) => updateField(index, { fieldKey: e.target.value })}
+                      placeholder="Ej: nombre_cliente"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Tipo de campo</Label>
+                    <Select
+                      value={field.fieldType}
+                      onValueChange={(v) => updateField(index, { fieldType: v as DynamicField["fieldType"] })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="text">Texto</SelectItem>
+                        <SelectItem value="number">Número</SelectItem>
+                        <SelectItem value="date">Fecha</SelectItem>
+                        <SelectItem value="select">Selección</SelectItem>
+                        <SelectItem value="project">Auto (del proyecto)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {field.fieldType === "project" && (
+                    <div>
+                      <Label className="text-xs">Mapeo automático</Label>
+                      <Select
+                        value={field.projectMapping || ""}
+                        onValueChange={(v) => updateField(index, { projectMapping: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona campo del proyecto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PROJECT_MAPPINGS.map((m) => (
+                            <SelectItem key={m.value} value={m.value}>
+                              {m.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {field.fieldType === "select" && (
+                    <div>
+                      <Label className="text-xs">Opciones (separadas por coma)</Label>
+                      <Input
+                        value={field.options || ""}
+                        onChange={(e) => updateField(index, { options: e.target.value })}
+                        placeholder="Ej: Opción 1, Opción 2, Opción 3"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <Label className="text-xs">Valor por defecto</Label>
+                    <Input
+                      value={field.defaultValue || ""}
+                      onChange={(e) => updateField(index, { defaultValue: e.target.value })}
+                      placeholder="Opcional"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={field.isRequired}
+                    onChange={(e) => updateField(index, { isRequired: e.target.checked })}
+                    className="rounded"
+                  />
+                  <Label className="text-xs">Campo obligatorio</Label>
+                </div>
+              </div>
+            ))
+          )}
+
+          <Button variant="outline" onClick={addField} className="w-full">
+            <Plus className="mr-2 h-4 w-4" />
+            Agregar Campo
+          </Button>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cerrar
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saveMutation.isPending || !hasChanges}
+          >
+            {saveMutation.isPending ? "Guardando..." : "Guardar Campos"}
           </Button>
         </DialogFooter>
       </DialogContent>
