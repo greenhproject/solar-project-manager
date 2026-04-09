@@ -643,4 +643,11 @@
 - [x] Confirmación antes de eliminar un item (window.confirm)
 - [x] Frontend: sección de Documentos Dinámicos muestra docs generados con badge verde, botones ver/descargar/eliminar
 - [x] Frontend: al generar documento, se invalida la query y aparece inmediatamente en la sección
+- [x] Push a GitHub (commit ece5ec1)
+
+## Mejora: Conversión automática Word a PDF al generar documento dinámico (09 Abr 2026)
+- [x] Instalar libreoffice-convert para conversión docx a PDF
+- [x] Modificar endpoint generateDocument para convertir el .docx generado a .pdf con LibreOffice
+- [x] Guardar el PDF en S3 en lugar del Word (con fallback a Word si LibreOffice no disponible)
+- [x] Actualizar nixpacks.toml con libreoffice-still para producción
 - [ ] Push a GitHub
