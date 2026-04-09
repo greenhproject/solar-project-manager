@@ -2840,6 +2840,223 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         return { success: true, timezone: input.timezone };
       }),
   }),
+
+  // ==========================================
+  // Documentos Dinámicos
+  // ==========================================
+  dynamicDocuments: router({
+    // Listar plantillas dinámicas
+    listTemplates: tramitesProcedure
+      .input(z.object({ category: z.string().optional() }).optional())
+      .query(async ({ input }) => {
+        return await db.getDynamicDocTemplates(input || {});
+      }),
+
+    // Obtener plantilla con sus campos
+    getTemplate: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const template = await db.getDynamicDocTemplateById(input.id);
+        if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Plantilla no encontrada" });
+        const fields = await db.getDynamicDocFieldsByTemplateId(input.id);
+        return { ...template, fields };
+      }),
+
+    // Crear plantilla dinámica (subir archivo Word)
+    createTemplate: tramitesProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        description: z.string().optional(),
+        category: z.string().optional(),
+        fileName: z.string(),
+        fileKey: z.string(),
+        fileData: z.string(), // base64
+        fileSize: z.number(),
+        mimeType: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { fileData, fileKey, ...rest } = input;
+        const buffer = Buffer.from(fileData, "base64");
+        const { storagePut } = await import("./storage");
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+
+        const templateId = await db.createDynamicDocTemplate({
+          ...rest,
+          fileKey,
+          fileUrl: url,
+          uploadedBy: ctx.user.id,
+        });
+
+        return { success: true, templateId };
+      }),
+
+    // Actualizar plantilla
+    updateTemplate: tramitesProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        description: z.string().optional(),
+        category: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateDynamicDocTemplate(id, data);
+        return { success: true };
+      }),
+
+    // Eliminar plantilla (soft delete)
+    deleteTemplate: tramitesProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteDynamicDocTemplate(input.id);
+        return { success: true };
+      }),
+
+    // ---- Campos dinámicos ----
+
+    // Obtener campos de una plantilla
+    getFields: protectedProcedure
+      .input(z.object({ templateId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getDynamicDocFieldsByTemplateId(input.templateId);
+      }),
+
+    // Crear campo dinámico
+    createField: tramitesProcedure
+      .input(z.object({
+        templateId: z.number(),
+        fieldKey: z.string().min(1),
+        fieldLabel: z.string().min(1),
+        fieldType: z.enum(["text", "number", "date", "select", "project"]).default("text"),
+        options: z.string().optional(), // JSON array
+        projectMapping: z.string().optional(),
+        defaultValue: z.string().optional(),
+        orderIndex: z.number().default(0),
+        isRequired: z.boolean().default(true),
+      }))
+      .mutation(async ({ input }) => {
+        const fieldId = await db.createDynamicDocField(input);
+        return { success: true, fieldId };
+      }),
+
+    // Actualizar campo dinámico
+    updateField: tramitesProcedure
+      .input(z.object({
+        id: z.number(),
+        fieldKey: z.string().optional(),
+        fieldLabel: z.string().optional(),
+        fieldType: z.enum(["text", "number", "date", "select", "project"]).optional(),
+        options: z.string().optional(),
+        projectMapping: z.string().optional(),
+        defaultValue: z.string().optional(),
+        orderIndex: z.number().optional(),
+        isRequired: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await db.updateDynamicDocField(id, data);
+        return { success: true };
+      }),
+
+    // Eliminar campo dinámico
+    deleteField: tramitesProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteDynamicDocField(input.id);
+        return { success: true };
+      }),
+
+    // Guardar todos los campos de una plantilla de golpe (reemplaza los existentes)
+    saveFields: tramitesProcedure
+      .input(z.object({
+        templateId: z.number(),
+        fields: z.array(z.object({
+          fieldKey: z.string().min(1),
+          fieldLabel: z.string().min(1),
+          fieldType: z.enum(["text", "number", "date", "select", "project"]).default("text"),
+          options: z.string().optional(),
+          projectMapping: z.string().optional(),
+          defaultValue: z.string().optional(),
+          orderIndex: z.number().default(0),
+          isRequired: z.boolean().default(true),
+        })),
+      }))
+      .mutation(async ({ input }) => {
+        // Eliminar campos existentes
+        await db.deleteAllDynamicDocFieldsByTemplate(input.templateId);
+        // Crear nuevos campos
+        for (const field of input.fields) {
+          await db.createDynamicDocField({
+            templateId: input.templateId,
+            ...field,
+          });
+        }
+        return { success: true };
+      }),
+
+    // ---- Generación de documentos ----
+
+    // Generar documento dinámico a partir de plantilla Word
+    generateDocument: protectedProcedure
+      .input(z.object({
+        templateId: z.number(),
+        projectId: z.number(),
+        fieldValues: z.record(z.string(), z.string()),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const template = await db.getDynamicDocTemplateById(input.templateId);
+        if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Plantilla no encontrada" });
+
+        // Descargar la plantilla Word desde S3
+        const response = await fetch(template.fileUrl);
+        if (!response.ok) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "No se pudo descargar la plantilla" });
+        const templateBuffer = Buffer.from(await response.arrayBuffer());
+
+        // Procesar el documento Word con docx-templates
+        const { createReport } = await import("docx-templates");
+        const generatedBuffer = await createReport({
+          template: templateBuffer,
+          data: input.fieldValues,
+          cmdDelimiter: ["{{", "}}"],
+        });
+
+        // Subir el documento generado a S3
+        const { storagePut } = await import("./storage");
+        const timestamp = Date.now();
+        const outputFileName = `${template.name.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
+        const fileKey = `dynamic-docs/generated/${input.projectId}/${outputFileName}`;
+        const { url } = await storagePut(fileKey, Buffer.from(generatedBuffer), "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
+        // Guardar registro en BD
+        const docId = await db.createGeneratedDoc({
+          projectId: input.projectId,
+          templateId: input.templateId,
+          fileName: outputFileName,
+          fileKey,
+          fileUrl: url,
+          fileSize: generatedBuffer.byteLength,
+          fieldValues: JSON.stringify(input.fieldValues),
+          generatedBy: ctx.user.id,
+        });
+
+        return { success: true, docId, fileUrl: url, fileName: outputFileName };
+      }),
+
+    // Listar documentos generados por proyecto
+    getGeneratedDocs: protectedProcedure
+      .input(z.object({ projectId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getGeneratedDocsByProjectId(input.projectId);
+      }),
+
+    // Eliminar documento generado
+    deleteGeneratedDoc: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await db.deleteGeneratedDoc(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

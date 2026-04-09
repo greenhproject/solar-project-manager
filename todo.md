@@ -567,4 +567,19 @@
 - [x] Corregir error TS en emailService.ts (instalar nodemailer + @types/nodemailer)
 - [x] Corregir errores TS en notificationGenerator.ts (usar sendMilestoneReminderEmail con params correctos)
 - [x] Verificar compilación limpia (0 errores TS)
-- [ ] Push a GitHub para Railway con drag & drop incluido
+- [x] Push a GitHub para Railway con drag & drop + TS fixes (commit 9c4c256)
+
+## Mejora: Sistema de Documentos Dinámicos tipo DocuSign (09 Abr 2026)
+- [x] Investigar código actual de Trámites y Diseño + Trámites y Legalización
+- [x] Diseñar tablas BD: dynamicDocTemplates (plantillas), dynamicDocFields (campos configurables), generatedDynamicDocs
+- [x] Crear migración de BD con script SQL directo
+- [x] Implementar endpoints servidor: CRUD plantillas dinámicas + campos + generación
+- [x] Implementar endpoint de generación de documento (reemplazar campos en Word con docx-templates)
+- [x] Agregar pestaña "Docs Dinámicos" en sección Trámites y Diseño (3 pestañas)
+- [x] UI para subir plantilla Word y configurar campos dinámicos (FieldEditorDialog)
+- [x] UI para configurar tipo de campo (texto, número, fecha, selección, auto-proyecto)
+- [x] Integrar en Trámites y Legalización: sección "Documentos Dinámicos" con botón Generar
+- [x] UI para llenar campos dinámicos con auto-fill de datos del proyecto y descargar documento
+- [x] 17 tests pasando (dynamic-docs.test.ts)
+- [x] 0 errores TypeScript
+- [ ] Push a GitHub para Railway

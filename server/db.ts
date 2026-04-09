@@ -28,6 +28,12 @@ import {
   appSettings,
   webhookLogs,
   InsertWebhookLog,
+  dynamicDocTemplates,
+  dynamicDocFields,
+  generatedDynamicDocs,
+  InsertDynamicDocTemplate,
+  InsertDynamicDocField,
+  InsertGeneratedDynamicDoc,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { getNowInConfiguredTimezone } from "./timezone";
@@ -1706,4 +1712,177 @@ export async function updateProjectFromOpenSolar(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(projects).set(data).where(eq(projects.id, projectId));
+}
+
+// ==========================================
+// Dynamic Document Templates
+// ==========================================
+
+export async function getDynamicDocTemplates(filters?: { category?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const conditions = [eq(dynamicDocTemplates.isActive, true)];
+  if (filters?.category) {
+    conditions.push(eq(dynamicDocTemplates.category, filters.category));
+  }
+  
+  return await db
+    .select()
+    .from(dynamicDocTemplates)
+    .where(and(...conditions))
+    .orderBy(desc(dynamicDocTemplates.createdAt));
+}
+
+export async function getDynamicDocTemplateById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db
+    .select()
+    .from(dynamicDocTemplates)
+    .where(eq(dynamicDocTemplates.id, id));
+  return result[0] || null;
+}
+
+export async function createDynamicDocTemplate(data: {
+  name: string;
+  description?: string;
+  category?: string;
+  fileName: string;
+  fileKey: string;
+  fileUrl: string;
+  fileSize: number;
+  mimeType: string;
+  uploadedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(dynamicDocTemplates).values(data);
+  return result[0].insertId;
+}
+
+export async function updateDynamicDocTemplate(id: number, data: Partial<{
+  name: string;
+  description: string;
+  category: string;
+  isActive: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(dynamicDocTemplates).set(data).where(eq(dynamicDocTemplates.id, id));
+}
+
+export async function deleteDynamicDocTemplate(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Soft delete
+  await db.update(dynamicDocTemplates)
+    .set({ isActive: false })
+    .where(eq(dynamicDocTemplates.id, id));
+}
+
+// ==========================================
+// Dynamic Document Fields
+// ==========================================
+
+export async function getDynamicDocFieldsByTemplateId(templateId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(dynamicDocFields)
+    .where(eq(dynamicDocFields.templateId, templateId))
+    .orderBy(dynamicDocFields.orderIndex);
+}
+
+export async function createDynamicDocField(data: {
+  templateId: number;
+  fieldKey: string;
+  fieldLabel: string;
+  fieldType?: "text" | "number" | "date" | "select" | "project";
+  options?: string;
+  projectMapping?: string;
+  defaultValue?: string;
+  orderIndex?: number;
+  isRequired?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(dynamicDocFields).values(data);
+  return result[0].insertId;
+}
+
+export async function updateDynamicDocField(id: number, data: Partial<{
+  fieldKey: string;
+  fieldLabel: string;
+  fieldType: "text" | "number" | "date" | "select" | "project";
+  options: string;
+  projectMapping: string;
+  defaultValue: string;
+  orderIndex: number;
+  isRequired: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(dynamicDocFields).set(data).where(eq(dynamicDocFields.id, id));
+}
+
+export async function deleteDynamicDocField(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(dynamicDocFields).where(eq(dynamicDocFields.id, id));
+}
+
+export async function deleteAllDynamicDocFieldsByTemplate(templateId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(dynamicDocFields).where(eq(dynamicDocFields.templateId, templateId));
+}
+
+// ==========================================
+// Generated Dynamic Documents
+// ==========================================
+
+export async function getGeneratedDocsByProjectId(projectId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(generatedDynamicDocs)
+    .where(eq(generatedDynamicDocs.projectId, projectId))
+    .orderBy(desc(generatedDynamicDocs.createdAt));
+}
+
+export async function createGeneratedDoc(data: {
+  projectId: number;
+  templateId: number;
+  fileName: string;
+  fileKey: string;
+  fileUrl: string;
+  fileSize: number;
+  fieldValues: string;
+  generatedBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(generatedDynamicDocs).values(data);
+  return result[0].insertId;
+}
+
+export async function deleteGeneratedDoc(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(generatedDynamicDocs).where(eq(generatedDynamicDocs.id, id));
 }

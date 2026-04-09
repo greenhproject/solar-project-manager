@@ -524,11 +524,11 @@ export const projectLegalizationChecklist = mysqlTable("project_legalization_che
   ]).notNull(),
   
   // Información del archivo (si ya está cargado)
-  fileName: varchar("fileName", { length: 255 }),
+  fileName: varchar("fileName", { length: 500 }),
   fileKey: varchar("fileKey", { length: 500 }), // S3 key
-  fileUrl: text("fileUrl"), // S3 URL
+  fileUrl: varchar("fileUrl", { length: 1000 }), // S3 URL
   fileSize: int("fileSize"), // Tamaño en bytes
-  mimeType: varchar("mimeType", { length: 100 }),
+  mimeType: varchar("mimeType", { length: 255 }),
   
   // Indicadores
   isCompleted: boolean("isCompleted").default(false).notNull(),
@@ -650,3 +650,108 @@ export const webhookLogs = mysqlTable("webhook_logs", {
 
 export type WebhookLog = typeof webhookLogs.$inferSelect;
 export type InsertWebhookLog = typeof webhookLogs.$inferInsert;
+
+/**
+ * Plantillas de documentos dinámicos
+ * Almacena archivos Word/PDF que contienen marcadores de campos dinámicos
+ * tipo DocuSign para generar documentos personalizados por proyecto
+ */
+export const dynamicDocTemplates = mysqlTable("dynamic_doc_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Información de la plantilla
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }), // Ej: "Contratos", "Actas", "Certificados"
+  
+  // Archivo original de la plantilla (Word)
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: text("fileUrl").notNull(), // S3 URL
+  fileSize: int("fileSize").notNull(),
+  mimeType: varchar("mimeType", { length: 100 }).notNull(),
+  
+  // Estado
+  isActive: boolean("isActive").default(true).notNull(),
+  
+  // Auditoría
+  uploadedBy: int("uploadedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DynamicDocTemplate = typeof dynamicDocTemplates.$inferSelect;
+export type InsertDynamicDocTemplate = typeof dynamicDocTemplates.$inferInsert;
+
+/**
+ * Campos dinámicos de plantillas de documentos
+ * Define los marcadores/placeholders configurables de cada plantilla
+ * Ej: {{nombre_cliente}}, {{direccion}}, {{cedula}}
+ */
+export const dynamicDocFields = mysqlTable("dynamic_doc_fields", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(), // FK a dynamicDocTemplates
+  
+  // Configuración del campo
+  fieldKey: varchar("fieldKey", { length: 100 }).notNull(), // Ej: "nombre_cliente"
+  fieldLabel: varchar("fieldLabel", { length: 255 }).notNull(), // Ej: "Nombre del Cliente"
+  fieldType: mysqlEnum("fieldType", [
+    "text",       // Texto libre
+    "number",     // Número
+    "date",       // Fecha
+    "select",     // Selección de opciones
+    "project",    // Auto-rellenado desde datos del proyecto
+  ]).default("text").notNull(),
+  
+  // Para fieldType = "select": opciones disponibles (JSON array)
+  options: text("options"), // JSON: ["Opción 1", "Opción 2"]
+  
+  // Para fieldType = "project": campo del proyecto a mapear
+  projectMapping: varchar("projectMapping", { length: 100 }), // Ej: "clientName", "location", "clientEmail"
+  
+  // Valor por defecto (opcional)
+  defaultValue: text("defaultValue"),
+  
+  // Orden de aparición en el formulario
+  orderIndex: int("orderIndex").default(0).notNull(),
+  
+  // Es obligatorio?
+  isRequired: boolean("isRequired").default(true).notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  templateIdx: index("template_idx").on(table.templateId),
+}));
+
+export type DynamicDocField = typeof dynamicDocFields.$inferSelect;
+export type InsertDynamicDocField = typeof dynamicDocFields.$inferInsert;
+
+/**
+ * Documentos dinámicos generados por proyecto
+ * Registro de cada documento generado a partir de una plantilla dinámica
+ */
+export const generatedDynamicDocs = mysqlTable("generated_dynamic_docs", {
+  id: int("id").autoincrement().primaryKey(),
+  projectId: int("projectId").notNull(),
+  templateId: int("templateId").notNull(), // FK a dynamicDocTemplates
+  
+  // Archivo generado
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key
+  fileUrl: text("fileUrl").notNull(), // S3 URL
+  fileSize: int("fileSize").notNull(),
+  
+  // Valores usados para generar (JSON: { fieldKey: value })
+  fieldValues: text("fieldValues").notNull(),
+  
+  // Auditoría
+  generatedBy: int("generatedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({
+  projectIdx: index("project_idx").on(table.projectId),
+  templateIdx: index("template_idx").on(table.templateId),
+}));
+
+export type GeneratedDynamicDoc = typeof generatedDynamicDocs.$inferSelect;
+export type InsertGeneratedDynamicDoc = typeof generatedDynamicDocs.$inferInsert;
