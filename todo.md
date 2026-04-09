@@ -587,4 +587,11 @@
 ## Fix: Responsive pestañas Trámites y Diseño (09 Abr 2026)
 - [x] Corregir pestañas superpuestas en móvil (flex + overflow-x-auto + text-xs/truncate)
 - [x] Corregir headers de cards para responsive (flex-col en móvil, flex-row en desktop)
+- [x] Push a GitHub (commit c8b5be4)
+
+## Fix: Error INSERT dynamic_doc_templates (09 Abr 2026)
+- [x] Investigar error: espacios en fileKey de S3 causaban problemas
+- [x] Sanitizar fileKey reemplazando espacios por guiones bajos
+- [x] Agregar mejor manejo de errores con try/catch y mensajes claros
+- [x] Verificar subida exitosa en entorno de desarrollo
 - [ ] Push a GitHub
