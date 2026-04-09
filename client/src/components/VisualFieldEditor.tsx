@@ -14,13 +14,11 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import {
   FileEdit,
@@ -35,6 +33,7 @@ import {
   Loader2,
   Zap,
   FileText,
+  Download,
 } from "lucide-react";
 
 type DynamicField = {
@@ -78,13 +77,11 @@ export function VisualFieldEditor({
 }: VisualFieldEditorProps) {
   const utils = trpc.useUtils();
 
-  // Fetch template data
   const { data: template } = trpc.dynamicDocuments.getTemplate.useQuery(
     { id: templateId },
     { enabled: open }
   );
 
-  // Fetch parsed document (HTML + markers)
   const {
     data: parsedDoc,
     isLoading: isParsing,
@@ -97,10 +94,11 @@ export function VisualFieldEditor({
   const [fields, setFields] = useState<DynamicField[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"split" | "fields">("split");
+  // On mobile, default to "fields" tab; on desktop, "split"
+  const [activeTab, setActiveTab] = useState<"document" | "fields">("fields");
   const docViewerRef = useRef<HTMLDivElement>(null);
 
-  // Sync fields from server when template loads
+  // Sync fields from server
   useEffect(() => {
     if (template?.fields) {
       setFields(
@@ -119,15 +117,11 @@ export function VisualFieldEditor({
     }
   }, [template?.fields]);
 
-  // Auto-detect markers and create fields for new ones
+  // Auto-detect new markers
   useEffect(() => {
     if (parsedDoc?.markers && template?.fields) {
-      const existingKeys = new Set(
-        template.fields.map((f) => f.fieldKey)
-      );
-      const newMarkers = parsedDoc.markers.filter(
-        (m) => !existingKeys.has(m)
-      );
+      const existingKeys = new Set(template.fields.map((f) => f.fieldKey));
+      const newMarkers = parsedDoc.markers.filter((m) => !existingKeys.has(m));
 
       if (newMarkers.length > 0 && fields.length === template.fields.length) {
         const newFields: DynamicField[] = newMarkers.map((marker, i) => ({
@@ -152,58 +146,24 @@ export function VisualFieldEditor({
   // Highlight markers in HTML
   const highlightedHtml = useMemo(() => {
     if (!parsedDoc?.html) return "";
-
     let html = parsedDoc.html;
-
-    // Replace {{marker}} with highlighted spans
-    html = html.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+    html = html.replace(/\{\{([^}]+)\}\}/g, (_match, key) => {
       const trimmedKey = key.trim();
       const field = fields.find((f) => f.fieldKey === trimmedKey);
       const isConfigured = !!field;
       const isActive = activeMarker === trimmedKey;
-
-      const bgColor = isActive
-        ? "#f97316"
-        : isConfigured
-        ? "#22c55e"
-        : "#ef4444";
-      const textColor = "#ffffff";
-
-      return `<span 
-        class="doc-marker" 
-        data-marker="${trimmedKey}"
-        style="
-          background-color: ${bgColor}; 
-          color: ${textColor}; 
-          padding: 2px 8px; 
-          border-radius: 4px; 
-          font-weight: 600; 
-          font-size: 0.85em;
-          cursor: pointer;
-          display: inline-block;
-          transition: all 0.2s;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        "
-      >{{${trimmedKey}}}</span>`;
+      const bgColor = isActive ? "#f97316" : isConfigured ? "#22c55e" : "#ef4444";
+      return `<span class="doc-marker" data-marker="${trimmedKey}" style="background-color:${bgColor};color:#fff;padding:2px 6px;border-radius:4px;font-weight:600;font-size:0.85em;cursor:pointer;display:inline-block;box-shadow:0 1px 3px rgba(0,0,0,0.2);white-space:nowrap;">{{${trimmedKey}}}</span>`;
     });
-
     return html;
   }, [parsedDoc?.html, fields, activeMarker]);
 
-  // Markers status
+  // Marker status
   const markerStatus = useMemo(() => {
     if (!parsedDoc?.markers) return { configured: 0, total: 0, unconfigured: [] as string[] };
-    const configured = parsedDoc.markers.filter((m) =>
-      fields.some((f) => f.fieldKey === m)
-    );
-    const unconfigured = parsedDoc.markers.filter(
-      (m) => !fields.some((f) => f.fieldKey === m)
-    );
-    return {
-      configured: configured.length,
-      total: parsedDoc.markers.length,
-      unconfigured,
-    };
+    const configured = parsedDoc.markers.filter((m) => fields.some((f) => f.fieldKey === m));
+    const unconfigured = parsedDoc.markers.filter((m) => !fields.some((f) => f.fieldKey === m));
+    return { configured: configured.length, total: parsedDoc.markers.length, unconfigured };
   }, [parsedDoc?.markers, fields]);
 
   // Save mutation
@@ -219,9 +179,7 @@ export function VisualFieldEditor({
   const addField = (key?: string) => {
     const newField: DynamicField = {
       fieldKey: key || "",
-      fieldLabel: key
-        ? key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-        : "",
+      fieldLabel: key ? key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "",
       fieldType: "text",
       orderIndex: fields.length,
       isRequired: true,
@@ -255,7 +213,6 @@ export function VisualFieldEditor({
     });
   };
 
-  // Click handler for markers in the document preview
   const handleDocClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const marker = target.closest(".doc-marker");
@@ -263,189 +220,166 @@ export function VisualFieldEditor({
       const key = marker.getAttribute("data-marker");
       if (key) {
         setActiveMarker(key);
-        // Scroll to the field in the sidebar
+        setActiveTab("fields");
         const fieldIndex = fields.findIndex((f) => f.fieldKey === key);
         if (fieldIndex >= 0) {
-          const el = document.getElementById(`field-card-${fieldIndex}`);
-          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          setTimeout(() => {
+            const el = document.getElementById(`field-card-${fieldIndex}`);
+            el?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 100);
         }
       }
     }
   };
 
-  // Scroll to marker in document when clicking a field
   const scrollToMarker = (key: string) => {
     setActiveMarker(key);
     if (docViewerRef.current) {
-      const markerEl = docViewerRef.current.querySelector(
-        `[data-marker="${key}"]`
-      );
+      const markerEl = docViewerRef.current.querySelector(`[data-marker="${key}"]`);
       markerEl?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-[1200px] max-h-[92vh] p-0 overflow-hidden">
-        {/* Header */}
-        <div className="px-6 pt-5 pb-3 border-b">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-lg flex items-center gap-2">
-                <FileEdit className="h-5 w-5 text-orange-500" />
-                Editor Visual de Campos
+      <DialogContent className="max-w-[96vw] w-[1100px] max-h-[94vh] h-[94vh] p-0 flex flex-col overflow-hidden gap-0">
+        {/* ========== HEADER ========== */}
+        <div className="shrink-0 px-4 sm:px-6 pt-4 pb-3 border-b space-y-3">
+          {/* Title row */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <DialogTitle className="text-base sm:text-lg flex items-center gap-2">
+                <FileEdit className="h-5 w-5 text-orange-500 shrink-0" />
+                <span className="truncate">Editor Visual de Campos</span>
               </DialogTitle>
-              <DialogDescription className="mt-1">
-                {template?.name} — Haz clic en los marcadores del documento para
-                configurar cada campo.
+              <DialogDescription className="mt-1 text-xs sm:text-sm truncate">
+                {template?.name || "Cargando..."}
               </DialogDescription>
             </div>
-            <div className="flex items-center gap-2">
-              {/* Status badges */}
-              {parsedDoc && (
-                <div className="flex items-center gap-2 mr-2">
-                  <Badge
-                    variant={
-                      markerStatus.configured === markerStatus.total
-                        ? "default"
-                        : "secondary"
-                    }
-                    className={
-                      markerStatus.configured === markerStatus.total
-                        ? "bg-green-600 text-white"
-                        : ""
-                    }
-                  >
-                    {markerStatus.configured === markerStatus.total ? (
-                      <CheckCircle2 className="mr-1 h-3 w-3" />
-                    ) : (
-                      <AlertCircle className="mr-1 h-3 w-3" />
-                    )}
-                    {markerStatus.configured}/{markerStatus.total} campos
-                  </Badge>
-                </div>
-              )}
-              {/* View toggle */}
-              <div className="flex border rounded-md overflow-hidden">
-                <button
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "split"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/50 hover:bg-muted"
-                  }`}
-                  onClick={() => setViewMode("split")}
-                >
-                  <Eye className="h-3.5 w-3.5 inline mr-1" />
-                  Vista Dividida
-                </button>
-                <button
-                  className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                    viewMode === "fields"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted/50 hover:bg-muted"
-                  }`}
-                  onClick={() => setViewMode("fields")}
-                >
-                  <Settings2 className="h-3.5 w-3.5 inline mr-1" />
-                  Solo Campos
-                </button>
-              </div>
-            </div>
+
+            {/* Status badge */}
+            {parsedDoc && (
+              <Badge
+                variant={markerStatus.configured === markerStatus.total ? "default" : "secondary"}
+                className={`shrink-0 text-xs ${
+                  markerStatus.configured === markerStatus.total ? "bg-green-600 text-white" : ""
+                }`}
+              >
+                {markerStatus.configured === markerStatus.total ? (
+                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                ) : (
+                  <AlertCircle className="mr-1 h-3 w-3" />
+                )}
+                {markerStatus.configured}/{markerStatus.total}
+              </Badge>
+            )}
+          </div>
+
+          {/* Tab switcher */}
+          <div className="flex gap-1 bg-muted/50 rounded-lg p-1">
+            <button
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                activeTab === "document"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveTab("document")}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>Documento</span>
+            </button>
+            <button
+              className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                activeTab === "fields"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              onClick={() => setActiveTab("fields")}
+            >
+              <Settings2 className="h-3.5 w-3.5" />
+              <span>Campos ({fields.length})</span>
+            </button>
           </div>
         </div>
 
-        {/* Body */}
-        <div
-          className={`flex ${
-            viewMode === "split" ? "flex-row" : "flex-col"
-          } overflow-hidden`}
-          style={{ height: "calc(92vh - 160px)" }}
-        >
-          {/* Document Preview Panel */}
-          {viewMode === "split" && (
-            <div className="flex-1 border-r overflow-hidden flex flex-col">
-              <div className="px-4 py-2 bg-muted/30 border-b flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <FileText className="h-4 w-4" />
-                  Vista Previa del Documento
-                </div>
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <span
-                      className="inline-block w-3 h-3 rounded-sm"
-                      style={{ backgroundColor: "#22c55e" }}
-                    />
-                    Configurado
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span
-                      className="inline-block w-3 h-3 rounded-sm"
-                      style={{ backgroundColor: "#ef4444" }}
-                    />
-                    Sin configurar
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span
-                      className="inline-block w-3 h-3 rounded-sm"
-                      style={{ backgroundColor: "#f97316" }}
-                    />
-                    Seleccionado
-                  </span>
-                </div>
-              </div>
-              <ScrollArea className="flex-1">
-                {isParsing ? (
-                  <div className="flex items-center justify-center py-20">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-orange-500" />
-                      <p className="text-sm text-muted-foreground">
-                        Analizando documento...
-                      </p>
-                    </div>
+        {/* ========== BODY ========== */}
+        <div className="flex-1 overflow-hidden relative">
+          {/* Document Tab */}
+          <div
+            className={`absolute inset-0 flex flex-col transition-opacity duration-200 ${
+              activeTab === "document" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+            }`}
+          >
+            {/* Legend bar */}
+            <div className="shrink-0 px-4 py-2 bg-muted/30 border-b flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="text-xs text-muted-foreground font-medium">Marcadores:</span>
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#22c55e" }} />
+                Configurado
+              </span>
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#ef4444" }} />
+                Sin configurar
+              </span>
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: "#f97316" }} />
+                Seleccionado
+              </span>
+            </div>
+
+            {/* Document content */}
+            <ScrollArea className="flex-1">
+              {isParsing ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-orange-500" />
+                    <p className="text-sm text-muted-foreground">Analizando documento...</p>
                   </div>
-                ) : parseError ? (
-                  <div className="flex items-center justify-center py-20">
-                    <div className="text-center">
-                      <AlertCircle className="h-8 w-8 mx-auto mb-3 text-destructive" />
-                      <p className="text-sm text-destructive">
-                        Error al parsear el documento
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {parseError.message}
-                      </p>
-                    </div>
+                </div>
+              ) : parseError ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="text-center px-4">
+                    <AlertCircle className="h-8 w-8 mx-auto mb-3 text-destructive" />
+                    <p className="text-sm text-destructive">Error al parsear el documento</p>
+                    <p className="text-xs text-muted-foreground mt-1">{parseError.message}</p>
                   </div>
-                ) : (
+                </div>
+              ) : (
+                <div className="p-4 sm:p-6">
                   <div
                     ref={docViewerRef}
-                    className="p-6 doc-preview"
+                    className="bg-white rounded-lg shadow-md border p-6 sm:p-8 mx-auto"
                     onClick={handleDocClick}
                     dangerouslySetInnerHTML={{ __html: highlightedHtml }}
                     style={{
-                      fontFamily: "'Times New Roman', serif",
-                      fontSize: "14px",
-                      lineHeight: "1.6",
+                      fontFamily: "'Times New Roman', 'Georgia', serif",
+                      fontSize: "13px",
+                      lineHeight: "1.7",
                       color: "#1a1a1a",
-                      backgroundColor: "#ffffff",
-                      minHeight: "100%",
+                      maxWidth: "800px",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
                     }}
                   />
-                )}
-              </ScrollArea>
-            </div>
-          )}
+                  <p className="text-center text-xs text-muted-foreground mt-4">
+                    Haz clic en un marcador resaltado para configurar ese campo
+                  </p>
+                </div>
+              )}
+            </ScrollArea>
+          </div>
 
-          {/* Fields Configuration Panel */}
+          {/* Fields Tab */}
           <div
-            className={`${
-              viewMode === "split" ? "w-[420px]" : "flex-1"
-            } overflow-hidden flex flex-col`}
+            className={`absolute inset-0 flex flex-col transition-opacity duration-200 ${
+              activeTab === "fields" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+            }`}
           >
-            <div className="px-4 py-2 bg-muted/30 border-b flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Settings2 className="h-4 w-4" />
-                Campos Dinámicos ({fields.length})
-              </div>
+            {/* Fields toolbar */}
+            <div className="shrink-0 px-4 py-2 bg-muted/30 border-b flex items-center justify-between gap-2">
+              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
+                {fields.length} campo(s) configurado(s)
+              </span>
               {markerStatus.unconfigured.length > 0 && (
                 <Button
                   size="sm"
@@ -461,18 +395,17 @@ export function VisualFieldEditor({
               )}
             </div>
 
+            {/* Fields list */}
             <ScrollArea className="flex-1">
-              <div className="p-3 space-y-2">
+              <div className="p-3 sm:p-4 space-y-2">
                 {fields.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
+                  <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg px-4">
                     <Settings2 className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm font-medium">
-                      No hay campos configurados
-                    </p>
+                    <p className="text-sm font-medium">No hay campos configurados</p>
                     <p className="text-xs mt-1">
                       {parsedDoc?.markers && parsedDoc.markers.length > 0
-                        ? `Se detectaron ${parsedDoc.markers.length} marcadores en el documento. Usa "Auto-detectar" para agregarlos.`
-                        : "Agrega campos manualmente o sube un documento con marcadores {{campo}}."}
+                        ? `Se detectaron ${parsedDoc.markers.length} marcadores. Usa "Auto-detectar" para agregarlos.`
+                        : 'Agrega campos manualmente o sube un documento con marcadores {{campo}}.'}
                     </p>
                   </div>
                 ) : (
@@ -483,9 +416,7 @@ export function VisualFieldEditor({
                       field={field}
                       index={index}
                       isActive={activeMarker === field.fieldKey}
-                      isInDocument={
-                        parsedDoc?.markers?.includes(field.fieldKey) ?? false
-                      }
+                      isInDocument={parsedDoc?.markers?.includes(field.fieldKey) ?? false}
                       onUpdate={(updates) => updateField(index, updates)}
                       onRemove={() => removeField(index)}
                       onFocus={() => scrollToMarker(field.fieldKey)}
@@ -507,23 +438,17 @@ export function VisualFieldEditor({
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t flex items-center justify-between bg-muted/20">
-          <div className="text-xs text-muted-foreground">
+        {/* ========== FOOTER ========== */}
+        <div className="shrink-0 px-4 sm:px-6 py-3 border-t flex items-center justify-between bg-muted/20 gap-2">
+          <div className="text-xs text-muted-foreground min-w-0">
             {hasChanges ? (
-              <span className="text-orange-500 font-medium">
-                Hay cambios sin guardar
-              </span>
+              <span className="text-orange-500 font-medium">Cambios sin guardar</span>
             ) : (
-              <span>Todos los cambios guardados</span>
+              <span className="hidden sm:inline">Todos los cambios guardados</span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-            >
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
               Cerrar
             </Button>
             <Button
@@ -533,13 +458,14 @@ export function VisualFieldEditor({
             >
               {saveMutation.isPending ? (
                 <>
-                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                  Guardando...
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  <span className="hidden sm:inline">Guardando...</span>
+                  <span className="sm:hidden">...</span>
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-3.5 w-3.5" />
-                  Guardar Campos
+                  <Save className="mr-1.5 h-3.5 w-3.5" />
+                  Guardar
                 </>
               )}
             </Button>
@@ -550,7 +476,9 @@ export function VisualFieldEditor({
   );
 }
 
-// Individual Field Card Component
+// ==========================================
+// Field Card Component
+// ==========================================
 function FieldCard({
   id,
   field,
@@ -581,9 +509,9 @@ function FieldCard({
           : "border-border bg-card hover:border-muted-foreground/20"
       }`}
     >
-      {/* Collapsed header */}
+      {/* Header row */}
       <div
-        className="flex items-center gap-2 p-2.5 cursor-pointer"
+        className="flex items-center gap-2 p-3 cursor-pointer"
         onClick={() => {
           setIsExpanded(!isExpanded);
           onFocus();
@@ -596,23 +524,20 @@ function FieldCard({
         />
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-medium truncate">
               {field.fieldLabel || "(Sin etiqueta)"}
             </span>
-            <Badge
-              variant="outline"
-              className="text-[10px] px-1.5 py-0 shrink-0"
-            >
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 font-mono">
               {`{{${field.fieldKey || "?"}}}`}
             </Badge>
           </div>
-          <div className="flex items-center gap-2 mt-0.5">
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className="text-[10px] text-muted-foreground">
               {FIELD_TYPE_LABELS[field.fieldType] || field.fieldType}
             </span>
             {field.isRequired && (
-              <span className="text-[10px] text-orange-500">Requerido</span>
+              <span className="text-[10px] text-orange-500 font-medium">Requerido</span>
             )}
             {isInDocument ? (
               <span className="text-[10px] text-green-600 flex items-center gap-0.5">
@@ -643,12 +568,10 @@ function FieldCard({
 
       {/* Expanded details */}
       {isExpanded && (
-        <div className="px-3 pb-3 pt-1 border-t space-y-2.5">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="px-3 pb-3 pt-1 border-t space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <Label className="text-[11px] text-muted-foreground">
-                Etiqueta
-              </Label>
+              <Label className="text-[11px] text-muted-foreground">Etiqueta</Label>
               <Input
                 value={field.fieldLabel}
                 onChange={(e) => onUpdate({ fieldLabel: e.target.value })}
@@ -658,7 +581,7 @@ function FieldCard({
             </div>
             <div>
               <Label className="text-[11px] text-muted-foreground">
-                Clave {`{{clave}}`}
+                Clave <span className="font-mono">{`{{clave}}`}</span>
               </Label>
               <Input
                 value={field.fieldKey}
@@ -669,18 +592,12 @@ function FieldCard({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
-              <Label className="text-[11px] text-muted-foreground">
-                Tipo de campo
-              </Label>
+              <Label className="text-[11px] text-muted-foreground">Tipo de campo</Label>
               <Select
                 value={field.fieldType}
-                onValueChange={(v) =>
-                  onUpdate({
-                    fieldType: v as DynamicField["fieldType"],
-                  })
-                }
+                onValueChange={(v) => onUpdate({ fieldType: v as DynamicField["fieldType"] })}
               >
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue />
@@ -695,9 +612,7 @@ function FieldCard({
               </Select>
             </div>
             <div>
-              <Label className="text-[11px] text-muted-foreground">
-                Valor por defecto
-              </Label>
+              <Label className="text-[11px] text-muted-foreground">Valor por defecto</Label>
               <Input
                 value={field.defaultValue || ""}
                 onChange={(e) => onUpdate({ defaultValue: e.target.value })}
@@ -714,11 +629,7 @@ function FieldCard({
               </Label>
               <Select
                 value={field.projectMapping || "none"}
-                onValueChange={(v) =>
-                  onUpdate({
-                    projectMapping: v === "none" ? undefined : v,
-                  })
-                }
+                onValueChange={(v) => onUpdate({ projectMapping: v === "none" ? undefined : v })}
               >
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue placeholder="Selecciona campo" />
@@ -757,10 +668,7 @@ function FieldCard({
               className="rounded"
               id={`required-${id}`}
             />
-            <Label
-              htmlFor={`required-${id}`}
-              className="text-xs cursor-pointer"
-            >
+            <Label htmlFor={`required-${id}`} className="text-xs cursor-pointer">
               Campo obligatorio
             </Label>
           </div>

@@ -618,4 +618,13 @@
 - [x] Corregir etiqueta del botón (aparece como 'Versión' en producción, debería ser 'Ver')
 - [x] Mostrar contenido renderizado del Word con marcadores resaltados en el modal
 - [x] Componente DocumentPreviewDialog creado con vista tipo "papel" y marcadores en naranja
+- [x] Push a GitHub (commit db9fb68)
+
+## Fix: Responsive del Editor Visual de Campos (09 Abr 2026)
+- [x] El texto del documento se corta - corregido con word-break y overflow-wrap
+- [x] Los controles del header se superponen - rediseñado con layout compacto y truncate
+- [x] El layout de vista dividida no se adapta - reemplazado por tabs (Documento/Campos)
+- [x] Los campos muestran "No encontrado" - era correcto, los campos del test sí están en el documento
+- [x] Mejorar el layout general - dialog fullscreen con tabs, footer fijo, scroll independiente
+- [x] DocumentPreviewDialog también mejorado con responsive
 - [ ] Push a GitHub
