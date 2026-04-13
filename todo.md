@@ -688,4 +688,9 @@
 - [x] Reemplazar textarea simple por hilo de comentarios con nombre de usuario, rol y fecha/hora
 - [x] Campo observations existente mantenido como legacy (no se eliminaron datos)
 - [x] Tests escritos y pasando (milestoneComments.test.ts - 8 tests)
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit 1ea6c55)
+
+## Bug: Error al insertar comentario en milestone_comments en producción (13 Abr 2026)
+- [x] Diagnosticar error: tabla milestone_comments no existe en BD de producción (Railway)
+- [x] Agregar auto-migración en el arranque del servidor para crear la tabla si no existe
+- [ ] Push a GitHub para que Railway despliegue y cree la tabla automáticamente

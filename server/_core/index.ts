@@ -118,6 +118,20 @@ async function runAutoMigrations() {
     `);
     console.log("[AutoMigration] generated_dynamic_docs table verified");
 
+    // Create milestone_comments table if not exists (trazabilidad de observaciones)
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS milestone_comments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        milestoneId INT NOT NULL,
+        userId INT NOT NULL,
+        content TEXT NOT NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX milestone_idx (milestoneId),
+        INDEX user_idx (userId)
+      )
+    `);
+    console.log("[AutoMigration] milestone_comments table verified");
+
     conn.release();
     await pool.end();
     console.log("[AutoMigration] All tables verified");
