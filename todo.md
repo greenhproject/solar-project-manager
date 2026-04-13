@@ -663,4 +663,20 @@
 - [x] Panel mobile como bottom sheet para pantallas pequeñas
 - [x] Mini-stats en header: total hitos, completados, pendientes, hoy
 - [x] CSS completamente reescrito con variables CSS para dark/light mode
+- [x] Push a GitHub (commit 295881c)
+
+## Mejora: Subir cualquier tipo de archivo en archivos del proyecto (13 Abr 2026)
+- [x] FileUpload.tsx ya acepta cualquier tipo de archivo (sin restricción accept)
+- [x] LegalizationChecklist.tsx: eliminada restricción accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+- [x] Backend ya aceptaba cualquier mimeType (sin cambios necesarios)
+- [x] FileUpload.tsx ya muestra icono apropiado según tipo de archivo (PDF, Word, Excel, imagen, ZIP, CAD, etc.)
+- [ ] Push a GitHub
+
+## Mejora: Ordenamiento y vistas múltiples en lista de proyectos (13 Abr 2026)
+- [x] Toolbar compacta con dropdown de filtro por estado, dropdown de ordenamiento (9 opciones), y toggle de vista
+- [x] Opciones de ordenamiento: más recientes, más antiguos, última actualización, fecha inicio, mayor/menor progreso, nombre A-Z/Z-A, cliente, estado agrupado
+- [x] Vista tarjetas: rediseñada con barra de color por estado, layout 4 columnas en XL, fechas inicio/fin
+- [x] Vista tabla: columnas proyecto, cliente, ubicación, estado, progreso, inicio, fin estimado; filas clickeables
+- [x] Vista Kanban: 5 columnas por estado (Planificación, En Progreso, En Espera, Completado, Cancelado) con scroll horizontal y conteo
+- [x] Status badges rediseñados con dot indicator y colores por estado
 - [ ] Push a GitHub

@@ -20,17 +20,7 @@ interface FileUploadProps {
   onUploadComplete?: () => void;
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/jpg",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-];
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -55,17 +45,9 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
 
   const validateFile = (file: File): boolean => {
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`El archivo es demasiado grande. Máximo 10MB`);
+      toast.error(`El archivo es demasiado grande. Máximo 50MB`);
       return false;
     }
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      toast.error(
-        `Tipo de archivo no permitido. Solo PDF, imágenes y documentos de Office`
-      );
-      return false;
-    }
-
     return true;
   };
 
@@ -138,10 +120,21 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
   };
 
   const getFileIcon = (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
     if (file.type.startsWith("image/")) {
       return <ImageIcon className="h-8 w-8 text-blue-500" />;
     } else if (file.type === "application/pdf") {
       return <FileText className="h-8 w-8 text-red-500" />;
+    } else if (['doc', 'docx'].includes(ext)) {
+      return <FileText className="h-8 w-8 text-blue-600" />;
+    } else if (['xls', 'xlsx', 'csv'].includes(ext)) {
+      return <FileText className="h-8 w-8 text-green-600" />;
+    } else if (['ppt', 'pptx'].includes(ext)) {
+      return <FileText className="h-8 w-8 text-orange-500" />;
+    } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext)) {
+      return <File className="h-8 w-8 text-yellow-600" />;
+    } else if (['dwg', 'dxf', 'skp'].includes(ext)) {
+      return <File className="h-8 w-8 text-purple-500" />;
     } else {
       return <File className="h-8 w-8 text-gray-500" />;
     }
@@ -184,11 +177,10 @@ export function FileUpload({ projectId, onUploadComplete }: FileUploadProps) {
               type="file"
               className="hidden"
               onChange={handleFileSelect}
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"
             />
           </label>
           <p className="text-xs text-gray-500 mt-2">
-            PDF, imágenes, Word, Excel (máx. 10MB)
+            Cualquier tipo de archivo (máx. 50MB)
           </p>
         </div>
 

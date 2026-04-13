@@ -518,7 +518,7 @@ function ManualUploadButton({
             <Label>Archivo</Label>
             <Input
               type="file"
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
           </div>

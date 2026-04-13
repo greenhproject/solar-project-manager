@@ -51,11 +51,22 @@ export function FileList({ projectId }: FileListProps) {
     },
   });
 
-  const getFileIcon = (mimeType: string) => {
+  const getFileIcon = (mimeType: string, fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase() || '';
     if (mimeType.startsWith("image/")) {
       return <ImageIcon className="h-5 w-5 text-blue-500" />;
     } else if (mimeType === "application/pdf") {
       return <FileText className="h-5 w-5 text-red-500" />;
+    } else if (['doc', 'docx'].includes(ext) || mimeType.includes('word')) {
+      return <FileText className="h-5 w-5 text-blue-600" />;
+    } else if (['xls', 'xlsx', 'csv'].includes(ext) || mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
+      return <FileText className="h-5 w-5 text-green-600" />;
+    } else if (['ppt', 'pptx'].includes(ext) || mimeType.includes('presentation')) {
+      return <FileText className="h-5 w-5 text-orange-500" />;
+    } else if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext) || mimeType.includes('zip') || mimeType.includes('compressed')) {
+      return <File className="h-5 w-5 text-yellow-600" />;
+    } else if (['dwg', 'dxf', 'skp'].includes(ext)) {
+      return <File className="h-5 w-5 text-purple-500" />;
     } else {
       return <File className="h-5 w-5 text-gray-500" />;
     }
@@ -116,7 +127,7 @@ export function FileList({ projectId }: FileListProps) {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3 flex-1">
-                <div className="mt-1">{getFileIcon(attachment.mimeType)}</div>
+                <div className="mt-1">{getFileIcon(attachment.mimeType, attachment.fileName)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
                     <h4 className="text-sm font-medium text-gray-900 truncate">
