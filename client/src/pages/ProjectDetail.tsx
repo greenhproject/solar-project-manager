@@ -47,6 +47,9 @@ import {
   Loader2,
   Edit,
   ExternalLink,
+  MessageSquare,
+  Send,
+  User as UserIcon,
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useState } from "react";
@@ -743,29 +746,8 @@ export default function ProjectDetail() {
                             )}
                           </div>
                           
-                          {/* Observaciones del equipo */}
-                          <div className="mt-3">
-                            <Label className="text-xs text-muted-foreground mb-1 block">Observaciones del equipo</Label>
-                            <Textarea
-                              placeholder="Escribe observaciones sobre este hito..."
-                              className="min-h-[80px] text-sm"
-                              defaultValue={(milestone as any).observations || ""}
-                              onBlur={async (e) => {
-                                const newValue = e.target.value;
-                                if (newValue === ((milestone as any).observations || "")) return;
-                                try {
-                                  await updateMilestone.mutateAsync({
-                                    id: milestone.id,
-                                    observations: newValue,
-                                  });
-                                  toast.success("Observaciones actualizadas");
-                                  await refetchMilestones();
-                                } catch (error: any) {
-                                  toast.error(error.message || "Error al actualizar observaciones");
-                                }
-                              }}
-                            />
-                          </div>
+                          {/* Observaciones del equipo - Sistema de comentarios con trazabilidad */}
+                          <MilestoneCommentsSection milestoneId={milestone.id} currentUser={user} />
 
                           {/* Botones de acción */}
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -1131,6 +1113,167 @@ export default function ProjectDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+
+/**
+ * Componente de comentarios con trazabilidad para hitos
+ * Muestra un hilo de comentarios con autor, fecha/hora y permite agregar/eliminar
+ */
+function MilestoneCommentsSection({ milestoneId, currentUser }: { milestoneId: number; currentUser: any }) {
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: comments, refetch: refetchComments } = trpc.milestoneComments.list.useQuery(
+    { milestoneId },
+    { refetchOnWindowFocus: false }
+  );
+
+  const addComment = trpc.milestoneComments.add.useMutation({
+    onSuccess: () => {
+      setNewComment("");
+      refetchComments();
+    },
+  });
+
+  const deleteComment = trpc.milestoneComments.delete.useMutation({
+    onSuccess: () => {
+      refetchComments();
+      toast.success("Comentario eliminado");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al eliminar comentario");
+    },
+  });
+
+  const handleSubmit = async () => {
+    if (!newComment.trim()) return;
+    setIsSubmitting(true);
+    try {
+      await addComment.mutateAsync({
+        milestoneId,
+        content: newComment.trim(),
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Error al agregar comentario");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "admin": return "Admin";
+      case "engineer": return "Ingeniero";
+      case "ingeniero_tramites": return "Ing. Trámites";
+      default: return role;
+    }
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "admin": return "bg-orange-100 text-orange-700 border-orange-200";
+      case "engineer": return "bg-blue-100 text-blue-700 border-blue-200";
+      case "ingeniero_tramites": return "bg-purple-100 text-purple-700 border-purple-200";
+      default: return "bg-gray-100 text-gray-700 border-gray-200";
+    }
+  };
+
+  return (
+    <div className="mt-3">
+      <Label className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
+        <MessageSquare className="h-3.5 w-3.5" />
+        Observaciones del equipo
+        {comments && comments.length > 0 && (
+          <span className="bg-orange-100 text-orange-700 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+            {comments.length}
+          </span>
+        )}
+      </Label>
+
+      {/* Hilo de comentarios */}
+      {comments && comments.length > 0 && (
+        <div className="space-y-2 mb-2 max-h-[300px] overflow-y-auto pr-1">
+          {comments.map((comment: any) => (
+            <div
+              key={comment.id}
+              className="bg-muted/50 rounded-lg px-3 py-2 text-sm group relative border border-border/50"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-5 w-5 rounded-full bg-orange-100 flex items-center justify-center">
+                    <UserIcon className="h-3 w-3 text-orange-600" />
+                  </div>
+                  <span className="font-medium text-xs">
+                    {comment.userName || comment.userEmail || "Usuario"}
+                  </span>
+                </div>
+                {comment.userRole && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${getRoleBadgeColor(comment.userRole)}`}>
+                    {getRoleLabel(comment.userRole)}
+                  </span>
+                )}
+                <span className="text-[10px] text-muted-foreground ml-auto">
+                  {format(new Date(comment.createdAt), "dd MMM yyyy, HH:mm", { locale: es })}
+                </span>
+              </div>
+              <p className="text-sm text-foreground/90 whitespace-pre-wrap pl-6">
+                {comment.content}
+              </p>
+              {/* Botón eliminar - visible solo para el autor o admin */}
+              {(comment.userId === currentUser?.id || currentUser?.role === "admin") && (
+                <button
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 p-0.5"
+                  title="Eliminar comentario"
+                  onClick={() => {
+                    if (confirm("¿Eliminar este comentario?")) {
+                      deleteComment.mutate({ id: comment.id });
+                    }
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Input para nuevo comentario */}
+      <div className="flex gap-2 items-end">
+        <Textarea
+          placeholder="Escribe una observación..."
+          className="min-h-[40px] max-h-[120px] text-sm resize-none flex-1"
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+        />
+        <Button
+          size="sm"
+          className="h-9 px-3 shrink-0"
+          disabled={!newComment.trim() || isSubmitting}
+          onClick={handleSubmit}
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1">
+        Enter para enviar, Shift+Enter para nueva línea
+      </p>
     </div>
   );
 }

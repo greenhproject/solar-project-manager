@@ -755,3 +755,22 @@ export const generatedDynamicDocs = mysqlTable("generated_dynamic_docs", {
 
 export type GeneratedDynamicDoc = typeof generatedDynamicDocs.$inferSelect;
 export type InsertGeneratedDynamicDoc = typeof generatedDynamicDocs.$inferInsert;
+
+/**
+ * Comentarios de hitos con trazabilidad
+ * Registra quién escribió cada observación, cuándo y en qué hito
+ * para auditoría completa de procesos
+ */
+export const milestoneComments = mysqlTable("milestone_comments", {
+  id: int("id").autoincrement().primaryKey(),
+  milestoneId: int("milestoneId").notNull(),
+  userId: int("userId").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({
+  milestoneIdx: index("milestone_idx").on(table.milestoneId),
+  userIdx: index("user_idx").on(table.userId),
+}));
+
+export type MilestoneComment = typeof milestoneComments.$inferSelect;
+export type InsertMilestoneComment = typeof milestoneComments.$inferInsert;

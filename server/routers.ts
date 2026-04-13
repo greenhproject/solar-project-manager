@@ -1559,6 +1559,72 @@ export const appRouter = router({
   }),
 
   // ============================================
+  // COMENTARIOS DE HITOS (TRAZABILIDAD)
+  // ============================================
+  milestoneComments: router({
+    /**
+     * Listar comentarios de un hito con datos del autor
+     */
+    list: protectedProcedure
+      .input(z.object({ milestoneId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getMilestoneComments(input.milestoneId);
+      }),
+
+    /**
+     * Agregar un comentario a un hito
+     */
+    add: protectedProcedure
+      .input(z.object({
+        milestoneId: z.number(),
+        content: z.string().min(1, "El comentario no puede estar vacío"),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const milestone = await db.getMilestoneById(input.milestoneId);
+        if (!milestone) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Hito no encontrado",
+          });
+        }
+
+        const commentId = await db.createMilestoneComment({
+          milestoneId: input.milestoneId,
+          userId: ctx.user.id,
+          content: input.content,
+        });
+
+        return { success: true, commentId };
+      }),
+
+    /**
+     * Eliminar un comentario (solo el autor o admin)
+     */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const comment = await db.getMilestoneCommentById(input.id);
+        if (!comment) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Comentario no encontrado",
+          });
+        }
+
+        // Solo el autor del comentario o un admin puede eliminarlo
+        if (comment.userId !== ctx.user.id && ctx.user.role !== "admin") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Solo puedes eliminar tus propios comentarios",
+          });
+        }
+
+        await db.deleteMilestoneComment(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============================================
   // GESTIÓN DE RECORDATORIOS
   // ============================================
   reminders: router({

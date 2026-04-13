@@ -670,7 +670,7 @@
 - [x] LegalizationChecklist.tsx: eliminada restricción accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
 - [x] Backend ya aceptaba cualquier mimeType (sin cambios necesarios)
 - [x] FileUpload.tsx ya muestra icono apropiado según tipo de archivo (PDF, Word, Excel, imagen, ZIP, CAD, etc.)
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit 8b65188)
 
 ## Mejora: Ordenamiento y vistas múltiples en lista de proyectos (13 Abr 2026)
 - [x] Toolbar compacta con dropdown de filtro por estado, dropdown de ordenamiento (9 opciones), y toggle de vista
@@ -679,4 +679,13 @@
 - [x] Vista tabla: columnas proyecto, cliente, ubicación, estado, progreso, inicio, fin estimado; filas clickeables
 - [x] Vista Kanban: 5 columnas por estado (Planificación, En Progreso, En Espera, Completado, Cancelado) con scroll horizontal y conteo
 - [x] Status badges rediseñados con dot indicator y colores por estado
+- [x] Push a GitHub (commit 8b65188)
+
+## Mejora: Sistema de comentarios con trazabilidad en observaciones de hitos (13 Abr 2026)
+- [x] Crear tabla milestone_comments en schema (milestoneId, userId, content, createdAt)
+- [x] Migrar base de datos con nueva tabla (SQL directo)
+- [x] Crear procedimientos tRPC: milestoneComments.list, milestoneComments.add, milestoneComments.delete
+- [x] Reemplazar textarea simple por hilo de comentarios con nombre de usuario, rol y fecha/hora
+- [x] Campo observations existente mantenido como legacy (no se eliminaron datos)
+- [x] Tests escritos y pasando (milestoneComments.test.ts - 8 tests)
 - [ ] Push a GitHub

@@ -34,6 +34,8 @@ import {
   InsertDynamicDocTemplate,
   InsertDynamicDocField,
   InsertGeneratedDynamicDoc,
+  milestoneComments,
+  InsertMilestoneComment,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { getNowInConfiguredTimezone } from "./timezone";
@@ -1909,4 +1911,76 @@ export async function deleteGeneratedDoc(id: number) {
   if (!db) throw new Error("Database not available");
   
   await db.delete(generatedDynamicDocs).where(eq(generatedDynamicDocs.id, id));
+}
+
+
+// ============================================
+// COMENTARIOS DE HITOS (TRAZABILIDAD)
+// ============================================
+
+/**
+ * Obtener todos los comentarios de un hito con datos del usuario
+ */
+export async function getMilestoneComments(milestoneId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const comments = await db
+    .select({
+      id: milestoneComments.id,
+      milestoneId: milestoneComments.milestoneId,
+      userId: milestoneComments.userId,
+      content: milestoneComments.content,
+      createdAt: milestoneComments.createdAt,
+      userName: users.name,
+      userEmail: users.email,
+      userRole: users.role,
+    })
+    .from(milestoneComments)
+    .leftJoin(users, eq(milestoneComments.userId, users.id))
+    .where(eq(milestoneComments.milestoneId, milestoneId))
+    .orderBy(desc(milestoneComments.createdAt));
+  
+  return comments;
+}
+
+/**
+ * Crear un nuevo comentario en un hito
+ */
+export async function createMilestoneComment(data: {
+  milestoneId: number;
+  userId: number;
+  content: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(milestoneComments).values(data);
+  return result[0].insertId;
+}
+
+/**
+ * Eliminar un comentario de hito (solo el autor o admin)
+ */
+export async function deleteMilestoneComment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(milestoneComments).where(eq(milestoneComments.id, id));
+}
+
+/**
+ * Obtener un comentario por ID
+ */
+export async function getMilestoneCommentById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db
+    .select()
+    .from(milestoneComments)
+    .where(eq(milestoneComments.id, id))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : undefined;
 }
