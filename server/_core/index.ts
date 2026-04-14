@@ -132,6 +132,20 @@ async function runAutoMigrations() {
     `);
     console.log("[AutoMigration] milestone_comments table verified");
 
+    // Add endDate and durationDays columns to milestones if not exist
+    try {
+      await conn.execute(`ALTER TABLE milestones ADD COLUMN endDate TIMESTAMP NULL AFTER startDate`);
+      console.log("[AutoMigration] milestones.endDate column added");
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.warn("[AutoMigration] endDate:", e.message);
+    }
+    try {
+      await conn.execute(`ALTER TABLE milestones ADD COLUMN durationDays INT NULL AFTER endDate`);
+      console.log("[AutoMigration] milestones.durationDays column added");
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) console.warn("[AutoMigration] durationDays:", e.message);
+    }
+
     conn.release();
     await pool.end();
     console.log("[AutoMigration] All tables verified");

@@ -130,6 +130,8 @@ export const milestones = mysqlTable(
 
     // Fechas del hito
     startDate: timestamp("startDate"),
+    endDate: timestamp("endDate"),
+    durationDays: int("durationDays"),
     dueDate: timestamp("dueDate").notNull(),
     completedDate: timestamp("completedDate"),
 

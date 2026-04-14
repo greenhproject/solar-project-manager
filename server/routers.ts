@@ -20,6 +20,8 @@ import {
 import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
+import { appSettings } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -574,23 +576,44 @@ export const appRouter = router({
           );
           console.log('[Project Create] Found templates:', templates.length);
 
+          // Calcular fechas con días hábiles
+          const { addBusinessDays } = await import("../shared/businessDays");
+          let includeWeekends = false;
+          try {
+            const dbInst = await db.getDb();
+            const settingResult = dbInst ? await dbInst
+              .select()
+              .from(appSettings)
+              .where(eq(appSettings.settingKey, "include_weekends"))
+              .limit(1) : [];
+            if (settingResult.length > 0 && settingResult[0].settingValue === "true") {
+              includeWeekends = true;
+            }
+          } catch (e) {
+            console.warn("[Project Create] Could not read include_weekends setting");
+          }
+
+          let currentStartDate = new Date(input.startDate);
           for (const template of templates) {
-            const dueDate = new Date(input.startDate);
-            dueDate.setDate(
-              dueDate.getDate() +
-                template.orderIndex * (template.estimatedDurationDays || 7)
-            );
+            const durationDays = template.estimatedDurationDays || 7;
+            const milestoneStartDate = new Date(currentStartDate);
+            const milestoneEndDate = addBusinessDays(milestoneStartDate, durationDays, includeWeekends);
 
             await db.createMilestone({
               projectId,
               name: template.name,
               description: template.description || "",
-              dueDate,
+              startDate: milestoneStartDate,
+              endDate: milestoneEndDate,
+              durationDays: durationDays,
+              dueDate: milestoneEndDate,
               status: "pending",
               orderIndex: template.orderIndex,
               weight: 1,
               assignedUserId: template.defaultAssignedUserId || null,
             });
+            
+            currentStartDate = new Date(milestoneEndDate);
           }
 
           console.log('[Project Create] Created', templates.length, 'milestones for project', projectId);
@@ -794,19 +817,47 @@ export const appRouter = router({
           });
         }
 
-        // Insertar hitos desde las plantillas
+        // Obtener configuración de días hábiles
+        const { addBusinessDays } = await import("../shared/businessDays");
+        let includeWeekends = false;
+        try {
+          const dbInst2 = await db.getDb();
+          const settingResult = dbInst2 ? await dbInst2
+            .select()
+            .from(appSettings)
+            .where(eq(appSettings.settingKey, "include_weekends"))
+            .limit(1) : [];
+          if (settingResult.length > 0 && settingResult[0].settingValue === "true") {
+            includeWeekends = true;
+          }
+        } catch (e) {
+          console.warn("[Projects] Could not read include_weekends setting, defaulting to false");
+        }
+
+        // Insertar hitos desde las plantillas con cálculo de fechas usando días hábiles
         let createdCount = 0;
+        let currentStartDate = new Date(project.startDate);
         for (const template of templates) {
           console.log(`[Projects] Creating milestone from template: ${template.name}`);
+          const durationDays = template.estimatedDurationDays || 7;
+          const milestoneStartDate = new Date(currentStartDate);
+          const milestoneEndDate = addBusinessDays(milestoneStartDate, durationDays, includeWeekends);
+          
           await db.createMilestone({
             projectId: project.id,
             name: template.name,
             description: template.description || "",
-            dueDate: new Date(project.startDate.getTime() + (template.estimatedDurationDays || 0) * 24 * 60 * 60 * 1000),
+            startDate: milestoneStartDate,
+            endDate: milestoneEndDate,
+            durationDays: durationDays,
+            dueDate: milestoneEndDate,
             orderIndex: template.orderIndex,
             status: "pending",
             assignedUserId: template.defaultAssignedUserId || null,
           });
+          
+          // El siguiente hito empieza donde termina este
+          currentStartDate = new Date(milestoneEndDate);
           createdCount++;
         }
 
@@ -933,6 +984,9 @@ export const appRouter = router({
           projectId: z.number(),
           name: z.string().min(1),
           description: z.string().optional(),
+          startDate: z.date().optional(),
+          endDate: z.date().optional(),
+          durationDays: z.number().optional(),
           dueDate: z.date(),
           orderIndex: z.number(),
           weight: z.number().default(1),
@@ -971,6 +1025,9 @@ export const appRouter = router({
           ...restInput,
           status: "pending",
           dependencies: dependenciesJson,
+          startDate: input.startDate || null,
+          endDate: input.endDate || null,
+          durationDays: input.durationDays || null,
         });
 
         // Sincronizar con Google Calendar
@@ -1012,6 +1069,9 @@ export const appRouter = router({
           id: z.number(),
           name: z.string().optional(),
           description: z.string().optional(),
+          startDate: z.date().nullable().optional(),
+          endDate: z.date().nullable().optional(),
+          durationDays: z.number().nullable().optional(),
           status: z
             .enum(["pending", "in_progress", "completed", "overdue"])
             .optional(),
@@ -1425,6 +1485,21 @@ export const appRouter = router({
             // Ordenar por orderIndex ascendente
             subsequentMilestones.sort((a, b) => a.orderIndex - b.orderIndex);
 
+            // Obtener configuración de días hábiles para cascada
+            const { addBusinessDays: addBizDays } = await import("../shared/businessDays");
+            let cascadeIncludeWeekends = false;
+            try {
+              const dbInst3 = await db.getDb();
+              const settingResult = dbInst3 ? await dbInst3
+                .select()
+                .from(appSettings)
+                .where(eq(appSettings.settingKey, "include_weekends"))
+                .limit(1) : [];
+              if (settingResult.length > 0 && settingResult[0].settingValue === "true") {
+                cascadeIncludeWeekends = true;
+              }
+            } catch (e) { /* default false */ }
+
             // Calcular fechas en cascada: cada hito empieza donde termina el anterior
             let previousDueDate = new Date(input.dueDate);
 
@@ -1432,12 +1507,15 @@ export const appRouter = router({
               // Obtener la duración de este hito desde la plantilla
               const durationDays = durationByOrder.get(subsequentMilestone.orderIndex) || 7;
 
-              // La nueva fecha = fecha del hito anterior + duración en días de este hito
-              const newDueDate = new Date(previousDueDate);
-              newDueDate.setDate(newDueDate.getDate() + durationDays);
+              // La nueva fecha = fecha del hito anterior + duración en días hábiles
+              const newDueDate = addBizDays(previousDueDate, durationDays, cascadeIncludeWeekends);
 
-              // Actualizar el hito
+              // Actualizar el hito con startDate, endDate y durationDays
+              const milestoneStart = new Date(previousDueDate);
               await db.updateMilestone(subsequentMilestone.id, {
+                startDate: milestoneStart,
+                endDate: newDueDate,
+                durationDays: durationDays,
                 dueDate: newDueDate,
               });
 
@@ -2027,7 +2105,11 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
   // ============================================
   reports: router({
     generateProjectPDF: protectedProcedure
-      .input(z.object({ projectId: z.number() }))
+      .input(z.object({
+        projectId: z.number(),
+        includeGantt: z.boolean().optional().default(true),
+        includeSchedule: z.boolean().optional().default(true),
+      }))
       .mutation(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
@@ -2057,11 +2139,27 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           ? await db.getUserById(project.assignedEngineerId)
           : undefined;
 
+        // Obtener comentarios de cada hito para trazabilidad
+        const milestoneComments: Record<number, any[]> = {};
+        for (const milestone of milestones) {
+          try {
+            const comments = await db.getMilestoneComments(milestone.id);
+            if (comments && comments.length > 0) {
+              milestoneComments[milestone.id] = comments;
+            }
+          } catch (e) {
+            // Si falla, continuar sin comentarios
+          }
+        }
+
         const pdfBuffer = await generateProjectReport({
           project,
           milestones,
           projectType,
           assignedEngineer,
+          milestoneComments,
+          includeGantt: input.includeGantt,
+          includeSchedule: input.includeSchedule,
         });
 
         // Convertir buffer a base64 para enviar al cliente
@@ -2904,6 +3002,45 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         }
 
         return { success: true, timezone: input.timezone };
+      }),
+
+    // Obtener configuración de días hábiles (incluir fines de semana)
+    getIncludeWeekends: protectedProcedure.query(async () => {
+      try {
+        const dbInst = await db.getDb();
+        if (!dbInst) return { includeWeekends: false };
+        const result = await dbInst
+          .select()
+          .from(appSettings)
+          .where(eq(appSettings.settingKey, "include_weekends"))
+          .limit(1);
+        return { includeWeekends: result.length > 0 && result[0].settingValue === "true" };
+      } catch {
+        return { includeWeekends: false };
+      }
+    }),
+
+    // Configurar si se incluyen fines de semana en el cálculo de duración de hitos
+    setIncludeWeekends: adminProcedure
+      .input(z.object({ includeWeekends: z.boolean() }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+        await dbInst
+          .insert(appSettings)
+          .values({
+            settingKey: "include_weekends",
+            settingValue: input.includeWeekends ? "true" : "false",
+            description: "Incluir fines de semana en el cálculo de duración de hitos",
+            updatedBy: ctx.user.id,
+          })
+          .onDuplicateKeyUpdate({
+            set: {
+              settingValue: input.includeWeekends ? "true" : "false",
+              updatedBy: ctx.user.id,
+            },
+          });
+        return { success: true, includeWeekends: input.includeWeekends };
       }),
   }),
 

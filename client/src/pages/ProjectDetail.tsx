@@ -62,6 +62,25 @@ import { FileList } from "@/components/FileList";
 import LegalizationChecklist from "@/components/LegalizationChecklist";
 import { SortableList } from "@/components/SortableList";
 
+// Helper para descargar PDF desde base64
+function downloadPdfFromBase64(pdfBase64: string, fileName: string) {
+  const byteCharacters = atob(pdfBase64);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: "application/pdf" });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+  document.body.removeChild(a);
+}
+
 export default function ProjectDetail() {
   const { formatDate: tzFormatDate, toDateInputValue } = useTimezone();
   const meQuery = trpc.auth.me.useQuery(undefined, {
@@ -92,6 +111,8 @@ export default function ProjectDetail() {
     name: "",
     description: "",
     dueDate: "",
+    startDate: "",
+    durationDays: "",
   });
 
   const utils = trpc.useUtils();
@@ -248,12 +269,15 @@ export default function ProjectDetail() {
         name: newMilestone.name,
         description: newMilestone.description || undefined,
         dueDate: fromDateInputValue(newMilestone.dueDate),
+        startDate: newMilestone.startDate ? fromDateInputValue(newMilestone.startDate) : undefined,
+        endDate: newMilestone.dueDate ? fromDateInputValue(newMilestone.dueDate) : undefined,
+        durationDays: newMilestone.durationDays ? parseInt(newMilestone.durationDays) : undefined,
         orderIndex: existingMilestones.length + 1,
         weight: 1,
       });
 
       toast.success("Hito creado exitosamente");
-      setNewMilestone({ name: "", description: "", dueDate: "" });
+      setNewMilestone({ name: "", description: "", dueDate: "", startDate: "", durationDays: "" });
       setIsAddingMilestone(false);
       refetchMilestones();
     } catch (error: any) {
@@ -338,49 +362,35 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={async () => {
-                try {
-                  toast.info("Generando reporte PDF...");
-                  const result = await generatePDF.mutateAsync({ projectId });
-
-                  // Convertir base64 a blob y descargar
-                  const byteCharacters = atob(result.pdfBase64);
-                  const byteNumbers = new Array(byteCharacters.length);
-                  for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+          <div className="flex gap-2 flex-wrap">
+            <div className="relative group">
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={async () => {
+                  try {
+                    toast.info("Generando reporte completo PDF...");
+                    const result = await generatePDF.mutateAsync({
+                      projectId,
+                      includeGantt: true,
+                      includeSchedule: true,
+                    });
+                    downloadPdfFromBase64(result.pdfBase64, result.fileName);
+                    toast.success("Reporte PDF generado exitosamente");
+                  } catch (error: any) {
+                    toast.error(error.message || "Error al generar el reporte");
                   }
-                  const byteArray = new Uint8Array(byteNumbers);
-                  const blob = new Blob([byteArray], {
-                    type: "application/pdf",
-                  });
-
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = result.fileName;
-                  document.body.appendChild(a);
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  document.body.removeChild(a);
-
-                  toast.success("Reporte PDF generado exitosamente");
-                } catch (error: any) {
-                  toast.error(error.message || "Error al generar el reporte");
-                }
-              }}
-              disabled={generatePDF.isPending}
-            >
-              {generatePDF.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <FileText className="h-4 w-4" />
-              )}
-              Generar Reporte
-            </Button>
+                }}
+                disabled={generatePDF.isPending}
+              >
+                {generatePDF.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+                Reporte Completo
+              </Button>
+            </div>
             <Button
               variant="outline"
               className="gap-2"
@@ -589,20 +599,52 @@ export default function ProjectDetail() {
                         placeholder="Detalles del hito..."
                       />
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="milestoneStartDate">Fecha de Inicio</Label>
+                        <Input
+                          id="milestoneStartDate"
+                          type="date"
+                          value={newMilestone.startDate}
+                          onChange={e =>
+                            setNewMilestone({
+                              ...newMilestone,
+                              startDate: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="milestoneDueDate">
+                          Fecha de Vencimiento *
+                        </Label>
+                        <Input
+                          id="milestoneDueDate"
+                          type="date"
+                          value={newMilestone.dueDate}
+                          onChange={e =>
+                            setNewMilestone({
+                              ...newMilestone,
+                              dueDate: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <Label htmlFor="milestoneDueDate">
-                        Fecha de Vencimiento *
-                      </Label>
+                      <Label htmlFor="milestoneDuration">Duración (días hábiles)</Label>
                       <Input
-                        id="milestoneDueDate"
-                        type="date"
-                        value={newMilestone.dueDate}
+                        id="milestoneDuration"
+                        type="number"
+                        min={1}
+                        value={newMilestone.durationDays}
                         onChange={e =>
                           setNewMilestone({
                             ...newMilestone,
-                            dueDate: e.target.value,
+                            durationDays: e.target.value,
                           })
                         }
+                        placeholder="Ej: 5"
                       />
                     </div>
                     <div className="flex gap-2">
@@ -722,12 +764,94 @@ export default function ProjectDetail() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {/* Fechas de inicio, fin y duración */}
+                          <div className="flex items-center gap-4 mb-2">
+                            <div className="flex-1">
+                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha inicio</Label>
+                              <Input
+                                type="date"
+                                className="h-8 text-xs"
+                                value={(milestone as any).startDate ? toDateInputValue((milestone as any).startDate) : ""}
+                                onChange={async (e) => {
+                                  if (!e.target.value) return;
+                                  try {
+                                    await updateMilestone.mutateAsync({
+                                      id: milestone.id,
+                                      startDate: fromDateInputValue(e.target.value),
+                                    });
+                                    toast.success("Fecha de inicio actualizada");
+                                    await refetchMilestones();
+                                  } catch (error: any) {
+                                    toast.error(error.message || "Error al actualizar fecha");
+                                  }
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha fin</Label>
+                              <Input
+                                type="date"
+                                className="h-8 text-xs"
+                                value={(milestone as any).endDate ? toDateInputValue((milestone as any).endDate) : ""}
+                                onChange={async (e) => {
+                                  if (!e.target.value) return;
+                                  try {
+                                    await updateMilestone.mutateAsync({
+                                      id: milestone.id,
+                                      endDate: fromDateInputValue(e.target.value),
+                                    });
+                                    toast.success("Fecha de fin actualizada");
+                                    await refetchMilestones();
+                                  } catch (error: any) {
+                                    toast.error(error.message || "Error al actualizar fecha");
+                                  }
+                                }}
+                              />
+                            </div>
+                            <div className="w-20">
+                              <Label className="text-xs text-muted-foreground mb-1 block">Días</Label>
+                              <Input
+                                type="number"
+                                className="h-8 text-xs text-center"
+                                min={1}
+                                value={(milestone as any).durationDays || ""}
+                                placeholder="-"
+                                onChange={async (e) => {
+                                  const days = parseInt(e.target.value);
+                                  if (!days || days < 1) return;
+                                  try {
+                                    await updateMilestone.mutateAsync({
+                                      id: milestone.id,
+                                      durationDays: days,
+                                    });
+                                    toast.success(`Duración actualizada: ${days} días`);
+                                    await refetchMilestones();
+                                  } catch (error: any) {
+                                    toast.error(error.message || "Error al actualizar duración");
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                            {(milestone as any).startDate && (
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Inicio:{" "}
+                                {tzFormatDate((milestone as any).startDate, { day: "2-digit", month: "short", year: "numeric" })}
+                              </span>
+                            )}
                             <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
+                              <Clock className="h-3 w-3" />
                               Vence:{" "}
                               {tzFormatDate(milestone.dueDate, { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
+                            {(milestone as any).durationDays && (
+                              <span className="flex items-center gap-1 font-medium">
+                                {(milestone as any).durationDays} día(s) hábiles
+                              </span>
+                            )}
                             {milestone.completedDate && (
                               <span className="flex items-center gap-1 text-green-600">
                                 <CheckCircle2 className="h-3 w-3" />

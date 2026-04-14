@@ -693,4 +693,24 @@
 ## Bug: Error al insertar comentario en milestone_comments en producción (13 Abr 2026)
 - [x] Diagnosticar error: tabla milestone_comments no existe en BD de producción (Railway)
 - [x] Agregar auto-migración en el arranque del servidor para crear la tabla si no existe
-- [ ] Push a GitHub para que Railway despliegue y cree la tabla automáticamente
+- [x] Push a GitHub (commit a613570) - Railway desplegará y creará la tabla automáticamente
+
+## Mejora: Diagrama de Gantt - Visualización, descarga y reporte (14 Abr 2026)
+- [x] Mejorar scroll lateral del diagrama de Gantt (drag-to-scroll, scroll fluido)
+- [x] Mejorar layout general del diagrama (barras con colores por estado, leyenda, línea "Hoy")
+- [x] Implementar descarga del diagrama Gantt como imagen PNG brandeada con html2canvas
+- [x] Cronograma incluido en reporte PDF del proyecto (tabla con fechas inicio/fin/duración)
+- [x] Diagrama de Gantt simplificado incluido en reporte PDF
+- [x] Botón "Reporte Completo" descarga todo junto (reporte + cronograma + Gantt + comentarios)
+- [ ] Push a GitHub
+
+## Mejora: Fechas inicio/fin y duración en hitos + Gantt mejorado (14 Abr 2026)
+- [x] Agregar campos endDate y durationDays a tabla milestones (startDate ya existía)
+- [x] Auto-migración para crear columnas en BD de producción
+- [x] Actualizar helpers y procedimientos tRPC para los nuevos campos
+- [x] UI hitos: mostrar fecha inicio, fecha fin y duración en días en cada tarjeta
+- [x] Cálculo automático con días hábiles al crear hitos desde plantilla
+- [x] Configuración includeWeekends en appSettings (admin puede activar fines de semana)
+- [x] Gantt usa startDate/endDate reales de cada hito
+- [x] Tests: 10 tests pasando (business days + PDF generator)
+- [ ] Push a GitHub
