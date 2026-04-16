@@ -179,10 +179,74 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
 // Componente interno para Manus OAuth
 function MainLayoutManus({ children }: MainLayoutProps) {
   const manusAuth = useAuth();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   
   // Monitorear y enviar notificaciones automáticas
   useNotificationMonitor();
 
+  // Timeout de 8 segundos para detectar sesiones colgadas
+  useEffect(() => {
+    if (manusAuth.loading) {
+      const timer = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 8000);
+      return () => clearTimeout(timer);
+    } else {
+      setLoadingTimeout(false);
+    }
+  }, [manusAuth.loading]);
+
+  // Loading con timeout: mostrar pantalla de sesión expirada
+  if (manusAuth.loading && loadingTimeout) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
+        <div className="text-center space-y-6 p-8 max-w-md">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Sesión Expirada</h1>
+            <p className="text-gray-500 mt-2 text-sm">
+              Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente para continuar.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button
+              size="lg"
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md"
+              onClick={() => {
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('auth_user_email');
+                localStorage.removeItem('auth_user_name');
+                localStorage.removeItem('manus-runtime-user-info');
+                window.location.href = '/';
+              }}
+            >
+              Iniciar Sesión
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-gray-400 hover:text-gray-600"
+              onClick={() => {
+                setLoadingTimeout(false);
+                manusAuth.refresh();
+              }}
+            >
+              Reintentar conexión
+            </Button>
+          </div>
+          <p className="text-xs text-gray-400">
+            Las sesiones expiran automáticamente por seguridad después de un período de inactividad.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading normal (menos de 8 segundos)
   if (manusAuth.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">

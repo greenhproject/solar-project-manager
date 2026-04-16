@@ -21,6 +21,8 @@ import {
   Calendar,
   Users,
   Loader2,
+  LogIn,
+  ShieldAlert,
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -42,7 +44,57 @@ export default function Dashboard() {
     trpc.projects.list.useQuery();
   const { data: reminders } = trpc.reminders.unread.useQuery();
 
-  if (meQuery.isLoading || !user) {
+  // Sesión expirada o no autenticado: query terminó sin datos
+  if (!meQuery.isLoading && !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
+        <div className="text-center space-y-6 p-8 max-w-md">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
+            <ShieldAlert className="w-10 h-10 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Sesión Expirada
+            </h1>
+            <p className="text-gray-500 mt-2 text-sm">
+              Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente para continuar.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button
+              size="lg"
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md"
+              onClick={() => {
+                // Limpiar estado local
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('auth_user_email');
+                localStorage.removeItem('auth_user_name');
+                localStorage.removeItem('manus-runtime-user-info');
+                window.location.href = '/';
+              }}
+            >
+              <LogIn className="mr-2 h-5 w-5" />
+              Iniciar Sesión
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-gray-400 hover:text-gray-600"
+              onClick={() => meQuery.refetch()}
+            >
+              Reintentar conexión
+            </Button>
+          </div>
+          <p className="text-xs text-gray-400">
+            Las sesiones expiran automáticamente por seguridad después de un período de inactividad.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Todavía cargando
+  if (meQuery.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -52,6 +104,9 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  // A este punto, user siempre está definido (los guards anteriores retornan si no)
+  const currentUser = user!;
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -86,8 +141,8 @@ export default function Dashboard() {
               Dashboard Solar
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-1 sm:mt-2 truncate">
-              Bienvenido, {user.name || user.email}
-              {user.role === "admin" && (
+              Bienvenido, {currentUser.name || currentUser.email}
+              {currentUser.role === "admin" && (
                 <Badge variant="default" className="ml-2">
                   Admin
                 </Badge>
@@ -95,7 +150,7 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {(user.role === "admin" || user.role === "engineer") && (
+          {(currentUser.role === "admin" || currentUser.role === "engineer") && (
             <Link href="/projects/new">
               <Button
                 size={isMobile ? "default" : "lg"}
@@ -234,13 +289,13 @@ export default function Dashboard() {
             <div className="min-w-0">
               <CardTitle className="text-lg sm:text-xl">Proyectos Recientes</CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                {user.role === "admin"
+                {currentUser.role === "admin"
                   ? "Todos los proyectos del sistema"
                   : "Tus proyectos asignados"}
               </CardDescription>
             </div>
             <div className="flex gap-2 flex-shrink-0">
-              {(user.role === "admin" || user.role === "engineer") && !isMobile && (
+              {(currentUser.role === "admin" || currentUser.role === "engineer") && !isMobile && (
                 <Link href="/projects/new">
                   <Button size="sm" className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600">
                     <Plus className="h-4 w-4" />
@@ -442,7 +497,7 @@ export default function Dashboard() {
                 <p className="text-muted-foreground">
                   No hay proyectos disponibles
                 </p>
-                {user.role === "admin" && (
+                {currentUser.role === "admin" && (
                   <Link href="/projects/new">
                     <Button className="mt-4">Crear Primer Proyecto</Button>
                   </Link>

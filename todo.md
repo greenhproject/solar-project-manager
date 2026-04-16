@@ -702,7 +702,7 @@
 - [x] Cronograma incluido en reporte PDF del proyecto (tabla con fechas inicio/fin/duración)
 - [x] Diagrama de Gantt simplificado incluido en reporte PDF
 - [x] Botón "Reporte Completo" descarga todo junto (reporte + cronograma + Gantt + comentarios)
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit 4a26a57)
 
 ## Mejora: Fechas inicio/fin y duración en hitos + Gantt mejorado (14 Abr 2026)
 - [x] Agregar campos endDate y durationDays a tabla milestones (startDate ya existía)
@@ -713,4 +713,12 @@
 - [x] Configuración includeWeekends en appSettings (admin puede activar fines de semana)
 - [x] Gantt usa startDate/endDate reales de cada hito
 - [x] Tests: 10 tests pasando (business days + PDF generator)
+- [x] Push a GitHub (commit 4a26a57)
+
+## Bug: Loop infinito "Cargando dashboard..." cuando la sesión expira (16 Abr 2026)
+- [x] Detectar sesión expirada en Dashboard.tsx (!meQuery.isLoading && !user)
+- [x] Detectar timeout en MainLayout.tsx (loading > 8 segundos = sesión colgada)
+- [x] Mostrar pantalla profesional "Sesión Expirada" con botón "Iniciar Sesión" y "Reintentar"
+- [x] Limpiar localStorage (auth_token, auth_user_email, auth_user_name, manus-runtime-user-info)
+- [x] Tests: 7 tests pasando (sessionExpiry.test.ts)
 - [ ] Push a GitHub
