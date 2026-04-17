@@ -721,4 +721,13 @@
 - [x] Mostrar pantalla profesional "Sesión Expirada" con botón "Iniciar Sesión" y "Reintentar"
 - [x] Limpiar localStorage (auth_token, auth_user_email, auth_user_name, manus-runtime-user-info)
 - [x] Tests: 7 tests pasando (sessionExpiry.test.ts)
+- [x] Push a GitHub (commit 9dd4e2a)
+
+## Bug: Bucle "Sesión Expirada" después de login con Auth0 (16 Abr 2026)
+- [x] Dashboard.tsx: eliminada pantalla duplicada de sesión expirada (MainLayout ya lo maneja)
+- [x] Dashboard.tsx: meQuery con retry:3 y retryDelay para dar tiempo a Auth0
+- [x] MainLayout Auth0: resetear backendError/backendReady cuando Auth0 hace nuevo login
+- [x] MainLayout Auth0: estado waitingForToken para esperar a que accessToken esté listo
+- [x] MainLayout Auth0: meQuery con retry:3 y retryDelay progresivo
+- [x] MainLayout Auth0: condición de espera incluye waitingForToken y auth0.isAuthenticated sin data
 - [ ] Push a GitHub

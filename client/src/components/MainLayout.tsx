@@ -22,17 +22,30 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
   const auth0 = useAuth0Custom();
   const [backendReady, setBackendReady] = useState(false);
   const [backendError, setBackendError] = useState(false);
+  const [waitingForToken, setWaitingForToken] = useState(false);
   
   // Verificar que el backend también reconoce al usuario
   const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: 2,
-    retryDelay: 1000,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 3000),
     refetchOnWindowFocus: false,
     enabled: auth0.isAuthenticated && !!auth0.accessToken,
   });
 
   // Monitorear y enviar notificaciones automáticas
   useNotificationMonitor();
+
+  // Resetear estados cuando Auth0 cambia de autenticación (nuevo login)
+  useEffect(() => {
+    if (auth0.isAuthenticated && !auth0.accessToken) {
+      // Auth0 está autenticado pero el token aún no está listo
+      setWaitingForToken(true);
+      setBackendError(false);
+      setBackendReady(false);
+    } else if (auth0.isAuthenticated && auth0.accessToken) {
+      setWaitingForToken(false);
+    }
+  }, [auth0.isAuthenticated, auth0.accessToken]);
 
   useEffect(() => {
     if (meQuery.data) {
@@ -101,13 +114,13 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     );
   }
 
-  // Autenticado en Auth0 pero esperando que el backend confirme
-  if (!backendReady && !backendError && meQuery.isLoading) {
+  // Autenticado en Auth0 pero esperando token o que el backend confirme
+  if (!backendReady && !backendError && (waitingForToken || meQuery.isLoading || (auth0.isAuthenticated && !meQuery.data))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
-          <p className="text-gray-600">Verificando sesión...</p>
+          <p className="text-gray-600">{waitingForToken ? 'Obteniendo credenciales...' : 'Verificando sesión...'}</p>
         </div>
       </div>
     );
