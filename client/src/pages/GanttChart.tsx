@@ -4,6 +4,7 @@ import "gantt-task-react/dist/index.css";
 import "../gantt-custom.css";
 import { trpc } from "@/lib/trpc";
 import { exportGanttToExcel } from "@/lib/excelExport";
+import { exportGanttToPdf } from "@/lib/ganttPdfExport";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
   Download,
   FileSpreadsheet,
   FileImage,
+  FileText,
   ChevronLeft,
   ChevronRight,
   Maximize2,
@@ -35,6 +37,7 @@ export default function GanttChart() {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const ganttRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -176,6 +179,32 @@ export default function GanttChart() {
     }
   };
 
+  // Resolver colores OKLCH a RGB para compatibilidad con html2canvas
+  const resolveOklchColors = (element: HTMLElement) => {
+    const allElements = element.querySelectorAll("*");
+    const resolveColor = (el: Element) => {
+      const computed = window.getComputedStyle(el);
+      const htmlEl = el as HTMLElement;
+      // Resolve background-color
+      const bg = computed.backgroundColor;
+      if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") {
+        htmlEl.style.backgroundColor = bg;
+      }
+      // Resolve color
+      const color = computed.color;
+      if (color) {
+        htmlEl.style.color = color;
+      }
+      // Resolve border-color
+      const borderColor = computed.borderColor;
+      if (borderColor) {
+        htmlEl.style.borderColor = borderColor;
+      }
+    };
+    resolveColor(element);
+    allElements.forEach(resolveColor);
+  };
+
   // Exportar Gantt como imagen PNG brandeada
   const handleExportImage = async () => {
     if (!ganttRef.current) return;
@@ -183,14 +212,15 @@ export default function GanttChart() {
 
     try {
       const project = projects?.find((p) => p.id === selectedProjectId);
-      const projectName = project?.name || "Proyecto";
+      const pName = project?.name || "Proyecto";
 
       // Crear un contenedor temporal para la exportación con branding
       const exportContainer = document.createElement("div");
       exportContainer.style.cssText = `
         position: fixed; left: -9999px; top: 0;
-        background: white; padding: 40px;
-        min-width: 1400px;
+        background: #FFFFFF; padding: 40px;
+        min-width: 1400px; color: #1F2937;
+        font-family: Inter, -apple-system, sans-serif;
       `;
       document.body.appendChild(exportContainer);
 
@@ -200,11 +230,11 @@ export default function GanttChart() {
         display: flex; align-items: center; justify-content: space-between;
         padding: 20px 30px; margin-bottom: 24px;
         background: linear-gradient(135deg, #FF6B35 0%, #F7B32B 100%);
-        border-radius: 12px; color: white;
+        border-radius: 12px; color: #FFFFFF;
       `;
       header.innerHTML = `
         <div style="display: flex; align-items: center; gap: 16px;">
-          <div style="width: 50px; height: 50px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+          <div style="width: 50px; height: 50px; background: #FFFFFF; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="4"/>
               <path d="M12 2v2"/>
@@ -218,13 +248,13 @@ export default function GanttChart() {
             </svg>
           </div>
           <div>
-            <div style="font-size: 22px; font-weight: 700; letter-spacing: -0.5px;">Solar Manager</div>
-            <div style="font-size: 13px; opacity: 0.9;">Green House Project</div>
+            <div style="font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: #FFFFFF;">Solar Manager</div>
+            <div style="font-size: 13px; opacity: 0.9; color: #FFFFFF;">Green House Project</div>
           </div>
         </div>
         <div style="text-align: right;">
-          <div style="font-size: 18px; font-weight: 600;">Diagrama de Gantt</div>
-          <div style="font-size: 13px; opacity: 0.9;">${projectName}</div>
+          <div style="font-size: 18px; font-weight: 600; color: #FFFFFF;">Diagrama de Gantt</div>
+          <div style="font-size: 13px; opacity: 0.9; color: #FFFFFF;">${pName}</div>
         </div>
       `;
       exportContainer.appendChild(header);
@@ -236,14 +266,14 @@ export default function GanttChart() {
         background: #FFF7ED; border-radius: 8px; border: 1px solid #FFEDD5;
         font-size: 13px; color: #92400E;
       `;
-      const startDate = project ? new Date(project.startDate).toLocaleDateString("es-CO") : "-";
-      const endDate = project ? new Date(project.estimatedEndDate).toLocaleDateString("es-CO") : "-";
-      const totalMilestones = milestones?.length || 0;
-      const completedMilestones = milestones?.filter((m) => m.status === "completed").length || 0;
+      const sDate = project ? new Date(project.startDate).toLocaleDateString("es-CO") : "-";
+      const eDate = project ? new Date(project.estimatedEndDate).toLocaleDateString("es-CO") : "-";
+      const totalMs = milestones?.length || 0;
+      const completedMs = milestones?.filter((m) => m.status === "completed").length || 0;
       infoBar.innerHTML = `
-        <span><strong>Inicio:</strong> ${startDate}</span>
-        <span><strong>Fin estimado:</strong> ${endDate}</span>
-        <span><strong>Hitos:</strong> ${completedMilestones}/${totalMilestones} completados</span>
+        <span><strong>Inicio:</strong> ${sDate}</span>
+        <span><strong>Fin estimado:</strong> ${eDate}</span>
+        <span><strong>Hitos:</strong> ${completedMs}/${totalMs} completados</span>
         <span><strong>Progreso:</strong> ${calculateProjectProgress(milestones || [])}%</span>
         <span><strong>Generado:</strong> ${new Date().toLocaleDateString("es-CO")} ${new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</span>
       `;
@@ -252,7 +282,6 @@ export default function GanttChart() {
       // Clonar el contenido del Gantt
       const ganttClone = ganttRef.current.cloneNode(true) as HTMLElement;
       ganttClone.style.cssText = "overflow: visible; width: auto;";
-      // Expandir el scroll para capturar todo
       const scrollable = ganttClone.querySelector(".gantt-container") as HTMLElement;
       if (scrollable) {
         scrollable.style.overflow = "visible";
@@ -268,11 +297,11 @@ export default function GanttChart() {
         font-size: 12px; color: #6B7280;
       `;
       legend.innerHTML = `
-        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#10B981;"></div>Completado</div>
-        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#3B82F6;"></div>En Progreso</div>
-        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#EF4444;"></div>Vencido</div>
-        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#9CA3AF;"></div>Pendiente</div>
-        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#FF6B35;"></div>Proyecto</div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#10B981;"></div><span style="color:#374151;">Completado</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#3B82F6;"></div><span style="color:#374151;">En Progreso</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#EF4444;"></div><span style="color:#374151;">Vencido</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#9CA3AF;"></div><span style="color:#374151;">Pendiente</span></div>
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:14px;height:14px;border-radius:3px;background:#FF6B35;"></div><span style="color:#374151;">Proyecto</span></div>
       `;
       exportContainer.appendChild(legend);
 
@@ -284,6 +313,9 @@ export default function GanttChart() {
       `;
       footer.innerHTML = `Solar Manager - Green House Project &bull; Diagrama de Gantt generado automáticamente &bull; ${new Date().toLocaleDateString("es-CO")}`;
       exportContainer.appendChild(footer);
+
+      // CRITICAL: Resolve all OKLCH colors to RGB before html2canvas capture
+      resolveOklchColors(exportContainer);
 
       // Capturar con html2canvas
       const canvas = await html2canvas(exportContainer, {
@@ -297,7 +329,7 @@ export default function GanttChart() {
 
       // Descargar
       const link = document.createElement("a");
-      link.download = `Gantt_${projectName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.png`;
+      link.download = `Gantt_${pName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.png`;
       link.href = canvas.toDataURL("image/png", 1.0);
       link.click();
 
@@ -309,6 +341,32 @@ export default function GanttChart() {
       toast.error("Error al exportar el diagrama");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Exportar Gantt como PDF profesional brandeado
+  const handleExportPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      const project = projects?.find((p) => p.id === selectedProjectId);
+      if (!project || !milestones) {
+        toast.error("Selecciona un proyecto con hitos para exportar");
+        return;
+      }
+      await exportGanttToPdf(
+        project.name,
+        project.clientName || "N/A",
+        milestones,
+        new Date(project.startDate),
+        new Date(project.estimatedEndDate),
+        calculateProjectProgress(milestones)
+      );
+      toast.success("Diagrama de Gantt exportado como PDF");
+    } catch (error) {
+      console.error("Error al exportar PDF:", error);
+      toast.error("Error al exportar el PDF");
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -440,7 +498,7 @@ export default function GanttChart() {
             <Button
               variant="default"
               onClick={handleExportImage}
-              className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+              className="gap-2"
               size={isMobile ? "sm" : "default"}
               disabled={isExporting || !milestones || milestones.length === 0}
             >
@@ -450,6 +508,20 @@ export default function GanttChart() {
                 <FileImage className="h-4 w-4" />
               )}
               <span className="hidden sm:inline">Descargar</span> Imagen
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleExportPdf}
+              className="gap-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600"
+              size={isMobile ? "sm" : "default"}
+              disabled={isExportingPdf || !milestones || milestones.length === 0}
+            >
+              {isExportingPdf ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">Descargar</span> PDF
             </Button>
           </div>
         </div>

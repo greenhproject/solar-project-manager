@@ -761,4 +761,13 @@
   - NotificationBell refetchInterval aumentado a 2 min
 - [x] Implementar renovación silenciosa de tokens (fetchTokenWithRetry con cacheMode:'off')
 - [x] Tests (session-management.test.ts - 11 tests passed)
+- [x] Push a GitHub (commit d0ff80f)
+
+## Fix: Exportación Diagrama de Gantt - Error OKLCH + PDF Profesional (17 Abr 2026)
+- [x] Analizar código de exportación del Gantt (error "unsupported color function oklch")
+- [x] Corregir exportación a imagen: resolveOklchColors() convierte colores OKLCH a RGB antes de html2canvas
+- [x] Implementar exportación a PDF profesional brandeada con logo GreenH (ganttPdfExport.ts)
+- [x] PDF incluye: logo GHP, header gradiente, cards de info, tabla con barras de Gantt visuales, leyenda, footer
+- [x] Diseño estético y profesional del PDF (jsPDF landscape A4)
+- [x] Tests (gantt-export.test.ts - 18 tests passed)
 - [ ] Push a GitHub
