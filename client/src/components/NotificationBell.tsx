@@ -21,7 +21,7 @@ export function NotificationBell() {
   const { data: notifications = [] } =
     trpc.notifications.getUserNotifications.useQuery(
       { limit: 10, unreadOnly: false },
-      { refetchInterval: 30000 } // Actualizar cada 30 segundos
+      { refetchInterval: 120000, refetchOnWindowFocus: false } // Actualizar cada 2 minutos
     );
 
   const unreadCount = notifications.filter(n => !n.isRead).length;

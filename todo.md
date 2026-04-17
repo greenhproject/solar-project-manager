@@ -746,4 +746,19 @@
 - [x] MainLayout Auth0: cuando tokenError=true, muestra SessionExpiredScreen inmediatamente
 - [x] MainLayout Auth0: "Iniciar Sesión" hace logout completo de Auth0 (limpia sesión + localStorage)
 - [x] main.tsx: cuando Auth0 configurado, solo limpia localStorage sin redirigir (MainLayout maneja)
+- [x] Push a GitHub (commit b112536)
+
+## Bug: Sesión expira después de ~2 minutos (debería durar mínimo 1 hora) (17 Abr 2026)
+- [x] Analizar JWT expiración en backend (server/_core) - Auth0 API token lifetime = 86400s (24h) ✅
+- [x] Analizar Auth0 token lifetime configuration - API audience = https://solar-project-manager-api ✅
+- [x] Analizar timeouts en MainLayout.tsx y useAuth0Custom.ts - Encontrado: tokenError se activaba demasiado rápido
+- [x] Corregir duración de sesión a mínimo 1 hora:
+  - useAuth0Custom.ts: renovación proactiva cada 50 min con reintentos (3x backoff exponencial)
+  - useAuth0Custom.ts: solo marca tokenError después de 2 renovaciones consecutivas fallidas
+  - MainLayout.tsx: intenta refreshToken antes de mostrar sesión expirada
+  - main.tsx: requiere 3 errores 401 consecutivos antes de limpiar token
+  - Queries con staleTime de 5 min para reducir llamadas innecesarias
+  - NotificationBell refetchInterval aumentado a 2 min
+- [x] Implementar renovación silenciosa de tokens (fetchTokenWithRetry con cacheMode:'off')
+- [x] Tests (session-management.test.ts - 11 tests passed)
 - [ ] Push a GitHub

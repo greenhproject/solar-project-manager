@@ -36,52 +36,98 @@ import App from "./App";
 import "./index.css";
 import { Auth0ProviderWrapper } from "./_core/Auth0Provider";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // No reintentar automáticamente en errores de autenticación
+      retry: (failureCount, error) => {
+        if (error instanceof TRPCClientError && error.message === UNAUTHED_ERR_MSG) {
+          return false; // No reintentar errores 401
+        }
+        return failureCount < 2; // Reintentar otros errores hasta 2 veces
+      },
+      // Mantener datos en caché por 5 minutos para evitar refetches innecesarios
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 // Detectar si Auth0 está configurado
 const isAuth0Configured = () => {
   return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
 };
 
-// Flag para evitar múltiples redirecciones simultáneas
-let isRedirecting = false;
+// Contador de errores 401 consecutivos para evitar reaccionar al primer error
+let consecutive401Errors = 0;
+const MAX_401_BEFORE_ACTION = 3; // Necesitamos 3 errores 401 consecutivos antes de actuar
 
-const redirectToLoginIfUnauthorized = (error: unknown) => {
+const handleUnauthorizedError = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
-  if (isRedirecting) return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
 
-  if (!isUnauthorized) return;
+  if (!isUnauthorized) {
+    // Reset counter on non-401 errors (means some requests are working)
+    consecutive401Errors = 0;
+    return;
+  }
 
-  // Si Auth0 está configurado, NO redirigir a Manus OAuth
-  // El MainLayout se encargará de mostrar la pantalla de sesión expirada
+  consecutive401Errors++;
+  console.log(`[Auth] 401 error #${consecutive401Errors}/${MAX_401_BEFORE_ACTION}`);
+
+  // Si Auth0 está configurado, NO limpiar el token inmediatamente
+  // El MainLayout y useAuth0Custom manejarán la renovación del token
   if (isAuth0Configured()) {
-    console.log('[Auth] Session expired with Auth0 - MainLayout will handle re-auth');
-    // No redirigir automáticamente, dejar que MainLayout maneje el error
-    // Solo limpiar el token corrupto
-    localStorage.removeItem('auth_token');
+    if (consecutive401Errors >= MAX_401_BEFORE_ACTION) {
+      console.log('[Auth] Multiple consecutive 401 errors - clearing stale token from localStorage');
+      // Solo limpiar el token del localStorage después de múltiples fallos
+      // Esto permite que useAuth0Custom intente renovar el token primero
+      localStorage.removeItem('auth_token');
+      consecutive401Errors = 0;
+    } else {
+      console.log('[Auth] 401 error - waiting for token renewal before taking action');
+    }
   } else {
     // Fallback para Manus OAuth - redirigir a login
-    isRedirecting = true;
+    localStorage.removeItem('auth_token');
     window.location.href = '/login';
   }
 };
 
+// Resetear el contador cuando una query tiene éxito
 queryClient.getQueryCache().subscribe(event => {
-  if (event.type === "updated" && event.action.type === "error") {
-    const error = event.query.state.error;
-    redirectToLoginIfUnauthorized(error);
-    console.error("[API Query Error]", error);
+  if (event.type === "updated") {
+    if (event.action.type === "error") {
+      const error = event.query.state.error;
+      handleUnauthorizedError(error);
+      // Solo loguear errores que no sean 401 (los 401 ya se manejan arriba)
+      if (!(error instanceof TRPCClientError && error.message === UNAUTHED_ERR_MSG)) {
+        console.error("[API Query Error]", error);
+      }
+    } else if (event.action.type === "success") {
+      // Una query exitosa = el token funciona, resetear contador
+      if (consecutive401Errors > 0) {
+        console.log('[Auth] Query succeeded - resetting 401 counter');
+        consecutive401Errors = 0;
+      }
+    }
   }
 });
 
 queryClient.getMutationCache().subscribe(event => {
-  if (event.type === "updated" && event.action.type === "error") {
-    const error = event.mutation.state.error;
-    redirectToLoginIfUnauthorized(error);
-    console.error("[API Mutation Error]", error);
+  if (event.type === "updated") {
+    if (event.action.type === "error") {
+      const error = event.mutation.state.error;
+      handleUnauthorizedError(error);
+      if (!(error instanceof TRPCClientError && error.message === UNAUTHED_ERR_MSG)) {
+        console.error("[API Mutation Error]", error);
+      }
+    } else if (event.action.type === "success") {
+      if (consecutive401Errors > 0) {
+        consecutive401Errors = 0;
+      }
+    }
   }
 });
 
