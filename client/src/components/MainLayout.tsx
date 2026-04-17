@@ -106,89 +106,108 @@ function LoginScreen({ onLogin, title = "Solar Project Manager" }: { onLogin: ()
 // Componente interno para Auth0
 function MainLayoutAuth0({ children }: MainLayoutProps) {
   const auth0 = useAuth0Custom();
-  const [sessionExpired, setSessionExpired] = useState(false);
-  const loadStartRef = useRef<number>(Date.now());
+  const [backendTimeout, setBackendTimeout] = useState(false);
   
   // Verificar que el backend también reconoce al usuario
+  // Solo habilitar cuando tenemos un token válido
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: 2,
-    retryDelay: 1500,
+    retryDelay: 2000,
     refetchOnWindowFocus: false,
-    enabled: auth0.isAuthenticated && !!auth0.accessToken,
+    enabled: auth0.isAuthenticated && !!auth0.accessToken && !auth0.tokenError,
   });
 
   // Monitorear y enviar notificaciones automáticas
   useNotificationMonitor();
 
-  // Timeout global: si después de 15 segundos no hay usuario autenticado con backend, sesión expirada
+  // Timeout: si después de 12 segundos con token válido el backend no responde
   useEffect(() => {
-    // Solo activar timeout si Auth0 dice que está autenticado (tiene sesión previa)
-    // pero el backend no responde
-    if (auth0.isAuthenticated && !meQuery.data && !auth0.isLoading) {
+    if (auth0.isAuthenticated && auth0.accessToken && !meQuery.data && !auth0.tokenError) {
       const timer = setTimeout(() => {
         if (!meQuery.data) {
-          console.log('[MainLayout Auth0] Session timeout - marking as expired');
-          setSessionExpired(true);
+          console.log('[MainLayout Auth0] Backend verification timeout');
+          setBackendTimeout(true);
         }
-      }, 15000);
+      }, 12000);
       return () => clearTimeout(timer);
     }
-  }, [auth0.isAuthenticated, auth0.isLoading, meQuery.data]);
-
-  // Detectar error del backend (después de reintentos)
-  useEffect(() => {
-    if (meQuery.error && !meQuery.isLoading && meQuery.failureCount >= 2) {
-      console.error('[MainLayout Auth0] Backend auth failed after retries:', meQuery.error);
-      setSessionExpired(true);
-    }
-  }, [meQuery.error, meQuery.isLoading, meQuery.failureCount]);
-
-  // Resetear sessionExpired cuando se obtiene data exitosamente
-  useEffect(() => {
+    // Reset timeout when we get data
     if (meQuery.data) {
-      setSessionExpired(false);
+      setBackendTimeout(false);
     }
-  }, [meQuery.data]);
+  }, [auth0.isAuthenticated, auth0.accessToken, auth0.tokenError, meQuery.data]);
 
-  // Auth0 cargando (SDK inicializándose)
+  // Función de logout completo
+  const handleFullLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user_email');
+    localStorage.removeItem('auth_user_name');
+    localStorage.removeItem('manus-runtime-user-info');
+    auth0.logout();
+  };
+
+  // Función de reintentar
+  const handleRetry = () => {
+    setBackendTimeout(false);
+    window.location.reload();
+  };
+
+  // === PASO 1: Auth0 SDK cargando (inicialización) ===
   if (auth0.isLoading) {
     return <LoadingScreen message="Cargando..." />;
   }
 
-  // No autenticado en Auth0 - mostrar pantalla de login
+  // === PASO 2: No autenticado en Auth0 → pantalla de login ===
   if (!auth0.isAuthenticated) {
     return <LoginScreen onLogin={() => auth0.login()} />;
   }
 
-  // Sesión expirada detectada (backend no responde o error)
-  if (sessionExpired && !meQuery.data) {
+  // === PASO 3: Autenticado en Auth0 pero error al obtener token ===
+  // Esto ocurre cuando: refresh token expiró, sesión Auth0 inválida, etc.
+  // "Missing Refresh Token", "login_required", "consent_required"
+  if (auth0.tokenError) {
+    console.log('[MainLayout Auth0] Token error detected - showing session expired');
     return (
       <SessionExpiredScreen
-        onLogin={() => {
-          // Limpiar todo y forzar re-login completo
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth_user_email');
-          localStorage.removeItem('auth_user_name');
-          localStorage.removeItem('manus-runtime-user-info');
-          auth0.logout();
-        }}
-        onRetry={() => {
-          setSessionExpired(false);
-          meQuery.refetch();
-        }}
+        onLogin={handleFullLogout}
+        onRetry={handleRetry}
       />
     );
   }
 
-  // Autenticado en Auth0, esperando token o verificación del backend
-  if (!meQuery.data) {
-    const waitingMessage = !auth0.accessToken 
-      ? 'Obteniendo credenciales...' 
-      : 'Verificando sesión...';
-    return <LoadingScreen message={waitingMessage} />;
+  // === PASO 4: Esperando token de Auth0 (getTokenSilently en progreso) ===
+  if (!auth0.accessToken) {
+    return <LoadingScreen message="Obteniendo credenciales..." />;
   }
 
-  // Todo listo - mostrar la app
+  // === PASO 5: Token obtenido, verificando con backend ===
+  // Backend error después de reintentos
+  if (meQuery.error && meQuery.failureCount >= 2) {
+    console.error('[MainLayout Auth0] Backend auth failed:', meQuery.error);
+    return (
+      <SessionExpiredScreen
+        onLogin={handleFullLogout}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  // Backend timeout
+  if (backendTimeout && !meQuery.data) {
+    return (
+      <SessionExpiredScreen
+        onLogin={handleFullLogout}
+        onRetry={handleRetry}
+      />
+    );
+  }
+
+  // Esperando respuesta del backend
+  if (!meQuery.data) {
+    return <LoadingScreen message="Verificando sesión..." />;
+  }
+
+  // === PASO 6: Todo listo - mostrar la app ===
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />

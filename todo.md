@@ -737,4 +737,13 @@
 - [x] Dashboard.tsx: retorna null cuando no hay usuario (MainLayout maneja redirección)
 - [x] Componentes reutilizables: SessionExpiredScreen, LoadingScreen, LoginScreen
 - [x] Flujo: Auth0 isLoading → Login → Esperando token → Verificando backend → App (o Sesión Expirada)
+- [x] Push a GitHub (commit a2c22fe)
+
+## Bug: Auth0 "Missing Refresh Token" impide iniciar sesión (17 Abr 2026)
+- [x] useAuth0Custom.ts: nuevo estado tokenError que se activa con CUALQUIER error de getTokenSilently
+- [x] useAuth0Custom.ts: no redirige automáticamente a login (evita bucle), marca tokenError para MainLayout
+- [x] MainLayout Auth0: flujo secuencial claro (SDK loading → no auth → token error → waiting token → backend verify → app)
+- [x] MainLayout Auth0: cuando tokenError=true, muestra SessionExpiredScreen inmediatamente
+- [x] MainLayout Auth0: "Iniciar Sesión" hace logout completo de Auth0 (limpia sesión + localStorage)
+- [x] main.tsx: cuando Auth0 configurado, solo limpia localStorage sin redirigir (MainLayout maneja)
 - [ ] Push a GitHub
