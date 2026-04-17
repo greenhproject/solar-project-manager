@@ -185,6 +185,65 @@ describe("Gantt Export Configuration", () => {
     });
   });
 
+  describe("OKLCH to HEX Override CSS", () => {
+    // These are the HEX equivalents we use to replace oklch() for html2canvas
+    const OKLCH_TO_HEX_MAP: Record<string, string> = {
+      "--primary": "#d4622b",
+      "--primary-foreground": "#ffffff",
+      "--background": "#ffffff",
+      "--foreground": "#3b3226",
+      "--card": "#ffffff",
+      "--card-foreground": "#3b3226",
+      "--destructive": "#e53e3e",
+      "--border": "#e8e8e8",
+      "--ring": "#3b82f6",
+      "--muted": "#f5f5f5",
+      "--muted-foreground": "#8b8b8b",
+      "--accent": "#f5f5f5",
+      "--accent-foreground": "#222222",
+      "--secondary": "#fafafa",
+      "--secondary-foreground": "#665c4d",
+    };
+
+    it("should have valid HEX values for all CSS variables", () => {
+      const hexRegex = /^#[0-9a-fA-F]{6}$/;
+      Object.entries(OKLCH_TO_HEX_MAP).forEach(([varName, hex]) => {
+        expect(hex).toMatch(hexRegex);
+      });
+    });
+
+    it("should include all critical CSS variables in the override map", () => {
+      const criticalVars = ["--primary", "--background", "--foreground", "--card", "--border"];
+      criticalVars.forEach(v => {
+        expect(OKLCH_TO_HEX_MAP).toHaveProperty(v);
+      });
+    });
+
+    it("should have distinct foreground and background colors", () => {
+      expect(OKLCH_TO_HEX_MAP["--background"]).not.toBe(OKLCH_TO_HEX_MAP["--foreground"]);
+      expect(OKLCH_TO_HEX_MAP["--card"]).not.toBe(OKLCH_TO_HEX_MAP["--card-foreground"]);
+    });
+
+    it("should replace oklch() pattern with HEX in CSS text", () => {
+      const cssWithOklch = ":root { --primary: oklch(0.65 0.19 45); --bg: oklch(1 0 0); }";
+      const fixed = cssWithOklch.replace(/oklch\([^)]*\)/g, "#888888");
+      expect(fixed).not.toContain("oklch");
+      expect(fixed).toContain("#888888");
+    });
+
+    it("should handle multiple oklch() occurrences in one line", () => {
+      const css = "color: oklch(0.5 0.1 30); background: oklch(1 0 0);";
+      const fixed = css.replace(/oklch\([^)]*\)/g, "#888888");
+      expect(fixed).toBe("color: #888888; background: #888888;");
+    });
+
+    it("should not modify CSS that doesn't contain oklch", () => {
+      const css = "color: #ff0000; background: rgb(255, 255, 255);";
+      const fixed = css.replace(/oklch\([^)]*\)/g, "#888888");
+      expect(fixed).toBe(css);
+    });
+  });
+
   describe("PDF Export Brand Configuration", () => {
     it("should use correct GHP logo URL", () => {
       const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663169336317/i9L9SEfcrUSsT5mzwNhmmi/GHPLogo-03_9b11623d.png";

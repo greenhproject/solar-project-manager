@@ -179,42 +179,68 @@ export default function GanttChart() {
     }
   };
 
-  // Resolver colores OKLCH a RGB para compatibilidad con html2canvas
-  const resolveOklchColors = (element: HTMLElement) => {
-    const allElements = element.querySelectorAll("*");
-    const resolveColor = (el: Element) => {
-      const computed = window.getComputedStyle(el);
-      const htmlEl = el as HTMLElement;
-      // Resolve background-color
-      const bg = computed.backgroundColor;
-      if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") {
-        htmlEl.style.backgroundColor = bg;
-      }
-      // Resolve color
-      const color = computed.color;
-      if (color) {
-        htmlEl.style.color = color;
-      }
-      // Resolve border-color
-      const borderColor = computed.borderColor;
-      if (borderColor) {
-        htmlEl.style.borderColor = borderColor;
-      }
-    };
-    resolveColor(element);
-    allElements.forEach(resolveColor);
-  };
+  /**
+   * OKLCH -> HEX override CSS.
+   * html2canvas parses CSS from stylesheets directly (not just computed styles).
+   * Our :root uses oklch() which html2canvas v1.x cannot parse.
+   * This CSS overrides every CSS variable with safe HEX equivalents.
+   */
+  const OKLCH_TO_HEX_CSS = `
+    :root, *, *::before, *::after {
+      --primary: #d4622b !important;
+      --primary-foreground: #ffffff !important;
+      --sidebar-primary: #d4622b !important;
+      --sidebar-primary-foreground: #ffffff !important;
+      --chart-1: #c99a3a !important;
+      --chart-2: #d4622b !important;
+      --chart-3: #a84a1f !important;
+      --chart-4: #8c3b17 !important;
+      --chart-5: #722e11 !important;
+      --background: #ffffff !important;
+      --foreground: #3b3226 !important;
+      --card: #ffffff !important;
+      --card-foreground: #3b3226 !important;
+      --popover: #ffffff !important;
+      --popover-foreground: #3b3226 !important;
+      --secondary: #fafafa !important;
+      --secondary-foreground: #665c4d !important;
+      --muted: #f5f5f5 !important;
+      --muted-foreground: #8b8b8b !important;
+      --accent: #f5f5f5 !important;
+      --accent-foreground: #222222 !important;
+      --destructive: #e53e3e !important;
+      --destructive-foreground: #fbfbfb !important;
+      --border: #e8e8e8 !important;
+      --input: #e8e8e8 !important;
+      --ring: #3b82f6 !important;
+      --sidebar: #fbfbfb !important;
+      --sidebar-foreground: #3b3226 !important;
+      --sidebar-accent: #f5f5f5 !important;
+      --sidebar-accent-foreground: #222222 !important;
+      --sidebar-border: #e8e8e8 !important;
+      --sidebar-ring: #3b82f6 !important;
+    }
+  `;
 
   // Exportar Gantt como imagen PNG brandeada
   const handleExportImage = async () => {
     if (!ganttRef.current) return;
     setIsExporting(true);
 
+    // Step 1: Inject HEX override into <head> BEFORE cloning
+    const overrideStyle = document.createElement("style");
+    overrideStyle.id = "__oklch_export_fix__";
+    overrideStyle.textContent = OKLCH_TO_HEX_CSS;
+    document.head.appendChild(overrideStyle);
+
+    // Wait for browser to apply the override
+    await new Promise(r => setTimeout(r, 150));
+
     try {
       const project = projects?.find((p) => p.id === selectedProjectId);
       const pName = project?.name || "Proyecto";
 
-      // Crear un contenedor temporal para la exportación con branding
+      // Step 2: Build export container with ALL inline HEX colors
       const exportContainer = document.createElement("div");
       exportContainer.style.cssText = `
         position: fixed; left: -9999px; top: 0;
@@ -271,15 +297,15 @@ export default function GanttChart() {
       const totalMs = milestones?.length || 0;
       const completedMs = milestones?.filter((m) => m.status === "completed").length || 0;
       infoBar.innerHTML = `
-        <span><strong>Inicio:</strong> ${sDate}</span>
-        <span><strong>Fin estimado:</strong> ${eDate}</span>
-        <span><strong>Hitos:</strong> ${completedMs}/${totalMs} completados</span>
-        <span><strong>Progreso:</strong> ${calculateProjectProgress(milestones || [])}%</span>
-        <span><strong>Generado:</strong> ${new Date().toLocaleDateString("es-CO")} ${new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</span>
+        <span style="color:#92400E;"><strong>Inicio:</strong> ${sDate}</span>
+        <span style="color:#92400E;"><strong>Fin estimado:</strong> ${eDate}</span>
+        <span style="color:#92400E;"><strong>Hitos:</strong> ${completedMs}/${totalMs} completados</span>
+        <span style="color:#92400E;"><strong>Progreso:</strong> ${calculateProjectProgress(milestones || [])}%</span>
+        <span style="color:#92400E;"><strong>Generado:</strong> ${new Date().toLocaleDateString("es-CO")} ${new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</span>
       `;
       exportContainer.appendChild(infoBar);
 
-      // Clonar el contenido del Gantt
+      // Step 3: Clone Gantt (now with HEX overrides active in the DOM)
       const ganttClone = ganttRef.current.cloneNode(true) as HTMLElement;
       ganttClone.style.cssText = "overflow: visible; width: auto;";
       const scrollable = ganttClone.querySelector(".gantt-container") as HTMLElement;
@@ -314,10 +340,20 @@ export default function GanttChart() {
       footer.innerHTML = `Solar Manager - Green House Project &bull; Diagrama de Gantt generado automáticamente &bull; ${new Date().toLocaleDateString("es-CO")}`;
       exportContainer.appendChild(footer);
 
-      // CRITICAL: Resolve all OKLCH colors to RGB before html2canvas capture
-      resolveOklchColors(exportContainer);
+      // Step 4: Force-resolve computed colors to inline RGB on ALL elements
+      const allEls = [exportContainer, ...Array.from(exportContainer.querySelectorAll("*"))];
+      for (const el of allEls) {
+        const htmlEl = el as HTMLElement;
+        const cs = window.getComputedStyle(el);
+        const bg = cs.backgroundColor;
+        if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") {
+          htmlEl.style.backgroundColor = bg;
+        }
+        htmlEl.style.color = cs.color;
+        htmlEl.style.borderColor = cs.borderColor;
+      }
 
-      // Capturar con html2canvas
+      // Step 5: Capture with html2canvas - use onclone to sanitize the cloned document
       const canvas = await html2canvas(exportContainer, {
         scale: 2,
         useCORS: true,
@@ -325,6 +361,37 @@ export default function GanttChart() {
         logging: false,
         windowWidth: exportContainer.scrollWidth,
         windowHeight: exportContainer.scrollHeight,
+        onclone: (clonedDoc: Document) => {
+          // Inject our HEX overrides into the cloned document
+          const fixStyle = clonedDoc.createElement("style");
+          fixStyle.textContent = OKLCH_TO_HEX_CSS;
+          clonedDoc.head.appendChild(fixStyle);
+
+          // Replace ALL oklch() references in ALL <style> tags with a safe fallback
+          clonedDoc.querySelectorAll("style").forEach(s => {
+            if (s.textContent && s.textContent.includes("oklch")) {
+              s.textContent = s.textContent.replace(/oklch\([^)]*\)/g, "#888888");
+            }
+          });
+
+          // Also resolve computed colors on all elements in the clone
+          const clonedEls = clonedDoc.body.querySelectorAll("*");
+          clonedEls.forEach(el => {
+            try {
+              const htmlEl = el as HTMLElement;
+              const cs = clonedDoc.defaultView?.getComputedStyle(el);
+              if (!cs) return;
+              const bg = cs.backgroundColor;
+              if (bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent") {
+                htmlEl.style.backgroundColor = bg;
+              }
+              htmlEl.style.color = cs.color;
+              htmlEl.style.borderColor = cs.borderColor;
+            } catch {
+              // Skip elements that can't be styled
+            }
+          });
+        },
       });
 
       // Descargar
@@ -340,6 +407,9 @@ export default function GanttChart() {
       console.error("Error al exportar Gantt:", error);
       toast.error("Error al exportar el diagrama");
     } finally {
+      // ALWAYS remove the override stylesheet to restore normal UI colors
+      const fix = document.getElementById("__oklch_export_fix__");
+      if (fix) fix.remove();
       setIsExporting(false);
     }
   };

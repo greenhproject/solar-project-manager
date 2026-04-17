@@ -765,9 +765,9 @@
 
 ## Fix: Exportación Diagrama de Gantt - Error OKLCH + PDF Profesional (17 Abr 2026)
 - [x] Analizar código de exportación del Gantt (error "unsupported color function oklch")
-- [x] Corregir exportación a imagen: resolveOklchColors() convierte colores OKLCH a RGB antes de html2canvas
+- [x] Corregir exportación a imagen: OKLCH_TO_HEX_CSS override stylesheet + onclone regex replace + inline RGB resolve
 - [x] Implementar exportación a PDF profesional brandeada con logo GreenH (ganttPdfExport.ts)
 - [x] PDF incluye: logo GHP, header gradiente, cards de info, tabla con barras de Gantt visuales, leyenda, footer
 - [x] Diseño estético y profesional del PDF (jsPDF landscape A4)
-- [x] Tests (gantt-export.test.ts - 18 tests passed)
+- [x] Tests (gantt-export.test.ts - 24 tests passed)
 - [ ] Push a GitHub
