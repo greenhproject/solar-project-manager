@@ -730,4 +730,11 @@
 - [x] MainLayout Auth0: estado waitingForToken para esperar a que accessToken esté listo
 - [x] MainLayout Auth0: meQuery con retry:3 y retryDelay progresivo
 - [x] MainLayout Auth0: condición de espera incluye waitingForToken y auth0.isAuthenticated sin data
+- [x] Push a GitHub (commit 84f1a28)
+
+## Bug: Sesión no se cierra automáticamente después de inactividad (17 Abr 2026)
+- [x] MainLayout Auth0 reescrito: timeout de 15s, detección de error después de 2 reintentos
+- [x] Dashboard.tsx: retorna null cuando no hay usuario (MainLayout maneja redirección)
+- [x] Componentes reutilizables: SessionExpiredScreen, LoadingScreen, LoginScreen
+- [x] Flujo: Auth0 isLoading → Login → Esperando token → Verificando backend → App (o Sesión Expirada)
 - [ ] Push a GitHub

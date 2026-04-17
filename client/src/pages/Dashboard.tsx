@@ -32,10 +32,9 @@ import { useTimezone } from "@/hooks/useTimezone";
 export default function Dashboard() {
   const { formatDate: tzFormatDate, formatRelative: tzFormatRelative } = useTimezone();
   // Usar meQuery del backend para obtener el usuario real (con rol correcto de la BD)
-  // retry: 3 con delay para dar tiempo a Auth0 de obtener el token
   const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 3000),
+    retry: 2,
+    retryDelay: 1500,
     refetchOnWindowFocus: false,
   });
   const user = meQuery.data ?? null;
@@ -46,10 +45,10 @@ export default function Dashboard() {
     trpc.projects.list.useQuery();
   const { data: reminders } = trpc.reminders.unread.useQuery();
 
-  // Todavía cargando o sin usuario (MainLayout se encarga de mostrar sesión expirada)
-  // Dashboard NO debe mostrar su propia pantalla de sesión expirada porque
-  // MainLayout ya maneja la autenticación (tanto Auth0 como Manus OAuth)
-  if (meQuery.isLoading || !user) {
+  // MainLayout se encarga de mostrar sesión expirada.
+  // Dashboard solo muestra un skeleton de carga breve mientras se obtiene el usuario.
+  // Si meQuery terminó con error, MainLayout lo detectará y mostrará sesión expirada.
+  if (meQuery.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -58,6 +57,11 @@ export default function Dashboard() {
         </div>
       </div>
     );
+  }
+
+  // Si no hay usuario después de cargar, no mostrar nada (MainLayout manejará la redirección)
+  if (!user) {
+    return null;
   }
 
   // A este punto, user siempre está definido

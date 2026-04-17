@@ -1,7 +1,7 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogIn, RefreshCw, ShieldAlert } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { Button } from "./ui/button";
 import { useNotificationMonitor } from "@/hooks/useNotificationMonitor";
@@ -17,17 +17,102 @@ const isAuth0Configured = () => {
   return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
 };
 
+// Pantalla de sesión expirada reutilizable
+function SessionExpiredScreen({ onLogin, onRetry }: { onLogin: () => void; onRetry?: () => void }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      <div className="text-center space-y-6 p-8 max-w-md">
+        <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
+          <ShieldAlert className="w-10 h-10 text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Sesión Expirada</h1>
+          <p className="text-gray-500 mt-2 text-sm">
+            Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente para continuar.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <Button
+            size="lg"
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md"
+            onClick={onLogin}
+          >
+            <LogIn className="w-5 h-5 mr-2" />
+            Iniciar Sesión
+          </Button>
+          {onRetry && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-gray-400 hover:text-gray-600"
+              onClick={onRetry}
+            >
+              <RefreshCw className="w-4 h-4 mr-1" />
+              Reintentar conexión
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-gray-400">
+          Las sesiones expiran automáticamente por seguridad después de un período de inactividad.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Pantalla de carga reutilizable
+function LoadingScreen({ message }: { message: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">
+      <div className="text-center space-y-4">
+        <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
+        <p className="text-gray-600">{message}</p>
+      </div>
+    </div>
+  );
+}
+
+// Pantalla de login reutilizable
+function LoginScreen({ onLogin, title = "Solar Project Manager" }: { onLogin: () => void; title?: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      <div className="text-center space-y-6 p-8">
+        <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple-lg">
+          <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+            {title}
+          </h1>
+          <p className="text-gray-600 mt-2">Green House Project</p>
+        </div>
+        <p className="text-gray-500 max-w-md">
+          Inicia sesión para acceder al sistema de gestión de proyectos solares
+        </p>
+        <Button
+          size="lg"
+          className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple"
+          onClick={onLogin}
+        >
+          Iniciar Sesión
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // Componente interno para Auth0
 function MainLayoutAuth0({ children }: MainLayoutProps) {
   const auth0 = useAuth0Custom();
-  const [backendReady, setBackendReady] = useState(false);
-  const [backendError, setBackendError] = useState(false);
-  const [waitingForToken, setWaitingForToken] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const loadStartRef = useRef<number>(Date.now());
   
   // Verificar que el backend también reconoce al usuario
   const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 3000),
+    retry: 2,
+    retryDelay: 1500,
     refetchOnWindowFocus: false,
     enabled: auth0.isAuthenticated && !!auth0.accessToken,
   });
@@ -35,150 +120,75 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
   // Monitorear y enviar notificaciones automáticas
   useNotificationMonitor();
 
-  // Resetear estados cuando Auth0 cambia de autenticación (nuevo login)
+  // Timeout global: si después de 15 segundos no hay usuario autenticado con backend, sesión expirada
   useEffect(() => {
-    if (auth0.isAuthenticated && !auth0.accessToken) {
-      // Auth0 está autenticado pero el token aún no está listo
-      setWaitingForToken(true);
-      setBackendError(false);
-      setBackendReady(false);
-    } else if (auth0.isAuthenticated && auth0.accessToken) {
-      setWaitingForToken(false);
+    // Solo activar timeout si Auth0 dice que está autenticado (tiene sesión previa)
+    // pero el backend no responde
+    if (auth0.isAuthenticated && !meQuery.data && !auth0.isLoading) {
+      const timer = setTimeout(() => {
+        if (!meQuery.data) {
+          console.log('[MainLayout Auth0] Session timeout - marking as expired');
+          setSessionExpired(true);
+        }
+      }, 15000);
+      return () => clearTimeout(timer);
     }
-  }, [auth0.isAuthenticated, auth0.accessToken]);
+  }, [auth0.isAuthenticated, auth0.isLoading, meQuery.data]);
 
+  // Detectar error del backend (después de reintentos)
+  useEffect(() => {
+    if (meQuery.error && !meQuery.isLoading && meQuery.failureCount >= 2) {
+      console.error('[MainLayout Auth0] Backend auth failed after retries:', meQuery.error);
+      setSessionExpired(true);
+    }
+  }, [meQuery.error, meQuery.isLoading, meQuery.failureCount]);
+
+  // Resetear sessionExpired cuando se obtiene data exitosamente
   useEffect(() => {
     if (meQuery.data) {
-      setBackendReady(true);
-      setBackendError(false);
-    } else if (meQuery.error && !meQuery.isLoading) {
-      console.error('[MainLayout] Backend auth error:', meQuery.error);
-      setBackendError(true);
+      setSessionExpired(false);
     }
-  }, [meQuery.data, meQuery.error, meQuery.isLoading]);
+  }, [meQuery.data]);
 
-  // Auth0 cargando
+  // Auth0 cargando (SDK inicializándose)
   if (auth0.isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Cargando..." />;
   }
 
   // No autenticado en Auth0 - mostrar pantalla de login
   if (!auth0.isAuthenticated) {
+    return <LoginScreen onLogin={() => auth0.login()} />;
+  }
+
+  // Sesión expirada detectada (backend no responde o error)
+  if (sessionExpired && !meQuery.data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
-        <div className="text-center space-y-6 p-8">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple-lg">
-            <svg
-              className="w-12 h-12 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-              Solar Project Manager
-            </h1>
-            <p className="text-gray-600 mt-2">Green House Project</p>
-          </div>
-          <p className="text-gray-500 max-w-md">
-            Inicia sesión para acceder al sistema de gestión de proyectos
-            solares
-          </p>
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple"
-            onClick={() => {
-              console.log('[MainLayout] Using Auth0 login');
-              auth0.login();
-            }}
-          >
-            Iniciar Sesión
-          </Button>
-        </div>
-      </div>
+      <SessionExpiredScreen
+        onLogin={() => {
+          // Limpiar todo y forzar re-login completo
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth_user_email');
+          localStorage.removeItem('auth_user_name');
+          localStorage.removeItem('manus-runtime-user-info');
+          auth0.logout();
+        }}
+        onRetry={() => {
+          setSessionExpired(false);
+          meQuery.refetch();
+        }}
+      />
     );
   }
 
-  // Autenticado en Auth0 pero esperando token o que el backend confirme
-  if (!backendReady && !backendError && (waitingForToken || meQuery.isLoading || (auth0.isAuthenticated && !meQuery.data))) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
-          <p className="text-gray-600">{waitingForToken ? 'Obteniendo credenciales...' : 'Verificando sesión...'}</p>
-        </div>
-      </div>
-    );
+  // Autenticado en Auth0, esperando token o verificación del backend
+  if (!meQuery.data) {
+    const waitingMessage = !auth0.accessToken 
+      ? 'Obteniendo credenciales...' 
+      : 'Verificando sesión...';
+    return <LoadingScreen message={waitingMessage} />;
   }
 
-  // Error del backend - token puede estar expirado
-  if (backendError && !backendReady) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
-        <div className="text-center space-y-6 p-8">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple-lg">
-            <svg
-              className="w-12 h-12 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-              Sesión Expirada
-            </h1>
-            <p className="text-gray-600 mt-2">Tu sesión ha expirado o no se pudo verificar</p>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple"
-              onClick={() => {
-                // Intentar renovar el token silenciosamente primero
-                meQuery.refetch();
-              }}
-            >
-              Reintentar
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => {
-                // Cerrar sesión completamente y volver a iniciar
-                auth0.logout();
-              }}
-            >
-              Cerrar Sesión e Iniciar de Nuevo
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Todo listo - mostrar la app
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
@@ -212,106 +222,33 @@ function MainLayoutManus({ children }: MainLayoutProps) {
   // Loading con timeout: mostrar pantalla de sesión expirada
   if (manusAuth.loading && loadingTimeout) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
-        <div className="text-center space-y-6 p-8 max-w-md">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
-            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sesión Expirada</h1>
-            <p className="text-gray-500 mt-2 text-sm">
-              Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente para continuar.
-            </p>
-          </div>
-          <div className="flex flex-col gap-3">
-            <Button
-              size="lg"
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md"
-              onClick={() => {
-                localStorage.removeItem('auth_token');
-                localStorage.removeItem('auth_user_email');
-                localStorage.removeItem('auth_user_name');
-                localStorage.removeItem('manus-runtime-user-info');
-                window.location.href = '/';
-              }}
-            >
-              Iniciar Sesión
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-gray-400 hover:text-gray-600"
-              onClick={() => {
-                setLoadingTimeout(false);
-                manusAuth.refresh();
-              }}
-            >
-              Reintentar conexión
-            </Button>
-          </div>
-          <p className="text-xs text-gray-400">
-            Las sesiones expiran automáticamente por seguridad después de un período de inactividad.
-          </p>
-        </div>
-      </div>
+      <SessionExpiredScreen
+        onLogin={() => {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('auth_user_email');
+          localStorage.removeItem('auth_user_name');
+          localStorage.removeItem('manus-runtime-user-info');
+          window.location.href = '/';
+        }}
+        onRetry={() => {
+          setLoadingTimeout(false);
+          manusAuth.refresh();
+        }}
+      />
     );
   }
 
   // Loading normal (menos de 8 segundos)
   if (manusAuth.loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="Cargando..." />;
   }
 
+  // No autenticado
   if (!manusAuth.isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-amber-50">
-        <div className="text-center space-y-6 p-8">
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple-lg">
-            <svg
-              className="w-12 h-12 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-              Solar Project Manager
-            </h1>
-            <p className="text-gray-600 mt-2">Green House Project</p>
-          </div>
-          <p className="text-gray-500 max-w-md">
-            Inicia sesión para acceder al sistema de gestión de proyectos
-            solares
-          </p>
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-apple"
-            onClick={() => {
-              console.log('[MainLayout] Using Manus OAuth login');
-              window.location.href = getLoginUrl();
-            }}
-          >
-            Iniciar Sesión
-          </Button>
-        </div>
-      </div>
+      <LoginScreen onLogin={() => {
+        window.location.href = getLoginUrl();
+      }} />
     );
   }
 
