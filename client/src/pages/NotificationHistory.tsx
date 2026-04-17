@@ -215,25 +215,25 @@ export default function NotificationHistory() {
   const getTypeBadgeColor = (type: NotificationType) => {
     switch (type) {
       case "milestone_due_soon":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300";
       case "milestone_overdue":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       case "project_completed":
-        return "bg-green-100 text-green-700";
+        return "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300";
       case "project_assigned":
-        return "bg-blue-100 text-blue-700";
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300";
       case "project_updated":
-        return "bg-purple-100 text-purple-700";
+        return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300";
       case "milestone_reminder":
-        return "bg-orange-100 text-orange-700";
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300";
       case "delay":
-        return "bg-red-100 text-red-700";
+        return "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300";
       case "ai_alert":
-        return "bg-indigo-100 text-indigo-700";
+        return "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300";
       case "general":
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 dark:text-gray-600";
       default:
-        return "bg-gray-100 text-gray-700";
+        return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 dark:text-gray-600";
     }
   };
 
@@ -243,11 +243,11 @@ export default function NotificationHistory() {
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Mail className="h-8 w-8 text-orange-500" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+              <Mail className="h-8 w-8 text-orange-500 dark:text-orange-400" />
               Notificaciones
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
               Gestiona tus notificaciones y alertas del sistema
             </p>
           </div>
@@ -258,7 +258,7 @@ export default function NotificationHistory() {
                 generateNotifications.mutate();
               }}
               variant="outline"
-              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+              className="border-orange-300 dark:border-gray-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:bg-orange-900/20"
               disabled={generateNotifications.isPending}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${generateNotifications.isPending ? 'animate-spin' : ''}`} />
@@ -268,7 +268,7 @@ export default function NotificationHistory() {
               <Button
                 onClick={() => markAllAsRead.mutate()}
                 variant="outline"
-                className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                className="border-blue-300 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:bg-blue-900/20"
                 disabled={markAllAsRead.isPending}
               >
                 <Eye className="h-4 w-4 mr-2" />
@@ -292,12 +292,12 @@ export default function NotificationHistory() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Total</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {notifications?.length || 0}
                   </p>
                 </div>
-                <Mail className="h-8 w-8 text-orange-500" />
+                <Mail className="h-8 w-8 text-orange-500 dark:text-orange-400" />
               </div>
             </CardContent>
           </Card>
@@ -306,12 +306,12 @@ export default function NotificationHistory() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">No Leídas</p>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">No Leídas</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {unreadCount}
                   </p>
                 </div>
-                <AlertCircle className="h-8 w-8 text-red-500" />
+                <AlertCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
               </div>
             </CardContent>
           </Card>
@@ -320,8 +320,8 @@ export default function NotificationHistory() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Hitos Vencidos</p>
-                  <p className="text-2xl font-bold text-amber-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Hitos Vencidos</p>
+                  <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     {notifications?.filter((n) => n.type === "milestone_overdue").length || 0}
                   </p>
                 </div>
@@ -334,8 +334,8 @@ export default function NotificationHistory() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Filtradas</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Filtradas</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {filteredNotifications.length}
                   </p>
                 </div>
@@ -351,7 +351,7 @@ export default function NotificationHistory() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Búsqueda */}
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <Input
                   placeholder="Buscar en notificaciones..."
                   value={searchTerm}
@@ -433,10 +433,10 @@ export default function NotificationHistory() {
             ) : filteredNotifications.length === 0 ? (
               <div className="text-center py-12">
                 <Mail className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg font-medium">
+                <p className="text-gray-500 dark:text-gray-400 dark:text-gray-500 text-lg font-medium">
                   No se encontraron notificaciones
                 </p>
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
                   Las notificaciones se generan automáticamente cuando hay hitos próximos a vencer o vencidos
                 </p>
                 <Button
@@ -456,8 +456,8 @@ export default function NotificationHistory() {
                     key={notif.id}
                     className={`p-4 rounded-lg border transition-all hover:shadow-md cursor-pointer ${
                       notif.isRead
-                        ? "bg-white border-gray-200"
-                        : "bg-orange-50 border-orange-200"
+                        ? "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                        : "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-gray-600"
                     }`}
                     onClick={() => {
                       if (!notif.isRead) {
@@ -476,19 +476,19 @@ export default function NotificationHistory() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                               {notif.title}
                             </h3>
                             {!notif.isRead && (
-                              <Badge className="bg-red-500 text-white text-xs">
+                              <Badge className="bg-red-50 dark:bg-red-900/200 text-white text-xs">
                                 Nuevo
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
                             {notif.message}
                           </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 flex-wrap">
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               {tzFormatDateTime(notif.sentAt)}
@@ -502,7 +502,7 @@ export default function NotificationHistory() {
                             {notif.projectId && (
                               <a
                                 href={`/projects/${notif.projectId}`}
-                                className="text-orange-600 hover:text-orange-800 underline flex items-center gap-1"
+                                className="text-orange-600 dark:text-orange-400 hover:text-orange-800 underline flex items-center gap-1"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 Ver proyecto →
@@ -516,7 +516,7 @@ export default function NotificationHistory() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-xs border-orange-300 text-orange-700 hover:bg-orange-50"
+                            className="text-xs border-orange-300 dark:border-gray-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:bg-orange-900/20"
                             onClick={(e) => {
                               e.stopPropagation();
                               sendEmailReminder.mutate({

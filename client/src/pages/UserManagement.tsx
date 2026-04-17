@@ -81,7 +81,7 @@ export default function UserManagement() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500 dark:text-orange-400" />
       </div>
     );
   }
@@ -95,7 +95,7 @@ export default function UserManagement() {
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
           Gestión de Usuarios
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-2">
           Administra roles y permisos de usuarios del sistema
         </p>
       </div>
@@ -111,7 +111,7 @@ export default function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Administradores</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-orange-600">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-orange-600 dark:text-orange-400">
               {adminUsers.length}
             </CardTitle>
           </CardHeader>
@@ -119,7 +119,7 @@ export default function UserManagement() {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Ingenieros</CardDescription>
-            <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-blue-600">
+            <CardTitle className="text-xl sm:text-2xl lg:text-3xl text-blue-600 dark:text-blue-400">
               {engineerUsers.length}
             </CardTitle>
           </CardHeader>
@@ -128,8 +128,8 @@ export default function UserManagement() {
 
       {/* Administradores */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <Shield className="h-5 w-5 text-orange-500" />
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <Shield className="h-5 w-5 text-orange-500 dark:text-orange-400" />
           Administradores ({adminUsers.length})
         </h2>
 
@@ -165,7 +165,7 @@ export default function UserManagement() {
                         <CardDescription className="mt-1">
                           {user.email}
                         </CardDescription>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                           <span>
                             Último acceso:{" "}
                             {tzFormatRelative(user.lastSignedIn)}
@@ -216,7 +216,7 @@ export default function UserManagement() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/20"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -245,7 +245,7 @@ export default function UserManagement() {
                         </>
                       )}
                       {isMaster && (
-                        <Badge variant="outline" className="text-gray-500">
+                        <Badge variant="outline" className="text-gray-500 dark:text-gray-400 dark:text-gray-500">
                           Protegido
                         </Badge>
                       )}
@@ -260,15 +260,15 @@ export default function UserManagement() {
 
       {/* Ingenieros */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <Wrench className="h-5 w-5 text-blue-500" />
           Ingenieros ({engineerUsers.length})
         </h2>
 
         {engineerUsers.length === 0 ? (
           <Card>
-            <CardContent className="pt-6 text-center text-gray-500">
-              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <CardContent className="pt-6 text-center text-gray-500 dark:text-gray-400 dark:text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <p>No hay ingenieros registrados</p>
             </CardContent>
           </Card>
@@ -297,7 +297,7 @@ export default function UserManagement() {
                           <CardDescription className="mt-1">
                             {user.email}
                           </CardDescription>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                             <span>
                               Último acceso:{" "}
                               {tzFormatRelative(user.lastSignedIn)}
@@ -346,7 +346,7 @@ export default function UserManagement() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/20"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

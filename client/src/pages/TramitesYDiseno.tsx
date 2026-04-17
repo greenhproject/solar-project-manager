@@ -900,7 +900,7 @@ function DynamicDocumentsTab() {
                 className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-muted/30 rounded-lg border gap-3"
               >
                 <div className="flex items-center gap-3 flex-1">
-                  <FileEdit className="h-8 w-8 text-orange-500 shrink-0" />
+                  <FileEdit className="h-8 w-8 text-orange-500 dark:text-orange-400 shrink-0" />
                   <div className="min-w-0">
                     <h4 className="font-semibold truncate">{template.name}</h4>
                     <p className="text-sm text-muted-foreground truncate">

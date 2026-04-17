@@ -75,10 +75,10 @@ export default function Analytics() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             Análisis y Métricas
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
             Visualización avanzada del rendimiento de proyectos solares
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function Analytics() {
           {/* Tasa de Completación */}
           <Card className="shadow-apple border-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500">
                 Tasa de Completación
               </CardTitle>
               <CheckCircle2 className="h-5 w-5 text-green-500" />
@@ -98,10 +98,10 @@ export default function Analytics() {
                 <Skeleton className="h-10 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {completionRate?.rate}%
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
                     {completionRate?.completed} de {completionRate?.total}{" "}
                     proyectos completados
                   </p>
@@ -113,7 +113,7 @@ export default function Analytics() {
           {/* Tiempo Promedio */}
           <Card className="shadow-apple border-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500">
                 Tiempo Promedio
               </CardTitle>
               <Clock className="h-5 w-5 text-blue-500" />
@@ -123,10 +123,10 @@ export default function Analytics() {
                 <Skeleton className="h-10 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {averageTime?.avgDays || 0} días
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
                     Basado en {averageTime?.totalCompleted || 0} proyectos
                     completados
                   </p>
@@ -138,20 +138,20 @@ export default function Analytics() {
           {/* Total de Proyectos */}
           <Card className="shadow-apple border-0">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500">
                 Total de Proyectos
               </CardTitle>
-              <TrendingUp className="h-5 w-5 text-orange-500" />
+              <TrendingUp className="h-5 w-5 text-orange-500 dark:text-orange-400" />
             </CardHeader>
             <CardContent>
               {loadingMonthly ? (
                 <Skeleton className="h-10 w-20" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {timelineData.reduce((sum, d) => sum + d.total, 0)}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Últimos 12 meses</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">Últimos 12 meses</p>
                 </>
               )}
             </CardContent>
@@ -160,15 +160,15 @@ export default function Analytics() {
 
         {/* Alerta de datos insuficientes */}
         {timelineData.length > 0 && timelineData.length < 3 && (
-          <Card className="shadow-apple border-0 bg-amber-50 border-amber-200">
+          <Card className="shadow-apple border-0 bg-amber-50 dark:bg-amber-900/20 border-amber-200">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-medium text-amber-900">
                     Datos limitados para análisis
                   </p>
-                  <p className="text-xs text-amber-700 mt-1">
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
                     Los gráficos mostrarán información más detallada cuando haya más proyectos registrados en diferentes meses.
                     Actualmente hay datos de {timelineData.length} {timelineData.length === 1 ? 'mes' : 'meses'}.
                   </p>
@@ -190,11 +190,11 @@ export default function Analytics() {
             {loadingMonthly ? (
               <Skeleton className="h-80 w-full" />
             ) : timelineData.length === 0 ? (
-              <div className="h-80 flex items-center justify-center text-gray-500">
+              <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400 dark:text-gray-500">
                 <div className="text-center">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                  <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                   <p>No hay proyectos registrados aún</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     Los gráficos aparecerán cuando se creen proyectos
                   </p>
                 </div>
@@ -270,9 +270,9 @@ export default function Analytics() {
               {loadingMonthly ? (
                 <Skeleton className="h-64 w-full" />
               ) : timelineData.length === 0 ? (
-                <div className="h-64 flex items-center justify-center text-gray-500">
+                <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   <div className="text-center">
-                    <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                     <p>No hay datos disponibles</p>
                   </div>
                 </div>
@@ -356,9 +356,9 @@ export default function Analytics() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-64 flex items-center justify-center text-gray-500">
+                <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   <div className="text-center">
-                    <PieChartIcon className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                    <PieChartIcon className="h-12 w-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
                     <p>No hay datos disponibles</p>
                   </div>
                 </div>

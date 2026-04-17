@@ -169,8 +169,8 @@ export default function ProjectDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
-          <p className="text-gray-600">Cargando proyecto...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-orange-500 dark:text-orange-400 mx-auto" />
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Cargando proyecto...</p>
         </div>
       </div>
     );
@@ -853,7 +853,7 @@ export default function ProjectDetail() {
                               </span>
                             )}
                             {milestone.completedDate && (
-                              <span className="flex items-center gap-1 text-green-600">
+                              <span className="flex items-center gap-1 text-green-600 dark:text-green-400">
                                 <CheckCircle2 className="h-3 w-3" />
                                 Completado:{" "}
                                 {tzFormatDate(milestone.completedDate, { day: "2-digit", month: "short", year: "numeric" })}
@@ -861,7 +861,7 @@ export default function ProjectDetail() {
                             )}
                             {(milestone as any).googleCalendarEventId && (
                               <span
-                                className="flex items-center gap-1 text-blue-600"
+                                className="flex items-center gap-1 text-blue-600 dark:text-blue-400"
                                 title="Sincronizado con Google Calendar"
                               >
                                 <Calendar className="h-3 w-3" />
@@ -891,7 +891,7 @@ export default function ProjectDetail() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                className="gap-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/20 border-red-200"
                                 onClick={() => setMilestoneToDelete({ id: milestone.id, name: milestone.name })}
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -979,7 +979,7 @@ export default function ProjectDetail() {
           <TabsContent value="attachments" className="space-y-4">
             <div>
               <h2 className="text-2xl font-bold mb-4">Archivos Adjuntos</h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">
                 Sube y gestiona documentos relacionados con este proyecto
                 (planos, contratos, certificaciones, etc.)
               </p>
@@ -1111,7 +1111,7 @@ export default function ProjectDetail() {
       <Dialog open={!!milestoneToDelete} onOpenChange={(open) => !open && setMilestoneToDelete(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">Eliminar Hito</DialogTitle>
+            <DialogTitle className="text-red-600 dark:text-red-400">Eliminar Hito</DialogTitle>
             <DialogDescription>
               ¿Estás seguro de que deseas eliminar el hito <strong className="text-foreground">"{milestoneToDelete?.name}"</strong>? Esta acción no se puede deshacer y se eliminarán también los recordatorios asociados.
             </DialogDescription>
@@ -1159,7 +1159,7 @@ export default function ProjectDetail() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-orange-500" />
+              <Calendar className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Actualizar fecha de hito
             </DialogTitle>
             <DialogDescription className="text-left">
@@ -1169,7 +1169,7 @@ export default function ProjectDetail() {
           </DialogHeader>
           <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground space-y-1">
             <p className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 text-orange-500 shrink-0" />
+              <RefreshCw className="h-4 w-4 text-orange-500 dark:text-orange-400 shrink-0" />
               <span><strong>Recalcular todos:</strong> Ajusta las fechas de los hitos siguientes en cascada usando los días de duración de la plantilla.</span>
             </p>
             <p className="flex items-center gap-2">
@@ -1202,7 +1202,7 @@ export default function ProjectDetail() {
               Solo este hito
             </Button>
             <Button
-              className="flex-1 bg-orange-500 hover:bg-orange-600"
+              className="flex-1 bg-orange-50 dark:bg-orange-900/200 hover:bg-orange-600"
               disabled={updateDueDate.isPending}
               onClick={async () => {
                 if (!cascadeDialog) return;
@@ -1305,10 +1305,10 @@ function MilestoneCommentsSection({ milestoneId, currentUser }: { milestoneId: n
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "admin": return "bg-orange-100 text-orange-700 border-orange-200";
-      case "engineer": return "bg-blue-100 text-blue-700 border-blue-200";
-      case "ingeniero_tramites": return "bg-purple-100 text-purple-700 border-purple-200";
-      default: return "bg-gray-100 text-gray-700 border-gray-200";
+      case "admin": return "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-gray-600";
+      case "engineer": return "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border-blue-200";
+      case "ingeniero_tramites": return "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200";
+      default: return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700";
     }
   };
 
@@ -1318,7 +1318,7 @@ function MilestoneCommentsSection({ milestoneId, currentUser }: { milestoneId: n
         <MessageSquare className="h-3.5 w-3.5" />
         Observaciones del equipo
         {comments && comments.length > 0 && (
-          <span className="bg-orange-100 text-orange-700 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+          <span className="bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
             {comments.length}
           </span>
         )}
@@ -1334,8 +1334,8 @@ function MilestoneCommentsSection({ milestoneId, currentUser }: { milestoneId: n
             >
               <div className="flex items-center gap-2 mb-1">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-5 w-5 rounded-full bg-orange-100 flex items-center justify-center">
-                    <UserIcon className="h-3 w-3 text-orange-600" />
+                  <div className="h-5 w-5 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                    <UserIcon className="h-3 w-3 text-orange-600 dark:text-orange-400" />
                   </div>
                   <span className="font-medium text-xs">
                     {comment.userName || comment.userEmail || "Usuario"}
@@ -1356,7 +1356,7 @@ function MilestoneCommentsSection({ milestoneId, currentUser }: { milestoneId: n
               {/* Botón eliminar - visible solo para el autor o admin */}
               {(comment.userId === currentUser?.id || currentUser?.role === "admin") && (
                 <button
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 p-0.5"
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 dark:text-red-400 p-0.5"
                   title="Eliminar comentario"
                   onClick={() => {
                     if (confirm("¿Eliminar este comentario?")) {

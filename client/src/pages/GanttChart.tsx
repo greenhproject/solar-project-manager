@@ -620,7 +620,7 @@ export default function GanttChart() {
           </Card>
           <Card className="p-3 text-center">
             <div className="text-xs text-muted-foreground">Progreso</div>
-            <div className="text-sm font-semibold text-orange-600">
+            <div className="text-sm font-semibold text-orange-600 dark:text-orange-400">
               {calculateProjectProgress(milestones)}%
             </div>
           </Card>
@@ -692,17 +692,17 @@ export default function GanttChart() {
               {/* Botones de scroll lateral */}
               <button
                 onClick={scrollLeft}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 border border-gray-200 transition-all hover:scale-110"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white dark:bg-gray-900 shadow-lg rounded-full p-2 border border-gray-200 dark:border-gray-700 transition-all hover:scale-110"
                 title="Desplazar izquierda"
               >
-                <ChevronLeft className="h-5 w-5 text-gray-600" />
+                <ChevronLeft className="h-5 w-5 text-gray-600 dark:text-gray-400 dark:text-gray-500" />
               </button>
               <button
                 onClick={scrollRight}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white shadow-lg rounded-full p-2 border border-gray-200 transition-all hover:scale-110"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 hover:bg-white dark:bg-gray-900 shadow-lg rounded-full p-2 border border-gray-200 dark:border-gray-700 transition-all hover:scale-110"
                 title="Desplazar derecha"
               >
-                <ChevronRight className="h-5 w-5 text-gray-600" />
+                <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-400 dark:text-gray-500" />
               </button>
 
               <div ref={ganttRef}>
@@ -810,15 +810,15 @@ export default function GanttChart() {
         <h3 className="font-semibold mb-4 text-sm sm:text-base">Leyenda de Estados</h3>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-500"></div>
+            <div className="w-4 h-4 rounded bg-green-50 dark:bg-green-900/200"></div>
             <span className="text-sm">Completado</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-500"></div>
+            <div className="w-4 h-4 rounded bg-blue-50 dark:bg-blue-900/200"></div>
             <span className="text-sm">En Progreso</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-red-500"></div>
+            <div className="w-4 h-4 rounded bg-red-50 dark:bg-red-900/200"></div>
             <span className="text-sm">Vencido</span>
           </div>
           <div className="flex items-center gap-2">
@@ -826,7 +826,7 @@ export default function GanttChart() {
             <span className="text-sm">Pendiente</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-orange-500"></div>
+            <div className="w-4 h-4 rounded bg-orange-50 dark:bg-orange-900/200"></div>
             <span className="text-sm">Proyecto</span>
           </div>
         </div>
@@ -854,11 +854,11 @@ function getStatusColor(status: string): string {
 
 function getStatusInfo(status: string) {
   switch (status) {
-    case "completed": return { label: "Completado", bgColor: "bg-green-100", textColor: "text-green-700" };
-    case "in_progress": return { label: "En Progreso", bgColor: "bg-blue-100", textColor: "text-blue-700" };
-    case "overdue": return { label: "Vencido", bgColor: "bg-red-100", textColor: "text-red-700" };
-    case "pending": return { label: "Pendiente", bgColor: "bg-gray-100", textColor: "text-gray-700" };
-    default: return { label: "Pendiente", bgColor: "bg-gray-100", textColor: "text-gray-700" };
+    case "completed": return { label: "Completado", bgColor: "bg-green-100 dark:bg-green-900/30", textColor: "text-green-700 dark:text-green-400" };
+    case "in_progress": return { label: "En Progreso", bgColor: "bg-blue-100 dark:bg-blue-900/30", textColor: "text-blue-700 dark:text-blue-400" };
+    case "overdue": return { label: "Vencido", bgColor: "bg-red-100 dark:bg-red-900/30", textColor: "text-red-700 dark:text-red-400" };
+    case "pending": return { label: "Pendiente", bgColor: "bg-gray-100 dark:bg-gray-800", textColor: "text-gray-700 dark:text-gray-300" };
+    default: return { label: "Pendiente", bgColor: "bg-gray-100 dark:bg-gray-800", textColor: "text-gray-700 dark:text-gray-300" };
   }
 }
 

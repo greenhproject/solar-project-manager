@@ -219,11 +219,11 @@ export default function AIAssistant() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Sparkles className="h-8 w-8 text-orange-500" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+              <Sparkles className="h-8 w-8 text-orange-500 dark:text-orange-400" />
               Asistente de IA
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
               Análisis inteligente y sugerencias para optimizar tus proyectos
             </p>
           </div>
@@ -273,8 +273,8 @@ export default function AIAssistant() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Proyectos Activos</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Proyectos Activos</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {stats?.active || 0}
                   </p>
                 </div>
@@ -287,12 +287,12 @@ export default function AIAssistant() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Con Retraso</p>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Con Retraso</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                     {stats?.overdue || 0}
                   </p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-red-500" />
+                <AlertTriangle className="h-8 w-8 text-red-500 dark:text-red-400" />
               </div>
             </CardContent>
           </Card>
@@ -301,8 +301,8 @@ export default function AIAssistant() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Completados</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Completados</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {stats?.completed || 0}
                   </p>
                 </div>
@@ -315,12 +315,12 @@ export default function AIAssistant() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Total</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     {stats?.total || 0}
                   </p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-gray-500" />
+                <BarChart3 className="h-8 w-8 text-gray-500 dark:text-gray-400 dark:text-gray-500" />
               </div>
             </CardContent>
           </Card>
@@ -330,7 +330,7 @@ export default function AIAssistant() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Bot className="h-5 w-5 text-orange-500" />
+              <Bot className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Asistente Inteligente
             </CardTitle>
             <CardDescription>
@@ -340,7 +340,7 @@ export default function AIAssistant() {
           <CardContent>
             <div className="space-y-4">
               {/* Messages */}
-              <div className="h-[400px] overflow-y-auto space-y-4 p-4 bg-gray-50 rounded-lg">
+              <div className="h-[400px] overflow-y-auto space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 {messages.map((message, index) => (
                   <div
                     key={index}
@@ -350,7 +350,7 @@ export default function AIAssistant() {
                       className={`max-w-[80%] rounded-lg p-4 ${
                         message.role === "user"
                           ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white"
-                          : "bg-white shadow-sm border border-gray-200"
+                          : "bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-700"
                       }`}
                     >
                       {message.role === "assistant" ? (
@@ -365,8 +365,8 @@ export default function AIAssistant() {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-4">
-                      <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
+                    <div className="bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-orange-500 dark:text-orange-400" />
                     </div>
                   </div>
                 )}
@@ -392,7 +392,7 @@ export default function AIAssistant() {
                 </Button>
               </div>
 
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 text-center">
                 Presiona Enter para enviar, Shift+Enter para nueva línea
               </p>
             </div>
@@ -403,7 +403,7 @@ export default function AIAssistant() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Lightbulb className="h-5 w-5 text-orange-500" />
+              <Lightbulb className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Acciones Rápidas
             </CardTitle>
             <CardDescription>
@@ -421,9 +421,9 @@ export default function AIAssistant() {
                 }}
                 disabled={isLoading}
               >
-                <AlertCircle className="h-5 w-5 text-red-500 mb-2" />
+                <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 mb-2" />
                 <p className="font-semibold">Proyectos Retrasados</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   Identifica proyectos con retraso
                 </p>
               </Button>
@@ -437,9 +437,9 @@ export default function AIAssistant() {
                 }}
                 disabled={isLoading}
               >
-                <Clock className="h-5 w-5 text-orange-500 mb-2" />
+                <Clock className="h-5 w-5 text-orange-500 dark:text-orange-400 mb-2" />
                 <p className="font-semibold">Hitos Críticos</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   Revisa hitos próximos a vencer
                 </p>
               </Button>
@@ -457,7 +457,7 @@ export default function AIAssistant() {
               >
                 <Lightbulb className="h-5 w-5 text-yellow-500 mb-2" />
                 <p className="font-semibold">Optimización</p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   Sugerencias de mejora
                 </p>
               </Button>

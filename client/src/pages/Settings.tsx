@@ -48,17 +48,17 @@ export default function Settings() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-orange-100">
-                  <Mail className="h-6 w-6 text-orange-600" />
+                <div className="p-3 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                  <Mail className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Configuración de Email</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">Configuración de Email</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                     Configura el proveedor de email (Resend, SendGrid, SMTP) para notificaciones automáticas
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-gray-400" />
+              <ChevronRight className="h-5 w-5 text-gray-400 dark:text-gray-500" />
             </div>
           </CardContent>
         </Card>

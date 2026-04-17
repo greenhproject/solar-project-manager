@@ -129,7 +129,7 @@ export default function Reminders() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500 dark:text-orange-400" />
       </div>
     );
   }
@@ -142,7 +142,7 @@ export default function Reminders() {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
           Recordatorios
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-2">
           Gestiona tus notificaciones y recordatorios de proyectos
         </p>
       </div>
@@ -150,7 +150,7 @@ export default function Reminders() {
       {/* Hitos Vencidos */}
       {overdueMilestones && overdueMilestones.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-red-600 flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             Hitos Vencidos ({overdueMilestones.length})
           </h2>
@@ -174,7 +174,7 @@ export default function Reminders() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-2 break-words">
                             {milestone.milestoneName}
-                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
+                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                           </CardTitle>
                           <Badge variant="destructive" className="gap-1">
                             <AlertCircle className="h-3 w-3" />
@@ -188,8 +188,8 @@ export default function Reminders() {
                           </CardDescription>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <span className="flex items-center gap-1 font-medium text-orange-600">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
+                          <span className="flex items-center gap-1 font-medium text-orange-600 dark:text-orange-400">
                             <MapPin className="h-4 w-4" />
                             {milestone.projectName}
                           </span>
@@ -231,7 +231,7 @@ export default function Reminders() {
                             e.stopPropagation();
                             openRescheduleDialog(milestone);
                           }}
-                          className="gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+                          className="gap-2 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-gray-600 hover:bg-orange-50 dark:bg-orange-900/20"
                         >
                           <CalendarClock className="h-4 w-4" />
                           Reprogramar
@@ -248,15 +248,15 @@ export default function Reminders() {
 
       {/* Hitos Próximos a Vencer */}
       <div className="space-y-3 sm:space-y-4">
-        <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 flex items-center gap-2">
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
+        <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500 dark:text-orange-400" />
           Próximos a Vencer ({upcomingMilestones?.length || 0})
         </h2>
 
         {!upcomingMilestones || upcomingMilestones.length === 0 ? (
           <Card>
-            <CardContent className="pt-6 text-center text-gray-500">
-              <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <CardContent className="pt-6 text-center text-gray-500 dark:text-gray-400 dark:text-gray-500">
+              <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <p>No hay hitos próximos a vencer en los próximos 7 días</p>
             </CardContent>
           </Card>
@@ -294,7 +294,7 @@ export default function Reminders() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <CardTitle className="text-sm sm:text-base lg:text-lg flex items-center gap-2 break-words">
                             {milestone.milestoneName}
-                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
+                            <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
                           </CardTitle>
                           <Badge variant={badgeVariant} className="gap-1">
                             <Clock className="h-3 w-3" />
@@ -312,8 +312,8 @@ export default function Reminders() {
                           </CardDescription>
                         )}
 
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <span className="flex items-center gap-1 font-medium text-orange-600">
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
+                          <span className="flex items-center gap-1 font-medium text-orange-600 dark:text-orange-400">
                             <MapPin className="h-4 w-4" />
                             {milestone.projectName}
                           </span>
@@ -356,7 +356,7 @@ export default function Reminders() {
                             e.stopPropagation();
                             openRescheduleDialog(milestone);
                           }}
-                          className="gap-2 text-orange-600 border-orange-300 hover:bg-orange-50"
+                          className="gap-2 text-orange-600 dark:text-orange-400 border-orange-300 dark:border-gray-600 hover:bg-orange-50 dark:bg-orange-900/20"
                         >
                           <CalendarClock className="h-4 w-4" />
                           Reprogramar
@@ -374,9 +374,9 @@ export default function Reminders() {
       {/* Estado Vacío Total */}
       {totalActive === 0 && (
         <Card className="border-2 border-dashed">
-          <CardContent className="pt-6 text-center text-gray-500">
+          <CardContent className="pt-6 text-center text-gray-500 dark:text-gray-400 dark:text-gray-500">
             <CheckCircle2 className="h-16 w-16 mx-auto mb-4 text-green-500" />
-            <p className="text-lg font-medium text-gray-900 mb-2">
+            <p className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               ¡Todo al día!
             </p>
             <p>No tienes hitos pendientes próximos a vencer ni vencidos</p>
@@ -398,7 +398,7 @@ export default function Reminders() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-orange-500" />
+              <CalendarClock className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Reprogramar Hito
             </DialogTitle>
             <DialogDescription>
@@ -421,7 +421,7 @@ export default function Reminders() {
 
             <div className="space-y-2">
               <Label htmlFor="justification">
-                Justificación <span className="text-red-500">*</span>
+                Justificación <span className="text-red-500 dark:text-red-400">*</span>
               </Label>
               <Textarea
                 id="justification"
@@ -430,7 +430,7 @@ export default function Reminders() {
                 onChange={(e) => setJustification(e.target.value)}
                 rows={3}
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                 Esta justificación quedará registrada como nota del proyecto y será visible para administradores e ingenieros.
               </p>
             </div>

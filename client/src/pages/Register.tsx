@@ -52,7 +52,7 @@ export default function Register() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirigiendo al registro...</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Redirigiendo al registro...</p>
         </div>
       </div>
     );
@@ -108,7 +108,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-orange-200">
+      <Card className="w-full max-w-md shadow-2xl border-orange-200 dark:border-gray-600">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full flex items-center justify-center shadow-lg">
             <Sun className="w-10 h-10 text-white" />
@@ -130,14 +130,14 @@ export default function Register() {
                 Nombre Completo
               </Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <Input
                   id="name"
                   type="text"
                   placeholder="Juan Pérez"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                  className="pl-10 h-11 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
                 />
@@ -149,14 +149,14 @@ export default function Register() {
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                  className="pl-10 h-11 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
                 />
@@ -168,14 +168,14 @@ export default function Register() {
                 Contraseña
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="Mínimo 6 caracteres"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                  className="pl-10 h-11 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
                   minLength={6}
@@ -188,14 +188,14 @@ export default function Register() {
                 Confirmar Contraseña
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="Repite tu contraseña"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  className="pl-10 h-11 border-gray-300 focus:border-orange-500 focus:ring-orange-500"
+                  className="pl-10 h-11 border-gray-300 dark:border-gray-600 focus:border-orange-500 focus:ring-orange-500"
                   disabled={isLoading}
                   required
                 />
@@ -219,12 +219,12 @@ export default function Register() {
               )}
             </Button>
 
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
               ¿Ya tienes una cuenta?{" "}
               <button
                 type="button"
                 onClick={() => setLocation("/login")}
-                className="text-orange-600 hover:text-orange-700 font-medium hover:underline"
+                className="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:text-orange-300 font-medium hover:underline"
                 disabled={isLoading}
               >
                 Inicia sesión aquí

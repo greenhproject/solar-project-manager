@@ -139,7 +139,7 @@ export function NotificationBell() {
                   </p>
                 </div>
                 {!notification.isRead && (
-                  <div className="h-2 w-2 rounded-full bg-orange-500 flex-shrink-0 mt-1" />
+                  <div className="h-2 w-2 rounded-full bg-orange-50 dark:bg-orange-900/200 flex-shrink-0 mt-1" />
                 )}
               </div>
             </DropdownMenuItem>

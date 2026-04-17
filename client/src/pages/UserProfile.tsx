@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { useTimezone } from "@/hooks/useTimezone";
+import { useTheme } from "@/contexts/ThemeContext";
 
 import {
   Card,
@@ -40,6 +41,7 @@ import {
 
 export default function UserProfile() {
   const { formatDate: tzFormatDate } = useTimezone();
+  const { setTheme } = useTheme();
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
@@ -211,15 +213,15 @@ export default function UserProfile() {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mi Perfil</h1>
-          <p className="text-gray-600">Administra tu información personal</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Mi Perfil</h1>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Administra tu información personal</p>
         </div>
 
         {/* Avatar */}
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5 text-orange-500" />
+              <Camera className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Foto de Perfil
             </CardTitle>
             <CardDescription>
@@ -229,7 +231,7 @@ export default function UserProfile() {
           <CardContent className="flex items-center gap-6">
             <div className="relative">
               <Avatar
-                className="h-24 w-24 border-4 border-orange-200 cursor-pointer hover:opacity-80 transition-opacity"
+                className="h-24 w-24 border-4 border-orange-200 dark:border-gray-600 cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={handleAvatarClick}
               >
                 <AvatarImage
@@ -241,7 +243,7 @@ export default function UserProfile() {
               </Avatar>
               <button
                 onClick={handleAvatarClick}
-                className="absolute bottom-0 right-0 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg transition-colors"
+                className="absolute bottom-0 right-0 bg-orange-50 dark:bg-orange-900/200 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg transition-colors"
                 disabled={uploadAvatar.isPending}
               >
                 {uploadAvatar.isPending ? (
@@ -252,10 +254,10 @@ export default function UserProfile() {
               </button>
             </div>
             <div className="flex-1">
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-2">
                 Formatos soportados: JPG, PNG, GIF
               </p>
-              <p className="text-sm text-gray-600">Tamaño máximo: 2MB</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Tamaño máximo: 2MB</p>
             </div>
             <input
               ref={fileInputRef}
@@ -271,7 +273,7 @@ export default function UserProfile() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-orange-500" />
+              <User className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Información Personal
             </CardTitle>
             <CardDescription>Actualiza tu nombre y email</CardDescription>
@@ -286,14 +288,14 @@ export default function UserProfile() {
                   onChange={e => setName(e.target.value)}
                   disabled={!isEditing || updateProfile.isPending}
                   placeholder="Tu nombre completo"
-                  className="bg-white"
+                  className="bg-white dark:bg-gray-900"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                   <Input
                     id="email"
                     type="email"
@@ -301,10 +303,10 @@ export default function UserProfile() {
                     onChange={e => setEmail(e.target.value)}
                     disabled={!isEditing || updateProfile.isPending}
                     placeholder="tu@email.com"
-                    className="pl-10 bg-white"
+                    className="pl-10 bg-white dark:bg-gray-900"
                   />
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   {user.loginMethod === "oauth"
                     ? "Email proporcionado por OAuth (opcional)"
                     : "Email usado para iniciar sesión"}
@@ -372,10 +374,10 @@ export default function UserProfile() {
               <>
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
                       Notificaciones Push
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                       Recibir notificaciones en tiempo real
                     </p>
                   </div>
@@ -390,16 +392,16 @@ export default function UserProfile() {
                       }
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-gray-900 after:border-gray-300 dark:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-50 dark:bg-orange-900/200"></div>
                   </label>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
                       Recordatorios de Hitos
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                       Alertas cuando un hito está próximo a vencer
                     </p>
                   </div>
@@ -414,16 +416,16 @@ export default function UserProfile() {
                       }
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-gray-900 after:border-gray-300 dark:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-50 dark:bg-orange-900/200"></div>
                   </label>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
                       Alertas de Retrasos
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                       Notificaciones de proyectos retrasados
                     </p>
                   </div>
@@ -438,14 +440,14 @@ export default function UserProfile() {
                       }
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-gray-900 after:border-gray-300 dark:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-50 dark:bg-orange-900/200"></div>
                   </label>
                 </div>
 
                 <div className="flex items-center justify-between py-3 border-b">
                   <div>
-                    <p className="font-medium text-gray-900">Alertas de IA</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">Alertas de IA</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
                       Sugerencias y alertas generadas por IA
                     </p>
                   </div>
@@ -460,14 +462,14 @@ export default function UserProfile() {
                       }
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-gray-900 after:border-gray-300 dark:border-gray-600 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-50 dark:bg-orange-900/200"></div>
                   </label>
                 </div>
 
                 <div className="pt-2">
                   <Label
                     htmlFor="reminderDays"
-                    className="text-sm font-medium text-gray-900 mb-2 block"
+                    className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 block"
                   >
                     Días de anticipación para recordatorios
                   </Label>
@@ -488,7 +490,7 @@ export default function UserProfile() {
                       }}
                       className="w-20"
                     />
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                       Recibir recordatorios{" "}
                       {notifSettings.milestoneReminderDays} días antes del
                       vencimiento
@@ -504,7 +506,7 @@ export default function UserProfile() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Monitor className="h-5 w-5 text-indigo-500" />
+              <Monitor className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />
               Apariencia
             </CardTitle>
             <CardDescription>Elige el tema de la aplicación</CardDescription>
@@ -516,10 +518,13 @@ export default function UserProfile() {
                 <Select
                   value={user.theme || "system"}
                   onValueChange={(value: "light" | "dark" | "system") => {
+                    // Apply theme visually immediately via ThemeContext
+                    setTheme(value);
+                    // Also persist to database
                     updateProfile.mutate({ theme: value });
                   }}
                 >
-                  <SelectTrigger id="theme" className="bg-white">
+                  <SelectTrigger id="theme" className="bg-white dark:bg-gray-900">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -543,7 +548,7 @@ export default function UserProfile() {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                   {user.theme === "system"
                     ? "El tema se ajustará automáticamente según la configuración de tu sistema"
                     : user.theme === "dark"
@@ -560,7 +565,7 @@ export default function UserProfile() {
           <Card className="shadow-apple border-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-red-500" />
+                <Lock className="h-5 w-5 text-red-500 dark:text-red-400" />
                 Cambiar Contraseña
               </CardTitle>
               <CardDescription>
@@ -572,7 +577,7 @@ export default function UserProfile() {
                 <div>
                   <Label htmlFor="currentPassword">Contraseña Actual</Label>
                   <div className="relative">
-                    <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Key className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <Input
                       id="currentPassword"
                       type="password"
@@ -588,7 +593,7 @@ export default function UserProfile() {
                 <div>
                   <Label htmlFor="newPassword">Nueva Contraseña</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <Input
                       id="newPassword"
                       type="password"
@@ -607,7 +612,7 @@ export default function UserProfile() {
                     Confirmar Nueva Contraseña
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
                     <Input
                       id="confirmPassword"
                       type="password"
@@ -645,17 +650,17 @@ export default function UserProfile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between py-2 border-b">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                 <Shield className="h-4 w-4" />
                 <span>Rol:</span>
               </div>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium ${
                   user.role === "admin"
-                    ? "bg-orange-100 text-orange-700"
+                    ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
                     : user.role === "ingeniero_tramites"
-                    ? "bg-purple-100 text-purple-700"
-                    : "bg-blue-100 text-blue-700"
+                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
+                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
                 }`}
               >
                 {user.role === "admin" 
@@ -667,21 +672,21 @@ export default function UserProfile() {
             </div>
 
             <div className="flex items-center justify-between py-2 border-b">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                 <User className="h-4 w-4" />
                 <span>Método de acceso:</span>
               </div>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {user.loginMethod === "oauth" ? "OAuth (Manus)" : "JWT"}
               </span>
             </div>
 
             <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
                 <Calendar className="h-4 w-4" />
                 <span>Miembro desde:</span>
               </div>
-              <span className="text-sm font-medium text-gray-900">
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {tzFormatDate(user.createdAt, { year: "numeric", month: "long", day: "numeric" })}
               </span>
             </div>

@@ -104,7 +104,7 @@ export default function AdvancedAnalytics() {
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               {stats?.overdueMilestones || 0}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -121,7 +121,7 @@ export default function AdvancedAnalytics() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {stats?.delayedProjects || 0}
             </div>
             <p className="text-xs text-muted-foreground">
@@ -259,7 +259,7 @@ export default function AdvancedAnalytics() {
                   </div>
                   <div className="text-right">
                     <div
-                      className={`text-lg font-bold ${prediction.daysDelay > 0 ? "text-red-600" : "text-green-600"}`}
+                      className={`text-lg font-bold ${prediction.daysDelay > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}
                     >
                       {prediction.daysDelay > 0 ? "+" : ""}
                       {prediction.daysDelay} días

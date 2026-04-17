@@ -235,7 +235,7 @@ export default function CalendarPage() {
           {/* Mini stats */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/50 text-xs font-medium">
-              <CalendarIcon className="h-3.5 w-3.5 text-orange-500" />
+              <CalendarIcon className="h-3.5 w-3.5 text-orange-500 dark:text-orange-400" />
               <span className="text-foreground">{stats.total}</span>
               <span className="text-muted-foreground hidden sm:inline">hitos</span>
             </div>
@@ -243,12 +243,12 @@ export default function CalendarPage() {
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
               <span className="text-emerald-600 dark:text-emerald-400">{stats.completed}</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-xs font-medium">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/200/10 text-xs font-medium">
               <Timer className="h-3.5 w-3.5 text-amber-500" />
               <span className="text-amber-600 dark:text-amber-400">{stats.pending}</span>
             </div>
             {stats.today > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 text-xs font-medium animate-pulse">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/200/10 text-xs font-medium animate-pulse">
                 <AlertCircle className="h-3.5 w-3.5 text-blue-500" />
                 <span className="text-blue-600 dark:text-blue-400">{stats.today} hoy</span>
               </div>
@@ -299,7 +299,7 @@ export default function CalendarPage() {
                   <div className="p-3 border-b border-border flex items-center justify-between">
                     <span className="text-xs font-semibold text-foreground">Filtrar por proyecto</span>
                     {selectedProjectIds.size > 0 && (
-                      <button onClick={clearFilters} className="text-[10px] text-orange-500 hover:text-orange-600 font-medium">
+                      <button onClick={clearFilters} className="text-[10px] text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:text-orange-400 font-medium">
                         Limpiar
                       </button>
                     )}
@@ -440,12 +440,12 @@ export default function CalendarPage() {
                         <span className="text-xs font-medium">Completado</span>
                       </div>
                     ) : selectedEvent.resource.status === "in_progress" ? (
-                      <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                      <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/200/10 text-blue-600 dark:text-blue-400">
                         <Timer className="h-3.5 w-3.5" />
                         <span className="text-xs font-medium">En progreso</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                      <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-900/200/10 text-amber-600 dark:text-amber-400">
                         <AlertCircle className="h-3.5 w-3.5" />
                         <span className="text-xs font-medium">Pendiente</span>
                       </div>
@@ -519,9 +519,9 @@ export default function CalendarPage() {
                   {selectedEvent.resource.status === "completed" ? (
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-0 text-[10px]">Completado</Badge>
                   ) : selectedEvent.resource.status === "in_progress" ? (
-                    <Badge className="bg-blue-500/10 text-blue-600 border-0 text-[10px]">En progreso</Badge>
+                    <Badge className="bg-blue-50 dark:bg-blue-900/200/10 text-blue-600 dark:text-blue-400 border-0 text-[10px]">En progreso</Badge>
                   ) : (
-                    <Badge className="bg-amber-500/10 text-amber-600 border-0 text-[10px]">Pendiente</Badge>
+                    <Badge className="bg-amber-50 dark:bg-amber-900/200/10 text-amber-600 dark:text-amber-400 border-0 text-[10px]">Pendiente</Badge>
                   )}
                 </div>
                 <Link href={`/projects/${selectedEvent.resource.projectId}`}>

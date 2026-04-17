@@ -770,4 +770,36 @@
 - [x] PDF incluye: logo GHP, header gradiente, cards de info, tabla con barras de Gantt visuales, leyenda, footer
 - [x] Diseño estético y profesional del PDF (jsPDF landscape A4)
 - [x] Tests (gantt-export.test.ts - 24 tests passed)
+- [x] Push a GitHub (commit 6482f3a)
+
+## Bug: Tema Claro no se aplica correctamente (17 Abr 2026)
+- [x] Analizar implementación del ThemeProvider y CSS variables para tema claro/oscuro
+- [x] Verificar que :root tiene colores claros y .dark tiene colores oscuros
+- [x] Corregir la lógica de cambio de tema: UserProfile ahora llama setTheme() + MainLayout sincroniza tema de BD
+- [x] Tests (dark-mode.test.ts - 53 tests passed)
+- [ ] Push a GitHub
+
+## Feature: Soporte completo tema claro/oscuro en toda la UI (17 Abr 2026)
+- [x] Sidebar.tsx - dark mode classes (30+ dark: classes)
+- [x] MainLayout.tsx - theme sync from DB + dark mode
+- [x] Dashboard.tsx - dark mode classes
+- [x] Projects.tsx - dark mode classes
+- [x] ProjectDetail.tsx - dark mode classes
+- [x] EditProject.tsx - dark mode classes
+- [x] NewProject.tsx - dark mode classes
+- [x] Analytics.tsx - dark mode classes
+- [x] AdvancedAnalytics.tsx - dark mode classes
+- [x] GanttChart.tsx - dark mode classes + gantt-custom.css dark rules
+- [x] Calendar.tsx / CalendarView.tsx - dark mode classes
+- [x] UserProfile.tsx - dark mode classes + setTheme() integration
+- [x] UserManagement.tsx - dark mode classes
+- [x] Settings.tsx - dark mode classes
+- [x] NotificationHistory.tsx - dark mode classes
+- [x] Reminders.tsx - dark mode classes
+- [x] AIAssistant.tsx - dark mode classes
+- [x] TramitesYDiseno.tsx - dark mode classes
+- [x] Reports.tsx - dark mode classes
+- [x] LoginAuth0.tsx - dark mode classes
+- [x] Remaining pages (Login, Register, ForgotPassword, NotFound, Home, EmailConfig) - all done
+- [x] Tests (dark-mode.test.ts - 53 tests passed)
 - [ ] Push a GitHub

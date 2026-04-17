@@ -59,7 +59,6 @@ export function Sidebar({ className }: SidebarProps) {
   const isUsingAuth0 = isAuth0Configured();
   
   // Siempre usar los datos del backend (meQuery) para obtener el rol correcto
-  // El auth0.user solo tiene datos de Auth0 (no el rol de la BD)
   const user = meQuery.data ?? manusAuth.user ?? null;
   
   const isAuthenticated = isUsingAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
@@ -153,10 +152,10 @@ export function Sidebar({ className }: SidebarProps) {
   );
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-gradient-to-b from-white to-orange-50/30 border-r border-orange-100">
+    <div className="flex flex-col h-full bg-gradient-to-b from-white to-orange-50/30 dark:from-gray-900 dark:to-gray-900 border-r border-orange-100 dark:border-gray-700">
       {/* Header */}
       <div
-        className={cn("p-6 border-b border-orange-100", isCollapsed && "p-4")}
+        className={cn("p-6 border-b border-orange-100 dark:border-gray-700", isCollapsed && "p-4")}
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-apple flex-shrink-0">
@@ -167,7 +166,7 @@ export function Sidebar({ className }: SidebarProps) {
               <h2 className="font-bold text-lg bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent truncate">
                 Solar Manager
               </h2>
-              <p className="text-xs text-gray-500 truncate">Green House Project</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Green House Project</p>
             </div>
           )}
           {isAuthenticated && <NotificationBell />}
@@ -184,30 +183,30 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* User Info */}
       {isAuthenticated && user && !isCollapsed && (
-        <div className="p-4 border-b border-orange-100">
+        <div className="p-4 border-b border-orange-100 dark:border-gray-700">
           <button
             onClick={() => navigate("/profile")}
-            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white shadow-sm border border-orange-100/50 hover:shadow-md hover:border-orange-200 transition-all cursor-pointer"
+            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-orange-100/50 dark:border-gray-600 hover:shadow-md hover:border-orange-200 dark:hover:border-gray-500 transition-all cursor-pointer"
           >
-            <Avatar className="h-10 w-10 border-2 border-orange-200 flex-shrink-0">
+            <Avatar className="h-10 w-10 border-2 border-orange-200 dark:border-orange-400/50 flex-shrink-0">
               <AvatarImage src={user.avatarUrl || (isUsingAuth0 ? auth0.user?.picture : undefined) || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0 text-left">
-              <p className="font-semibold text-sm text-gray-900 truncate">
+              <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
                 {user.name || "Usuario"}
               </p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
               <span
                 className={cn(
                   "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium",
                   user.role === "admin"
-                    ? "bg-orange-100 text-orange-700"
+                    ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
                     : user.role === "ingeniero_tramites"
-                    ? "bg-purple-100 text-purple-700"
-                    : "bg-blue-100 text-blue-700"
+                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
+                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
                 )}
               >
                 {user.role === "admin" 
@@ -223,13 +222,13 @@ export function Sidebar({ className }: SidebarProps) {
 
       {/* Collapsed User Avatar */}
       {isAuthenticated && user && isCollapsed && (
-        <div className="p-4 border-b border-orange-100 flex justify-center">
+        <div className="p-4 border-b border-orange-100 dark:border-gray-700 flex justify-center">
           <button
             onClick={() => navigate("/profile")}
             className="hover:opacity-80 transition-opacity"
             title="Ver perfil"
           >
-            <Avatar className="h-10 w-10 border-2 border-orange-200">
+            <Avatar className="h-10 w-10 border-2 border-orange-200 dark:border-orange-400/50">
               <AvatarImage src={user.avatarUrl || (isUsingAuth0 ? auth0.user?.picture : undefined) || undefined} />
               <AvatarFallback className="bg-gradient-to-br from-orange-400 to-amber-400 text-white font-semibold">
                 {user.name?.charAt(0).toUpperCase() || "U"}
@@ -259,7 +258,7 @@ export function Sidebar({ className }: SidebarProps) {
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group cursor-pointer",
                   isActive
                     ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-apple"
-                    : "text-gray-700 hover:bg-orange-50 hover:text-orange-600",
+                    : "text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800 hover:text-orange-600 dark:hover:text-orange-400",
                   isCollapsed && "justify-center px-2"
                 )}
                 title={isCollapsed ? item.label : undefined}
@@ -269,7 +268,7 @@ export function Sidebar({ className }: SidebarProps) {
                     "h-5 w-5 transition-transform group-hover:scale-110 flex-shrink-0",
                     isActive
                       ? "text-white"
-                      : "text-gray-500 group-hover:text-orange-500"
+                      : "text-gray-500 dark:text-gray-400 group-hover:text-orange-500 dark:group-hover:text-orange-400"
                   )}
                 />
                 {!isCollapsed && (
@@ -291,7 +290,7 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Footer */}
       <div
         className={cn(
-          "p-4 border-t border-orange-100 space-y-2",
+          "p-4 border-t border-orange-100 dark:border-gray-700 space-y-2",
           isCollapsed && "p-2"
         )}
       >
@@ -299,7 +298,7 @@ export function Sidebar({ className }: SidebarProps) {
         <Button
           variant="ghost"
           className={cn(
-            "w-full gap-3 text-gray-700 hover:text-red-600 hover:bg-red-50",
+            "w-full gap-3 text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20",
             isCollapsed && "justify-center px-2"
           )}
           onClick={handleLogout}
@@ -309,7 +308,7 @@ export function Sidebar({ className }: SidebarProps) {
           {!isCollapsed && <span className="font-medium">Cerrar Sesión</span>}
         </Button>
         {!isCollapsed && (
-          <p className="text-xs text-center text-gray-400 pt-2">
+          <p className="text-xs text-center text-gray-400 dark:text-gray-500 pt-2">
             v2.0.0 • Green House Project
           </p>
         )}
@@ -323,7 +322,7 @@ export function Sidebar({ className }: SidebarProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden bg-white shadow-apple border border-orange-100"
+        className="fixed top-4 left-4 z-50 lg:hidden bg-white dark:bg-gray-800 shadow-apple border border-orange-100 dark:border-gray-600"
         onClick={() => setIsOpen(true)}
       >
         <Menu className="h-5 w-5 text-orange-600" />
@@ -333,7 +332,7 @@ export function Sidebar({ className }: SidebarProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="hidden lg:flex fixed top-4 left-4 z-50 bg-white shadow-apple border border-orange-100"
+        className="hidden lg:flex fixed top-4 left-4 z-50 bg-white dark:bg-gray-800 shadow-apple border border-orange-100 dark:border-gray-600"
         onClick={() => setIsCollapsed(!isCollapsed)}
         style={{ left: isCollapsed ? "4.5rem" : "17rem" }}
       >

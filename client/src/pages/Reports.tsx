@@ -49,7 +49,7 @@ export default function Reports() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent mx-auto" />
-          <p className="text-gray-600">Cargando reportes...</p>
+          <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Cargando reportes...</p>
         </div>
       </div>
     );

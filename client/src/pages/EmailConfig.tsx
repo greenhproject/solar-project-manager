@@ -111,9 +111,9 @@ export default function EmailConfigPage() {
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <Shield className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Acceso Restringido</h2>
-            <p className="text-gray-600">Solo los administradores pueden acceder a la configuración de email.</p>
+            <Shield className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Restringido</h2>
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500">Solo los administradores pueden acceder a la configuración de email.</p>
             <Button onClick={() => navigate("/dashboard")} className="mt-4">
               Volver al Dashboard
             </Button>
@@ -208,7 +208,7 @@ export default function EmailConfigPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 p-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-orange-500 dark:text-orange-400" />
       </div>
     );
   }
@@ -230,23 +230,23 @@ export default function EmailConfigPage() {
 
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Mail className="h-8 w-8 text-orange-500" />
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+              <Mail className="h-8 w-8 text-orange-500 dark:text-orange-400" />
               Configuración de Email
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
               Configura el proveedor de email para notificaciones automáticas
             </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               {form.isActive ? (
-                <Badge className="bg-green-100 text-green-700 flex items-center gap-1">
+                <Badge className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />
                   Activo
                 </Badge>
               ) : (
-                <Badge className="bg-gray-100 text-gray-700 flex items-center gap-1">
+                <Badge className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center gap-1">
                   <XCircle className="h-3 w-3" />
                   Inactivo
                 </Badge>
@@ -263,7 +263,7 @@ export default function EmailConfigPage() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Server className="h-5 w-5 text-orange-500" />
+              <Server className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Proveedor de Email
             </CardTitle>
             <CardDescription>
@@ -279,20 +279,20 @@ export default function EmailConfigPage() {
                     key={key}
                     className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
                       form.provider === key
-                        ? "border-orange-500 bg-orange-50"
-                        : "border-gray-200 hover:border-gray-300"
+                        ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
+                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:border-gray-600"
                     }`}
                     onClick={() => setForm({ ...form, provider: key })}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <div className={`p-2 rounded-lg ${
-                        form.provider === key ? "bg-orange-100 text-orange-600" : "bg-gray-100 text-gray-600"
+                        form.provider === key ? "bg-orange-100 text-orange-600 dark:text-orange-400" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 dark:text-gray-500"
                       }`}>
                         {info.icon}
                       </div>
                       <h3 className="font-semibold">{info.name}</h3>
                     </div>
-                    <p className="text-sm text-gray-600">{info.description}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">{info.description}</p>
                   </div>
                 );
               })}
@@ -304,7 +304,7 @@ export default function EmailConfigPage() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Key className="h-5 w-5 text-orange-500" />
+              <Key className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Credenciales
             </CardTitle>
             <CardDescription>
@@ -329,12 +329,12 @@ export default function EmailConfigPage() {
                   <button
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500"
                   >
                     {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-1">
                   {form.provider === "resend"
                     ? "Obtén tu API Key en https://resend.com/api-keys"
                     : "Obtén tu API Key en https://app.sendgrid.com/settings/api_keys"}
@@ -387,7 +387,7 @@ export default function EmailConfigPage() {
                     <button
                       type="button"
                       onClick={() => setShowSmtpPassword(!showSmtpPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500"
                     >
                       {showSmtpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -409,7 +409,7 @@ export default function EmailConfigPage() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Send className="h-5 w-5 text-orange-500" />
+              <Send className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Configuración del Remitente
             </CardTitle>
           </CardHeader>
@@ -444,7 +444,7 @@ export default function EmailConfigPage() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5 text-orange-500" />
+              <Settings className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Opciones de Notificación
             </CardTitle>
           </CardHeader>
@@ -452,7 +452,7 @@ export default function EmailConfigPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base">Habilitar notificaciones por email</Label>
-                <p className="text-sm text-gray-500">Enviar emails automáticos cuando hay hitos próximos a vencer o vencidos</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Enviar emails automáticos cuando hay hitos próximos a vencer o vencidos</p>
               </div>
               <Switch
                 checked={form.enableEmailNotifications}
@@ -465,7 +465,7 @@ export default function EmailConfigPage() {
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base">Enviar copia al administrador</Label>
-                <p className="text-sm text-gray-500">Recibir una copia de cada notificación enviada para trazabilidad</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Recibir una copia de cada notificación enviada para trazabilidad</p>
               </div>
               <Switch
                 checked={form.sendCopyToAdmin}
@@ -493,7 +493,7 @@ export default function EmailConfigPage() {
         <Card className="shadow-apple border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5 text-orange-500" />
+              <Mail className="h-5 w-5 text-orange-500 dark:text-orange-400" />
               Email de Prueba
             </CardTitle>
             <CardDescription>
@@ -512,7 +512,7 @@ export default function EmailConfigPage() {
               <Button
                 onClick={handleSendTest}
                 variant="outline"
-                className="border-orange-300 text-orange-700 hover:bg-orange-50"
+                className="border-orange-300 dark:border-gray-600 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:bg-orange-900/20"
                 disabled={sendTest.isPending || !form.isActive}
               >
                 {sendTest.isPending ? (
@@ -524,7 +524,7 @@ export default function EmailConfigPage() {
               </Button>
             </div>
             {config?.lastTestedAt && (
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 mt-2">
                 Último test: {tzFormatDateTime(config.lastTestedAt)}
               </p>
             )}

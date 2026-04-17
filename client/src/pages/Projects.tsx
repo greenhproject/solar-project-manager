@@ -58,19 +58,19 @@ const SORT_OPTIONS: { value: SortOption; label: string; icon: React.ReactNode }[
 ];
 
 const STATUS_CONFIG: Record<string, { label: string; variant: "secondary" | "default" | "outline" | "destructive"; color: string; dotColor: string }> = {
-  planning: { label: "Planificación", variant: "secondary", color: "bg-blue-500/10 text-blue-400 border-blue-500/20", dotColor: "bg-blue-500" },
-  in_progress: { label: "En Progreso", variant: "default", color: "bg-green-500/10 text-green-400 border-green-500/20", dotColor: "bg-green-500" },
-  on_hold: { label: "En Espera", variant: "outline", color: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20", dotColor: "bg-yellow-500" },
+  planning: { label: "Planificación", variant: "secondary", color: "bg-blue-50 dark:bg-blue-900/200/10 text-blue-400 border-blue-500/20", dotColor: "bg-blue-50 dark:bg-blue-900/200" },
+  in_progress: { label: "En Progreso", variant: "default", color: "bg-green-50 dark:bg-green-900/200/10 text-green-400 border-green-500/20", dotColor: "bg-green-50 dark:bg-green-900/200" },
+  on_hold: { label: "En Espera", variant: "outline", color: "bg-yellow-50 dark:bg-yellow-900/200/10 text-yellow-400 border-yellow-500/20", dotColor: "bg-yellow-50 dark:bg-yellow-900/200" },
   completed: { label: "Completado", variant: "default", color: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20", dotColor: "bg-emerald-500" },
-  cancelled: { label: "Cancelado", variant: "destructive", color: "bg-red-500/10 text-red-400 border-red-500/20", dotColor: "bg-red-500" },
+  cancelled: { label: "Cancelado", variant: "destructive", color: "bg-red-50 dark:bg-red-900/200/10 text-red-400 border-red-500/20", dotColor: "bg-red-50 dark:bg-red-900/200" },
 };
 
 const KANBAN_COLUMNS = [
-  { key: "planning", label: "Planificación", color: "border-blue-500/40", headerBg: "bg-blue-500/10" },
-  { key: "in_progress", label: "En Progreso", color: "border-green-500/40", headerBg: "bg-green-500/10" },
-  { key: "on_hold", label: "En Espera", color: "border-yellow-500/40", headerBg: "bg-yellow-500/10" },
+  { key: "planning", label: "Planificación", color: "border-blue-500/40", headerBg: "bg-blue-50 dark:bg-blue-900/200/10" },
+  { key: "in_progress", label: "En Progreso", color: "border-green-500/40", headerBg: "bg-green-50 dark:bg-green-900/200/10" },
+  { key: "on_hold", label: "En Espera", color: "border-yellow-500/40", headerBg: "bg-yellow-50 dark:bg-yellow-900/200/10" },
   { key: "completed", label: "Completado", color: "border-emerald-500/40", headerBg: "bg-emerald-500/10" },
-  { key: "cancelled", label: "Cancelado", color: "border-red-500/40", headerBg: "bg-red-500/10" },
+  { key: "cancelled", label: "Cancelado", color: "border-red-500/40", headerBg: "bg-red-50 dark:bg-red-900/200/10" },
 ];
 
 export default function Projects() {
@@ -111,7 +111,7 @@ export default function Projects() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="h-12 w-12 animate-spin text-orange-500 mx-auto" />
+          <Loader2 className="h-12 w-12 animate-spin text-orange-500 dark:text-orange-400 mx-auto" />
           <p className="text-muted-foreground">Cargando proyectos...</p>
         </div>
       </div>

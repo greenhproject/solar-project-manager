@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { useNotificationMonitor } from "@/hooks/useNotificationMonitor";
 import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 import { trpc } from "@/lib/trpc";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -157,6 +158,14 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
 
     handleBackendError();
   }, [meQuery.error, auth0.isAuthenticated, auth0.accessToken, auth0.tokenError, auth0.refreshToken, utils]);
+
+  // Sync user theme from DB to ThemeContext
+  const { setTheme } = useTheme();
+  useEffect(() => {
+    if (meQuery.data?.theme) {
+      setTheme(meQuery.data.theme as "light" | "dark" | "system");
+    }
+  }, [meQuery.data?.theme, setTheme]);
 
   // Reset retry counter cuando la query tiene éxito
   useEffect(() => {
