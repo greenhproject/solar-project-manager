@@ -803,3 +803,13 @@
 - [x] Remaining pages (Login, Register, ForgotPassword, NotFound, Home, EmailConfig) - all done
 - [x] Tests (dark-mode.test.ts - 53 tests passed)
 - [ ] Push a GitHub
+
+## Mejora: Auto-ajuste Fecha Fin + Toggle Días Hábiles (21 Abr 2026)
+- [x] Auto-ajuste: Cuando se cambie la fecha de vencimiento, la fecha fin se actualiza automáticamente
+- [x] Toggle Días Hábiles Global: Switch en SystemConfiguration (tab "Días Hábiles")
+- [x] Toggle Días Hábiles por Hito: Toggle individual en cada hito card en ProjectDetail
+- [x] Backend: recalculateWithWeekends procedure en milestones router
+- [x] Backend: usa addBusinessDays de shared/businessDays.ts para recalcular
+- [x] Frontend: Toggle Switch por hito + label dinámico (calendario/hábiles)
+- [x] Tests (weekends-toggle.test.ts - 27 tests passed)
+- [ ] Push a GitHub

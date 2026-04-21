@@ -1155,6 +1155,56 @@ export const appRouter = router({
         return { success: true, projectId: milestone.projectId };
       }),
 
+    // Recalcular fechas de un hito individual basado en toggle de días hábiles
+    recalculateWithWeekends: protectedProcedure
+      .input(
+        z.object({
+          milestoneId: z.number(),
+          includeWeekends: z.boolean(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const milestone = await db.getMilestoneById(input.milestoneId);
+        if (!milestone) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Hito no encontrado" });
+        }
+
+        const project = await db.getProjectById(milestone.projectId);
+        if (!project) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Proyecto no encontrado" });
+        }
+
+        // Verificar permisos
+        if (
+          ctx.user.role !== "admin" &&
+          ctx.user.role !== "ingeniero_tramites" &&
+          project.assignedEngineerId !== ctx.user.id
+        ) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "No tienes permiso" });
+        }
+
+        const { addBusinessDays } = await import("../shared/businessDays");
+
+        // Usar startDate del hito como base, o dueDate si no hay startDate
+        const startDate = milestone.startDate ? new Date(milestone.startDate) : new Date(milestone.dueDate);
+        const durationDays = milestone.durationDays || 7;
+
+        // Recalcular endDate y dueDate usando la configuración de weekends
+        const newEndDate = addBusinessDays(startDate, durationDays, input.includeWeekends);
+
+        await db.updateMilestone(input.milestoneId, {
+          endDate: newEndDate,
+          dueDate: newEndDate,
+        });
+
+        return {
+          success: true,
+          newEndDate,
+          includeWeekends: input.includeWeekends,
+          durationDays,
+        };
+      }),
+
     // Solicitar reprogramación de fecha con justificación (para roles no-admin)
     requestReschedule: protectedProcedure
       .input(

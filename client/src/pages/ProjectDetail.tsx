@@ -52,8 +52,9 @@ import {
   User as UserIcon,
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useTimezone, fromDateInputValue } from "@/hooks/useTimezone";
@@ -145,7 +146,11 @@ export default function ProjectDetail() {
   };
   const assignResponsible = trpc.milestones.assignResponsible.useMutation();
   const updateDueDate = trpc.milestones.updateDueDate.useMutation();
+  const recalculateWithWeekends = trpc.milestones.recalculateWithWeekends.useMutation();
   const deleteMilestone = trpc.milestones.delete.useMutation();
+
+  // Query para configuración global de días hábiles
+  const { data: weekendsConfig } = trpc.settings.getIncludeWeekends.useQuery();
   const reorderMilestones = trpc.milestones.reorder.useMutation({
     onSuccess: () => {
       refetchMilestones();
@@ -164,6 +169,30 @@ export default function ProjectDetail() {
     milestoneName: string;
     newDate: string; // valor del input date (yyyy-MM-dd)
   } | null>(null);
+
+  // Estado local para tracking de toggles de weekends por hito
+  const [milestoneWeekendOverrides, setMilestoneWeekendOverrides] = useState<Record<number, boolean>>({});
+
+  // Handler para toggle de días hábiles por hito
+  const handleMilestoneWeekendToggle = useCallback(async (milestoneId: number, milestoneName: string, includeWeekends: boolean) => {
+    try {
+      setMilestoneWeekendOverrides(prev => ({ ...prev, [milestoneId]: includeWeekends }));
+      const result = await recalculateWithWeekends.mutateAsync({
+        milestoneId,
+        includeWeekends,
+      });
+      toast.success(
+        includeWeekends
+          ? `"${milestoneName}": Recalculado con fines de semana (${result.durationDays} días calendario)`
+          : `"${milestoneName}": Recalculado solo días hábiles (${result.durationDays} días hábiles)`
+      );
+      await refetchMilestones();
+    } catch (error: any) {
+      // Revertir el toggle local
+      setMilestoneWeekendOverrides(prev => ({ ...prev, [milestoneId]: !includeWeekends }));
+      toast.error(error.message || "Error al recalcular fechas");
+    }
+  }, [recalculateWithWeekends, refetchMilestones]);
 
   if (meQuery.isLoading || !user) {
     return (
@@ -834,6 +863,33 @@ export default function ProjectDetail() {
                             </div>
                           </div>
 
+                          {/* Toggle de días hábiles por hito */}
+                          {(milestone as any).durationDays && (milestone as any).startDate && (
+                            <div className="flex items-center gap-3 mb-2 p-2 rounded-md bg-muted/30 border border-dashed">
+                              <Switch
+                                checked={
+                                  milestoneWeekendOverrides[milestone.id] !== undefined
+                                    ? milestoneWeekendOverrides[milestone.id]
+                                    : (weekendsConfig?.includeWeekends ?? false)
+                                }
+                                onCheckedChange={(checked) => {
+                                  handleMilestoneWeekendToggle(milestone.id, milestone.name, checked);
+                                }}
+                                disabled={recalculateWithWeekends.isPending}
+                                className="scale-75"
+                              />
+                              <span className="text-xs text-muted-foreground">
+                                {
+                                  (milestoneWeekendOverrides[milestone.id] !== undefined
+                                    ? milestoneWeekendOverrides[milestone.id]
+                                    : (weekendsConfig?.includeWeekends ?? false))
+                                    ? "Incluye fines de semana"
+                                    : "Solo días hábiles (L-V)"
+                                }
+                              </span>
+                            </div>
+                          )}
+
                           <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                             {(milestone as any).startDate && (
                               <span className="flex items-center gap-1">
@@ -849,7 +905,13 @@ export default function ProjectDetail() {
                             </span>
                             {(milestone as any).durationDays && (
                               <span className="flex items-center gap-1 font-medium">
-                                {(milestone as any).durationDays} día(s) hábiles
+                                {(milestone as any).durationDays} día(s) {
+                                  (milestoneWeekendOverrides[milestone.id] !== undefined
+                                    ? milestoneWeekendOverrides[milestone.id]
+                                    : (weekendsConfig?.includeWeekends ?? false))
+                                    ? "calendario"
+                                    : "hábiles"
+                                }
                               </span>
                             )}
                             {milestone.completedDate && (
@@ -1185,12 +1247,18 @@ export default function ProjectDetail() {
               onClick={async () => {
                 if (!cascadeDialog) return;
                 try {
+                  // Actualizar dueDate Y endDate al mismo valor
                   await updateDueDate.mutateAsync({
                     milestoneId: cascadeDialog.milestoneId,
                     dueDate: fromDateInputValue(cascadeDialog.newDate),
                     cascadeSubsequent: false,
                   });
-                  toast.success("Fecha actualizada (solo este hito)");
+                  // También actualizar endDate para que coincida con la nueva fecha de vencimiento
+                  await updateMilestone.mutateAsync({
+                    id: cascadeDialog.milestoneId,
+                    endDate: fromDateInputValue(cascadeDialog.newDate),
+                  });
+                  toast.success("Fecha de vencimiento y fecha fin actualizadas");
                   setCascadeDialog(null);
                   await refetchMilestones();
                 } catch (error: any) {

@@ -21,9 +21,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Edit, Trash2, FolderKanban, ListTodo, User, GripVertical } from "lucide-react";
+import { Plus, Edit, Trash2, FolderKanban, ListTodo, User, GripVertical, CalendarDays } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SortableList } from "@/components/SortableList";
+import { Switch } from "@/components/ui/switch";
 
 export function SystemConfiguration() {
   const utils = trpc.useUtils();
@@ -54,6 +55,22 @@ export function SystemConfiguration() {
   const { data: milestoneTemplates = [], isLoading: loadingTemplates } =
     trpc.milestoneTemplates.list.useQuery();
   const { data: allUsers = [] } = trpc.users.list.useQuery();
+
+  // Query para configuración de días hábiles
+  const { data: weekendsConfig } = trpc.settings.getIncludeWeekends.useQuery();
+  const setIncludeWeekends = trpc.settings.setIncludeWeekends.useMutation({
+    onSuccess: (data) => {
+      utils.settings.getIncludeWeekends.invalidate();
+      toast.success(
+        data.includeWeekends
+          ? "Fines de semana incluidos en el cálculo de días"
+          : "Solo días hábiles (lunes a viernes) en el cálculo"
+      );
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al actualizar configuración");
+    },
+  });
 
   // Filtrar usuarios con roles de ingeniería
   const engineers = allUsers.filter(
@@ -240,7 +257,7 @@ export function SystemConfiguration() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="project-types" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="project-types">
             <FolderKanban className="w-4 h-4 mr-2" />
             Tipos de Proyectos
@@ -248,6 +265,10 @@ export function SystemConfiguration() {
           <TabsTrigger value="milestone-templates">
             <ListTodo className="w-4 h-4 mr-2" />
             Plantillas de Hitos
+          </TabsTrigger>
+          <TabsTrigger value="business-days">
+            <CalendarDays className="w-4 h-4 mr-2" />
+            Días Hábiles
           </TabsTrigger>
         </TabsList>
 
@@ -617,6 +638,58 @@ export function SystemConfiguration() {
                     Primero debes crear tipos de proyectos
                   </p>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="business-days" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuración de Días Hábiles</CardTitle>
+              <CardDescription>
+                Define cómo el sistema calcula la duración de los hitos al crear proyectos y al recalcular fechas en cascada.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-1">
+                  <Label className="text-base font-medium">Incluir fines de semana</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {weekendsConfig?.includeWeekends
+                      ? "El sistema cuenta sábados y domingos como días de trabajo al calcular la duración de hitos."
+                      : "El sistema solo cuenta días hábiles (lunes a viernes) al calcular la duración de hitos. Los sábados y domingos se excluyen."}
+                  </p>
+                </div>
+                <Switch
+                  checked={weekendsConfig?.includeWeekends ?? false}
+                  onCheckedChange={(checked) => {
+                    setIncludeWeekends.mutate({ includeWeekends: checked });
+                  }}
+                  disabled={setIncludeWeekends.isPending}
+                />
+              </div>
+
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <h4 className="font-medium text-sm">¿Cómo funciona?</h4>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p className="flex items-start gap-2">
+                    <span className="text-orange-500 font-bold mt-0.5">•</span>
+                    <span><strong>Desactivado (solo días hábiles):</strong> Si un hito tiene duración de 5 días y empieza un lunes, terminará el viernes de esa misma semana.</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-orange-500 font-bold mt-0.5">•</span>
+                    <span><strong>Activado (incluye fines de semana):</strong> Si un hito tiene duración de 5 días y empieza un lunes, terminará el sábado (cuenta todos los días calendario).</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-orange-500 font-bold mt-0.5">•</span>
+                    <span><strong>Aplica a:</strong> Creación de proyectos con plantillas, carga de hitos predeterminados, y recálculo en cascada al cambiar fechas de vencimiento.</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <span className="text-orange-500 font-bold mt-0.5">•</span>
+                    <span><strong>Toggle por hito:</strong> Cada hito individual también tiene su propio toggle para hacer ajustes rápidos sin cambiar la configuración global.</span>
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
