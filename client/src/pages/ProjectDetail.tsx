@@ -150,7 +150,7 @@ export default function ProjectDetail() {
   const deleteMilestone = trpc.milestones.delete.useMutation();
 
   // Query para configuración global de días hábiles
-  const { data: weekendsConfig } = trpc.settings.getIncludeWeekends.useQuery();
+  const { data: weekendsConfig } = trpc.appSettings.getIncludeWeekends.useQuery();
   const reorderMilestones = trpc.milestones.reorder.useMutation({
     onSuccess: () => {
       refetchMilestones();
@@ -361,7 +361,7 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container py-8 space-y-8">
+      <div className="container py-4 sm:py-8 space-y-4 sm:space-y-8 px-3 sm:px-4">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="space-y-2">
@@ -373,11 +373,11 @@ export default function ProjectDetail() {
             </Link>
 
             <div className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-xl bg-gradient-solar flex items-center justify-center">
-                <Sun className="h-8 w-8 text-white" />
+              <div className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl bg-gradient-solar flex items-center justify-center flex-shrink-0">
+                <Sun className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold">{project.name}</h1>
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-4xl font-bold truncate">{project.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   {getStatusBadge(project.status)}
                   {isOverdue(project.estimatedEndDate, project.status) && (
@@ -391,11 +391,11 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap w-full md:w-auto">
             <div className="relative group">
               <Button
                 variant="outline"
-                className="gap-2"
+                className="gap-1 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-initial"
                 onClick={async () => {
                   try {
                     toast.info("Generando reporte completo PDF...");
@@ -417,12 +417,12 @@ export default function ProjectDetail() {
                 ) : (
                   <FileText className="h-4 w-4" />
                 )}
-                Reporte Completo
+                <span className="sm:hidden">PDF</span><span className="hidden sm:inline">Reporte Completo</span>
               </Button>
             </div>
             <Button
               variant="outline"
-              className="gap-2"
+              className="gap-1 sm:gap-2 text-xs sm:text-sm"
               onClick={() => setLocation(`/projects/${project.id}/edit`)}
             >
               <Edit className="h-4 w-4" />
@@ -431,7 +431,7 @@ export default function ProjectDetail() {
             {user.role === "admin" && (
               <Button
                 variant="destructive"
-                className="gap-2"
+                className="gap-1 sm:gap-2 text-xs sm:text-sm"
                 onClick={async () => {
                   if (
                     !confirm(
@@ -463,7 +463,7 @@ export default function ProjectDetail() {
         </div>
 
         {/* Información General */}
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -477,7 +477,7 @@ export default function ProjectDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">
+              <div className="text-2xl sm:text-3xl font-bold mb-2">
                 {project.progressPercentage}%
               </div>
               <Progress value={project.progressPercentage} className="h-2" />
@@ -551,22 +551,24 @@ export default function ProjectDetail() {
 
         {/* Tabs */}
         <Tabs defaultValue="milestones" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="milestones">Hitos</TabsTrigger>
-            <TabsTrigger value="updates">Actualizaciones</TabsTrigger>
-            <TabsTrigger value="attachments">Archivos</TabsTrigger>
-            <TabsTrigger value="legalization">Trámites y Legalización</TabsTrigger>
-            <TabsTrigger value="sync">Sincronización</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-thin">
+            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 whitespace-nowrap">
+              <TabsTrigger value="milestones" className="text-xs sm:text-sm">Hitos</TabsTrigger>
+              <TabsTrigger value="updates" className="text-xs sm:text-sm">Actualizaciones</TabsTrigger>
+              <TabsTrigger value="attachments" className="text-xs sm:text-sm">Archivos</TabsTrigger>
+              <TabsTrigger value="legalization" className="text-xs sm:text-sm">Trámites</TabsTrigger>
+              <TabsTrigger value="sync" className="text-xs sm:text-sm">Sincronización</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Hitos */}
           <TabsContent value="milestones" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Hitos del Proyecto</h2>
-              <div className="flex gap-2">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+              <h2 className="text-lg sm:text-2xl font-bold">Hitos del Proyecto</h2>
+              <div className="flex gap-2 flex-wrap">
                 <Button
                   variant="outline"
-                  className="gap-2"
+                  className="gap-1 sm:gap-2 text-xs sm:text-sm"
                   onClick={handleLoadMilestonesFromTemplate}
                   disabled={loadMilestonesFromTemplate.isPending}
                 >
@@ -578,7 +580,8 @@ export default function ProjectDetail() {
                   ) : (
                     <>
                       <FileText className="h-4 w-4" />
-                      Cargar Hitos Predeterminados
+                      <span className="hidden sm:inline">Cargar Hitos Predeterminados</span>
+                      <span className="sm:hidden">Cargar Hitos</span>
                     </>
                   )}
                 </Button>
@@ -587,7 +590,7 @@ export default function ProjectDetail() {
                   onOpenChange={setIsAddingMilestone}
                 >
                   <DialogTrigger asChild>
-                    <Button className="gap-2">
+                    <Button className="gap-1 sm:gap-2 text-xs sm:text-sm">
                       <Plus className="h-4 w-4" />
                       Agregar Hito
                     </Button>
@@ -707,8 +710,8 @@ export default function ProjectDetail() {
                 className="space-y-3"
                 renderItem={(milestone) => (
                   <Card className="hover:shadow-apple transition-all">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
+                    <CardContent className="p-3 sm:p-6">
+                      <div className="flex items-start gap-2 sm:gap-4">
                         <button
                           onClick={() =>
                             handleToggleMilestoneStatus(
@@ -742,8 +745,8 @@ export default function ProjectDetail() {
                           )}
 
                           {/* Asignación de responsable */}
-                          <div className="flex items-center gap-4 mb-3">
-                            <div className="flex-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3">
+                            <div>
                               <Label className="text-xs text-muted-foreground mb-1 block">Responsable</Label>
                               <Select
                                 value={(milestone as any).assignedUserId?.toString() || "none"}
@@ -774,7 +777,7 @@ export default function ProjectDetail() {
                               </Select>
                             </div>
                             
-                            <div className="flex-1">
+                            <div>
                               <Label className="text-xs text-muted-foreground mb-1 block">Fecha de vencimiento</Label>
                               <Input
                                 type="date"
@@ -794,8 +797,8 @@ export default function ProjectDetail() {
                           </div>
 
                           {/* Fechas de inicio, fin y duración */}
-                          <div className="flex items-center gap-4 mb-2">
-                            <div className="flex-1">
+                          <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_5rem] gap-2 sm:gap-4 mb-2">
+                            <div>
                               <Label className="text-xs text-muted-foreground mb-1 block">Fecha inicio</Label>
                               <Input
                                 type="date"
@@ -816,7 +819,7 @@ export default function ProjectDetail() {
                                 }}
                               />
                             </div>
-                            <div className="flex-1">
+                            <div>
                               <Label className="text-xs text-muted-foreground mb-1 block">Fecha fin</Label>
                               <Input
                                 type="date"
@@ -837,11 +840,11 @@ export default function ProjectDetail() {
                                 }}
                               />
                             </div>
-                            <div className="w-20">
+                            <div className="col-span-2 sm:col-span-1">
                               <Label className="text-xs text-muted-foreground mb-1 block">Días</Label>
                               <Input
                                 type="number"
-                                className="h-8 text-xs text-center"
+                                className="h-8 text-xs text-center w-full sm:w-20"
                                 min={1}
                                 value={(milestone as any).durationDays || ""}
                                 placeholder="-"
@@ -940,12 +943,12 @@ export default function ProjectDetail() {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="gap-2"
+                              className="gap-1 sm:gap-2 text-xs sm:text-sm"
                               onClick={() => openGoogleCalendar(milestone)}
                             >
                               <Calendar className="h-3 w-3" />
                               <ExternalLink className="h-3 w-3" />
-                              Agregar a mi Calendar
+                              <span className="hidden sm:inline">Agregar a mi</span> Calendar
                             </Button>
 
                             {/* Botón eliminar hito - solo admin */}
@@ -996,7 +999,7 @@ export default function ProjectDetail() {
 
           {/* Actualizaciones */}
           <TabsContent value="updates" className="space-y-4">
-            <h2 className="text-2xl font-bold">Historial de Actualizaciones</h2>
+            <h2 className="text-lg sm:text-2xl font-bold">Historial de Actualizaciones</h2>
             {updates && updates.length > 0 ? (
               <div className="space-y-3">
                 {updates.map(update => (
@@ -1040,7 +1043,7 @@ export default function ProjectDetail() {
           {/* Archivos Adjuntos */}
           <TabsContent value="attachments" className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold mb-4">Archivos Adjuntos</h2>
+              <h2 className="text-lg sm:text-2xl font-bold mb-4">Archivos Adjuntos</h2>
               <p className="text-gray-600 dark:text-gray-400 dark:text-gray-500 mb-6">
                 Sube y gestiona documentos relacionados con este proyecto
                 (planos, contratos, certificaciones, etc.)
@@ -1076,8 +1079,8 @@ export default function ProjectDetail() {
 
           {/* Sincronización */}
           <TabsContent value="sync" className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+              <h2 className="text-lg sm:text-2xl font-bold">
                 Sincronización con OpenSolar
               </h2>
               {project.openSolarId && (

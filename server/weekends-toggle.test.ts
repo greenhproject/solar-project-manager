@@ -85,11 +85,11 @@ describe("Weekends Toggle & Auto-adjust Features", () => {
     });
 
     it("should use getIncludeWeekends query", () => {
-      expect(configContent).toContain("settings.getIncludeWeekends.useQuery");
+      expect(configContent).toContain("appSettings.getIncludeWeekends.useQuery");
     });
 
     it("should use setIncludeWeekends mutation", () => {
-      expect(configContent).toContain("settings.setIncludeWeekends.useMutation");
+      expect(configContent).toContain("appSettings.setIncludeWeekends.useMutation");
     });
 
     it("should display explanation of how weekends toggle works", () => {
@@ -133,7 +133,7 @@ describe("Weekends Toggle & Auto-adjust Features", () => {
 
     it("should query global weekends config", () => {
       expect(detailContent).toContain(
-        "settings.getIncludeWeekends.useQuery"
+        "appSettings.getIncludeWeekends.useQuery"
       );
     });
 

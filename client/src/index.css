@@ -248,6 +248,22 @@
   background: hsl(var(--muted-foreground) / 0.5);
 }
 
+/* Scrollbar thin for horizontal scroll containers */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 2px;
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+}
+
 /* Animaciones de entrada */
 @keyframes fadeIn {
   from {

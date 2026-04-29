@@ -57,10 +57,10 @@ export function SystemConfiguration() {
   const { data: allUsers = [] } = trpc.users.list.useQuery();
 
   // Query para configuración de días hábiles
-  const { data: weekendsConfig } = trpc.settings.getIncludeWeekends.useQuery();
-  const setIncludeWeekends = trpc.settings.setIncludeWeekends.useMutation({
+  const { data: weekendsConfig } = trpc.appSettings.getIncludeWeekends.useQuery();
+  const setIncludeWeekends = trpc.appSettings.setIncludeWeekends.useMutation({
     onSuccess: (data) => {
-      utils.settings.getIncludeWeekends.invalidate();
+      utils.appSettings.getIncludeWeekends.invalidate();
       toast.success(
         data.includeWeekends
           ? "Fines de semana incluidos en el cálculo de días"

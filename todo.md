@@ -812,4 +812,17 @@
 - [x] Backend: usa addBusinessDays de shared/businessDays.ts para recalcular
 - [x] Frontend: Toggle Switch por hito + label dinámico (calendario/hábiles)
 - [x] Tests (weekends-toggle.test.ts - 27 tests passed)
+- [x] Push a GitHub (commit ad5738f)
+
+## Fix: Responsive móvil en ProjectDetail (29 Abr 2026)
+- [x] Tabs de navegación (Hitos, Actualizaciones, etc.) se cortan en móvil - hacer scrollable horizontal con overflow-x-auto y scrollbar-thin
+- [x] Hitos se desbordan de la pantalla - campos de fecha y responsable se apilan verticalmente en móvil (grid-cols-1 sm:grid-cols-2)
+- [x] Botones "Cargar Hitos Predeterminados" y "Agregar Hito" se desbordan - flex-wrap con texto reducido en móvil
+- [x] Campos de fecha (Inicio, Fin, Vencimiento, Días) se apilan en 2 columnas en móvil (grid-cols-2 sm:grid-cols-[1fr_1fr_5rem])
+- [x] Toggle de días hábiles responsive (ya tenía buena estructura)
+- [x] Info cards (Progreso, Cronograma, Cliente) se apilan en móvil (grid-cols-1 sm:grid-cols-2 md:grid-cols-3)
+- [x] Título del proyecto responsive (text-xl sm:text-2xl md:text-4xl con truncate)
+- [x] Botones de header responsive (text-xs sm:text-sm, texto abreviado en móvil)
+- [x] Container padding reducido en móvil (py-4 sm:py-8, px-3 sm:px-4)
+- [x] Tests actualizados (weekends-toggle test corregido: settings → appSettings)
 - [ ] Push a GitHub
