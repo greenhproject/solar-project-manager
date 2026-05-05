@@ -21,7 +21,7 @@ import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
 import { appSettings, apiKeys, webhooks, outgoingWebhookLogs } from "../drizzle/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
 
@@ -3474,28 +3474,20 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
           const prefix = rawKey.substring(0, 8);
 
-          // Calcular expiración como Date o undefined (no null para evitar problemas con Drizzle)
-          let expiresAt: Date | undefined = undefined;
+          // Calcular expiración
+          let expiresAt: Date | null = null;
           if (input.expiresInDays && input.expiresInDays > 0) {
             expiresAt = new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000);
           }
 
           // Asegurar que userId sea un número entero
           const userId = typeof ctx.user.id === "string" ? parseInt(ctx.user.id, 10) : ctx.user.id;
+          const permissionsJson = JSON.stringify(input.permissions);
 
-          const insertValues: any = {
-            name: input.name,
-            key: keyHash,
-            prefix,
-            userId,
-            permissions: JSON.stringify(input.permissions),
-          };
-          // Solo incluir expiresAt si tiene valor (evitar pasar null/undefined que cause problemas)
-          if (expiresAt) {
-            insertValues.expiresAt = expiresAt;
-          }
-
-          await dbInst.insert(apiKeys).values(insertValues);
+          // Usar SQL raw para evitar bugs de Drizzle ORM con params/default en ciertas versiones
+          await dbInst.execute(
+            sql`INSERT INTO api_keys (name, \`key\`, prefix, userId, permissions, isActive, expiresAt, createdAt, updatedAt) VALUES (${input.name}, ${keyHash}, ${prefix}, ${userId}, ${permissionsJson}, 1, ${expiresAt}, NOW(), NOW())`
+          );
 
           return {
             key: rawKey,
