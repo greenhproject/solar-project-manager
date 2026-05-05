@@ -843,4 +843,20 @@
 - [x] Endpoint DELETE /api/v1/keys/:id - Desactivar API Key (admin)
 - [x] Router tRPC apiKeyManagement para gestión desde UI
 - [x] Tests vitest (12 tests pasando)
+- [x] Push a GitHub (commit 1e5043a)
+
+## UI de Gestión de API Keys + Webhooks (04 May 2026)
+- [x] Crear página ApiKeysSettings.tsx en Configuración con UI para generar/ver/desactivar keys
+- [x] Agregar sección de API Keys en Settings.tsx
+- [x] Crear tabla webhooks en DB (nombre, url, secret, events, isActive, failCount)
+- [x] Crear tabla outgoing_webhook_logs para auditoría de envíos
+- [x] Crear endpoints REST /api/v1/webhooks (GET, POST, DELETE)
+- [x] Crear router tRPC webhookManagement (list, create, update, delete, logs, test)
+- [x] Implementar webhookService.ts con lógica de disparo (HMAC-SHA256, timeout, retry)
+- [x] Integrar triggers en router de milestones (status_changed, completed)
+- [x] Trigger automático cuando proyecto se completa (todos hitos completados)
+- [x] Desactivación automática después de 10 fallos consecutivos
+- [x] Crear WebhookSettings.tsx con UI completa (crear, test ping, ver logs, activar/desactivar)
+- [x] Documentar webhooks en /api-docs (eventos, firma, headers, endpoints)
+- [x] Tests pasan (api-v1.test.ts + weekends-toggle.test.ts)
 - [ ] Push a GitHub

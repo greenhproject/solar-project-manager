@@ -8,7 +8,7 @@
  */
 import { Router, Request, Response, NextFunction } from "express";
 import { getDb } from "../db";
-import { apiKeys, projects, milestones, projectTypes, users } from "../../drizzle/schema";
+import { apiKeys, projects, milestones, projectTypes, users, webhooks as webhooksTable } from "../../drizzle/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import crypto from "crypto";
 
@@ -537,6 +537,75 @@ apiRouter.delete("/keys/:id", async (req: AuthenticatedRequest, res: Response) =
   await db.update(apiKeys).set({ isActive: false }).where(eq(apiKeys.id, keyId));
 
   res.json({ success: true, message: "API Key desactivada" });
+});
+
+// ============================================
+// WEBHOOKS MANAGEMENT
+// ============================================
+
+/**
+ * GET /api/v1/webhooks
+ * Listar webhooks configurados
+ */
+apiRouter.get("/webhooks", async (req: AuthenticatedRequest, res: Response) => {
+  if (!hasPermission(req, "admin")) {
+    return res.status(403).json({ error: "FORBIDDEN", message: "Se requiere permiso de admin" });
+  }
+
+  const db = await getDb();
+  if (!db) return res.status(503).json({ error: "SERVICE_UNAVAILABLE" });
+
+  const whs = await db.select().from(webhooksTable).orderBy(desc(webhooksTable.createdAt));
+  res.json({ data: whs.map(wh => ({ ...wh, events: JSON.parse(wh.events) })) });
+});
+
+/**
+ * POST /api/v1/webhooks
+ * Crear un nuevo webhook
+ * Body: { name, url, events[] }
+ */
+apiRouter.post("/webhooks", async (req: AuthenticatedRequest, res: Response) => {
+  if (!hasPermission(req, "admin")) {
+    return res.status(403).json({ error: "FORBIDDEN", message: "Se requiere permiso de admin" });
+  }
+
+  const { name, url, events } = req.body;
+  if (!name || !url || !events || !Array.isArray(events) || events.length === 0) {
+    return res.status(400).json({ error: "INVALID_INPUT", message: "name, url y events[] son requeridos" });
+  }
+
+  const db = await getDb();
+  if (!db) return res.status(503).json({ error: "SERVICE_UNAVAILABLE" });
+
+  const secret = crypto.randomBytes(32).toString("hex");
+  await db.insert(webhooksTable).values({
+    name,
+    url,
+    secret,
+    events: JSON.stringify(events),
+    userId: req.apiKeyUser!.userId,
+  });
+
+  res.status(201).json({ success: true, secret, message: "Guarda el secret para verificar firmas HMAC-SHA256" });
+});
+
+/**
+ * DELETE /api/v1/webhooks/:id
+ * Eliminar un webhook
+ */
+apiRouter.delete("/webhooks/:id", async (req: AuthenticatedRequest, res: Response) => {
+  if (!hasPermission(req, "admin")) {
+    return res.status(403).json({ error: "FORBIDDEN", message: "Se requiere permiso de admin" });
+  }
+
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) return res.status(400).json({ error: "INVALID_ID", message: "ID inválido" });
+
+  const db = await getDb();
+  if (!db) return res.status(503).json({ error: "SERVICE_UNAVAILABLE" });
+
+  await db.delete(webhooksTable).where(eq(webhooksTable.id, id));
+  res.json({ success: true, message: "Webhook eliminado" });
 });
 
 export { apiRouter };

@@ -799,3 +799,45 @@ export const apiKeys = mysqlTable("api_keys", {
 }));
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type InsertApiKey = typeof apiKeys.$inferInsert;
+
+
+/**
+ * Tabla de Webhooks
+ * Permite configurar notificaciones automáticas a URLs externas cuando ocurren eventos
+ */
+export const webhooks = mysqlTable("webhooks", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  url: text("url").notNull(), // URL destino del webhook
+  secret: varchar("secret", { length: 64 }).notNull(), // Secret para firma HMAC
+  events: text("events").notNull(), // JSON array: ["milestone.status_changed", "project.completed", etc.]
+  isActive: boolean("isActive").default(true).notNull(),
+  userId: int("userId").notNull(), // Usuario que lo creó
+  lastTriggeredAt: timestamp("lastTriggeredAt"),
+  failCount: int("failCount").default(0).notNull(), // Conteo de fallos consecutivos
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type Webhook = typeof webhooks.$inferSelect;
+export type InsertWebhook = typeof webhooks.$inferInsert;
+
+/**
+ * Tabla de logs de Webhooks salientes
+ * Registra cada intento de envío de webhook para auditoría
+ */
+export const outgoingWebhookLogs = mysqlTable("outgoing_webhook_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  webhookId: int("webhookId").notNull(),
+  event: varchar("event", { length: 100 }).notNull(),
+  payload: text("payload").notNull(), // JSON del payload enviado
+  responseStatus: int("responseStatus"), // HTTP status code de la respuesta
+  responseBody: text("responseBody"), // Cuerpo de la respuesta (truncado)
+  success: boolean("success").default(false).notNull(),
+  error: text("error"), // Mensaje de error si falló
+  duration: int("duration"), // Duración en ms
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({
+  webhookIdx: index("outgoing_wh_log_webhook_idx").on(table.webhookId),
+  eventIdx: index("outgoing_wh_log_event_idx").on(table.event),
+}));
+export type OutgoingWebhookLog = typeof outgoingWebhookLogs.$inferSelect;

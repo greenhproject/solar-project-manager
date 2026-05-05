@@ -20,9 +20,10 @@ import {
 import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
-import { appSettings, apiKeys } from "../drizzle/schema";
+import { appSettings, apiKeys, webhooks, outgoingWebhookLogs } from "../drizzle/schema";
 import { eq, desc } from "drizzle-orm";
 import crypto from "crypto";
+import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -1151,6 +1152,39 @@ export const appRouter = router({
             description: `El hito "${milestone.name}" ha sido marcado como completado`,
             createdBy: ctx.user.id,
           });
+        }
+
+        // Disparar webhooks si cambió el status
+        if (data.status && data.status !== milestone.status) {
+          const project = await db.getProjectById(milestone.projectId);
+          triggerMilestoneStatusChanged({
+            milestoneId: id,
+            milestoneName: milestone.name,
+            projectId: milestone.projectId,
+            projectName: project?.name || "Desconocido",
+            oldStatus: milestone.status,
+            newStatus: data.status,
+          });
+          if (data.status === "completed") {
+            triggerMilestoneCompleted({
+              milestoneId: id,
+              milestoneName: milestone.name,
+              projectId: milestone.projectId,
+              projectName: project?.name || "Desconocido",
+              completedDate: new Date().toISOString(),
+            });
+            // Verificar si el proyecto se completó
+            const milestones = await db.getMilestonesByProjectId(milestone.projectId);
+            const allCompleted = milestones.every((m: any) => m.id === id ? true : m.status === "completed");
+            if (allCompleted && milestones.length > 0) {
+              triggerProjectCompleted({
+                projectId: milestone.projectId,
+                projectName: project?.name || "Desconocido",
+                completedDate: new Date().toISOString(),
+                totalMilestones: milestones.length,
+              });
+            }
+          }
         }
 
         return { success: true, projectId: milestone.projectId };
@@ -3491,6 +3525,145 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
         await dbInst.delete(apiKeys).where(eq(apiKeys.id, input.id));
         return { success: true };
+      }),
+  }),
+
+  // ============================================
+  // GESTIÓN DE WEBHOOKS (ADMIN)
+  // ============================================
+  webhookManagement: router({
+    // Listar webhooks
+    list: adminProcedure.query(async () => {
+      const dbInst = await db.getDb();
+      if (!dbInst) return [];
+      const whs = await dbInst.select().from(webhooks).orderBy(desc(webhooks.createdAt));
+      return whs.map(wh => ({
+        ...wh,
+        events: JSON.parse(wh.events) as string[],
+      }));
+    }),
+
+    // Crear webhook
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        url: z.string().url(),
+        events: z.array(z.string()).min(1),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+
+        const secret = crypto.randomBytes(32).toString("hex");
+
+        await dbInst.insert(webhooks).values({
+          name: input.name,
+          url: input.url,
+          secret,
+          events: JSON.stringify(input.events),
+          userId: ctx.user.id,
+        });
+
+        return { success: true, secret };
+      }),
+
+    // Actualizar webhook
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).max(255).optional(),
+        url: z.string().url().optional(),
+        events: z.array(z.string()).min(1).optional(),
+        isActive: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+
+        const updateData: any = {};
+        if (input.name) updateData.name = input.name;
+        if (input.url) updateData.url = input.url;
+        if (input.events) updateData.events = JSON.stringify(input.events);
+        if (input.isActive !== undefined) updateData.isActive = input.isActive;
+
+        await dbInst.update(webhooks).set(updateData).where(eq(webhooks.id, input.id));
+        return { success: true };
+      }),
+
+    // Eliminar webhook
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+        await dbInst.delete(webhooks).where(eq(webhooks.id, input.id));
+        return { success: true };
+      }),
+
+    // Obtener logs de un webhook
+    logs: adminProcedure
+      .input(z.object({ webhookId: z.number().optional(), limit: z.number().default(50) }))
+      .query(async ({ input }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) return [];
+        if (input.webhookId) {
+          return dbInst.select().from(outgoingWebhookLogs).where(eq(outgoingWebhookLogs.webhookId, input.webhookId)).orderBy(desc(outgoingWebhookLogs.createdAt)).limit(input.limit);
+        }
+        return dbInst.select().from(outgoingWebhookLogs).orderBy(desc(outgoingWebhookLogs.createdAt)).limit(input.limit);
+      }),
+
+    // Test webhook (enviar ping)
+    test: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+
+        const [wh] = await dbInst.select().from(webhooks).where(eq(webhooks.id, input.id));
+        if (!wh) throw new TRPCError({ code: "NOT_FOUND", message: "Webhook no encontrado" });
+
+        const payload = JSON.stringify({
+          event: "test.ping",
+          timestamp: new Date().toISOString(),
+          data: { message: "Test ping from Solar Project Manager" },
+        });
+
+        const signature = crypto.createHmac("sha256", wh.secret).update(payload).digest("hex");
+
+        try {
+          const response = await fetch(wh.url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Webhook-Signature": `sha256=${signature}`,
+              "X-Webhook-Event": "test.ping",
+              "User-Agent": "SolarProjectManager/1.0",
+            },
+            body: payload,
+          });
+
+          await dbInst.insert(outgoingWebhookLogs).values({
+            webhookId: wh.id,
+            event: "test.ping",
+            payload,
+            responseStatus: response.status,
+            responseBody: (await response.text()).substring(0, 500),
+            success: response.ok,
+            duration: 0,
+          });
+
+          return { success: response.ok, status: response.status };
+        } catch (err: any) {
+          await dbInst.insert(outgoingWebhookLogs).values({
+            webhookId: wh.id,
+            event: "test.ping",
+            payload,
+            success: false,
+            error: err.message,
+            duration: 0,
+          });
+          return { success: false, error: err.message };
+        }
       }),
   }),
 });

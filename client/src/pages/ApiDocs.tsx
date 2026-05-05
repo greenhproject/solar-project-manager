@@ -375,6 +375,143 @@ curl -H "Authorization: Bearer spm_tu_api_key_aqui" \\
           />
         </section>
 
+        {/* Webhooks */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-6">Webhooks</h2>
+          <p className="text-gray-300 mb-4">Configura webhooks para recibir notificaciones automáticas cuando ocurren eventos en tus proyectos.</p>
+
+          <div className="mb-6 p-4 bg-gray-900 border border-gray-800 rounded-lg">
+            <h3 className="text-lg font-semibold text-white mb-3">Eventos Disponibles</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left px-3 py-2 text-gray-300">Evento</th>
+                    <th className="text-left px-3 py-2 text-gray-300">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  <tr><td className="px-3 py-2"><code className="text-green-400">milestone.status_changed</code></td><td className="px-3 py-2 text-gray-400">Un hito cambió de estado</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-green-400">milestone.completed</code></td><td className="px-3 py-2 text-gray-400">Un hito fue completado</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-green-400">project.completed</code></td><td className="px-3 py-2 text-gray-400">Todos los hitos de un proyecto se completaron</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-green-400">project.status_changed</code></td><td className="px-3 py-2 text-gray-400">Un proyecto cambió de estado</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-green-400">*</code></td><td className="px-3 py-2 text-gray-400">Todos los eventos</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="mb-6 p-4 bg-gray-900 border border-gray-800 rounded-lg">
+            <h3 className="text-lg font-semibold text-white mb-3">Verificación de Firma</h3>
+            <p className="text-gray-400 text-sm mb-3">Cada webhook incluye una firma HMAC-SHA256 en el header <code className="text-orange-300">X-Webhook-Signature</code>:</p>
+            <pre className="bg-gray-950 p-3 rounded text-xs text-gray-300 overflow-x-auto">
+{`// Verificar firma en Node.js
+const crypto = require('crypto');
+
+function verifySignature(body, signature, secret) {
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(JSON.stringify(body))
+    .digest('hex');
+  return signature === expected;
+}
+
+// En tu endpoint:
+app.post('/webhook', (req, res) => {
+  const sig = req.headers['x-webhook-signature'];
+  if (!verifySignature(req.body, sig, WEBHOOK_SECRET)) {
+    return res.status(401).send('Invalid signature');
+  }
+  // Procesar evento...
+  console.log(req.body.event, req.body.data);
+  res.status(200).send('OK');
+});`}
+            </pre>
+          </div>
+
+          <div className="mb-6 p-4 bg-gray-900 border border-gray-800 rounded-lg">
+            <h3 className="text-lg font-semibold text-white mb-3">Headers del Webhook</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="text-left px-3 py-2 text-gray-300">Header</th>
+                    <th className="text-left px-3 py-2 text-gray-300">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  <tr><td className="px-3 py-2"><code className="text-orange-300">X-Webhook-Signature</code></td><td className="px-3 py-2 text-gray-400">Firma HMAC-SHA256 del body (sha256=...)</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-orange-300">X-Webhook-Event</code></td><td className="px-3 py-2 text-gray-400">Nombre del evento</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-orange-300">X-Webhook-Timestamp</code></td><td className="px-3 py-2 text-gray-400">Timestamp ISO del evento</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-orange-300">Content-Type</code></td><td className="px-3 py-2 text-gray-400">application/json</td></tr>
+                  <tr><td className="px-3 py-2"><code className="text-orange-300">User-Agent</code></td><td className="px-3 py-2 text-gray-400">SolarProjectManager/1.0</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <EndpointDoc
+            method="GET"
+            path="/api/v1/webhooks"
+            description="Listar webhooks configurados"
+            permission="admin"
+            responseExample={`{
+  "data": [
+    {
+      "id": 1,
+      "name": "Slack Notifications",
+      "url": "https://hooks.slack.com/...",
+      "events": ["milestone.completed", "project.completed"],
+      "isActive": true,
+      "failCount": 0
+    }
+  ]
+}`}
+            curlExample={`curl -H "X-API-Key: spm_tu_key" \\
+  ${baseUrl}/api/v1/webhooks`}
+            baseUrl={baseUrl}
+            copyToClipboard={copyToClipboard}
+            copiedId={copiedId}
+          />
+
+          <EndpointDoc
+            method="POST"
+            path="/api/v1/webhooks"
+            description="Crear un nuevo webhook"
+            permission="admin"
+            bodyParams={[
+              { name: "name", type: "string", description: "Nombre descriptivo" },
+              { name: "url", type: "string", description: "URL destino (HTTPS recomendado)" },
+              { name: "events", type: "string[]", description: "Array de eventos a suscribir" },
+            ]}
+            responseExample={`{
+  "success": true,
+  "secret": "abc123...def456",
+  "message": "Guarda el secret para verificar firmas HMAC-SHA256"
+}`}
+            curlExample={`curl -X POST -H "X-API-Key: spm_tu_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{"name":"Mi App","url":"https://mi-app.com/webhook","events":["milestone.completed"]}' \\
+  ${baseUrl}/api/v1/webhooks`}
+            baseUrl={baseUrl}
+            copyToClipboard={copyToClipboard}
+            copiedId={copiedId}
+          />
+
+          <EndpointDoc
+            method="DELETE"
+            path="/api/v1/webhooks/:id"
+            description="Eliminar un webhook"
+            permission="admin"
+            responseExample={`{ "success": true, "message": "Webhook eliminado" }`}
+            curlExample={`curl -X DELETE -H "X-API-Key: spm_tu_key" \\
+  ${baseUrl}/api/v1/webhooks/1`}
+            baseUrl={baseUrl}
+            copyToClipboard={copyToClipboard}
+            copiedId={copiedId}
+          />
+        </section>
+
         {/* Códigos de Error */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Códigos de Error</h2>
