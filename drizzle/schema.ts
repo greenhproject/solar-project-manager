@@ -776,3 +776,26 @@ export const milestoneComments = mysqlTable("milestone_comments", {
 
 export type MilestoneComment = typeof milestoneComments.$inferSelect;
 export type InsertMilestoneComment = typeof milestoneComments.$inferInsert;
+
+/**
+ * API Keys para integración externa
+ * Permite a aplicaciones de terceros acceder a la API REST pública
+ */
+export const apiKeys = mysqlTable("api_keys", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // Nombre descriptivo de la API Key
+  key: varchar("key", { length: 64 }).notNull().unique(), // Hash SHA-256 de la key
+  prefix: varchar("prefix", { length: 8 }).notNull(), // Primeros 8 caracteres para identificación
+  userId: int("userId").notNull(), // Usuario propietario
+  permissions: text("permissions"), // JSON array de permisos: ["projects:read", "milestones:write", etc.]
+  isActive: boolean("isActive").default(true).notNull(),
+  lastUsedAt: timestamp("lastUsedAt"),
+  expiresAt: timestamp("expiresAt"), // Null = no expira
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, table => ({
+  keyIdx: index("key_idx").on(table.key),
+  userIdx: index("user_idx").on(table.userId),
+}));
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = typeof apiKeys.$inferInsert;

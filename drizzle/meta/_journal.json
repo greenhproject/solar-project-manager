@@ -8,6 +8,13 @@
       "when": 1764430274753,
       "tag": "0000_early_grandmaster",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1777941454739,
+      "tag": "0001_chubby_hiroim",
+      "breakpoints": true
     }
   ]
 }

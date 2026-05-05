@@ -176,6 +176,9 @@ async function startServer() {
   // OpenSolar webhook endpoint
   const { registerWebhookRoutes } = await import("../webhookHandler");
   registerWebhookRoutes(app);
+  // API REST v1 para integración externa
+  const { apiRouter } = await import("../routes/api-v1");
+  app.use("/api/v1", apiRouter);
   // tRPC API
   app.use(
     "/api/trpc",

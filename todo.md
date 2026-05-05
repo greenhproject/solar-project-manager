@@ -825,4 +825,22 @@
 - [x] Botones de header responsive (text-xs sm:text-sm, texto abreviado en móvil)
 - [x] Container padding reducido en móvil (py-4 sm:py-8, px-3 sm:px-4)
 - [x] Tests actualizados (weekends-toggle test corregido: settings → appSettings)
+- [x] Push a GitHub (commit 99f17a0)
+
+## API REST Pública para Integración Externa (04 May 2026)
+- [x] Crear endpoints REST bajo /api/v1/ con autenticación por API Key
+- [x] Endpoint GET /api/v1/projects - Listar proyectos
+- [x] Endpoint GET /api/v1/projects/:id - Detalle de proyecto
+- [x] Endpoint GET /api/v1/projects/:id/milestones - Hitos de un proyecto
+- [x] Endpoint PATCH /api/v1/milestones/:id - Actualizar estado de hito
+- [x] Endpoint GET /api/v1/stats - Estadísticas generales
+- [x] Crear sistema de API Keys para autenticación externa (tabla api_keys + hash SHA-256)
+- [x] Crear página /api-docs con documentación interactiva
+- [x] Crear documento Markdown con documentación completa (API_DOCUMENTATION.md)
+- [x] Endpoint GET /api/v1/milestones/:id - Detalle de hito
+- [x] Endpoint POST /api/v1/keys/generate - Generar API Key (admin)
+- [x] Endpoint GET /api/v1/keys - Listar API Keys (admin)
+- [x] Endpoint DELETE /api/v1/keys/:id - Desactivar API Key (admin)
+- [x] Router tRPC apiKeyManagement para gestión desde UI
+- [x] Tests vitest (12 tests pasando)
 - [ ] Push a GitHub

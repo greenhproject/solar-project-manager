@@ -20,8 +20,9 @@ import {
 import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
-import { appSettings } from "../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { appSettings, apiKeys } from "../drizzle/schema";
+import { eq, desc } from "drizzle-orm";
+import crypto from "crypto";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -3394,6 +3395,101 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         await db.deleteGeneratedDoc(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ============================================
+  // GESTIÓN DE API KEYS (ADMIN)
+  // ============================================
+  apiKeyManagement: router({
+    // Listar API Keys
+    list: adminProcedure.query(async () => {
+      const dbInst = await db.getDb();
+      if (!dbInst) return [];
+      const keys = await dbInst.select({
+        id: apiKeys.id,
+        name: apiKeys.name,
+        prefix: apiKeys.prefix,
+        permissions: apiKeys.permissions,
+        isActive: apiKeys.isActive,
+        lastUsedAt: apiKeys.lastUsedAt,
+        expiresAt: apiKeys.expiresAt,
+        createdAt: apiKeys.createdAt,
+      }).from(apiKeys).orderBy(desc(apiKeys.createdAt));
+      return keys.map(k => ({
+        ...k,
+        permissions: k.permissions ? JSON.parse(k.permissions) : ["*"],
+        keyPreview: `${k.prefix}...`
+      }));
+    }),
+
+    // Generar nueva API Key
+    generate: adminProcedure
+      .input(z.object({
+        name: z.string().min(1).max(255),
+        permissions: z.array(z.string()).default(["*"]),
+        expiresInDays: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+
+        const rawKey = `spm_${crypto.randomBytes(32).toString("hex")}`;
+        const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
+        const prefix = rawKey.substring(0, 8);
+
+        let expiresAt: Date | null = null;
+        if (input.expiresInDays && input.expiresInDays > 0) {
+          expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + input.expiresInDays);
+        }
+
+        await dbInst.insert(apiKeys).values({
+          name: input.name,
+          key: keyHash,
+          prefix,
+          userId: ctx.user.id,
+          permissions: JSON.stringify(input.permissions),
+          expiresAt,
+        });
+
+        return {
+          key: rawKey,
+          prefix,
+          name: input.name,
+          permissions: input.permissions,
+          expiresAt: expiresAt?.toISOString() || null,
+        };
+      }),
+
+    // Desactivar API Key
+    deactivate: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+        await dbInst.update(apiKeys).set({ isActive: false }).where(eq(apiKeys.id, input.id));
+        return { success: true };
+      }),
+
+    // Reactivar API Key
+    activate: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+        await dbInst.update(apiKeys).set({ isActive: true }).where(eq(apiKeys.id, input.id));
+        return { success: true };
+      }),
+
+    // Eliminar API Key permanentemente
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+        await dbInst.delete(apiKeys).where(eq(apiKeys.id, input.id));
         return { success: true };
       }),
   }),

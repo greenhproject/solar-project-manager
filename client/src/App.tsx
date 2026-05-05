@@ -29,6 +29,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TramitesYDiseno from "./pages/TramitesYDiseno";
 import EmailConfigPage from "./pages/EmailConfig";
+import ApiDocs from "./pages/ApiDocs";
 
 function Router() {
   return (
@@ -40,6 +41,7 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/api-docs" component={ApiDocs} />
 
       {/* Protected routes with MainLayout */}
       <Route path="/dashboard">
