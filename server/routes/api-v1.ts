@@ -38,61 +38,69 @@ function hashApiKey(key: string): string {
  * Middleware que valida la API Key y adjunta los permisos al request
  */
 async function authenticateApiKey(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  const apiKey = req.headers["x-api-key"] as string || 
-                 (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.slice(7) : null);
-
-  if (!apiKey) {
-    return res.status(401).json({
-      error: "API_KEY_REQUIRED",
-      message: "Se requiere una API Key. Envíala en el header 'X-API-Key' o 'Authorization: Bearer <key>'",
-      docs: "/api-docs"
-    });
-  }
-
-  const db = await getDb();
-  if (!db) {
-    return res.status(503).json({ error: "SERVICE_UNAVAILABLE", message: "Base de datos no disponible" });
-  }
-
-  const keyHash = hashApiKey(apiKey);
-  const [keyRecord] = await db.select().from(apiKeys).where(
-    and(eq(apiKeys.key, keyHash), eq(apiKeys.isActive, true))
-  ).limit(1);
-
-  if (!keyRecord) {
-    return res.status(401).json({
-      error: "INVALID_API_KEY",
-      message: "API Key inválida o desactivada"
-    });
-  }
-
-  // Verificar expiración
-  if (keyRecord.expiresAt && new Date(keyRecord.expiresAt) < new Date()) {
-    return res.status(401).json({
-      error: "API_KEY_EXPIRED",
-      message: "La API Key ha expirado. Genera una nueva desde el panel de administración."
-    });
-  }
-
-  // Actualizar lastUsedAt
-  await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, keyRecord.id));
-
-  // Parsear permisos
-  let permissions: string[] = [];
   try {
-    permissions = keyRecord.permissions ? JSON.parse(keyRecord.permissions) : ["*"];
-  } catch {
-    permissions = ["*"];
+    const apiKey = req.headers["x-api-key"] as string || 
+                   (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.slice(7) : null);
+
+    if (!apiKey) {
+      return res.status(401).json({
+        error: "API_KEY_REQUIRED",
+        message: "Se requiere una API Key. Envíala en el header 'X-API-Key' o 'Authorization: Bearer <key>'",
+        docs: "/api-docs"
+      });
+    }
+
+    const db = await getDb();
+    if (!db) {
+      return res.status(503).json({ error: "SERVICE_UNAVAILABLE", message: "Base de datos no disponible" });
+    }
+
+    const keyHash = hashApiKey(apiKey);
+    const [keyRecord] = await db.select().from(apiKeys).where(
+      and(eq(apiKeys.key, keyHash), eq(apiKeys.isActive, true))
+    ).limit(1);
+
+    if (!keyRecord) {
+      return res.status(401).json({
+        error: "INVALID_API_KEY",
+        message: "API Key inválida o desactivada"
+      });
+    }
+
+    // Verificar expiración
+    if (keyRecord.expiresAt && new Date(keyRecord.expiresAt) < new Date()) {
+      return res.status(401).json({
+        error: "API_KEY_EXPIRED",
+        message: "La API Key ha expirado. Genera una nueva desde el panel de administración."
+      });
+    }
+
+    // Actualizar lastUsedAt (no bloquear si falla)
+    db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, keyRecord.id)).catch(() => {});
+
+    // Parsear permisos
+    let permissions: string[] = [];
+    try {
+      permissions = keyRecord.permissions ? JSON.parse(keyRecord.permissions) : ["*"];
+    } catch {
+      permissions = ["*"];
+    }
+
+    req.apiKeyUser = {
+      id: keyRecord.id,
+      userId: keyRecord.userId,
+      name: keyRecord.name,
+      permissions
+    };
+
+    next();
+  } catch (error: any) {
+    console.error("[API Auth] Error:", error?.message || error);
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: "Error interno al validar API Key"
+    });
   }
-
-  req.apiKeyUser = {
-    id: keyRecord.id,
-    userId: keyRecord.userId,
-    name: keyRecord.name,
-    permissions
-  };
-
-  next();
 }
 
 /**

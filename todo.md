@@ -859,4 +859,11 @@
 - [x] Crear WebhookSettings.tsx con UI completa (crear, test ping, ver logs, activar/desactivar)
 - [x] Documentar webhooks en /api-docs (eventos, firma, headers, endpoints)
 - [x] Tests pasan (api-v1.test.ts + weekends-toggle.test.ts)
+- [x] Push a GitHub (commit aa8d626)
+
+## Bug: No se puede crear API Key - Error INSERT (04 May 2026)
+- [x] Diagnosticar error: expiresAt null + userId posiblemente string causaba crash en Drizzle/MySQL
+- [x] Corregir procedimiento: usar undefined en vez de null, parseInt userId, try-catch robusto
+- [x] Agregar try-catch al middleware de autenticación REST (evitar 502 en Railway)
+- [x] Probar creación de key exitosa en servidor local con 90 días de expiración
 - [ ] Push a GitHub

@@ -3469,32 +3469,48 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         const dbInst = await db.getDb();
         if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
 
-        const rawKey = `spm_${crypto.randomBytes(32).toString("hex")}`;
-        const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
-        const prefix = rawKey.substring(0, 8);
+        try {
+          const rawKey = `spm_${crypto.randomBytes(32).toString("hex")}`;
+          const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
+          const prefix = rawKey.substring(0, 8);
 
-        let expiresAt: Date | null = null;
-        if (input.expiresInDays && input.expiresInDays > 0) {
-          expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + input.expiresInDays);
+          // Calcular expiración como Date o undefined (no null para evitar problemas con Drizzle)
+          let expiresAt: Date | undefined = undefined;
+          if (input.expiresInDays && input.expiresInDays > 0) {
+            expiresAt = new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000);
+          }
+
+          // Asegurar que userId sea un número entero
+          const userId = typeof ctx.user.id === "string" ? parseInt(ctx.user.id, 10) : ctx.user.id;
+
+          const insertValues: any = {
+            name: input.name,
+            key: keyHash,
+            prefix,
+            userId,
+            permissions: JSON.stringify(input.permissions),
+          };
+          // Solo incluir expiresAt si tiene valor (evitar pasar null/undefined que cause problemas)
+          if (expiresAt) {
+            insertValues.expiresAt = expiresAt;
+          }
+
+          await dbInst.insert(apiKeys).values(insertValues);
+
+          return {
+            key: rawKey,
+            prefix,
+            name: input.name,
+            permissions: input.permissions,
+            expiresAt: expiresAt?.toISOString() || null,
+          };
+        } catch (error: any) {
+          console.error("[API Key Generate] Error:", error?.message || error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Error al generar API Key: ${error?.message || "Error desconocido"}`,
+          });
         }
-
-        await dbInst.insert(apiKeys).values({
-          name: input.name,
-          key: keyHash,
-          prefix,
-          userId: ctx.user.id,
-          permissions: JSON.stringify(input.permissions),
-          expiresAt,
-        });
-
-        return {
-          key: rawKey,
-          prefix,
-          name: input.name,
-          permissions: input.permissions,
-          expiresAt: expiresAt?.toISOString() || null,
-        };
       }),
 
     // Desactivar API Key
