@@ -65,6 +65,8 @@ export default function EditProject() {
         id: projectId,
         name: formData.name,
         description: formData.description,
+        startDate: formData.startDate || undefined,
+        estimatedEndDate: formData.estimatedEndDate || undefined,
         location: formData.location,
         clientName: formData.clientName,
         clientEmail: formData.clientEmail,

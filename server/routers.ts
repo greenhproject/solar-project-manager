@@ -671,6 +671,8 @@ export const appRouter = router({
             .optional(),
           progressPercentage: z.number().min(0).max(100).optional(),
           actualEndDate: z.date().optional(),
+          startDate: z.string().optional(),
+          estimatedEndDate: z.string().optional(),
           location: z.string().optional(),
           clientName: z.string().optional(),
           clientEmail: z.string().optional(),
@@ -705,7 +707,16 @@ export const appRouter = router({
           delete data.assignedEngineerId;
         }
 
-        await db.updateProject(id, data);
+        // Convertir fechas de string a Date para Drizzle
+        const updateData: any = { ...data };
+        if (data.startDate) {
+          updateData.startDate = new Date(data.startDate + 'T12:00:00');
+        }
+        if (data.estimatedEndDate) {
+          updateData.estimatedEndDate = new Date(data.estimatedEndDate + 'T12:00:00');
+        }
+
+        await db.updateProject(id, updateData);
 
         // Registrar actualización si cambió el estado
         if (data.status && data.status !== project.status) {

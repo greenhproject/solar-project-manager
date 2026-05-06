@@ -867,3 +867,11 @@
 - [x] Agregar try-catch al middleware de autenticación REST (evitar 502 en Railway)
 - [x] Probar creación de key exitosa en servidor local con 90 días de expiración
 - [ ] Push a GitHub
+
+## Bug RESUELTO: Fecha Estimada de Finalización no se guarda al editar (06 May 2026)
+- [x] Diagnosticar: handleSubmit en EditProject.tsx NO incluía startDate ni estimatedEndDate en mutateAsync
+- [x] Corregir frontend: agregar startDate y estimatedEndDate al mutateAsync
+- [x] Corregir backend: agregar startDate y estimatedEndDate al schema z.object del input del procedimiento update
+- [x] Corregir backend: convertir strings a Date con T12:00:00 para evitar problemas de timezone
+- [x] Probar que la fecha se guarda correctamente (verificado en DB: 2026-12-31)
+- [ ] Push a GitHub
