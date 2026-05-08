@@ -568,7 +568,7 @@ export const appRouter = router({
           progressPercentage: 0,
         });
 
-        const projectId = Number((result as any).insertId || 0);
+        const projectId = Number((result as any)[0]?.insertId || (result as any).insertId || 0);
 
         // Crear hitos desde plantillas
         console.log('[Project Create] projectId:', projectId, 'projectTypeId:', input.projectTypeId);
@@ -1044,7 +1044,7 @@ export const appRouter = router({
         });
 
         // Sincronizar con Google Calendar
-        const milestoneId = Number((result as any).insertId || 0);
+        const milestoneId = Number((result as any)[0]?.insertId || (result as any).insertId || 0);
         if (milestoneId > 0) {
           try {
             const { createCalendarEvent, toRFC3339, createEndDate } =

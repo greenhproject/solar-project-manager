@@ -875,3 +875,14 @@
 - [x] Corregir backend: convertir strings a Date con T12:00:00 para evitar problemas de timezone
 - [x] Probar que la fecha se guarda correctamente (verificado en DB: 2026-12-31)
 - [ ] Push a GitHub
+
+## Bug Fix: API Key INTERNAL_ERROR en producción + Creación de proyectos (08 May 2026)
+- [x] Diagnosticar: middleware de API Key usa Drizzle ORM con columna `key` (palabra reservada MySQL) → crash en producción
+- [x] Corregir: cambiar query de validación de API Key a raw SQL con backticks explícitos
+- [x] Corregir: cambiar UPDATE lastUsedAt a raw SQL también
+- [x] Diagnosticar: insertId de createProject no se extraía correctamente (result es array [ResultSetHeader, null])
+- [x] Corregir: usar (result as any)[0]?.insertId || (result as any).insertId para projects y milestones
+- [x] Tests API v1 pasan (12/12)
+- [x] Tests weekends-toggle pasan (27/27)
+- [ ] Guardar checkpoint
+- [ ] Push a GitHub

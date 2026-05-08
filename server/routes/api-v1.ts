@@ -56,9 +56,11 @@ async function authenticateApiKey(req: AuthenticatedRequest, res: Response, next
     }
 
     const keyHash = hashApiKey(apiKey);
-    const [keyRecord] = await db.select().from(apiKeys).where(
-      and(eq(apiKeys.key, keyHash), eq(apiKeys.isActive, true))
-    ).limit(1);
+    // Usar raw SQL para evitar problemas con 'key' como palabra reservada en MySQL/TiDB
+    const [rows] = await db.execute(
+      sql`SELECT * FROM api_keys WHERE \`key\` = ${keyHash} AND isActive = 1 LIMIT 1`
+    );
+    const keyRecord = (rows as any[])[0] || null;
 
     if (!keyRecord) {
       return res.status(401).json({
@@ -76,7 +78,7 @@ async function authenticateApiKey(req: AuthenticatedRequest, res: Response, next
     }
 
     // Actualizar lastUsedAt (no bloquear si falla)
-    db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, keyRecord.id)).catch(() => {});
+    db.execute(sql`UPDATE api_keys SET lastUsedAt = NOW() WHERE id = ${keyRecord.id}`).catch(() => {});
 
     // Parsear permisos
     let permissions: string[] = [];
