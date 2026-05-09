@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO api_keys (name, keyHash, prefix, userId, permissions, isActive, expiresAt, createdAt, updatedAt) VALUES ('test_direct_insert', 'aaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaa1111bbbb2222', 'spm_test', 206, '[\"*\"]', 1, NULL, NOW(), NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute INSERT INTO api_keys (name, keyHash, prefix, userId, permissions, isActive, expiresAt, createdAt, updatedAt) VALUES ('test_direct_insert', 'aaaa1111bbbb2222cccc3333dddd4444eeee5555ffff6666aaaa1111bbbb2222', 'spm_test', 206, '[\"*\"]', 1, NULL, NOW(), NOW());",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 290
+}

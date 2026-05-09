@@ -903,5 +903,14 @@
 - [x] TypeScript sin errores
 - [x] Tests API v1 pasan (12/12)
 - [x] Tests de INSERT/SELECT con Drizzle ORM exitosos
+- [x] Guardar checkpoint (aff24284)
+- [x] Push a GitHub
+- [x] Crear tablas api_keys, webhooks, webhook_logs en DB de Railway (no existían)
+
+## Bug Fix: CORS en API v1 para integración cross-origin (09 May 2026)
+- [x] Diagnosticar: "Failed to fetch" al probar conexión desde GHP Center → falta CORS en API v1
+- [x] Agregar middleware CORS al apiRouter con Access-Control-Allow-Origin: *
+- [x] Manejar preflight OPTIONS con respuesta 204
+- [x] Permitir headers: Content-Type, Authorization, X-API-Key
 - [ ] Guardar checkpoint
 - [ ] Push a GitHub

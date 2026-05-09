@@ -1,0 +1,31 @@
+{
+  "query": "SHOW CREATE TABLE api_keys;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SHOW CREATE TABLE api_keys;",
+  "rows": [
+    {
+      "Table": "api_keys",
+      "Create Table": "CREATE TABLE `api_keys` ("
+    }
+  ],
+  "messages": [
+    "  `id` int NOT NULL AUTO_INCREMENT,",
+    "  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `keyHash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `prefix` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL,",
+    "  `userId` int NOT NULL,",
+    "  `permissions` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,",
+    "  `isActive` tinyint(1) NOT NULL DEFAULT '1',",
+    "  `lastUsedAt` timestamp NULL DEFAULT NULL,",
+    "  `expiresAt` timestamp NULL DEFAULT NULL,",
+    "  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,",
+    "  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,",
+    "  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,",
+    "  UNIQUE KEY `api_keys_key_unique` (`keyHash`),",
+    "  KEY `key_idx` (`keyHash`),",
+    "  KEY `user_idx_api` (`userId`)",
+    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=30001"
+  ],
+  "stdout": "Table\tCreate Table\napi_keys\tCREATE TABLE `api_keys` (\n  `id` int NOT NULL AUTO_INCREMENT,\n  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `keyHash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `prefix` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL,\n  `userId` int NOT NULL,\n  `permissions` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,\n  `isActive` tinyint(1) NOT NULL DEFAULT '1',\n  `lastUsedAt` timestamp NULL DEFAULT NULL,\n  `expiresAt` timestamp NULL DEFAULT NULL,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY (`id`) /*T![clustered_index] CLUSTERED */,\n  UNIQUE KEY `api_keys_key_unique` (`keyHash`),\n  KEY `key_idx` (`keyHash`),\n  KEY `user_idx_api` (`userId`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci AUTO_INCREMENT=30001\n",
+  "stderr": "",
+  "execution_time_ms": 291
+}

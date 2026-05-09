@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, name, prefix FROM api_keys WHERE prefix = 'spm_test'; DELETE FROM api_keys WHERE prefix = 'spm_test';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT id, name, prefix FROM api_keys WHERE prefix = 'spm_test'; DELETE FROM api_keys WHERE prefix = 'spm_test';",
+  "rows": [
+    {
+      "id": "34",
+      "name": "test_direct_insert",
+      "prefix": "spm_test"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tprefix\n34\ttest_direct_insert\tspm_test\n",
+  "stderr": "",
+  "execution_time_ms": 277
+}

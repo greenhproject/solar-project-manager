@@ -15,6 +15,21 @@ import crypto from "crypto";
 const apiRouter = Router();
 
 // ============================================
+// CORS MIDDLEWARE PARA API EXTERNA
+// ============================================
+apiRouter.use((req: Request, res: Response, next: NextFunction) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key");
+  
+  // Responder inmediatamente a preflight requests
+  if (req.method === "OPTIONS") {
+    return res.status(204).send();
+  }
+  next();
+});
+
+// ============================================
 // MIDDLEWARE DE AUTENTICACIÓN POR API KEY
 // ============================================
 
