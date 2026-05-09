@@ -56,11 +56,11 @@ async function authenticateApiKey(req: AuthenticatedRequest, res: Response, next
     }
 
     const keyHash = hashApiKey(apiKey);
-    // Usar raw SQL para evitar problemas con 'key' como palabra reservada en MySQL/TiDB
+    // Usar keyHash (columna renombrada de 'key' para evitar palabra reservada MySQL)
     const [rows] = await db.execute(
-      sql`SELECT * FROM api_keys WHERE \`key\` = ${keyHash} AND isActive = 1 LIMIT 1`
+      sql`SELECT * FROM api_keys WHERE keyHash = ${keyHash} AND isActive = 1 LIMIT 1`
     );
-    const keyRecord = (rows as any[])[0] || null;
+    const keyRecord = (rows as unknown as any[])[0] || null;
 
     if (!keyRecord) {
       return res.status(401).json({
@@ -476,7 +476,7 @@ apiRouter.post("/keys/generate", async (req: AuthenticatedRequest, res: Response
 
   await db.insert(apiKeys).values({
     name,
-    key: keyHash,
+    keyHash,
     prefix,
     userId: req.apiKeyUser!.userId,
     permissions: JSON.stringify(permissions),
@@ -566,7 +566,7 @@ apiRouter.get("/webhooks", async (req: AuthenticatedRequest, res: Response) => {
   if (!db) return res.status(503).json({ error: "SERVICE_UNAVAILABLE" });
 
   const whs = await db.select().from(webhooksTable).orderBy(desc(webhooksTable.createdAt));
-  res.json({ data: whs.map(wh => ({ ...wh, events: JSON.parse(wh.events) })) });
+  res.json({ data: whs.map(wh => ({ ...wh, events: JSON.parse(wh.eventTypes) })) });
 });
 
 /**
@@ -591,8 +591,8 @@ apiRouter.post("/webhooks", async (req: AuthenticatedRequest, res: Response) => 
   await db.insert(webhooksTable).values({
     name,
     url,
-    secret,
-    events: JSON.stringify(events),
+    secretKey: secret,
+    eventTypes: JSON.stringify(events),
     userId: req.apiKeyUser!.userId,
   });
 

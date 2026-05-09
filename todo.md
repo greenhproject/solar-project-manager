@@ -895,5 +895,13 @@
 - [x] Agregar escapeSql() para prevenir SQL injection en valores de usuario
 - [x] Tests locales exitosos: con expiración, sin expiración, y con caracteres especiales
 - [x] Tests API v1 pasan (12/12)
+- [x] Renombrar columnas en DB: key->keyHash, secret->secretKey, events->eventTypes
+- [x] Actualizar schema.ts con nuevos nombres de columna
+- [x] Actualizar routers.ts (apiKeyManagement, webhookManagement)
+- [x] Actualizar webhookService.ts
+- [x] Actualizar api-v1.ts (middleware + endpoints)
+- [x] TypeScript sin errores
+- [x] Tests API v1 pasan (12/12)
+- [x] Tests de INSERT/SELECT con Drizzle ORM exitosos
 - [ ] Guardar checkpoint
 - [ ] Push a GitHub

@@ -32,7 +32,7 @@ export async function triggerWebhooks(event: WebhookEvent, data: Record<string, 
 
     // Filtrar por evento
     const matchingWebhooks = activeWebhooks.filter((wh) => {
-      const events: string[] = JSON.parse(wh.events);
+      const events: string[] = JSON.parse(wh.eventTypes);
       return events.includes(event) || events.includes("*");
     });
 
@@ -87,7 +87,7 @@ async function sendWebhook(
 
   const payloadStr = JSON.stringify(payload);
   const signature = crypto
-    .createHmac("sha256", wh.secret)
+    .createHmac("sha256", wh.secretKey)
     .update(payloadStr)
     .digest("hex");
 

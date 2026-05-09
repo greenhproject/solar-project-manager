@@ -784,7 +784,7 @@ export type InsertMilestoneComment = typeof milestoneComments.$inferInsert;
 export const apiKeys = mysqlTable("api_keys", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(), // Nombre descriptivo de la API Key
-  key: varchar("key", { length: 64 }).notNull().unique(), // Hash SHA-256 de la key
+  keyHash: varchar("keyHash", { length: 64 }).notNull().unique(), // Hash SHA-256 de la key
   prefix: varchar("prefix", { length: 8 }).notNull(), // Primeros 8 caracteres para identificación
   userId: int("userId").notNull(), // Usuario propietario
   permissions: text("permissions"), // JSON array de permisos: ["projects:read", "milestones:write", etc.]
@@ -794,7 +794,7 @@ export const apiKeys = mysqlTable("api_keys", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, table => ({
-  keyIdx: index("key_idx").on(table.key),
+  keyIdx: index("key_idx").on(table.keyHash),
   userIdx: index("user_idx").on(table.userId),
 }));
 export type ApiKey = typeof apiKeys.$inferSelect;
@@ -809,8 +809,8 @@ export const webhooks = mysqlTable("webhooks", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   url: text("url").notNull(), // URL destino del webhook
-  secret: varchar("secret", { length: 64 }).notNull(), // Secret para firma HMAC
-  events: text("events").notNull(), // JSON array: ["milestone.status_changed", "project.completed", etc.]
+  secretKey: varchar("secretKey", { length: 64 }).notNull(), // Secret para firma HMAC
+  eventTypes: text("eventTypes").notNull(), // JSON array: ["milestone.status_changed", "project.completed", etc.]
   isActive: boolean("isActive").default(true).notNull(),
   userId: int("userId").notNull(), // Usuario que lo creó
   lastTriggeredAt: timestamp("lastTriggeredAt"),

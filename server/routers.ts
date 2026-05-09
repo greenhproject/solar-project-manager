@@ -3504,7 +3504,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           const permEsc = escapeSql(permissionsJson);
           const expiresClause = expiresAtStr ? `'${expiresAtStr}'` : 'NULL';
 
-          const insertQuery = `INSERT INTO api_keys (name, \`key\`, prefix, userId, permissions, isActive, expiresAt, createdAt, updatedAt) VALUES ('${nameEsc}', '${keyEsc}', '${prefixEsc}', ${userId}, '${permEsc}', 1, ${expiresClause}, NOW(), NOW())`;
+          const insertQuery = `INSERT INTO api_keys (name, keyHash, prefix, userId, permissions, isActive, expiresAt, createdAt, updatedAt) VALUES ('${nameEsc}', '${keyEsc}', '${prefixEsc}', ${userId}, '${permEsc}', 1, ${expiresClause}, NOW(), NOW())`;
           
           await dbInst.execute(sql.raw(insertQuery));
 
@@ -3564,9 +3564,9 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
       const dbInst = await db.getDb();
       if (!dbInst) return [];
       const whs = await dbInst.select().from(webhooks).orderBy(desc(webhooks.createdAt));
-      return whs.map(wh => ({
+      return whs.map(({ secretKey, eventTypes, ...wh }) => ({
         ...wh,
-        events: JSON.parse(wh.events) as string[],
+        events: JSON.parse(eventTypes) as string[],
       }));
     }),
 
@@ -3586,8 +3586,8 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         await dbInst.insert(webhooks).values({
           name: input.name,
           url: input.url,
-          secret,
-          events: JSON.stringify(input.events),
+          secretKey: secret,
+          eventTypes: JSON.stringify(input.events),
           userId: ctx.user.id,
         });
 
@@ -3610,7 +3610,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         const updateData: any = {};
         if (input.name) updateData.name = input.name;
         if (input.url) updateData.url = input.url;
-        if (input.events) updateData.events = JSON.stringify(input.events);
+        if (input.events) updateData.eventTypes = JSON.stringify(input.events);
         if (input.isActive !== undefined) updateData.isActive = input.isActive;
 
         await dbInst.update(webhooks).set(updateData).where(eq(webhooks.id, input.id));
@@ -3655,7 +3655,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           data: { message: "Test ping from Solar Project Manager" },
         });
 
-        const signature = crypto.createHmac("sha256", wh.secret).update(payload).digest("hex");
+        const signature = crypto.createHmac("sha256", wh.secretKey).update(payload).digest("hex");
 
         try {
           const response = await fetch(wh.url, {
