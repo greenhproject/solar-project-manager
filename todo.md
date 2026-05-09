@@ -884,5 +884,16 @@
 - [x] Corregir: usar (result as any)[0]?.insertId || (result as any).insertId para projects y milestones
 - [x] Tests API v1 pasan (12/12)
 - [x] Tests weekends-toggle pasan (27/27)
+- [x] Guardar checkpoint (70ee8638)
+- [x] Push a GitHub (commit 70ee863)
+
+## Bug Fix DEFINITIVO: INSERT API Key falla con sql template literal en producción (09 May 2026)
+- [x] Diagnosticar: sql template literal de Drizzle no pasa correctamente Date objects ni null como params en producción (TiDB)
+- [x] Corregir: reemplazar sql template literal por sql.raw() con valores escapados manualmente
+- [x] Convertir expiresAt de Date a string ISO formateado para MySQL ('YYYY-MM-DD HH:MM:SS')
+- [x] Usar NULL literal cuando no hay expiración en vez de pasar null como param
+- [x] Agregar escapeSql() para prevenir SQL injection en valores de usuario
+- [x] Tests locales exitosos: con expiración, sin expiración, y con caracteres especiales
+- [x] Tests API v1 pasan (12/12)
 - [ ] Guardar checkpoint
 - [ ] Push a GitHub

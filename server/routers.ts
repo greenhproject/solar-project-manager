@@ -3485,27 +3485,35 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           const keyHash = crypto.createHash("sha256").update(rawKey).digest("hex");
           const prefix = rawKey.substring(0, 8);
 
-          // Calcular expiración
-          let expiresAt: Date | null = null;
+          // Calcular expiración como string ISO para MySQL
+          let expiresAtStr: string | null = null;
           if (input.expiresInDays && input.expiresInDays > 0) {
-            expiresAt = new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000);
+            const expiresDate = new Date(Date.now() + input.expiresInDays * 24 * 60 * 60 * 1000);
+            expiresAtStr = expiresDate.toISOString().slice(0, 19).replace('T', ' ');
           }
 
           // Asegurar que userId sea un número entero
           const userId = typeof ctx.user.id === "string" ? parseInt(ctx.user.id, 10) : ctx.user.id;
           const permissionsJson = JSON.stringify(input.permissions);
 
-          // Usar SQL raw para evitar bugs de Drizzle ORM con params/default en ciertas versiones
-          await dbInst.execute(
-            sql`INSERT INTO api_keys (name, \`key\`, prefix, userId, permissions, isActive, expiresAt, createdAt, updatedAt) VALUES (${input.name}, ${keyHash}, ${prefix}, ${userId}, ${permissionsJson}, 1, ${expiresAt}, NOW(), NOW())`
-          );
+          // Escapar valores para SQL raw - evita TODOS los problemas de Drizzle ORM con params
+          const escapeSql = (val: string) => val.replace(/'/g, "''").replace(/\\/g, "\\\\");
+          const nameEsc = escapeSql(input.name);
+          const keyEsc = escapeSql(keyHash);
+          const prefixEsc = escapeSql(prefix);
+          const permEsc = escapeSql(permissionsJson);
+          const expiresClause = expiresAtStr ? `'${expiresAtStr}'` : 'NULL';
+
+          const insertQuery = `INSERT INTO api_keys (name, \`key\`, prefix, userId, permissions, isActive, expiresAt, createdAt, updatedAt) VALUES ('${nameEsc}', '${keyEsc}', '${prefixEsc}', ${userId}, '${permEsc}', 1, ${expiresClause}, NOW(), NOW())`;
+          
+          await dbInst.execute(sql.raw(insertQuery));
 
           return {
             key: rawKey,
             prefix,
             name: input.name,
             permissions: input.permissions,
-            expiresAt: expiresAt?.toISOString() || null,
+            expiresAt: expiresAtStr || null,
           };
         } catch (error: any) {
           console.error("[API Key Generate] Error:", error?.message || error);
