@@ -27,6 +27,7 @@ export default function EditProject() {
   });
 
   const { data: projectTypes } = trpc.projectTypes.list.useQuery();
+  const utils = trpc.useUtils();
   const updateProject = trpc.projects.update.useMutation();
 
   const [formData, setFormData] = useState({
@@ -72,6 +73,10 @@ export default function EditProject() {
         clientEmail: formData.clientEmail,
         clientPhone: formData.clientPhone,
       });
+
+      // Invalidar cache para que ProjectDetail muestre los datos actualizados
+      await utils.projects.getById.invalidate({ id: projectId });
+      await utils.projects.list.invalidate();
 
       toast.success("Proyecto actualizado exitosamente");
       setLocation(`/projects/${projectId}`);

@@ -914,3 +914,11 @@
 - [x] Permitir headers: Content-Type, Authorization, X-API-Key
 - [ ] Guardar checkpoint
 - [ ] Push a GitHub
+
+## Bug Fix: Fecha estimada de finalización no se guarda al editar proyecto (10 May 2026)
+- [x] Investigar procedimiento update de proyectos (backend) - backend OK, fecha se guarda correctamente en DB
+- [x] Verificar qué campos se envían desde el frontend (EditProject.tsx) - campos OK
+- [x] Diagnosticar: falta invalidar cache tRPC después del update → UI muestra datos stale
+- [x] Corregir: agregar utils.projects.getById.invalidate() y utils.projects.list.invalidate() en EditProject.tsx
+- [ ] Probar localmente
+- [ ] Guardar checkpoint y push a GitHub
