@@ -22,7 +22,8 @@ export const users = mysqlTable("users", {
   avatarUrl: text("avatarUrl"), // URL del avatar personalizado en S3
   theme: mysqlEnum("theme", ["light", "dark", "system"]).default("system"), // Tema preferido del usuario
   loginMethod: varchar("loginMethod", { length: 64 }), // 'oauth' o 'jwt'
-  role: mysqlEnum("role", ["admin", "engineer", "ingeniero_tramites"]).default("engineer").notNull(),
+  role: mysqlEnum("role", ["admin", "engineer", "ingeniero_tramites", "client"]).default("engineer").notNull(),
+  status: mysqlEnum("accountStatus", ["pending", "approved", "rejected"]).default("pending").notNull(),
   jobTitle: varchar("jobTitle", { length: 255 }), // Cargo del usuario
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -841,3 +842,26 @@ export const outgoingWebhookLogs = mysqlTable("outgoing_webhook_logs", {
   eventIdx: index("outgoing_wh_log_event_idx").on(table.event),
 }));
 export type OutgoingWebhookLog = typeof outgoingWebhookLogs.$inferSelect;
+
+/**
+ * Acceso de clientes a proyectos
+ * Vincula usuarios con rol 'client' a los proyectos que pueden ver
+ */
+export const clientProjectAccess = mysqlTable("client_project_access", {
+  id: int("id").autoincrement().primaryKey(),
+  clientUserId: int("clientUserId").notNull(), // Usuario con rol 'client'
+  projectId: int("projectId").notNull(),
+  
+  // Permisos granulares
+  canViewFiles: boolean("canViewFiles").default(true).notNull(),
+  canViewUpdates: boolean("canViewUpdates").default(true).notNull(),
+  
+  // Auditoría
+  grantedBy: int("grantedBy").notNull(), // Admin que otorgó acceso
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({
+  clientIdx: index("client_access_client_idx").on(table.clientUserId),
+  projectIdx: index("client_access_project_idx").on(table.projectId),
+}));
+export type ClientProjectAccess = typeof clientProjectAccess.$inferSelect;
+export type InsertClientProjectAccess = typeof clientProjectAccess.$inferInsert;

@@ -30,6 +30,7 @@ import ResetPassword from "./pages/ResetPassword";
 import TramitesYDiseno from "./pages/TramitesYDiseno";
 import EmailConfigPage from "./pages/EmailConfig";
 import ApiDocs from "./pages/ApiDocs";
+import ClientPortal from "./pages/ClientPortal";
 
 function Router() {
   return (
@@ -42,6 +43,8 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/api-docs" component={ApiDocs} />
+      <Route path="/portal" component={ClientPortal} />
+      <Route path="/portal/:id" component={ClientPortal} />
 
       {/* Protected routes with MainLayout */}
       <Route path="/dashboard">

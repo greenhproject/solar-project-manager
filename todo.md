@@ -922,3 +922,30 @@
 - [x] Corregir: agregar utils.projects.getById.invalidate() y utils.projects.list.invalidate() en EditProject.tsx
 - [ ] Probar localmente
 - [ ] Guardar checkpoint y push a GitHub
+
+## Feature: Control de Registro de Usuarios (20 May 2026)
+- [x] Agregar campo 'status' (pending/approved/rejected) a tabla users
+- [x] Modificar registro: nuevos usuarios quedan en 'pending'
+- [x] Modificar login: bloquear usuarios no aprobados
+- [x] UI admin: lista de usuarios pendientes con botones aprobar/rechazar
+- [x] Asignar rol al aprobar
+- [x] Notificar al admin cuando hay un nuevo registro pendiente
+- [x] Migrar DB (Railway + Manus)
+
+## Feature: Portal de Cliente (20 May 2026)
+- [x] Agregar rol 'client' al enum de roles en schema
+- [x] Crear tabla client_project_access (vincula clientes con proyectos)
+- [x] Backend: procedimientos para portal de cliente (myProjects, projectDetail, projectUpdates)
+- [x] Frontend: nueva ruta /portal con diseño profesional
+- [x] Vista de proyecto para cliente: progreso, hitos (sin detalles internos), cronograma
+- [x] Actualizaciones públicas del proyecto
+- [x] Admin: asignar/revocar acceso de clientes a proyectos
+- [x] Tab de clientes en gestión de usuarios
+
+## Feature: SSO / API Token para acceso desde otras apps (20 May 2026)
+- [x] Endpoint POST /api/sso/token - generar token temporal con API Key + email del cliente
+- [x] Endpoint GET /api/sso/login?token=xxx - consumir token, crear sesión, redirigir al portal
+- [x] Endpoint POST /api/sso/validate - verificar sesión activa
+- [x] Permitir que GHP Center autentique clientes y los redirija al portal
+- [x] Auto-crear usuario cliente si no existe (vía SSO con API Key admin)
+- [ ] Documentar flujo SSO en /api-docs

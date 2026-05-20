@@ -60,10 +60,19 @@ export default function Register() {
   
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: async (data) => {
+      if (data.pendingApproval) {
+        // El registro requiere aprobación del admin
+        toast.success("¡Cuenta creada!", {
+          description: data.message || "Un administrador debe aprobar tu cuenta antes de que puedas acceder.",
+          duration: 8000,
+        });
+        setLocation("/login");
+        return;
+      }
+      
       // Guardar el token en localStorage para autenticación híbrida
-      if (data.token) {
-        localStorage.setItem('auth_token', data.token);
-        console.log('[Register] Token guardado en localStorage:', data.token.substring(0, 20) + '...');
+      if ((data as any).token) {
+        localStorage.setItem('auth_token', (data as any).token);
       }
       
       toast.success("¡Cuenta creada exitosamente!", {

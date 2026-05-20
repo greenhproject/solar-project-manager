@@ -179,6 +179,9 @@ async function startServer() {
   // API REST v1 para integración externa
   const { apiRouter } = await import("../routes/api-v1");
   app.use("/api/v1", apiRouter);
+  // SSO routes para acceso desde apps externas (GHP Center)
+  const { ssoRouter } = await import("../routes/sso");
+  app.use("/api/sso", ssoRouter);
   // tRPC API
   app.use(
     "/api/trpc",

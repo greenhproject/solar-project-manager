@@ -19,8 +19,9 @@ import {
 } from "./openSolarIntegration";
 import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
+import { clientPortalRouter } from "./routes/client-portal";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
-import { appSettings, apiKeys, webhooks, outgoingWebhookLogs } from "../drizzle/schema";
+import { appSettings, apiKeys, webhooks, outgoingWebhookLogs, users, clientProjectAccess } from "../drizzle/schema";
 import { eq, desc, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
@@ -51,6 +52,7 @@ export const appRouter = router({
   system: systemRouter,
   analytics: metricsRouter,
   adminTools: adminToolsRouter,
+  clientPortal: clientPortalRouter,
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -77,9 +79,6 @@ export const appRouter = router({
         const { createJWTUser, getUserByEmailForAuth } = await import(
           "./jwtAuthFunctions"
         );
-        const { jwtAuthService, JWT_COOKIE_NAME } = await import(
-          "./_core/jwtAuth"
-        );
 
         // Verificar si el email ya existe
         const existingUser = await getUserByEmailForAuth(input.email);
@@ -90,44 +89,20 @@ export const appRouter = router({
           });
         }
 
-        // Crear usuario
+        // Crear usuario con status 'pending' (requiere aprobación del admin)
         await createJWTUser(input);
 
-        // Obtener usuario recién creado
-        const user = await getUserByEmailForAuth(input.email);
-        if (!user) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Error al crear usuario",
-          });
-        }
-
-        // Crear sesión JWT
-        const token = await jwtAuthService.createJWTSessionToken(
-          user.id,
-          user.email!,
-          user.name || ""
-        );
-
-        // NO establecer cookie - solo usar Authorization header
-        // const cookieOptions = getSessionCookieOptions(ctx.req);
-        // ctx.res.cookie(JWT_COOKIE_NAME, token, cookieOptions);
-
-        // Enviar email de bienvenida (no bloqueante)
-        const { sendWelcomeEmail } = await import("./_core/email");
-        sendWelcomeEmail(user.email!, user.name || "Usuario").catch(err =>
-          console.error("[Register] Error sending welcome email:", err)
-        );
+        // Notificar al admin sobre nuevo registro pendiente (no bloqueante)
+        const { notifyOwner } = await import("./_core/notification");
+        notifyOwner({
+          title: "Nuevo registro pendiente de aprobación",
+          content: `El usuario ${input.name} (${input.email}) se ha registrado y espera aprobación.`,
+        }).catch(err => console.error("[Register] Error notifying admin:", err));
 
         return {
           success: true,
-          token, // Devolver el token para autenticación híbrida
-          user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-          },
+          pendingApproval: true,
+          message: "Tu cuenta ha sido creada. Un administrador debe aprobarla antes de que puedas acceder.",
         };
       }),
 
@@ -162,6 +137,20 @@ export const appRouter = router({
           throw new TRPCError({
             code: "UNAUTHORIZED",
             message: "Email o contraseña incorrectos",
+          });
+        }
+
+        // Verificar status de la cuenta
+        if ((user as any).status === "pending") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Tu cuenta está pendiente de aprobación por un administrador. Te notificaremos cuando sea aprobada.",
+          });
+        }
+        if ((user as any).status === "rejected") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Tu cuenta ha sido rechazada. Contacta al administrador para más información.",
           });
         }
 
@@ -312,6 +301,57 @@ export const appRouter = router({
         await db.updateUserRole(input.userId, input.role);
         return { success: true };
       }),
+
+    // Aprobar usuario pendiente
+    approveUser: adminProcedure
+      .input(z.object({ userId: z.number(), role: z.enum(["admin", "engineer", "ingeniero_tramites", "client"]).default("engineer") }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserById(input.userId);
+        if (!user) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Usuario no encontrado" });
+        }
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+        await dbInst.update(users).set({ status: "approved" as any, role: input.role }).where(eq(users.id, input.userId));
+        
+        // Notificar al usuario que fue aprobado (no bloqueante)
+        if (user.email) {
+          const { sendEmail } = await import("./_core/email");
+          sendEmail({
+            to: user.email,
+            subject: "Tu cuenta ha sido aprobada - Solar Project Manager",
+            html: `<p>Hola ${user.name || "Usuario"},</p><p>Tu cuenta ha sido aprobada. Ya puedes iniciar sesi\u00f3n en Solar Project Manager.</p><p>Saludos,<br/>Equipo GreenH Project</p>`,
+          }).catch(err => console.error("[ApproveUser] Error sending email:", err));
+        }
+        return { success: true };
+      }),
+
+    // Rechazar usuario pendiente
+    rejectUser: adminProcedure
+      .input(z.object({ userId: z.number(), reason: z.string().optional() }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserById(input.userId);
+        if (!user) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Usuario no encontrado" });
+        }
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+        await dbInst.update(users).set({ status: "rejected" as any }).where(eq(users.id, input.userId));
+        return { success: true };
+      }),
+
+    // Listar usuarios pendientes de aprobaci\u00f3n
+    pendingApproval: adminProcedure.query(async () => {
+      const dbInst = await db.getDb();
+      if (!dbInst) return [];
+      const pending = await dbInst.select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        createdAt: users.createdAt,
+      }).from(users).where(eq(users.status, "pending" as any));
+      return pending;
+    }),
 
     // Actualizar perfil de usuario
     updateProfile: protectedProcedure
