@@ -956,3 +956,9 @@
 - [x] Redirigir según rol: clientes → /portal, admins/ingenieros → /dashboard
 - [x] Probar flujo completo
 - [x] Guardar checkpoint y push a GitHub
+
+## Fix: Logout del Portal de Cliente no funciona (20 May 2026)
+- [x] Problema: useAuth().logout() solo limpia cookies del backend pero NO cierra sesión de Auth0
+- [x] Solución: Usar useAuth0Custom().logout() que llama a auth0Logout({returnTo: origin})
+- [x] Corregido ClientLogoutButton para detectar Auth0 y usar el logout correcto (igual que Sidebar)
+- [x] Corregido Home.tsx: usar backendUser (de trpc.auth.me) para obtener el rol real, no auth0.user

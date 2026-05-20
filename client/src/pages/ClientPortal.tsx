@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuth0Custom } from "@/_core/hooks/useAuth0Custom";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,21 +80,31 @@ export default function ClientPortal() {
   );
 }
 
+// Detectar si Auth0 está configurado
+const isAuth0Configured = () => {
+  return !!(import.meta.env.VITE_AUTH0_DOMAIN && import.meta.env.VITE_AUTH0_CLIENT_ID);
+};
+
 function ClientLogoutButton() {
-  const { logout } = useAuth();
+  const manusAuth = useAuth();
+  const auth0 = useAuth0Custom();
+  const isUsingAuth0 = isAuth0Configured();
+
+  const handleLogout = () => {
+    if (isUsingAuth0) {
+      // Auth0: cierra sesión completamente en Auth0 y redirige a la home
+      auth0.logout();
+    } else {
+      // JWT/Manus: limpia localStorage y redirige al login
+      manusAuth.logout();
+    }
+  };
 
   return (
     <Button
       variant="ghost"
       size="sm"
-      onClick={() => {
-        // Limpiar localStorage y redirigir al login
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user_email');
-        localStorage.removeItem('auth_user_name');
-        localStorage.removeItem('manus-runtime-user-info');
-        logout();
-      }}
+      onClick={handleLogout}
     >
       <LogOut className="w-4 h-4" />
     </Button>

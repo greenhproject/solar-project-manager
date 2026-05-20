@@ -45,17 +45,21 @@ export default function Home() {
   const isAuthenticated = useAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
   const loading = useAuth0 ? auth0.isLoading : manusAuth.loading;
 
-  // Redirigir según el rol del usuario
-  const user = useAuth0 ? auth0.user : manusAuth.user;
+  // Redirigir según el rol del usuario (siempre usar manusAuth.user que viene del backend con el rol real)
+  const backendUser = manusAuth.user;
   useEffect(() => {
-    if (isAuthenticated && user) {
-      if ((user as any).role === "client") {
+    if (isAuthenticated && backendUser) {
+      if ((backendUser as any).role === "client") {
         window.location.href = "/portal";
       } else {
         window.location.href = "/dashboard";
       }
+    } else if (isAuthenticated && !backendUser && !manusAuth.loading) {
+      // Autenticado en Auth0 pero sin datos del backend aún - ir al dashboard
+      // El MainLayout se encargará de redirigir si es cliente
+      window.location.href = "/dashboard";
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, backendUser, manusAuth.loading]);
 
   if (loading) {
     return (
