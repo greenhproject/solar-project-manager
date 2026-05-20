@@ -80,17 +80,19 @@ export default function ClientPortal() {
 }
 
 function ClientLogoutButton() {
-  const logout = trpc.auth.logout.useMutation();
-  const [, navigate] = useLocation();
+  const { logout } = useAuth();
 
   return (
     <Button
       variant="ghost"
       size="sm"
       onClick={() => {
-        logout.mutate(undefined, {
-          onSuccess: () => navigate("/login"),
-        });
+        // Limpiar localStorage y redirigir al login
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user_email');
+        localStorage.removeItem('auth_user_name');
+        localStorage.removeItem('manus-runtime-user-info');
+        logout();
       }}
     >
       <LogOut className="w-4 h-4" />
