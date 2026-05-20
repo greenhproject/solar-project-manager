@@ -1,0 +1,88 @@
+{
+  "query": "SELECT id, email, name, role FROM users ORDER BY id DESC LIMIT 15;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT id, email, name, role FROM users ORDER BY id DESC LIMIT 15;",
+  "rows": [
+    {
+      "id": "13",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "12",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "11",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "10",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "9",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "8",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "7",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "6",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "5",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "4",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "3",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "2",
+      "email": "NULL",
+      "name": "NULL",
+      "role": "admin"
+    },
+    {
+      "id": "1",
+      "email": "greenhproject@gmail.com",
+      "name": "Green House Project",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\n13\tNULL\tNULL\tadmin\n12\tNULL\tNULL\tadmin\n11\tNULL\tNULL\tadmin\n10\tNULL\tNULL\tadmin\n9\tNULL\tNULL\tadmin\n8\tNULL\tNULL\tadmin\n7\tNULL\tNULL\tadmin\n6\tNULL\tNULL\tadmin\n5\tNULL\tNULL\tadmin\n4\tNULL\tNULL\tadmin\n3\tNULL\tNULL\tadmin\n2\tNULL\tNULL\tadmin\n1\tgreenhproject@gmail.com\tGreen House Project\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 274
+}

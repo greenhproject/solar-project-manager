@@ -105,9 +105,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.role = user.role;
       updateSet.role = user.role;
     } else {
-      // Por defecto, nuevos usuarios son ingenieros
-      values.role = "engineer";
-      updateSet.role = "engineer";
+      // Por defecto, nuevos usuarios son clientes
+      values.role = "client";
+      updateSet.role = "client";
     }
 
     if (!values.lastSignedIn) {

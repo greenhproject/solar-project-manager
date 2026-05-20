@@ -1,0 +1,46 @@
+{
+  "query": "SELECT id, name, clientName, clientEmail FROM projects ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT id, name, clientName, clientEmail FROM projects ORDER BY id DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "90001",
+      "name": "Proyecto para Eliminar Test",
+      "clientName": "",
+      "clientEmail": ""
+    },
+    {
+      "id": "60001",
+      "name": "Proyecto Test Progreso",
+      "clientName": "Cliente Test",
+      "clientEmail": "test@test.com"
+    },
+    {
+      "id": "30003",
+      "name": "Proyecto Test Progreso",
+      "clientName": "Cliente Test",
+      "clientEmail": "test@test.com"
+    },
+    {
+      "id": "30002",
+      "name": "Proyecto Test Progreso",
+      "clientName": "Cliente Test",
+      "clientEmail": "test@test.com"
+    },
+    {
+      "id": "30001",
+      "name": "proyecto de prueba 2",
+      "clientName": "kike",
+      "clientEmail": "lenarvaez52@gmail.com"
+    },
+    {
+      "id": "1",
+      "name": "proyecto de prueba",
+      "clientName": "pepito perez",
+      "clientEmail": "lenarvaez52@gmail.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tclientName\tclientEmail\n90001\tProyecto para Eliminar Test\t\t\n60001\tProyecto Test Progreso\tCliente Test\ttest@test.com\n30003\tProyecto Test Progreso\tCliente Test\ttest@test.com\n30002\tProyecto Test Progreso\tCliente Test\ttest@test.com\n30001\tproyecto de prueba 2\tkike\tlenarvaez52@gmail.com\n1\tproyecto de prueba\tpepito perez\tlenarvaez52@gmail.com\n",
+  "stderr": "",
+  "execution_time_ms": 276
+}

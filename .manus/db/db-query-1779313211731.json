@@ -1,0 +1,26 @@
+{
+  "query": "SELECT * FROM users WHERE email LIKE '%narvaez%' OR name LIKE '%narvaez%' OR name LIKE '%Green House%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT * FROM users WHERE email LIKE '%narvaez%' OR name LIKE '%narvaez%' OR name LIKE '%Green House%';",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "LcjfjWmLEGzFVhjrWcCCW2",
+      "name": "Green House Project",
+      "email": "greenhproject@gmail.com",
+      "loginMethod": "google",
+      "role": "admin",
+      "jobTitle": "NULL",
+      "createdAt": "2026-05-20 17:40:59",
+      "updatedAt": "2026-05-20 17:40:59",
+      "lastSignedIn": "2026-05-20 17:40:59",
+      "password": "NULL",
+      "avatarUrl": "NULL",
+      "theme": "system",
+      "accountStatus": "pending"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tjobTitle\tcreatedAt\tupdatedAt\tlastSignedIn\tpassword\tavatarUrl\ttheme\taccountStatus\n1\tLcjfjWmLEGzFVhjrWcCCW2\tGreen House Project\tgreenhproject@gmail.com\tgoogle\tadmin\tNULL\t2026-05-20 17:40:59\t2026-05-20 17:40:59\t2026-05-20 17:40:59\tNULL\tNULL\tsystem\tpending\n",
+  "stderr": "",
+  "execution_time_ms": 268
+}

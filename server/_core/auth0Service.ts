@@ -146,7 +146,7 @@ class Auth0Service {
       // Crear nuevo usuario
       // Asignar rol admin al sub específico de greenhproject@gmail.com
       const ADMIN_SUB = "google-oauth2|106723310869919984535";
-      const role = auth0UserId === ADMIN_SUB ? "admin" : "engineer";
+      const role = auth0UserId === ADMIN_SUB ? "admin" : "client";
       
       await db.upsertUser({
         openId: auth0UserId,
@@ -162,6 +162,35 @@ class Auth0Service {
       
       if (!user) {
         throw ForbiddenError("Failed to create user");
+      }
+
+      // Auto-vincular proyectos existentes por email del cliente
+      if (email) {
+        try {
+          const { projects, clientProjectAccess } = await import("../../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+          const dbInst = await db.getDb();
+          if (dbInst) {
+            const matchingProjects = await dbInst.select({ id: projects.id })
+              .from(projects)
+              .where(eq(projects.clientEmail, email));
+            
+            if (matchingProjects.length > 0) {
+              for (const proj of matchingProjects) {
+                await dbInst.insert(clientProjectAccess).values({
+                  clientUserId: user.id,
+                  projectId: proj.id,
+                  canViewFiles: true,
+                  canViewUpdates: true,
+                  grantedBy: user.id,
+                }).onDuplicateKeyUpdate({ set: { canViewFiles: true } });
+              }
+              console.log(`[Auth0] Auto-vinculados ${matchingProjects.length} proyectos para ${email}`);
+            }
+          }
+        } catch (err) {
+          console.error("[Auth0] Error auto-vinculando proyectos:", err);
+        }
       }
     } else {
       // Actualizar última vez que inició sesión

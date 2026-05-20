@@ -44,17 +44,30 @@ export const clientPortalRouter = router({
       return allProjects;
     }
 
-    // Para clientes: solo proyectos asignados
+    // Para clientes: buscar por tabla client_project_access Y por email directo en proyectos
+    const userEmail = ctx.user.email;
+    
+    // 1. Proyectos asignados vía client_project_access
     const accessList = await dbInst.select({
       projectId: clientProjectAccess.projectId,
-      canViewFiles: clientProjectAccess.canViewFiles,
-      canViewUpdates: clientProjectAccess.canViewUpdates,
     }).from(clientProjectAccess).where(eq(clientProjectAccess.clientUserId, ctx.user.id));
 
-    if (accessList.length === 0) return [];
+    const projectIdsFromAccess = accessList.map(a => a.projectId);
 
-    const projectIds = accessList.map(a => a.projectId);
+    // 2. Proyectos donde el email del cliente coincide directamente
+    let projectIdsFromEmail: number[] = [];
+    if (userEmail) {
+      const emailProjects = await dbInst.select({ id: projects.id })
+        .from(projects)
+        .where(eq(projects.clientEmail, userEmail));
+      projectIdsFromEmail = emailProjects.map(p => p.id);
+    }
+
+    // Combinar ambas fuentes (sin duplicados)
+    const allProjectIds = Array.from(new Set([...projectIdsFromAccess, ...projectIdsFromEmail]));
     
+    if (allProjectIds.length === 0) return [];
+
     const clientProjects = await dbInst.select({
       id: projects.id,
       name: projects.name,
@@ -67,7 +80,7 @@ export const clientPortalRouter = router({
       clientName: projects.clientName,
       projectTypeId: projects.projectTypeId,
     }).from(projects).where(
-      sql`${projects.id} IN (${sql.raw(projectIds.join(","))})`
+      sql`${projects.id} IN (${sql.raw(allProjectIds.join(","))})`
     ).orderBy(desc(projects.createdAt));
 
     return clientProjects;
@@ -80,15 +93,30 @@ export const clientPortalRouter = router({
       const dbInst = await db.getDb();
       if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
 
-      // Verificar acceso
+      // Verificar acceso: por client_project_access O por email directo
       if (ctx.user.role !== "admin") {
         const access = await dbInst.select().from(clientProjectAccess)
           .where(and(
             eq(clientProjectAccess.clientUserId, ctx.user.id),
             eq(clientProjectAccess.projectId, input.projectId)
           ));
+        
+        // Si no tiene acceso por tabla, verificar por email directo
         if (access.length === 0) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "No tienes acceso a este proyecto" });
+          const userEmail = ctx.user.email;
+          if (userEmail) {
+            const [projectByEmail] = await dbInst.select({ id: projects.id })
+              .from(projects)
+              .where(and(
+                eq(projects.id, input.projectId),
+                eq(projects.clientEmail, userEmail)
+              ));
+            if (!projectByEmail) {
+              throw new TRPCError({ code: "FORBIDDEN", message: "No tienes acceso a este proyecto" });
+            }
+          } else {
+            throw new TRPCError({ code: "FORBIDDEN", message: "No tienes acceso a este proyecto" });
+          }
         }
       }
 
@@ -153,7 +181,7 @@ export const clientPortalRouter = router({
       const dbInst = await db.getDb();
       if (!dbInst) return [];
 
-      // Verificar acceso
+      // Verificar acceso: por client_project_access O por email directo
       if (ctx.user.role !== "admin") {
         const access = await dbInst.select().from(clientProjectAccess)
           .where(and(
@@ -161,7 +189,20 @@ export const clientPortalRouter = router({
             eq(clientProjectAccess.projectId, input.projectId)
           ));
         if (access.length === 0) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "No tienes acceso a este proyecto" });
+          const userEmail = ctx.user.email;
+          if (userEmail) {
+            const [projectByEmail] = await dbInst.select({ id: projects.id })
+              .from(projects)
+              .where(and(
+                eq(projects.id, input.projectId),
+                eq(projects.clientEmail, userEmail)
+              ));
+            if (!projectByEmail) {
+              throw new TRPCError({ code: "FORBIDDEN", message: "No tienes acceso a este proyecto" });
+            }
+          } else {
+            throw new TRPCError({ code: "FORBIDDEN", message: "No tienes acceso a este proyecto" });
+          }
         }
       }
 

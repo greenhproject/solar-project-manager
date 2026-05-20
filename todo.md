@@ -962,3 +962,12 @@
 - [x] Solución: Usar useAuth0Custom().logout() que llama a auth0Logout({returnTo: origin})
 - [x] Corregido ClientLogoutButton para detectar Auth0 y usar el logout correcto (igual que Sidebar)
 - [x] Corregido Home.tsx: usar backendUser (de trpc.auth.me) para obtener el rol real, no auth0.user
+
+## Fix: Portal no muestra proyectos asociados al cliente (20 May 2026)
+- [x] Problema: myProjects solo buscaba en client_project_access (tabla vacía) sin buscar por email directo
+- [x] auth0Service.ts creaba usuarios con rol 'engineer' en vez de 'client'
+- [x] No había auto-vinculación de proyectos cuando usuario se registra vía Auth0
+- [x] Solución: myProjects ahora busca en AMBAS fuentes (client_project_access + projects.clientEmail)
+- [x] projectDetail y projectUpdates también verifican acceso por email directo
+- [x] auth0Service.ts ahora asigna rol 'client' y auto-vincula proyectos al crear usuario
+- [x] upsertUser default cambiado de 'engineer' a 'client'
