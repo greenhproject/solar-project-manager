@@ -92,6 +92,38 @@ export const appRouter = router({
         // Crear usuario con status 'pending' (requiere aprobación del admin)
         await createJWTUser(input);
 
+        // Auto-vincular proyectos existentes por email del cliente
+        try {
+          const dbInst = await db.getDb();
+          if (dbInst) {
+            const { projects } = await import("../drizzle/schema");
+            // Buscar proyectos donde el email del cliente coincida
+            const matchingProjects = await dbInst.select({ id: projects.id })
+              .from(projects)
+              .where(eq(projects.clientEmail, input.email));
+            
+            if (matchingProjects.length > 0) {
+              // Obtener el ID del usuario recién creado
+              const newUser = await getUserByEmailForAuth(input.email);
+              if (newUser) {
+                // Crear acceso para cada proyecto encontrado
+                for (const proj of matchingProjects) {
+                  await dbInst.insert(clientProjectAccess).values({
+                    clientUserId: newUser.id,
+                    projectId: proj.id,
+                    canViewFiles: true,
+                    canViewUpdates: true,
+                    grantedBy: newUser.id, // auto-asignado
+                  }).onDuplicateKeyUpdate({ set: { canViewFiles: true } });
+                }
+                console.log(`[Register] Auto-vinculados ${matchingProjects.length} proyectos para ${input.email}`);
+              }
+            }
+          }
+        } catch (err) {
+          console.error("[Register] Error auto-vinculando proyectos:", err);
+        }
+
         // Notificar al admin sobre nuevo registro pendiente (no bloqueante)
         const { notifyOwner } = await import("./_core/notification");
         notifyOwner({
@@ -279,7 +311,7 @@ export const appRouter = router({
     // Actualizar rol de usuario
     updateRole: adminProcedure
       .input(
-        z.object({ userId: z.number(), role: z.enum(["admin", "engineer", "ingeniero_tramites"]) })
+        z.object({ userId: z.number(), role: z.enum(["admin", "engineer", "ingeniero_tramites", "client"]) })
       )
       .mutation(async ({ input }) => {
         const user = await db.getUserById(input.userId);

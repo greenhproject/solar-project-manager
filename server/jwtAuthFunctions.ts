@@ -44,7 +44,7 @@ export async function createJWTUser(data: {
     email: data.email,
     password: hashedPassword,
     name: data.name,
-    role: "engineer", // Default role
+    role: "client", // Default role - los clientes se registran como 'client'
     loginMethod: "jwt",
     lastSignedIn: new Date(),
   });

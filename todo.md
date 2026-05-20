@@ -949,3 +949,10 @@
 - [x] Permitir que GHP Center autentique clientes y los redirija al portal
 - [x] Auto-crear usuario cliente si no existe (vía SSO con API Key admin)
 - [ ] Documentar flujo SSO en /api-docs
+## Fix: Roles y Auto-vinculación de Proyectos (20 May 2026)
+- [x] Agregar opción "Cliente" al dropdown de roles en UserManagement.tsx
+- [x] Cambiar rol por defecto de "engineer" a "client" al registrarse
+- [x] Auto-vincular proyectos por email del cliente al registrarse (buscar en projects.clientEmail)
+- [x] Redirigir según rol: clientes → /portal, admins/ingenieros → /dashboard
+- [x] Probar flujo completo
+- [x] Guardar checkpoint y push a GitHub

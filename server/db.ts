@@ -680,7 +680,7 @@ export async function getProjectUpdatesByProjectId(projectId: number) {
 
 export async function updateUserRole(
   userId: number,
-  role: "admin" | "engineer" | "ingeniero_tramites"
+  role: "admin" | "engineer" | "ingeniero_tramites" | "client"
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

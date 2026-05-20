@@ -38,8 +38,12 @@ export default function Login() {
       // Invalidar queries para forzar refetch con el nuevo token
       await utils.auth.me.invalidate();
       
-      // Redireccionar sin recargar la página
-      setLocation("/");
+      // Redireccionar según el rol del usuario
+      if (data.user?.role === "client") {
+        setLocation("/portal");
+      } else {
+        setLocation("/dashboard");
+      }
     },
     onError: error => {
       toast.error("Error al iniciar sesión", {

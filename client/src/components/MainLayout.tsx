@@ -279,7 +279,13 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     return <LoadingScreen message="Verificando sesión..." />;
   }
 
-  // === PASO 10: Todo listo - mostrar la app ===
+  // === PASO 10: Redirigir clientes al portal ===
+  if (meQuery.data?.role === "client") {
+    window.location.href = "/portal";
+    return <LoadingScreen message="Redirigiendo al portal..." />;
+  }
+
+  // === PASO 11: Todo listo - mostrar la app ===
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <Sidebar />
@@ -341,6 +347,12 @@ function MainLayoutManus({ children }: MainLayoutProps) {
         window.location.href = getLoginUrl();
       }} />
     );
+  }
+
+  // Redirigir clientes al portal
+  if (manusAuth.user?.role === "client") {
+    window.location.href = "/portal";
+    return <LoadingScreen message="Redirigiendo al portal..." />;
   }
 
   return (

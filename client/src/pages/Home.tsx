@@ -45,12 +45,17 @@ export default function Home() {
   const isAuthenticated = useAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
   const loading = useAuth0 ? auth0.isLoading : manusAuth.loading;
 
-  // Redirigir al dashboard si ya está autenticado
+  // Redirigir según el rol del usuario
+  const user = useAuth0 ? auth0.user : manusAuth.user;
   useEffect(() => {
-    if (isAuthenticated) {
-      window.location.href = "/dashboard";
+    if (isAuthenticated && user) {
+      if ((user as any).role === "client") {
+        window.location.href = "/portal";
+      } else {
+        window.location.href = "/dashboard";
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   if (loading) {
     return (
