@@ -865,3 +865,92 @@ export const clientProjectAccess = mysqlTable("client_project_access", {
 }));
 export type ClientProjectAccess = typeof clientProjectAccess.$inferSelect;
 export type InsertClientProjectAccess = typeof clientProjectAccess.$inferInsert;
+
+
+/**
+ * Configuración del sistema de recordatorios por email para hitos vencidos
+ * Parámetros configurables desde el panel de administración
+ */
+export const milestoneReminderConfig = mysqlTable("milestone_reminder_config", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Activar/desactivar el sistema
+  isEnabled: boolean("isEnabled").default(true).notNull(),
+  
+  // Horario de envío (hora UTC, ej: 12 = 7am Colombia)
+  sendHourUtc: int("sendHourUtc").default(12).notNull(), // 12 UTC = 7am COL
+  
+  // Niveles de urgencia según días de retraso
+  reminderDaysThreshold: int("reminderDaysThreshold").default(1).notNull(), // 1-3 días: Recordatorio
+  urgentDaysThreshold: int("urgentDaysThreshold").default(4).notNull(), // 4-7 días: Urgente
+  criticalDaysThreshold: int("criticalDaysThreshold").default(8).notNull(), // 8+ días: Crítico
+  
+  // Máximo de días para enviar recordatorios (después se escala)
+  maxReminderDays: int("maxReminderDays").default(30).notNull(),
+  
+  // Opciones de envío
+  sendCopyToAdmin: boolean("sendCopyToAdmin").default(true).notNull(),
+  adminCcEmail: varchar("adminCcEmail", { length: 255 }).default("admin@greenhproject.com"),
+  
+  // Mensajes personalizables
+  reminderSubject: varchar("reminderSubject", { length: 255 }).default("Recordatorio: Hito pendiente de completar"),
+  urgentSubject: varchar("urgentSubject", { length: 255 }).default("⚠️ Urgente: Hito con retraso significativo"),
+  criticalSubject: varchar("criticalSubject", { length: 255 }).default("🚨 Crítico: Hito con retraso grave - Acción inmediata requerida"),
+  
+  // Mensaje adicional personalizable (se agrega al cuerpo del email)
+  customMessage: text("customMessage"),
+  
+  // Heartbeat task UID (para gestionar el cron)
+  scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
+  
+  // Auditoría
+  updatedBy: int("updatedBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type MilestoneReminderConfig = typeof milestoneReminderConfig.$inferSelect;
+export type InsertMilestoneReminderConfig = typeof milestoneReminderConfig.$inferInsert;
+
+/**
+ * Logs de recordatorios de hitos enviados
+ * Registro para trazabilidad y evitar duplicados
+ */
+export const milestoneReminderLogs = mysqlTable("milestone_reminder_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Hito y proyecto relacionado
+  milestoneId: int("milestoneId").notNull(),
+  projectId: int("projectId").notNull(),
+  
+  // Destinatario
+  recipientUserId: int("recipientUserId"), // Usuario responsable
+  recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
+  recipientName: varchar("recipientName", { length: 255 }),
+  
+  // Nivel de urgencia del email enviado
+  urgencyLevel: mysqlEnum("urgencyLevel", ["reminder", "urgent", "critical"]).notNull(),
+  
+  // Días de retraso al momento del envío
+  daysOverdue: int("daysOverdue").notNull(),
+  
+  // Estado del envío
+  status: mysqlEnum("status", ["sent", "failed", "skipped"]).default("sent").notNull(),
+  errorMessage: text("errorMessage"),
+  
+  // Respuesta del responsable (si solicitó reprogramación)
+  rescheduleRequested: boolean("rescheduleRequested").default(false).notNull(),
+  rescheduleJustification: text("rescheduleJustification"),
+  rescheduleNewDate: timestamp("rescheduleNewDate"),
+  rescheduleRespondedAt: timestamp("rescheduleRespondedAt"),
+  
+  // Metadata
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+}, table => ({
+  milestoneIdx: index("reminder_log_milestone_idx").on(table.milestoneId),
+  projectIdx: index("reminder_log_project_idx").on(table.projectId),
+  sentAtIdx: index("reminder_log_sent_idx").on(table.sentAt),
+}));
+
+export type MilestoneReminderLog = typeof milestoneReminderLogs.$inferSelect;
+export type InsertMilestoneReminderLog = typeof milestoneReminderLogs.$inferInsert;

@@ -15,6 +15,13 @@
       "when": 1777941454739,
       "tag": "0001_chubby_hiroim",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1779751873928,
+      "tag": "0002_flashy_aqueduct",
+      "breakpoints": true
     }
   ]
 }

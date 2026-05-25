@@ -971,3 +971,15 @@
 - [x] projectDetail y projectUpdates también verifican acceso por email directo
 - [x] auth0Service.ts ahora asigna rol 'client' y auto-vincula proyectos al crear usuario
 - [x] upsertUser default cambiado de 'engineer' a 'client'
+
+## Feature: Sistema de Notificaciones por Email para Hitos Vencidos (25 May 2026)
+- [x] Crear tabla milestone_reminder_config (configuración admin del sistema)
+- [x] Crear tabla milestone_reminder_logs (registro de emails enviados)
+- [x] Implementar Heartbeat job diario para detectar hitos vencidos y enviar emails
+- [x] Crear template de email HTML profesional con niveles de urgencia (recordatorio/urgente/crítico)
+- [x] Implementar procedimientos tRPC para configuración admin (activar/desactivar, horario, niveles)
+- [x] Crear UI de configuración admin en panel de Configuración
+- [x] Crear formulario público de justificación de reprogramación (accesible desde email)
+- [x] Enviar copia al admin (CC) para trazabilidad
+- [x] Usar Resend como proveedor de email (admin@greenhproject.com)
+- [x] Guardar checkpoint y push a GitHub

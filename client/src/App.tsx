@@ -31,6 +31,8 @@ import TramitesYDiseno from "./pages/TramitesYDiseno";
 import EmailConfigPage from "./pages/EmailConfig";
 import ApiDocs from "./pages/ApiDocs";
 import ClientPortal from "./pages/ClientPortal";
+import MilestoneRemindersConfig from "./pages/MilestoneRemindersConfig";
+import RescheduleRequest from "./pages/RescheduleRequest";
 
 function Router() {
   return (
@@ -159,6 +161,15 @@ function Router() {
           <EmailConfigPage />
         </MainLayout>
       </Route>
+
+      <Route path="/settings/reminders">
+        <MainLayout>
+          <MilestoneRemindersConfig />
+        </MainLayout>
+      </Route>
+
+      {/* Public route for reschedule requests from email */}
+      <Route path="/reschedule/:milestoneId" component={RescheduleRequest} />
 
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

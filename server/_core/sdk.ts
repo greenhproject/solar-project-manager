@@ -256,7 +256,7 @@ class SDKServer {
     } as GetUserInfoWithJwtResponse;
   }
 
-  async authenticateRequest(req: Request): Promise<User> {
+  async authenticateRequest(req: Request): Promise<User & { isCron?: boolean; taskUid?: string }> {
     // Regular authentication flow
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
@@ -264,6 +264,31 @@ class SDKServer {
 
     if (!session) {
       throw ForbiddenError("Invalid session cookie");
+    }
+
+    // Cron short-circuit: if openId starts with cron_ prefix, it's a scheduled task
+    if (session.openId.startsWith("cron_")) {
+      const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+      if (!userInfo.taskUid) throw ForbiddenError("Cron session missing task_uid");
+      const now = new Date();
+      return {
+        id: -1,
+        openId: userInfo.openId,
+        name: userInfo.name || "Manus Scheduled Task",
+        email: null,
+        loginMethod: null,
+        role: "admin",
+        status: "approved",
+        avatarUrl: null,
+        theme: "system",
+        jobTitle: null,
+        createdAt: now,
+        updatedAt: now,
+        lastSignedIn: now,
+        password: null,
+        taskUid: userInfo.taskUid,
+        isCron: true,
+      } as User & { isCron: boolean; taskUid: string };
     }
 
     const sessionUserId = session.openId;

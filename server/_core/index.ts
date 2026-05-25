@@ -182,6 +182,9 @@ async function startServer() {
   // SSO routes para acceso desde apps externas (GHP Center)
   const { ssoRouter } = await import("../routes/sso");
   app.use("/api/sso", ssoRouter);
+  // Milestone reminders heartbeat handler
+  const { milestoneReminderRouter } = await import("../routes/milestone-reminders");
+  app.use(milestoneReminderRouter);
   // tRPC API
   app.use(
     "/api/trpc",

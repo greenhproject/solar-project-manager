@@ -20,6 +20,7 @@ import {
 import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
 import { clientPortalRouter } from "./routes/client-portal";
+import { milestoneReminderConfigRouter } from "./routes/milestone-reminder-config";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
 import { appSettings, apiKeys, webhooks, outgoingWebhookLogs, users, clientProjectAccess } from "../drizzle/schema";
 import { eq, desc, sql } from "drizzle-orm";
@@ -53,6 +54,7 @@ export const appRouter = router({
   analytics: metricsRouter,
   adminTools: adminToolsRouter,
   clientPortal: clientPortalRouter,
+  milestoneReminders: milestoneReminderConfigRouter,
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

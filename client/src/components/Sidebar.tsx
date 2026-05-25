@@ -145,6 +145,12 @@ export function Sidebar({ className }: SidebarProps) {
       href: "/settings",
       roles: ["admin"],
     },
+    {
+      icon: Bell,
+      label: "Config. Recordatorios",
+      href: "/settings/reminders",
+      roles: ["admin"],
+    },
   ];
 
   const filteredMenuItems = menuItems.filter(item =>
