@@ -1,0 +1,146 @@
+{
+  "query": "DESCRIBE milestone_reminder_config;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute DESCRIBE milestone_reminder_config;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "isEnabled",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "sendHourUtc",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "12",
+      "Extra": ""
+    },
+    {
+      "Field": "reminderDaysThreshold",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "urgentDaysThreshold",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "4",
+      "Extra": ""
+    },
+    {
+      "Field": "criticalDaysThreshold",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "8",
+      "Extra": ""
+    },
+    {
+      "Field": "maxReminderDays",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "30",
+      "Extra": ""
+    },
+    {
+      "Field": "sendCopyToAdmin",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "adminCcEmail",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "admin@greenhproject.com",
+      "Extra": ""
+    },
+    {
+      "Field": "reminderSubject",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "Recordatorio: Hito pendiente de completar",
+      "Extra": ""
+    },
+    {
+      "Field": "urgentSubject",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "⚠️ Urgente: Hito con retraso significativo",
+      "Extra": ""
+    },
+    {
+      "Field": "criticalSubject",
+      "Type": "varchar(255)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "🚨 Crítico: Hito con retraso grave - Acción inmediata requerida",
+      "Extra": ""
+    },
+    {
+      "Field": "customMessage",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "scheduleCronTaskUid",
+      "Type": "varchar(65)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedBy",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nisEnabled\ttinyint(1)\tNO\t\t1\t\nsendHourUtc\tint\tNO\t\t12\t\nreminderDaysThreshold\tint\tNO\t\t1\t\nurgentDaysThreshold\tint\tNO\t\t4\t\ncriticalDaysThreshold\tint\tNO\t\t8\t\nmaxReminderDays\tint\tNO\t\t30\t\nsendCopyToAdmin\ttinyint(1)\tNO\t\t1\t\nadminCcEmail\tvarchar(255)\tYES\t\tadmin@greenhproject.com\t\nreminderSubject\tvarchar(255)\tYES\t\tRecordatorio: Hito pendiente de completar\t\nurgentSubject\tvarchar(255)\tYES\t\t⚠️ Urgente: Hito con retraso significativo\t\ncriticalSubject\tvarchar(255)\tYES\t\t🚨 Crítico: Hito con retraso grave - Acción inmediata requerida\t\ncustomMessage\ttext\tYES\t\tNULL\t\nscheduleCronTaskUid\tvarchar(65)\tYES\t\tNULL\t\nupdatedBy\tint\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\n",
+  "stderr": "",
+  "execution_time_ms": 264
+}

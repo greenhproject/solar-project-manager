@@ -983,3 +983,12 @@
 - [x] Enviar copia al admin (CC) para trazabilidad
 - [x] Usar Resend como proveedor de email (admin@greenhproject.com)
 - [x] Guardar checkpoint y push a GitHub
+
+## Fix: Responsive Layout MilestoneRemindersConfig (26 May 2026)
+- [x] Header: flex-col sm:flex-row, responsive text sizes, badge hidden on mobile
+- [x] Tabs: w-full overflow-x-auto flex, responsive text sizes, "Config" abbreviation on mobile
+- [x] Urgency levels grid: sm:grid-cols-2 lg:grid-cols-3, responsive padding
+- [x] Scheduling grid: sm:grid-cols-2 instead of md:grid-cols-2
+- [x] Logs list: items stack vertically on mobile with flex-col sm:flex-row, truncate email
+- [x] Test tab: input+button flex-col sm:flex-row, button w-full sm:w-auto
+- [x] Guardar checkpoint y push a GitHub

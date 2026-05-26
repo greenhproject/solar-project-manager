@@ -146,6 +146,65 @@ async function runAutoMigrations() {
       if (!e.message?.includes('Duplicate column')) console.warn("[AutoMigration] durationDays:", e.message);
     }
 
+    // Create milestone_reminder_config table if not exists
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS milestone_reminder_config (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        isEnabled BOOLEAN NOT NULL DEFAULT TRUE,
+        sendHourUtc INT NOT NULL DEFAULT 12,
+        reminderDaysThreshold INT NOT NULL DEFAULT 1,
+        urgentDaysThreshold INT NOT NULL DEFAULT 4,
+        criticalDaysThreshold INT NOT NULL DEFAULT 8,
+        maxReminderDays INT NOT NULL DEFAULT 30,
+        sendCopyToAdmin BOOLEAN NOT NULL DEFAULT TRUE,
+        adminCcEmail VARCHAR(255) DEFAULT 'admin@greenhproject.com',
+        reminderSubject VARCHAR(255) DEFAULT 'Recordatorio: Hito pendiente de completar',
+        urgentSubject VARCHAR(255) DEFAULT '⚠️ Urgente: Hito con retraso significativo',
+        criticalSubject VARCHAR(255) DEFAULT '🚨 Crítico: Hito con retraso grave - Acción inmediata requerida',
+        customMessage TEXT,
+        scheduleCronTaskUid VARCHAR(65),
+        updatedBy INT,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("[AutoMigration] milestone_reminder_config table verified");
+
+    // Insert default config if table is empty
+    const [configRows]: any = await conn.execute(`SELECT COUNT(*) as cnt FROM milestone_reminder_config`);
+    if (configRows[0].cnt === 0) {
+      await conn.execute(`
+        INSERT INTO milestone_reminder_config (isEnabled, sendHourUtc, reminderDaysThreshold, urgentDaysThreshold, criticalDaysThreshold, maxReminderDays, sendCopyToAdmin, adminCcEmail)
+        VALUES (FALSE, 12, 1, 4, 8, 30, TRUE, 'admin@greenhproject.com')
+      `);
+      console.log("[AutoMigration] milestone_reminder_config default row inserted");
+    }
+
+    // Create milestone_reminder_logs table if not exists
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS milestone_reminder_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        milestoneId INT NOT NULL,
+        projectId INT NOT NULL,
+        recipientUserId INT,
+        recipientEmail VARCHAR(320) NOT NULL,
+        recipientName VARCHAR(255),
+        urgencyLevel ENUM('reminder', 'urgent', 'critical') NOT NULL,
+        daysOverdue INT NOT NULL,
+        status ENUM('sent', 'failed', 'skipped') NOT NULL DEFAULT 'sent',
+        errorMessage TEXT,
+        rescheduleRequested BOOLEAN NOT NULL DEFAULT FALSE,
+        rescheduleJustification TEXT,
+        rescheduleNewDate TIMESTAMP NULL,
+        rescheduleRespondedAt TIMESTAMP NULL,
+        sentAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX reminder_log_milestone_idx (milestoneId),
+        INDEX reminder_log_project_idx (projectId),
+        INDEX reminder_log_sent_idx (sentAt)
+      )
+    `);
+    console.log("[AutoMigration] milestone_reminder_logs table verified");
+
     conn.release();
     await pool.end();
     console.log("[AutoMigration] All tables verified");

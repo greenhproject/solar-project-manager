@@ -1,0 +1,29 @@
+{
+  "query": "SELECT * FROM milestone_reminder_config;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT * FROM milestone_reminder_config;",
+  "rows": [
+    {
+      "id": "1",
+      "isEnabled": "1",
+      "sendHourUtc": "12",
+      "reminderDaysThreshold": "1",
+      "urgentDaysThreshold": "4",
+      "criticalDaysThreshold": "8",
+      "maxReminderDays": "30",
+      "sendCopyToAdmin": "1",
+      "adminCcEmail": "admin@greenhproject.com",
+      "reminderSubject": "Recordatorio: Hito pendiente de completar",
+      "urgentSubject": "⚠️ Urgente: Hito con retraso significativo",
+      "criticalSubject": "🚨 Crítico: Hito con retraso grave - Acción inmediata requerida",
+      "customMessage": "NULL",
+      "scheduleCronTaskUid": "NULL",
+      "updatedBy": "NULL",
+      "createdAt": "2026-05-25 23:31:41",
+      "updatedAt": "2026-05-25 23:31:41"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tisEnabled\tsendHourUtc\treminderDaysThreshold\turgentDaysThreshold\tcriticalDaysThreshold\tmaxReminderDays\tsendCopyToAdmin\tadminCcEmail\treminderSubject\turgentSubject\tcriticalSubject\tcustomMessage\tscheduleCronTaskUid\tupdatedBy\tcreatedAt\tupdatedAt\n1\t1\t12\t1\t4\t8\t30\t1\tadmin@greenhproject.com\tRecordatorio: Hito pendiente de completar\t⚠️ Urgente: Hito con retraso significativo\t🚨 Crítico: Hito con retraso grave - Acción inmediata requerida\tNULL\tNULL\tNULL\t2026-05-25 23:31:41\t2026-05-25 23:31:41\n",
+  "stderr": "",
+  "execution_time_ms": 255
+}

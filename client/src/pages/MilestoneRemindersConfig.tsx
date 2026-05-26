@@ -103,15 +103,15 @@ export default function MilestoneRemindersConfig() {
   const isEnabled = configQuery.data?.isEnabled ?? false;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-1">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Bell className="h-6 w-6 text-orange-500" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 flex-shrink-0" />
             Recordatorios de Hitos
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 mt-1 text-sm">
             Configura el envío automático de emails para hitos vencidos
           </p>
         </div>
@@ -125,7 +125,7 @@ export default function MilestoneRemindersConfig() {
             disabled={toggleCron.isPending}
           />
           {isEnabled && (
-            <Badge variant="default" className="bg-green-600">
+            <Badge variant="default" className="bg-green-600 hidden sm:flex">
               <CheckCircle className="h-3 w-3 mr-1" /> Enviando diariamente
             </Badge>
           )}
@@ -133,17 +133,17 @@ export default function MilestoneRemindersConfig() {
       </div>
 
       <Tabs defaultValue="config" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="config" className="flex items-center gap-1">
-            <Settings className="h-4 w-4" /> Configuración
+        <TabsList className="w-full overflow-x-auto flex">
+          <TabsTrigger value="config" className="flex items-center gap-1 text-xs sm:text-sm">
+            <Settings className="h-4 w-4" /> <span className="hidden sm:inline">Configuración</span><span className="sm:hidden">Config</span>
           </TabsTrigger>
-          <TabsTrigger value="messages" className="flex items-center gap-1">
+          <TabsTrigger value="messages" className="flex items-center gap-1 text-xs sm:text-sm">
             <Mail className="h-4 w-4" /> Mensajes
           </TabsTrigger>
-          <TabsTrigger value="logs" className="flex items-center gap-1">
+          <TabsTrigger value="logs" className="flex items-center gap-1 text-xs sm:text-sm">
             <History className="h-4 w-4" /> Historial
           </TabsTrigger>
-          <TabsTrigger value="test" className="flex items-center gap-1">
+          <TabsTrigger value="test" className="flex items-center gap-1 text-xs sm:text-sm">
             <Send className="h-4 w-4" /> Prueba
           </TabsTrigger>
         </TabsList>
@@ -160,7 +160,7 @@ export default function MilestoneRemindersConfig() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Hora de envío (UTC)</Label>
                   <Select
@@ -218,8 +218,8 @@ export default function MilestoneRemindersConfig() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg bg-yellow-50 border border-yellow-200">
                   <Label className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-yellow-500" />
                     Recordatorio
@@ -243,7 +243,7 @@ export default function MilestoneRemindersConfig() {
                   </div>
                 </div>
 
-                <div className="space-y-2 p-4 rounded-lg bg-orange-50 border border-orange-200">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg bg-orange-50 border border-orange-200">
                   <Label className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-orange-500" />
                     Urgente
@@ -267,7 +267,7 @@ export default function MilestoneRemindersConfig() {
                   </div>
                 </div>
 
-                <div className="space-y-2 p-4 rounded-lg bg-red-50 border border-red-200">
+                <div className="space-y-2 p-3 sm:p-4 rounded-lg bg-red-50 border border-red-200">
                   <Label className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-red-500" />
                     Crítico
@@ -436,24 +436,24 @@ export default function MilestoneRemindersConfig() {
                   {logsQuery.data.logs.map((log) => (
                     <div
                       key={log.id}
-                      className="flex items-center justify-between p-3 rounded-lg border"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 rounded-lg border gap-2"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         {log.status === "sent" ? (
-                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
                         ) : log.status === "failed" ? (
-                          <XCircle className="h-5 w-5 text-red-500" />
+                          <XCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
                         ) : (
-                          <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                          <AlertTriangle className="h-5 w-5 text-yellow-500 flex-shrink-0" />
                         )}
-                        <div>
-                          <p className="text-sm font-medium">{log.recipientEmail}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{log.recipientEmail}</p>
                           <p className="text-xs text-gray-500">
-                            Hito #{log.milestoneId} · Proyecto #{log.projectId} · {log.daysOverdue} días de retraso
+                            Hito #{log.milestoneId} · Proyecto #{log.projectId} · {log.daysOverdue} días
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 ml-8 sm:ml-0">
                         <Badge
                           variant={
                             log.urgencyLevel === "critical"
@@ -496,16 +496,18 @@ export default function MilestoneRemindersConfig() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Email de destino</Label>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     type="email"
                     value={testEmail}
                     onChange={(e) => setTestEmail(e.target.value)}
                     placeholder="tu@email.com"
+                    className="flex-1"
                   />
                   <Button
                     onClick={handleSendTest}
                     disabled={sendTest.isPending || !testEmail}
+                    className="w-full sm:w-auto whitespace-nowrap"
                   >
                     {sendTest.isPending ? "Enviando..." : "Enviar Prueba"}
                   </Button>

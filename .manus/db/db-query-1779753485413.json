@@ -1,0 +1,16 @@
+{
+  "query": "SHOW TABLES LIKE 'milestone_reminder%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SHOW TABLES LIKE 'milestone_reminder%';",
+  "rows": [
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi (milestone_reminder%)": "milestone_reminder_config"
+    },
+    {
+      "Tables_in_i9L9SEfcrUSsT5mzwNhmmi (milestone_reminder%)": "milestone_reminder_logs"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_i9L9SEfcrUSsT5mzwNhmmi (milestone_reminder%)\nmilestone_reminder_config\nmilestone_reminder_logs\n",
+  "stderr": "",
+  "execution_time_ms": 259
+}
