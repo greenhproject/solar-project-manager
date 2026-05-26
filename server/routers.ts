@@ -1415,10 +1415,24 @@ export const appRouter = router({
         }
 
         const oldDueDate = milestone.dueDate;
+        const tz = await getConfiguredTimezone();
+        const oldDateStr = oldDueDate ? new Date(oldDueDate).toLocaleDateString("es-CO", { timeZone: tz }) : "sin fecha";
+        const newDateStr = input.newDueDate.toLocaleDateString("es-CO", { timeZone: tz });
+        const userName = ctx.user.name || "Usuario";
+        const now = new Date().toLocaleDateString("es-CO", { timeZone: tz });
 
-        // Actualizar la fecha del hito
+        // Construir la nota de reprogramación para el hito
+        const rescheduleNote = `[${now}] Reprogramado por ${userName}: ${oldDateStr} → ${newDateStr}. Justificación: ${input.justification}`;
+
+        // Actualizar la fecha del hito Y agregar la justificación en el campo notes
+        const existingNotes = milestone.notes || "";
+        const updatedNotes = existingNotes 
+          ? `${existingNotes}\n\n--- Reprogramación ---\n${rescheduleNote}`
+          : `--- Reprogramación ---\n${rescheduleNote}`;
+
         await db.updateMilestone(input.milestoneId, {
           dueDate: input.newDueDate,
+          notes: updatedNotes,
         });
 
         // Registrar la reprogramación como nota en project_updates
@@ -1426,7 +1440,7 @@ export const appRouter = router({
           projectId: milestone.projectId,
           updateType: "note_added",
           title: `Hito reprogramado: ${milestone.name}`,
-          description: `${ctx.user.name || "Usuario"} reprogramó la fecha del hito "${milestone.name}" de ${oldDueDate ? new Date(oldDueDate).toLocaleDateString("es-CO", { timeZone: await getConfiguredTimezone() }) : "sin fecha"} a ${input.newDueDate.toLocaleDateString("es-CO", { timeZone: await getConfiguredTimezone() })}. Justificación: ${input.justification}`,
+          description: `${userName} reprogramó la fecha del hito "${milestone.name}" de ${oldDateStr} a ${newDateStr}. Justificación: ${input.justification}`,
           oldValue: oldDueDate ? JSON.stringify({ dueDate: oldDueDate }) : null,
           newValue: JSON.stringify({ dueDate: input.newDueDate }),
           createdBy: ctx.user.id,

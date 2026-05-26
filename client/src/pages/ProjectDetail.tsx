@@ -1015,6 +1015,21 @@ export default function ProjectDetail() {
                             )}
                           </div>
                           
+                          {/* Notas de reprogramación del hito */}
+                          {(milestone as any).notes && (milestone as any).notes.includes("Reprogramaci\u00f3n") && (
+                            <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md">
+                              <p className="text-xs font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1 mb-1">
+                                <Clock className="h-3 w-3" />
+                                Historial de Reprogramaciones
+                              </p>
+                              <div className="text-xs text-amber-600 dark:text-amber-400 whitespace-pre-line">
+                                {(milestone as any).notes.split("--- Reprogramaci\u00f3n ---\n").filter((_: string, i: number) => i > 0).map((note: string, idx: number) => (
+                                  <p key={idx} className="mb-1 last:mb-0">{note.trim()}</p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Observaciones del equipo - Sistema de comentarios con trazabilidad */}
                           <MilestoneCommentsSection milestoneId={milestone.id} currentUser={user} />
 

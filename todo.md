@@ -1007,4 +1007,10 @@
 - [x] Modificar milestone-reminder-config.ts para usar cron interno en vez de Heartbeat API
 - [x] Registrar el cron scheduler en el arranque del servidor
 - [x] Mantener el endpoint /api/scheduled/milestone-reminders como fallback
+- [x] Guardar checkpoint y push a GitHub
+
+## Fix: Justificación de reprogramación debe quedar registrada en el hito (26 May 2026)
+- [x] Investigar el procedimiento de reprogramación actual (rescheduleMilestone)
+- [x] Modificar el backend para guardar la justificación como nota del hito
+- [x] Agregar visualización del historial de reprogramaciones en ProjectDetail
 - [ ] Guardar checkpoint y push a GitHub
