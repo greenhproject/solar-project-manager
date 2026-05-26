@@ -1014,3 +1014,10 @@
 - [x] Modificar el backend para guardar la justificación como nota del hito
 - [x] Agregar visualización del historial de reprogramaciones en ProjectDetail
 - [ ] Guardar checkpoint y push a GitHub
+
+## Refactor: Eliminar redundancia Fecha vencimiento vs Fecha fin en hitos (26 May 2026)
+- [x] Eliminar campo "Fecha de vencimiento" separado del UI de hitos
+- [x] Unificar: Fecha fin = Fecha de vencimiento (dueDate)
+- [x] Sincronización automática: cambiar inicio → recalcula fin; cambiar días → recalcula fin; cambiar fin → recalcula días
+- [x] Ajustar backend para que dueDate siempre se sincronice con endDate
+- [ ] Guardar checkpoint y push a GitHub

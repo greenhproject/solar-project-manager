@@ -857,8 +857,55 @@ export default function ProjectDetail() {
                               </Select>
                             </div>
                             
+                          </div>
+
+                          {/* Fechas de inicio, fin (=vencimiento) y duración - Sincronizados */}
+                          <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_5rem] gap-2 sm:gap-4 mb-2">
                             <div>
-                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha de vencimiento</Label>
+                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha inicio</Label>
+                              <Input
+                                type="date"
+                                className="h-8 text-xs"
+                                value={(milestone as any).startDate ? toDateInputValue((milestone as any).startDate) : ""}
+                                onChange={async (e) => {
+                                  if (!e.target.value) return;
+                                  try {
+                                    // Al cambiar inicio, recalcular fin = inicio + días
+                                    const newStart = fromDateInputValue(e.target.value);
+                                    const days = (milestone as any).durationDays || 1;
+                                    const includeWeekends = milestoneWeekendOverrides[milestone.id] !== undefined
+                                      ? milestoneWeekendOverrides[milestone.id]
+                                      : (weekendsConfig?.includeWeekends ?? false);
+                                    
+                                    // Calcular nueva fecha fin
+                                    let newEnd = new Date(newStart);
+                                    if (includeWeekends) {
+                                      newEnd.setDate(newEnd.getDate() + days);
+                                    } else {
+                                      let added = 0;
+                                      while (added < days) {
+                                        newEnd.setDate(newEnd.getDate() + 1);
+                                        const dow = newEnd.getDay();
+                                        if (dow !== 0 && dow !== 6) added++;
+                                      }
+                                    }
+                                    
+                                    await updateMilestone.mutateAsync({
+                                      id: milestone.id,
+                                      startDate: newStart,
+                                      endDate: newEnd,
+                                      dueDate: newEnd,
+                                    });
+                                    toast.success("Fechas actualizadas");
+                                    await refetchMilestones();
+                                  } catch (error: any) {
+                                    toast.error(error.message || "Error al actualizar fecha");
+                                  }
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha fin (vencimiento)</Label>
                               <Input
                                 type="date"
                                 className="h-8 text-xs"
@@ -874,52 +921,6 @@ export default function ProjectDetail() {
                                 }}
                               />
                             </div>
-                          </div>
-
-                          {/* Fechas de inicio, fin y duración */}
-                          <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_5rem] gap-2 sm:gap-4 mb-2">
-                            <div>
-                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha inicio</Label>
-                              <Input
-                                type="date"
-                                className="h-8 text-xs"
-                                value={(milestone as any).startDate ? toDateInputValue((milestone as any).startDate) : ""}
-                                onChange={async (e) => {
-                                  if (!e.target.value) return;
-                                  try {
-                                    await updateMilestone.mutateAsync({
-                                      id: milestone.id,
-                                      startDate: fromDateInputValue(e.target.value),
-                                    });
-                                    toast.success("Fecha de inicio actualizada");
-                                    await refetchMilestones();
-                                  } catch (error: any) {
-                                    toast.error(error.message || "Error al actualizar fecha");
-                                  }
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-xs text-muted-foreground mb-1 block">Fecha fin</Label>
-                              <Input
-                                type="date"
-                                className="h-8 text-xs"
-                                value={(milestone as any).endDate ? toDateInputValue((milestone as any).endDate) : ""}
-                                onChange={async (e) => {
-                                  if (!e.target.value) return;
-                                  try {
-                                    await updateMilestone.mutateAsync({
-                                      id: milestone.id,
-                                      endDate: fromDateInputValue(e.target.value),
-                                    });
-                                    toast.success("Fecha de fin actualizada");
-                                    await refetchMilestones();
-                                  } catch (error: any) {
-                                    toast.error(error.message || "Error al actualizar fecha");
-                                  }
-                                }}
-                              />
-                            </div>
                             <div className="col-span-2 sm:col-span-1">
                               <Label className="text-xs text-muted-foreground mb-1 block">Días</Label>
                               <Input
@@ -932,10 +933,37 @@ export default function ProjectDetail() {
                                   const days = parseInt(e.target.value);
                                   if (!days || days < 1) return;
                                   try {
-                                    await updateMilestone.mutateAsync({
-                                      id: milestone.id,
-                                      durationDays: days,
-                                    });
+                                    // Al cambiar días, recalcular fin = inicio + días
+                                    const startDate = (milestone as any).startDate;
+                                    if (startDate) {
+                                      const includeWeekends = milestoneWeekendOverrides[milestone.id] !== undefined
+                                        ? milestoneWeekendOverrides[milestone.id]
+                                        : (weekendsConfig?.includeWeekends ?? false);
+                                      
+                                      let newEnd = new Date(startDate);
+                                      if (includeWeekends) {
+                                        newEnd.setDate(newEnd.getDate() + days);
+                                      } else {
+                                        let added = 0;
+                                        while (added < days) {
+                                          newEnd.setDate(newEnd.getDate() + 1);
+                                          const dow = newEnd.getDay();
+                                          if (dow !== 0 && dow !== 6) added++;
+                                        }
+                                      }
+                                      
+                                      await updateMilestone.mutateAsync({
+                                        id: milestone.id,
+                                        durationDays: days,
+                                        endDate: newEnd,
+                                        dueDate: newEnd,
+                                      });
+                                    } else {
+                                      await updateMilestone.mutateAsync({
+                                        id: milestone.id,
+                                        durationDays: days,
+                                      });
+                                    }
                                     toast.success(`Duración actualizada: ${days} días`);
                                     await refetchMilestones();
                                   } catch (error: any) {
@@ -1351,12 +1379,35 @@ export default function ProjectDetail() {
                     dueDate: fromDateInputValue(cascadeDialog.newDate),
                     cascadeSubsequent: false,
                   });
-                  // También actualizar endDate para que coincida con la nueva fecha de vencimiento
+                  // También actualizar endDate y recalcular días
+                  const newEndDate = fromDateInputValue(cascadeDialog.newDate);
+                  const milestoneData = milestones?.find((m: any) => m.id === cascadeDialog.milestoneId);
+                  let newDays: number | undefined;
+                  if (milestoneData && (milestoneData as any).startDate) {
+                    const start = new Date((milestoneData as any).startDate);
+                    const end = new Date(newEndDate);
+                    const includeWk = milestoneWeekendOverrides[cascadeDialog.milestoneId] !== undefined
+                      ? milestoneWeekendOverrides[cascadeDialog.milestoneId]
+                      : (weekendsConfig?.includeWeekends ?? false);
+                    if (includeWk) {
+                      newDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+                    } else {
+                      let count = 0;
+                      const cur = new Date(start);
+                      while (cur < end) {
+                        cur.setDate(cur.getDate() + 1);
+                        const dow = cur.getDay();
+                        if (dow !== 0 && dow !== 6) count++;
+                      }
+                      newDays = Math.max(1, count);
+                    }
+                  }
                   await updateMilestone.mutateAsync({
                     id: cascadeDialog.milestoneId,
-                    endDate: fromDateInputValue(cascadeDialog.newDate),
+                    endDate: newEndDate,
+                    ...(newDays ? { durationDays: newDays } : {}),
                   });
-                  toast.success("Fecha de vencimiento y fecha fin actualizadas");
+                  toast.success("Fecha fin y duración actualizadas");
                   setCascadeDialog(null);
                   await refetchMilestones();
                 } catch (error: any) {

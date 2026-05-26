@@ -1218,6 +1218,7 @@ export const appRouter = router({
           description: z.string().optional(),
           startDate: z.date().nullable().optional(),
           endDate: z.date().nullable().optional(),
+          dueDate: z.date().nullable().optional(),
           durationDays: z.number().nullable().optional(),
           status: z
             .enum(["pending", "in_progress", "completed", "overdue"])
@@ -1236,6 +1237,15 @@ export const appRouter = router({
         if (dependencies !== undefined) {
           updateData.dependencies =
             dependencies.length > 0 ? JSON.stringify(dependencies) : null;
+        }
+
+        // Sincronizar: si se envía endDate, también actualizar dueDate
+        if (updateData.endDate && !updateData.dueDate) {
+          updateData.dueDate = updateData.endDate;
+        }
+        // Sincronizar: si se envía dueDate, también actualizar endDate
+        if (updateData.dueDate && !updateData.endDate) {
+          updateData.endDate = updateData.dueDate;
         }
 
         // Si se marca como completado y no hay completedDate, usar fecha actual (zona horaria configurada)
@@ -1674,9 +1684,10 @@ export const appRouter = router({
           });
         }
 
-        // Actualizar fecha de vencimiento del hito seleccionado
+        // Actualizar fecha de vencimiento del hito seleccionado (endDate = dueDate siempre)
         await db.updateMilestone(input.milestoneId, {
           dueDate: input.dueDate,
+          endDate: input.dueDate,
         });
 
         // Sincronizar con Google Calendar si existe eventId
