@@ -50,6 +50,7 @@ import {
   MessageSquare,
   Send,
   User as UserIcon,
+  Mail,
 } from "lucide-react";
 import { Link, useRoute } from "wouter";
 import { useState, useCallback } from "react";
@@ -62,6 +63,82 @@ import { FileUpload } from "@/components/FileUpload";
 import { FileList } from "@/components/FileList";
 import LegalizationChecklist from "@/components/LegalizationChecklist";
 import { SortableList } from "@/components/SortableList";
+
+// Componente: Botón para invitar al cliente al portal
+function InviteClientButton({ projectId, clientEmail, clientName }: { projectId: number; clientEmail: string; clientName?: string | null }) {
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const sendInvitation = trpc.projects.sendClientInvitation.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Invitación enviada exitosamente a ${data.sentTo}`);
+      setIsConfirmOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Error al enviar la invitación");
+    },
+  });
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-full mt-3 gap-2 text-orange-600 border-orange-200 hover:bg-orange-50 hover:text-orange-700"
+        onClick={() => setIsConfirmOpen(true)}
+      >
+        <Mail className="h-3.5 w-3.5" />
+        Invitar al Portal
+      </Button>
+
+      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5 text-orange-500" />
+              Invitar Cliente al Portal
+            </DialogTitle>
+            <DialogDescription>
+              Se enviará un email de invitación con instrucciones de acceso al portal de clientes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+              <UserIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0">
+                {clientName && <p className="text-sm font-medium truncate">{clientName}</p>}
+                <p className="text-sm text-muted-foreground truncate">{clientEmail}</p>
+              </div>
+            </div>
+            <div className="text-sm text-muted-foreground space-y-1">
+              <p>El email incluirá:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-xs">
+                <li>Enlace directo al portal de clientes</li>
+                <li>Instrucciones de registro con su email</li>
+                <li>Información del proyecto asignado</li>
+                <li>Guía de funcionalidades disponibles</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsConfirmOpen(false)} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => sendInvitation.mutate({ projectId })}
+              disabled={sendInvitation.isPending}
+              className="w-full sm:w-auto gap-2 bg-orange-500 hover:bg-orange-600"
+            >
+              {sendInvitation.isPending ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Enviando...</>
+              ) : (
+                <><Send className="h-4 w-4" /> Enviar Invitación</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 // Helper para descargar PDF desde base64
 function downloadPdfFromBase64(pdfBase64: string, fileName: string) {
@@ -544,6 +621,9 @@ export default function ProjectDetail() {
                   <MapPin className="h-3 w-3" />
                   {project.location}
                 </div>
+              )}
+              {project.clientEmail && (user.role === "admin" || user.role === "engineer" || user.role === "ingeniero_tramites") && (
+                <InviteClientButton projectId={project.id} clientEmail={project.clientEmail} clientName={project.clientName} />
               )}
             </CardContent>
           </Card>

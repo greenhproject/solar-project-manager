@@ -453,3 +453,70 @@ export async function sendGenericNotificationEmail(
     html: content,
   });
 }
+
+/**
+ * Email de invitación al portal del cliente
+ * Envía un email profesional con instrucciones de acceso al portal
+ */
+export async function sendClientInvitationEmail(params: {
+  toEmail: string;
+  clientName: string;
+  projectName: string;
+  projectId: number;
+  portalUrl: string;
+  senderName: string;
+}): Promise<boolean> {
+  const { toEmail, clientName, projectName, projectId, portalUrl, senderName } = params;
+
+  const content = getEmailTemplate(`
+    <div class="alert alert-info">
+      <h2 style="margin-top: 0;">🎉 ¡Bienvenido al Portal de Clientes!</h2>
+      <p><strong>Proyecto:</strong> ${projectName}</p>
+      <p><strong>ID del Proyecto:</strong> #${projectId}</p>
+    </div>
+    
+    <p>Hola <strong>${clientName || 'Estimado cliente'}</strong>,</p>
+    
+    <p>Le informamos que su proyecto de energía solar <strong>"${projectName}"</strong> ya está registrado en nuestro sistema de gestión. A partir de ahora podrá consultar el avance de su proyecto en tiempo real a través de nuestro portal de clientes.</p>
+    
+    <h3 style="color: #f97316; margin-top: 25px;">¿Cómo acceder?</h3>
+    
+    <ol style="padding-left: 20px; line-height: 2;">
+      <li>Ingrese al portal: <a href="${portalUrl}" style="color: #f97316; font-weight: bold;">${portalUrl}</a></li>
+      <li>Regístrese con este mismo correo electrónico: <strong>${toEmail}</strong></li>
+      <li>Una vez registrado, su proyecto aparecerá automáticamente en su panel</li>
+    </ol>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${portalUrl}" class="button" style="color: #ffffff !important; text-decoration: none;">
+        Acceder al Portal de Clientes
+      </a>
+    </div>
+    
+    <h3 style="color: #f97316; margin-top: 25px;">¿Qué puede hacer en el portal?</h3>
+    <ul style="padding-left: 20px; line-height: 2;">
+      <li>📊 Ver el progreso general de su proyecto</li>
+      <li>📅 Consultar el cronograma y fechas estimadas</li>
+      <li>✅ Revisar el estado de cada hito del proyecto</li>
+      <li>📝 Recibir actualizaciones importantes</li>
+    </ul>
+    
+    <div style="background-color: #f8fafc; border-radius: 8px; padding: 15px; margin-top: 20px; border: 1px solid #e2e8f0;">
+      <p style="margin: 0; font-size: 14px; color: #64748b;">
+        <strong>💡 Nota:</strong> Es importante que se registre con el correo <strong>${toEmail}</strong> para que el sistema vincule automáticamente su proyecto. Si tiene alguna duda, no dude en contactarnos.
+      </p>
+    </div>
+    
+    <p style="margin-top: 25px; color: #666;">
+      Atentamente,<br/>
+      <strong>${senderName}</strong><br/>
+      Green House Project
+    </p>
+  `);
+
+  return sendEmail({
+    to: toEmail,
+    subject: `🎉 ¡Bienvenido! Acceda al estado de su proyecto "${projectName}" - Green House Project`,
+    html: content,
+  });
+}

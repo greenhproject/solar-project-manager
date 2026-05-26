@@ -992,3 +992,11 @@
 - [x] Logs list: items stack vertically on mobile with flex-col sm:flex-row, truncate email
 - [x] Test tab: input+button flex-col sm:flex-row, button w-full sm:w-auto
 - [x] Guardar checkpoint y push a GitHub
+
+## Feature: Botón "Invitar Cliente" en Detalle de Proyecto (26 May 2026)
+- [x] Crear procedimiento tRPC para enviar email de invitación al cliente
+- [x] Diseñar template HTML profesional de invitación al portal
+- [x] Agregar botón "Invitar Cliente" en la vista de detalle de proyecto (ProjectDetail.tsx)
+- [x] Incluir datos de acceso y enlace directo al portal en el email
+- [x] Validar que el proyecto tenga clientEmail antes de enviar
+- [ ] Guardar checkpoint y push a GitHub

@@ -961,6 +961,66 @@ export const appRouter = router({
           message: `Se cargaron ${createdCount} hitos predeterminados correctamente`,
         };
       }),
+
+    // Enviar invitación al cliente por email
+    sendClientInvitation: protectedProcedure
+      .input(z.object({
+        projectId: z.number(),
+        customMessage: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Solo admin e ingenieros pueden invitar
+        if (ctx.user.role !== "admin" && ctx.user.role !== "engineer" && ctx.user.role !== "ingeniero_tramites") {
+          throw new TRPCError({ code: "FORBIDDEN", message: "No tienes permisos para enviar invitaciones" });
+        }
+
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
+
+        // Obtener proyecto
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Proyecto no encontrado" });
+        }
+
+        if (!project.clientEmail) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "El proyecto no tiene un email de cliente configurado. Edita el proyecto y agrega el email del cliente." });
+        }
+
+        // Determinar URL del portal
+        const isProduction = process.env.NODE_ENV === "production";
+        const baseUrl = isProduction
+          ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN || "spm.ghp.center"}`
+          : "http://localhost:3000";
+        const portalUrl = `${baseUrl}/portal`;
+
+        // Enviar email de invitación
+        const { sendClientInvitationEmail } = await import("./emailService");
+        const success = await sendClientInvitationEmail({
+          toEmail: project.clientEmail,
+          clientName: project.clientName || "",
+          projectName: project.name,
+          projectId: project.id,
+          portalUrl,
+          senderName: ctx.user.name || "Equipo GreenH",
+        });
+
+        if (!success) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "No se pudo enviar el email. Verifica la configuración de email en Ajustes." });
+        }
+
+        // Registrar la invitación como una actualización del proyecto
+        const { projectUpdates } = await import("../drizzle/schema");
+        await dbInst.insert(projectUpdates).values({
+          projectId: input.projectId,
+          updateType: "notification",
+          title: "Invitación enviada al cliente",
+          description: `Se envió invitación al portal a ${project.clientEmail}`,
+          createdBy: ctx.user.id,
+        });
+
+        return { success: true, sentTo: project.clientEmail };
+      }),
   }),
 
   // ============================================
