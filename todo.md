@@ -999,4 +999,12 @@
 - [x] Agregar botón "Invitar Cliente" en la vista de detalle de proyecto (ProjectDetail.tsx)
 - [x] Incluir datos de acceso y enlace directo al portal en el email
 - [x] Validar que el proyecto tenga clientEmail antes de enviar
+- [x] Guardar checkpoint y push a GitHub
+
+## Fix: Reemplazar Heartbeat de Manus por cron interno para Railway (26 May 2026)
+- [x] Instalar node-cron como dependencia
+- [x] Crear módulo cronScheduler.ts con sistema de cron interno
+- [x] Modificar milestone-reminder-config.ts para usar cron interno en vez de Heartbeat API
+- [x] Registrar el cron scheduler en el arranque del servidor
+- [x] Mantener el endpoint /api/scheduled/milestone-reminders como fallback
 - [ ] Guardar checkpoint y push a GitHub

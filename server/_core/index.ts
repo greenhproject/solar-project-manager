@@ -266,8 +266,16 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
+  server.listen(port, async () => {
     console.log(`Server running on http://localhost:${port}/`);
+    
+    // Inicializar cron jobs internos (compatible con Railway)
+    try {
+      const { initMilestoneReminderCron } = await import("../routes/milestone-reminder-config");
+      await initMilestoneReminderCron();
+    } catch (error) {
+      console.error("[CronInit] Error al inicializar cron de recordatorios:", error);
+    }
   });
 }
 

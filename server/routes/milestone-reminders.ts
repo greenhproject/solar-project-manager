@@ -12,206 +12,219 @@ import { sendEmail } from "../emailService";
 import { sdk } from "../_core/sdk";
 import { getConfiguredTimezone } from "../timezone";
 
+/**
+ * Función exportada que ejecuta la lógica de envío de recordatorios.
+ * Puede ser invocada tanto desde el endpoint HTTP como desde el cron interno.
+ */
+export async function processMilestoneReminders(): Promise<{ ok: boolean; summary?: any; skipped?: string }> {
+  const dbInst = await getDb();
+  if (!dbInst) {
+    throw new Error("DB no disponible");
+  }
+
+  const [config] = await dbInst.select().from(milestoneReminderConfig).limit(1);
+  
+  if (!config || !config.isEnabled) {
+    console.log("[MilestoneReminders] Sistema desactivado");
+    return { ok: true, skipped: "disabled" };
+  }
+
+  const now = new Date();
+  const overdueMilestones = await dbInst
+    .select({
+      milestone: milestones,
+      project: projects,
+      assignedUser: users,
+    })
+    .from(milestones)
+    .innerJoin(projects, eq(milestones.projectId, projects.id))
+    .leftJoin(users, eq(milestones.assignedUserId, users.id))
+    .where(
+      and(
+        lt(milestones.dueDate, now),
+        ne(milestones.status, "completed"),
+        isNull(milestones.completedDate)
+      )
+    );
+
+  console.log(`[MilestoneReminders] Encontrados ${overdueMilestones.length} hitos vencidos`);
+
+  let sentCount = 0;
+  let skippedCount = 0;
+  let failedCount = 0;
+
+  for (const { milestone, project, assignedUser } of overdueMilestones) {
+    const daysOverdue = Math.floor((now.getTime() - milestone.dueDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysOverdue > config.maxReminderDays) {
+      skippedCount++;
+      continue;
+    }
+
+    let urgencyLevel: "reminder" | "urgent" | "critical";
+    let subject: string;
+    
+    if (daysOverdue >= config.criticalDaysThreshold) {
+      urgencyLevel = "critical";
+      subject = config.criticalSubject || "\u{1F6A8} Crítico: Hito con retraso grave - Acción inmediata requerida";
+    } else if (daysOverdue >= config.urgentDaysThreshold) {
+      urgencyLevel = "urgent";
+      subject = config.urgentSubject || "\u26A0\uFE0F Urgente: Hito con retraso significativo";
+    } else {
+      urgencyLevel = "reminder";
+      subject = config.reminderSubject || "Recordatorio: Hito pendiente de completar";
+    }
+
+    let recipientEmail: string | null = null;
+    let recipientName: string | null = null;
+    let recipientUserId: number | null = null;
+
+    if (assignedUser && assignedUser.email) {
+      recipientEmail = assignedUser.email;
+      recipientName = assignedUser.name || "Responsable";
+      recipientUserId = assignedUser.id;
+    }
+
+    if (!recipientEmail) {
+      skippedCount++;
+      continue;
+    }
+
+    // Verificar si ya se envió hoy para este hito
+    const [existingLog] = await dbInst
+      .select()
+      .from(milestoneReminderLogs)
+      .where(
+        and(
+          eq(milestoneReminderLogs.milestoneId, milestone.id),
+          eq(milestoneReminderLogs.recipientEmail, recipientEmail),
+          sql`DATE(${milestoneReminderLogs.sentAt}) = CURDATE()`
+        )
+      )
+      .limit(1);
+
+    if (existingLog) {
+      skippedCount++;
+      continue;
+    }
+
+    const [preLog] = await dbInst.insert(milestoneReminderLogs).values({
+      milestoneId: milestone.id,
+      projectId: project.id,
+      recipientUserId,
+      recipientEmail,
+      recipientName,
+      urgencyLevel,
+      daysOverdue,
+      status: "sent",
+      errorMessage: null,
+    }).$returningId();
+
+    const logId = preLog.id;
+    const rescheduleToken = Buffer.from(`${logId}-${milestone.id}-${recipientEmail}`).toString("base64url");
+
+    const emailHtml = generateReminderEmailHtml({
+      recipientName: recipientName || "Responsable",
+      milestoneName: milestone.name,
+      projectName: project.name,
+      dueDate: milestone.dueDate,
+      daysOverdue,
+      urgencyLevel,
+      milestoneDescription: milestone.description || "",
+      customMessage: config.customMessage || "",
+      milestoneId: milestone.id,
+      projectId: project.id,
+      logId,
+      rescheduleToken,
+    });
+
+    const personalizedSubject = `${subject} - ${milestone.name} (${daysOverdue} días)`;
+
+    const sent = await sendEmail({
+      to: recipientEmail,
+      subject: personalizedSubject,
+      html: emailHtml,
+    });
+
+    if (sent && config.sendCopyToAdmin && config.adminCcEmail) {
+      await sendEmail({
+        to: config.adminCcEmail,
+        subject: `[CC] ${personalizedSubject}`,
+        html: emailHtml,
+      });
+    }
+
+    await dbInst.update(milestoneReminderLogs)
+      .set({
+        status: sent ? "sent" : "failed",
+        errorMessage: sent ? null : "Email service returned false",
+      })
+      .where(eq(milestoneReminderLogs.id, logId));
+
+    if (sent) {
+      sentCount++;
+    } else {
+      failedCount++;
+    }
+  }
+
+  console.log(`[MilestoneReminders] Resultado: ${sentCount} enviados, ${skippedCount} omitidos, ${failedCount} fallidos`);
+
+  return {
+    ok: true,
+    summary: {
+      totalOverdue: overdueMilestones.length,
+      sent: sentCount,
+      skipped: skippedCount,
+      failed: failedCount,
+    },
+  };
+}
+
 export const milestoneReminderRouter = Router();
 
 /**
  * POST /api/scheduled/milestone-reminders
  * Handler del Heartbeat - se ejecuta diariamente
  */
+/**
+ * POST /api/scheduled/milestone-reminders
+ * Endpoint HTTP que puede ser llamado manualmente o por un cron externo.
+ * Ya no requiere autenticación de Heartbeat de Manus.
+ * Acepta un header secreto X-Cron-Secret para seguridad básica.
+ */
 milestoneReminderRouter.post("/api/scheduled/milestone-reminders", async (req: Request, res: Response) => {
   try {
-    // Autenticar que viene del cron system
-    const user = await sdk.authenticateRequest(req);
-    if (!(user as any).isCron) {
-      return res.status(403).json({ error: "cron-only" });
-    }
-
-    console.log("[MilestoneReminders] Heartbeat triggered, taskUid:", (user as any).taskUid);
-
-    // Obtener instancia de DB
-    const dbInst = await getDb();
-    if (!dbInst) {
-      return res.status(500).json({ error: "DB no disponible" });
-    }
-
-    // Obtener configuración
-    const [config] = await dbInst.select().from(milestoneReminderConfig).limit(1);
+    // Seguridad: verificar header secreto o autenticación
+    const cronSecret = req.headers["x-cron-secret"];
+    const expectedSecret = process.env.CRON_SECRET || "ghp-milestone-cron-2026";
     
-    if (!config || !config.isEnabled) {
-      console.log("[MilestoneReminders] Sistema desactivado");
-      return res.json({ ok: true, skipped: "disabled" });
-    }
-
-    // Buscar hitos vencidos (dueDate < ahora) que NO estén completados
-    const now = new Date();
-    const overdueMilestones = await dbInst
-      .select({
-        milestone: milestones,
-        project: projects,
-        assignedUser: users,
-      })
-      .from(milestones)
-      .innerJoin(projects, eq(milestones.projectId, projects.id))
-      .leftJoin(users, eq(milestones.assignedUserId, users.id))
-      .where(
-        and(
-          lt(milestones.dueDate, now),
-          ne(milestones.status, "completed"),
-          isNull(milestones.completedDate)
-        )
-      );
-
-    console.log(`[MilestoneReminders] Encontrados ${overdueMilestones.length} hitos vencidos`);
-
-    let sentCount = 0;
-    let skippedCount = 0;
-    let failedCount = 0;
-
-    for (const { milestone, project, assignedUser } of overdueMilestones) {
-      // Calcular días de retraso
-      const daysOverdue = Math.floor((now.getTime() - milestone.dueDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      // Verificar si excede el máximo de días
-      if (daysOverdue > config.maxReminderDays) {
-        skippedCount++;
-        continue;
-      }
-
-      // Determinar nivel de urgencia
-      let urgencyLevel: "reminder" | "urgent" | "critical";
-      let subject: string;
-      
-      if (daysOverdue >= config.criticalDaysThreshold) {
-        urgencyLevel = "critical";
-        subject = config.criticalSubject || "🚨 Crítico: Hito con retraso grave - Acción inmediata requerida";
-      } else if (daysOverdue >= config.urgentDaysThreshold) {
-        urgencyLevel = "urgent";
-        subject = config.urgentSubject || "⚠️ Urgente: Hito con retraso significativo";
-      } else {
-        urgencyLevel = "reminder";
-        subject = config.reminderSubject || "Recordatorio: Hito pendiente de completar";
-      }
-
-      // Determinar destinatario (usuario asignado o email del ingeniero del proyecto)
-      let recipientEmail: string | null = null;
-      let recipientName: string | null = null;
-      let recipientUserId: number | null = null;
-
-      if (assignedUser && assignedUser.email) {
-        recipientEmail = assignedUser.email;
-        recipientName = assignedUser.name || "Responsable";
-        recipientUserId = assignedUser.id;
-      }
-
-      // Si no hay responsable asignado, skip
-      if (!recipientEmail) {
-        skippedCount++;
-        continue;
-      }
-
-      // Verificar si ya se envió hoy para este hito
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const [existingLog] = await dbInst
-        .select()
-        .from(milestoneReminderLogs)
-        .where(
-          and(
-            eq(milestoneReminderLogs.milestoneId, milestone.id),
-            eq(milestoneReminderLogs.recipientEmail, recipientEmail),
-            sql`DATE(${milestoneReminderLogs.sentAt}) = CURDATE()`
-          )
-        )
-        .limit(1);
-
-      if (existingLog) {
-        skippedCount++;
-        continue;
-      }
-
-      // Primero insertar el log para obtener el ID (necesario para el token de reschedule)
-      const [preLog] = await dbInst.insert(milestoneReminderLogs).values({
-        milestoneId: milestone.id,
-        projectId: project.id,
-        recipientUserId,
-        recipientEmail,
-        recipientName,
-        urgencyLevel,
-        daysOverdue,
-        status: "sent",
-        errorMessage: null,
-      }).$returningId();
-
-      const logId = preLog.id;
-      const rescheduleToken = Buffer.from(`${logId}-${milestone.id}-${recipientEmail}`).toString("base64url");
-
-      // Generar el HTML del email
-      const emailHtml = generateReminderEmailHtml({
-        recipientName: recipientName || "Responsable",
-        milestoneName: milestone.name,
-        projectName: project.name,
-        dueDate: milestone.dueDate,
-        daysOverdue,
-        urgencyLevel,
-        milestoneDescription: milestone.description || "",
-        customMessage: config.customMessage || "",
-        milestoneId: milestone.id,
-        projectId: project.id,
-        logId,
-        rescheduleToken,
-      });
-
-      // Personalizar asunto con datos del hito
-      const personalizedSubject = `${subject} - ${milestone.name} (${daysOverdue} días)`;
-
-      // Enviar email
-      const sent = await sendEmail({
-        to: recipientEmail,
-        subject: personalizedSubject,
-        html: emailHtml,
-      });
-
-      // Enviar copia al admin si está configurado
-      if (sent && config.sendCopyToAdmin && config.adminCcEmail) {
-        await sendEmail({
-          to: config.adminCcEmail,
-          subject: `[CC] ${personalizedSubject}`,
-          html: emailHtml,
-        });
-      }
-
-      // Actualizar el log con el resultado del envío
-      await dbInst.update(milestoneReminderLogs)
-        .set({
-          status: sent ? "sent" : "failed",
-          errorMessage: sent ? null : "Email service returned false",
-        })
-        .where(eq(milestoneReminderLogs.id, logId));
-
-      if (sent) {
-        sentCount++;
-      } else {
-        failedCount++;
+    // Permitir acceso si: tiene el secreto correcto, o viene de localhost, o tiene sesión válida
+    const isLocalhost = req.ip === "127.0.0.1" || req.ip === "::1" || req.ip === "::ffff:127.0.0.1";
+    const hasValidSecret = cronSecret === expectedSecret;
+    
+    if (!isLocalhost && !hasValidSecret) {
+      // Intentar autenticación normal como fallback
+      try {
+        const user = await sdk.authenticateRequest(req);
+        if (!user || ((user as any).role !== "admin" && !(user as any).isCron)) {
+          return res.status(403).json({ error: "unauthorized" });
+        }
+      } catch {
+        return res.status(403).json({ error: "unauthorized - provide X-Cron-Secret header" });
       }
     }
 
-    console.log(`[MilestoneReminders] Resultado: ${sentCount} enviados, ${skippedCount} omitidos, ${failedCount} fallidos`);
+    console.log("[MilestoneReminders] Cron triggered at", new Date().toISOString());
 
-    return res.json({
-      ok: true,
-      summary: {
-        totalOverdue: overdueMilestones.length,
-        sent: sentCount,
-        skipped: skippedCount,
-        failed: failedCount,
-      },
-    });
+    const result = await processMilestoneReminders();
+    return res.json(result);
   } catch (error) {
     console.error("[MilestoneReminders] Error:", error);
     return res.status(500).json({
       error: (error as Error).message,
       stack: (error as Error).stack,
-      context: { url: req.url, taskUid: (req as any).taskUid },
+      context: { url: req.url },
       timestamp: new Date().toISOString(),
     });
   }

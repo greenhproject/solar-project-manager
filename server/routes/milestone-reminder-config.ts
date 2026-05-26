@@ -1,6 +1,7 @@
 /**
  * Router tRPC para la configuración de recordatorios de hitos vencidos
  * Solo accesible por administradores
+ * Usa node-cron interno (compatible con Railway) en vez de Heartbeat de Manus
  */
 
 import { router, protectedProcedure } from "../_core/trpc";
@@ -8,7 +9,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { milestoneReminderConfig, milestoneReminderLogs } from "../../drizzle/schema";
 import { eq, desc, sql, and } from "drizzle-orm";
-import { createHeartbeatJob, updateHeartbeatJob, deleteHeartbeatJob, listHeartbeatJobs } from "../_core/heartbeat";
+import { cronScheduler } from "../cronScheduler";
 import * as db from "../db";
 
 // Admin-only procedure
@@ -19,13 +20,44 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+/**
+ * Función que ejecuta el envío de recordatorios.
+ * Se invoca tanto desde el cron como desde el endpoint manual.
+ */
+async function executeMilestoneReminders(): Promise<void> {
+  const { processMilestoneReminders } = await import("./milestone-reminders");
+  await processMilestoneReminders();
+}
+
+/**
+ * Registra o actualiza el cron job de recordatorios de hitos
+ */
+function registerReminderCron(hour: number): boolean {
+  const cronExpression = `0 ${hour} * * *`; // min hour dom mon dow (5 campos para node-cron)
+  const result = cronScheduler.schedule({
+    name: "milestone-overdue-reminders",
+    cronExpression,
+    handler: executeMilestoneReminders,
+    description: `Envío diario de recordatorios de hitos vencidos a las ${hour}:00 UTC`,
+  });
+  return result.success;
+}
+
 export const milestoneReminderConfigRouter = router({
   // Obtener configuración actual
   getConfig: adminProcedure.query(async ({ ctx }) => {
     const dbInst = await db.getDb();
     if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
     const [config] = await dbInst.select().from(milestoneReminderConfig).limit(1);
-    return config || null;
+    
+    // Agregar info del cron activo
+    const cronInfo = cronScheduler.getJobInfo("milestone-overdue-reminders");
+    
+    return {
+      ...config,
+      cronActive: !!cronInfo,
+      cronLastExecuted: cronInfo?.lastExecutedAt || null,
+    } || null;
   }),
 
   // Actualizar configuración
@@ -81,62 +113,44 @@ export const milestoneReminderConfigRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Configuración no encontrada" });
       }
 
-      const sessionCookie = ctx.req.cookies?.["app_session_id"] || "";
-
-      if (input.enabled && !config.scheduleCronTaskUid) {
-        // Crear el cron job - ejecutar diariamente a la hora configurada (UTC)
+      if (input.enabled) {
+        // Activar el cron job con node-cron
         const hour = config.sendHourUtc || 12;
-        const cronExpression = `0 0 ${hour} * * *`; // sec min hour dom mon dow
+        const success = registerReminderCron(hour);
+        
+        if (!success) {
+          throw new TRPCError({ 
+            code: "INTERNAL_SERVER_ERROR", 
+            message: "No se pudo crear el cron job. Verifica la configuración." 
+          });
+        }
 
-        const result = await createHeartbeatJob(
-          {
-            name: "milestone-overdue-reminders",
-            cron: cronExpression,
-            path: "/api/scheduled/milestone-reminders",
-            method: "POST",
-            description: "Envío diario de recordatorios de hitos vencidos",
-          },
-          sessionCookie
-        );
-
-        // Guardar el taskUid en la configuración
+        // Marcar como activo en la BD
         await dbInst
           .update(milestoneReminderConfig)
           .set({
-            scheduleCronTaskUid: result.taskUid,
+            scheduleCronTaskUid: "internal-cron-active",
             isEnabled: true,
             updatedBy: ctx.user.id,
           })
           .where(eq(milestoneReminderConfig.id, config.id));
 
-        return { success: true, taskUid: result.taskUid, nextExecution: result.nextExecutionAt };
-      } else if (input.enabled && config.scheduleCronTaskUid) {
-        // Reactivar el cron existente
-        await updateHeartbeatJob(config.scheduleCronTaskUid, { enable: true }, sessionCookie);
-        await dbInst
-          .update(milestoneReminderConfig)
-          .set({ isEnabled: true, updatedBy: ctx.user.id })
-          .where(eq(milestoneReminderConfig.id, config.id));
+        return { success: true, message: "Cron job activado correctamente" };
+      } else {
+        // Desactivar/pausar el cron job
+        cronScheduler.stop("milestone-overdue-reminders");
 
-        return { success: true, taskUid: config.scheduleCronTaskUid };
-      } else if (!input.enabled && config.scheduleCronTaskUid) {
-        // Pausar el cron
-        await updateHeartbeatJob(config.scheduleCronTaskUid, { enable: false }, sessionCookie);
         await dbInst
           .update(milestoneReminderConfig)
-          .set({ isEnabled: false, updatedBy: ctx.user.id })
+          .set({ 
+            isEnabled: false, 
+            scheduleCronTaskUid: null,
+            updatedBy: ctx.user.id 
+          })
           .where(eq(milestoneReminderConfig.id, config.id));
 
         return { success: true, paused: true };
       }
-
-      // Solo actualizar el estado
-      await dbInst
-        .update(milestoneReminderConfig)
-        .set({ isEnabled: input.enabled, updatedBy: ctx.user.id })
-        .where(eq(milestoneReminderConfig.id, config.id));
-
-      return { success: true };
     }),
 
   // Actualizar la hora del cron
@@ -148,22 +162,15 @@ export const milestoneReminderConfigRouter = router({
       const [config] = await dbInst.select().from(milestoneReminderConfig).limit(1);
       if (!config) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const sessionCookie = ctx.req.cookies?.["app_session_id"] || "";
-
       // Actualizar hora en la BD
       await dbInst
         .update(milestoneReminderConfig)
         .set({ sendHourUtc: input.hour, updatedBy: ctx.user.id })
         .where(eq(milestoneReminderConfig.id, config.id));
 
-      // Si hay un cron activo, actualizar su expresión
-      if (config.scheduleCronTaskUid) {
-        const cronExpression = `0 0 ${input.hour} * * *`;
-        await updateHeartbeatJob(
-          config.scheduleCronTaskUid,
-          { cron: cronExpression },
-          sessionCookie
-        );
+      // Si hay un cron activo, actualizarlo con la nueva hora
+      if (config.isEnabled || cronScheduler.isActive("milestone-overdue-reminders")) {
+        registerReminderCron(input.hour);
       }
 
       return { success: true };
@@ -246,6 +253,29 @@ export const milestoneReminderConfigRouter = router({
       return { success: sent };
     }),
 });
+
+// Exportar función para inicializar el cron al arrancar el servidor
+export async function initMilestoneReminderCron(): Promise<void> {
+  try {
+    const dbInst = await db.getDb();
+    if (!dbInst) {
+      console.log("[MilestoneReminders] DB no disponible, cron no inicializado");
+      return;
+    }
+
+    const [config] = await dbInst.select().from(milestoneReminderConfig).limit(1);
+    
+    if (config && config.isEnabled) {
+      const hour = config.sendHourUtc || 12;
+      registerReminderCron(hour);
+      console.log(`[MilestoneReminders] Cron inicializado: diariamente a las ${hour}:00 UTC`);
+    } else {
+      console.log("[MilestoneReminders] Cron no activado (configuración deshabilitada o no existe)");
+    }
+  } catch (error) {
+    console.error("[MilestoneReminders] Error al inicializar cron:", error);
+  }
+}
 
 function generateTestReminderHtml(): string {
   return `
