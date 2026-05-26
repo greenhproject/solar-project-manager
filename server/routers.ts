@@ -1010,10 +1010,9 @@ export const appRouter = router({
         }
 
         // Registrar la invitación como una actualización del proyecto
-        const { projectUpdates } = await import("../drizzle/schema");
-        await dbInst.insert(projectUpdates).values({
+        await db.createProjectUpdate({
           projectId: input.projectId,
-          updateType: "notification",
+          updateType: "note_added",
           title: "Invitación enviada al cliente",
           description: `Se envió invitación al portal a ${project.clientEmail}`,
           createdBy: ctx.user.id,
