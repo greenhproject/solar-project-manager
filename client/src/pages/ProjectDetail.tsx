@@ -848,7 +848,7 @@ export default function ProjectDetail() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="none">Sin asignar</SelectItem>
-                                  {allUsers?.map((u) => (
+                                  {allUsers?.filter((u) => (u as any).role !== 'client').map((u) => (
                                     <SelectItem key={u.id} value={u.id.toString()}>
                                       {u.name} {(u as any).jobTitle ? `(${(u as any).jobTitle})` : ''}
                                     </SelectItem>

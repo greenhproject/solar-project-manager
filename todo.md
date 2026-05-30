@@ -1050,4 +1050,8 @@
 - [x] Mostrar score en el frontend de Análisis Avanzado
 - [x] Mostrar ranking de ingenieros cuando no hay filtro
 - [x] Manejar caso sin datos (score = -1)
+- [x] Guardar checkpoint y push a GitHub
+
+## Fix: Filtrar clientes del selector de responsable de hito (30 May 2026)
+- [x] Filtrar selector de responsable para mostrar solo admin/engineer (excluir client)
 - [ ] Guardar checkpoint y push a GitHub
