@@ -1025,11 +1025,29 @@
 ## Feature: Cron para actualizar status de hitos vencidos (30 May 2026)
 - [x] Crear función que actualice status de hitos vencidos (pending/in_progress → overdue cuando dueDate < now)
 - [x] Registrar cron job cada hora en cronScheduler
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub
 
 ## Feature: Filtro por ingeniero en Análisis Avanzado (30 May 2026)
 - [x] Agregar input opcional de engineerId al procedimiento analytics.dashboardStats
 - [x] Crear procedimiento para listar ingenieros disponibles
 - [x] Agregar selector de ingeniero en el frontend de AdvancedAnalytics
 - [x] Filtrar todas las métricas según el ingeniero seleccionado
+- [x] Guardar checkpoint y push a GitHub
+
+## Fix: Corregir métricas inconsistentes en Análisis Avanzado por ingeniero (30 May 2026)
+- [x] Reescribir metricsCalculator para filtrar correctamente por assignedUserId
+- [x] Progreso Promedio: solo proyectos donde el ingeniero tiene hitos asignados
+- [x] Hitos Completados/Totales: solo hitos asignados al ingeniero
+- [x] Hitos Vencidos: solo hitos del ingeniero con dueDate < now
+- [x] Proyectos Retrasados: solo proyectos con hitos vencidos del ingeniero
+- [x] Proyectos Activos: solo proyectos donde el ingeniero tiene hitos
+- [x] Velocidad: solo hitos completados por ese ingeniero por mes
+
+## Feature: Score de Desempeño por Ingeniero (30 May 2026)
+- [x] Diseñar fórmula del score (completados a tiempo, vencidos, velocidad)
+- [x] Implementar cálculo del score en metricsCalculator (sin tabla BD, cálculo en tiempo real)
+- [x] Crear cron mensual que evalúe y envíe email de felicitación (score >= 80) o alerta de mejora (score < 60)
+- [x] Mostrar score en el frontend de Análisis Avanzado
+- [x] Mostrar ranking de ingenieros cuando no hay filtro
+- [x] Manejar caso sin datos (score = -1)
 - [ ] Guardar checkpoint y push a GitHub

@@ -1,5 +1,11 @@
 /**
  * Calculador de métricas avanzadas y análisis predictivo
+ * 
+ * LÓGICA DE FILTRADO POR INGENIERO:
+ * - Cuando se filtra por engineerId, SOLO se consideran hitos donde assignedUserId === engineerId
+ * - Los proyectos relevantes son aquellos que contienen al menos un hito asignado al ingeniero
+ * - El progreso promedio se calcula solo sobre esos proyectos relevantes
+ * - Los hitos vencidos son solo los asignados al ingeniero con dueDate < now
  */
 
 import * as db from "./db";
@@ -27,27 +33,46 @@ export interface PredictionResult {
   confidence: number; // 0-100
 }
 
-/**
- * Filtra proyectos por ingeniero asignado si se proporciona engineerId
- */
-function filterProjectsByEngineer(projects: any[], engineerId?: number): any[] {
-  if (!engineerId) return projects;
-  return projects.filter((p: any) => p.assignedEngineerId === engineerId);
+export interface EngineerScore {
+  engineerId: number;
+  engineerName: string;
+  month: string; // "2026-05"
+  score: number; // 0-100
+  metrics: {
+    totalAssigned: number;
+    completedOnTime: number;
+    completedLate: number;
+    overdue: number;
+    averageDaysToComplete: number;
+    onTimeRate: number; // porcentaje
+    completionRate: number; // porcentaje
+  };
+  level: "excelente" | "bueno" | "regular" | "necesita_mejora";
 }
 
 /**
- * Filtra hitos por ingeniero asignado si se proporciona engineerId
+ * Obtiene los hitos filtrados por ingeniero (SOLO por assignedUserId)
  */
-function filterMilestonesByEngineer(milestones: any[], engineerId?: number, projects?: any[]): any[] {
-  if (!engineerId) return milestones;
-  // Filtrar hitos asignados directamente al ingeniero O que pertenecen a proyectos del ingeniero
-  const engineerProjectIds = projects
-    ? new Set(projects.filter((p: any) => p.assignedEngineerId === engineerId).map((p: any) => p.id))
-    : new Set<number>();
+function getEngineerMilestones(allMilestones: any[], engineerId?: number): any[] {
+  if (!engineerId) return allMilestones;
+  return allMilestones.filter((m: any) => m.assignedUserId === engineerId);
+}
+
+/**
+ * Obtiene los proyectos relevantes para un ingeniero
+ * (proyectos que tienen al menos un hito asignado al ingeniero)
+ */
+function getEngineerProjects(allProjects: any[], allMilestones: any[], engineerId?: number): any[] {
+  if (!engineerId) return allProjects;
   
-  return milestones.filter((m: any) => 
-    m.assignedUserId === engineerId || engineerProjectIds.has(m.projectId)
+  // Obtener IDs de proyectos donde el ingeniero tiene hitos asignados
+  const projectIdsWithEngineerMilestones = new Set(
+    allMilestones
+      .filter((m: any) => m.assignedUserId === engineerId)
+      .map((m: any) => m.projectId)
   );
+  
+  return allProjects.filter((p: any) => projectIdsWithEngineerMilestones.has(p.id));
 }
 
 /**
@@ -57,8 +82,8 @@ export async function calculateTeamVelocity(engineerId?: number): Promise<TeamVe
   const allProjects = await db.getAllProjects();
   const allMilestones = await db.getAllMilestones();
 
-  const filteredProjects = filterProjectsByEngineer(allProjects, engineerId);
-  const filteredMilestones = filterMilestonesByEngineer(allMilestones, engineerId, allProjects);
+  const filteredMilestones = getEngineerMilestones(allMilestones, engineerId);
+  const filteredProjects = getEngineerProjects(allProjects, allMilestones, engineerId);
 
   const metrics: TeamVelocityMetric[] = [];
 
@@ -76,14 +101,14 @@ export async function calculateTeamVelocity(engineerId?: number): Promise<TeamVe
       0
     );
 
-    // Hitos completados en el mes
+    // Hitos completados en el mes (solo los del ingeniero)
     const completedMilestones = filteredMilestones.filter((m: any) => {
       if (!m.completedDate) return false;
       const completedDate = new Date(m.completedDate);
       return completedDate >= monthStart && completedDate <= monthEnd;
     });
 
-    // Proyectos completados en el mes
+    // Proyectos completados en el mes (solo los relevantes al ingeniero)
     const completedProjects = filteredProjects.filter((p: any) => {
       if (!p.actualEndDate) return false;
       const endDate = new Date(p.actualEndDate);
@@ -92,6 +117,7 @@ export async function calculateTeamVelocity(engineerId?: number): Promise<TeamVe
 
     // Calcular promedio de días por hito
     let totalDays = 0;
+    let countWithDates = 0;
     completedMilestones.forEach((m: any) => {
       if (m.startDate && m.completedDate) {
         const start = new Date(m.startDate);
@@ -100,13 +126,11 @@ export async function calculateTeamVelocity(engineerId?: number): Promise<TeamVe
           (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)
         );
         totalDays += days;
+        countWithDates++;
       }
     });
 
-    const averageDays =
-      completedMilestones.length > 0
-        ? Math.round(totalDays / completedMilestones.length)
-        : 0;
+    const averageDays = countWithDates > 0 ? Math.round(totalDays / countWithDates) : 0;
 
     metrics.push({
       month: monthDate.toLocaleDateString("es-ES", {
@@ -126,10 +150,11 @@ export async function calculateTeamVelocity(engineerId?: number): Promise<TeamVe
  * Calcular métricas por tipo de proyecto
  */
 export async function calculateProjectTypeMetrics(engineerId?: number): Promise<ProjectTypeMetric[]> {
-  const projects = await db.getAllProjects();
+  const allProjects = await db.getAllProjects();
+  const allMilestones = await db.getAllMilestones();
   const projectTypes = await db.getAllProjectTypes();
 
-  const filteredProjects = filterProjectsByEngineer(projects, engineerId);
+  const filteredProjects = getEngineerProjects(allProjects, allMilestones, engineerId);
   const metrics: ProjectTypeMetric[] = [];
 
   for (const type of projectTypes) {
@@ -182,8 +207,9 @@ export async function calculateProjectTypeMetrics(engineerId?: number): Promise<
 export async function predictProjectCompletion(engineerId?: number): Promise<PredictionResult[]> {
   const allActiveProjects = await db.getActiveProjects();
   const allProjects = await db.getAllProjects();
-  
-  const activeProjects = filterProjectsByEngineer(allActiveProjects, engineerId);
+  const allMilestones = await db.getAllMilestones();
+
+  const activeProjects = getEngineerProjects(allActiveProjects, allMilestones, engineerId);
   const predictions: PredictionResult[] = [];
 
   for (const project of activeProjects) {
@@ -259,33 +285,51 @@ export async function predictProjectCompletion(engineerId?: number): Promise<Pre
 
 /**
  * Calcular estadísticas generales del dashboard
+ * 
+ * Cuando se filtra por engineerId:
+ * - totalMilestones: solo hitos asignados al ingeniero
+ * - completedMilestones: solo hitos del ingeniero con status completed
+ * - overdueMilestones: solo hitos del ingeniero con dueDate < now y status pending/in_progress/overdue
+ * - activeProjects: proyectos activos donde el ingeniero tiene hitos
+ * - averageProgress: progreso promedio de proyectos donde el ingeniero tiene hitos
  */
 export async function calculateDashboardStats(engineerId?: number) {
   const allProjects = await db.getAllProjects();
   const allMilestones = await db.getAllMilestones();
 
-  const projects = filterProjectsByEngineer(allProjects, engineerId);
-  const milestones = filterMilestonesByEngineer(allMilestones, engineerId, allProjects);
+  const milestones = getEngineerMilestones(allMilestones, engineerId);
+  const projects = getEngineerProjects(allProjects, allMilestones, engineerId);
 
   const totalProjects = projects.length;
   const activeProjects = projects.filter(
-    (p: any) => p.status === "in_progress"
+    (p: any) => p.status === "in_progress" || p.status === "planning"
   ).length;
   const completedProjects = projects.filter(
     (p: any) => p.status === "completed"
   ).length;
+  
+  // Proyectos retrasados: proyectos del ingeniero que tienen hitos vencidos del ingeniero
+  const now = new Date();
+  const projectsWithOverdueMilestones = new Set(
+    milestones
+      .filter((m: any) => {
+        if (m.status === "completed" || m.status === "cancelled") return false;
+        if (!m.dueDate) return false;
+        return new Date(m.dueDate) < now;
+      })
+      .map((m: any) => m.projectId)
+  );
   const delayedProjects = projects.filter((p: any) => {
     if (p.status === "completed" || p.status === "cancelled") return false;
-    const endDate = new Date(p.estimatedEndDate);
-    return endDate < new Date();
+    return projectsWithOverdueMilestones.has(p.id);
   }).length;
 
   const totalMilestones = milestones.length;
   const completedMilestones = milestones.filter(
     (m: any) => m.status === "completed"
   ).length;
-  // Contar hitos vencidos: dueDate ya pasó Y status es pending o in_progress
-  const now = new Date();
+  
+  // Hitos vencidos: dueDate ya pasó Y status es pending/in_progress/overdue
   const overdueMilestones = milestones.filter(
     (m: any) => {
       if (m.status === "completed" || m.status === "cancelled") return false;
@@ -315,4 +359,202 @@ export async function calculateDashboardStats(engineerId?: number) {
     overdueMilestones,
     averageProgress,
   };
+}
+
+/**
+ * Calcular Score de Desempeño para un ingeniero en un mes específico
+ * 
+ * FÓRMULA DEL SCORE (0-100):
+ * - Tasa de completación a tiempo: 40% del score
+ *   (hitos completados antes o en la fecha de vencimiento / total completados)
+ * - Tasa de completación general: 30% del score
+ *   (hitos completados / total asignados que debían completarse en el mes)
+ * - Hitos sin vencer: 20% del score
+ *   (1 - hitos vencidos actualmente / total asignados activos)
+ * - Velocidad: 10% del score
+ *   (basado en promedio de días para completar vs duración estimada)
+ * 
+ * NIVELES:
+ * - 80-100: Excelente
+ * - 60-79: Bueno
+ * - 40-59: Regular
+ * - 0-39: Necesita mejora
+ */
+export async function calculateEngineerScore(engineerId: number, monthDate?: Date): Promise<EngineerScore | null> {
+  const allMilestones = await db.getAllMilestones();
+  const users = await db.getAllUsers();
+  
+  const engineer = users.find((u: any) => u.id === engineerId);
+  if (!engineer) return null;
+
+  const targetDate = monthDate || new Date();
+  const monthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+  const monthEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59);
+  const now = new Date();
+
+  // Hitos asignados al ingeniero
+  const engineerMilestones = allMilestones.filter((m: any) => m.assignedUserId === engineerId);
+  
+  // Hitos que debían completarse en este mes (dueDate dentro del mes)
+  const milestonesForMonth = engineerMilestones.filter((m: any) => {
+    if (!m.dueDate) return false;
+    const due = new Date(m.dueDate);
+    return due >= monthStart && due <= monthEnd;
+  });
+
+  // Hitos completados en este mes
+  const completedInMonth = engineerMilestones.filter((m: any) => {
+    if (!m.completedDate) return false;
+    const completed = new Date(m.completedDate);
+    return completed >= monthStart && completed <= monthEnd;
+  });
+
+  // Hitos completados a tiempo (completedDate <= dueDate)
+  const completedOnTime = completedInMonth.filter((m: any) => {
+    if (!m.dueDate || !m.completedDate) return false;
+    return new Date(m.completedDate) <= new Date(m.dueDate);
+  });
+
+  // Hitos completados tarde
+  const completedLate = completedInMonth.filter((m: any) => {
+    if (!m.dueDate || !m.completedDate) return false;
+    return new Date(m.completedDate) > new Date(m.dueDate);
+  });
+
+  // Hitos actualmente vencidos (no completados, dueDate pasó)
+  const currentlyOverdue = engineerMilestones.filter((m: any) => {
+    if (m.status === "completed" || m.status === "cancelled") return false;
+    if (!m.dueDate) return false;
+    return new Date(m.dueDate) < now;
+  });
+
+  // Hitos activos (no completados, no cancelados)
+  const activeMilestones = engineerMilestones.filter((m: any) => 
+    m.status !== "completed" && m.status !== "cancelled"
+  );
+
+  // Calcular promedio de días para completar
+  let totalDaysToComplete = 0;
+  let countCompleted = 0;
+  completedInMonth.forEach((m: any) => {
+    if (m.startDate && m.completedDate) {
+      const start = new Date(m.startDate);
+      const end = new Date(m.completedDate);
+      const days = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+      totalDaysToComplete += days;
+      countCompleted++;
+    }
+  });
+  const averageDaysToComplete = countCompleted > 0 ? Math.round(totalDaysToComplete / countCompleted) : 0;
+
+  // CALCULAR SCORE
+  const totalAssigned = milestonesForMonth.length + activeMilestones.length;
+  
+  // Si no tiene hitos asignados ni activos, no hay datos suficientes para evaluar
+  if (totalAssigned === 0 && completedInMonth.length === 0 && currentlyOverdue.length === 0) {
+    const monthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}`;
+    return {
+      engineerId,
+      engineerName: engineer.name || engineer.email || `Ingeniero ${engineerId}`,
+      month: monthStr,
+      score: -1, // -1 indica "sin datos suficientes"
+      metrics: {
+        totalAssigned: 0,
+        completedOnTime: 0,
+        completedLate: 0,
+        overdue: 0,
+        averageDaysToComplete: 0,
+        onTimeRate: 0,
+        completionRate: 0,
+      },
+      level: "regular" as const,
+    };
+  }
+
+  // 1. Tasa de completación a tiempo (40%)
+  const onTimeRate = completedInMonth.length > 0 
+    ? (completedOnTime.length / completedInMonth.length) * 100 
+    : (milestonesForMonth.length === 0 && currentlyOverdue.length === 0 ? 100 : 0);
+  const onTimeScore = (onTimeRate / 100) * 40;
+
+  // 2. Tasa de completación general (30%)
+  const completionRate = milestonesForMonth.length > 0
+    ? (completedInMonth.length / milestonesForMonth.length) * 100
+    : (completedInMonth.length > 0 ? 100 : 0);
+  const completionScore = Math.min((completionRate / 100) * 30, 30);
+
+  // 3. Hitos sin vencer (20%)
+  const totalActive = activeMilestones.length;
+  const overdueRate = totalActive > 0 ? currentlyOverdue.length / totalActive : 0;
+  const noOverdueScore = (1 - overdueRate) * 20;
+
+  // 4. Velocidad bonus (10%) - completar más rápido que el promedio
+  let velocityScore = 5; // Base neutral
+  if (countCompleted > 0 && milestonesForMonth.length > 0) {
+    // Comparar días promedio vs duración estimada promedio
+    let totalEstimatedDays = 0;
+    let countWithDuration = 0;
+    completedInMonth.forEach((m: any) => {
+      if (m.durationDays) {
+        totalEstimatedDays += m.durationDays;
+        countWithDuration++;
+      }
+    });
+    if (countWithDuration > 0) {
+      const avgEstimated = totalEstimatedDays / countWithDuration;
+      if (averageDaysToComplete <= avgEstimated) {
+        velocityScore = 10; // Completó más rápido o igual que lo estimado
+      } else {
+        velocityScore = Math.max(0, 10 - ((averageDaysToComplete - avgEstimated) / avgEstimated) * 10);
+      }
+    }
+  }
+
+  const totalScore = Math.round(Math.min(100, Math.max(0, onTimeScore + completionScore + noOverdueScore + velocityScore)));
+
+  // Determinar nivel
+  let level: "excelente" | "bueno" | "regular" | "necesita_mejora";
+  if (totalScore >= 80) level = "excelente";
+  else if (totalScore >= 60) level = "bueno";
+  else if (totalScore >= 40) level = "regular";
+  else level = "necesita_mejora";
+
+  const monthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}`;
+
+  return {
+    engineerId,
+    engineerName: engineer.name || engineer.email || `Ingeniero ${engineerId}`,
+    month: monthStr,
+    score: totalScore,
+    metrics: {
+      totalAssigned: milestonesForMonth.length,
+      completedOnTime: completedOnTime.length,
+      completedLate: completedLate.length,
+      overdue: currentlyOverdue.length,
+      averageDaysToComplete,
+      onTimeRate: Math.round(onTimeRate),
+      completionRate: Math.round(completionRate),
+    },
+    level,
+  };
+}
+
+/**
+ * Calcular scores de todos los ingenieros para un mes
+ */
+export async function calculateAllEngineerScores(monthDate?: Date): Promise<EngineerScore[]> {
+  const users = await db.getAllUsers();
+  const engineers = users.filter((u: any) => 
+    u.role === "user" || u.role === "admin" || u.role === "ingeniero_tramites"
+  );
+
+  const scores: EngineerScore[] = [];
+  for (const eng of engineers) {
+    const score = await calculateEngineerScore(eng.id, monthDate);
+    if (score && score.metrics.totalAssigned > 0) {
+      scores.push(score);
+    }
+  }
+
+  return scores.sort((a, b) => b.score - a.score);
 }

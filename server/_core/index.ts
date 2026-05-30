@@ -295,6 +295,53 @@ async function startServer() {
     } catch (error) {
       console.error("[CronInit] Error al inicializar cron de status overdue:", error);
     }
+
+    // Cron mensual para evaluación de desempeño (día 1 de cada mes a las 8:00 UTC)
+    try {
+      const { cronScheduler } = await import("../cronScheduler");
+      const { calculateAllEngineerScores } = await import("../metricsCalculator");
+      const { sendPerformanceEvaluationEmail } = await import("../emailService");
+      const { getAllUsers } = await import("../db");
+
+      cronScheduler.schedule({
+        name: "monthly-performance-evaluation",
+        cronExpression: "0 8 1 * *", // Día 1 de cada mes a las 8:00 UTC
+        description: "Evaluación mensual de desempeño de ingenieros con envío de email",
+        handler: async () => {
+          // Evaluar el mes anterior
+          const lastMonth = new Date();
+          lastMonth.setMonth(lastMonth.getMonth() - 1);
+          
+          const scores = await calculateAllEngineerScores(lastMonth);
+          const users = await getAllUsers();
+          
+          console.log(`[PerformanceCron] Evaluando ${scores.length} ingenieros para ${lastMonth.toISOString().slice(0, 7)}`);
+          
+          for (const score of scores) {
+            const user = users.find((u: any) => u.id === score.engineerId);
+            if (!user || !user.email) continue;
+            
+            try {
+              await sendPerformanceEvaluationEmail({
+                toEmail: user.email,
+                engineerName: score.engineerName,
+                month: score.month,
+                score: score.score,
+                level: score.level,
+                metrics: score.metrics,
+              });
+              console.log(`[PerformanceCron] Email enviado a ${user.email} - Score: ${score.score} (${score.level})`);
+            } catch (emailError) {
+              console.error(`[PerformanceCron] Error enviando email a ${user.email}:`, emailError);
+            }
+          }
+          
+          console.log(`[PerformanceCron] Evaluación completada. ${scores.length} ingenieros evaluados.`);
+        },
+      });
+    } catch (error) {
+      console.error("[CronInit] Error al inicializar cron de evaluación de desempeño:", error);
+    }
   });
 }
 

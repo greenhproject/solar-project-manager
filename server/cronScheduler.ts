@@ -61,9 +61,8 @@ class CronSchedulerService {
         }
       }
     }, {
-      scheduled: true,
       timezone: "UTC",
-    });
+    } as any);
 
     this.jobs.set(config.name, {
       name: config.name,
@@ -170,7 +169,7 @@ class CronSchedulerService {
    * Detener todos los jobs (para shutdown graceful)
    */
   stopAll(): void {
-    for (const [name, job] of this.jobs) {
+    for (const [name, job] of Array.from(this.jobs.entries())) {
       job.task.stop();
       console.log(`[CronScheduler] Job stopped: ${name}`);
     }

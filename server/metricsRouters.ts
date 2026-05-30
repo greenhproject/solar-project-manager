@@ -32,7 +32,52 @@ export const metricsRouter = router({
   engineers: protectedProcedure.query(async () => {
     const users = await db.getAllUsers();
     return users
-      .filter((u: any) => u.role === "admin" || u.role === "engineer" || u.role === "ingeniero_tramites")
+      .filter((u: any) => u.role === "admin" || u.role === "user" || u.role === "ingeniero_tramites")
       .map((u: any) => ({ id: u.id, name: u.name || u.email, role: u.role }));
   }),
+
+  // Score de desempeño de un ingeniero específico
+  engineerScore: protectedProcedure
+    .input(z.object({ 
+      engineerId: z.number(),
+      month: z.string().optional() // formato "2026-05"
+    }))
+    .query(async ({ input }) => {
+      let monthDate: Date | undefined;
+      if (input.month) {
+        const [year, month] = input.month.split("-").map(Number);
+        monthDate = new Date(year, month - 1, 1);
+      }
+      return await metrics.calculateEngineerScore(input.engineerId, monthDate);
+    }),
+
+  // Scores de todos los ingenieros para un mes
+  allEngineerScores: protectedProcedure
+    .input(z.object({ 
+      month: z.string().optional() // formato "2026-05"
+    }).optional())
+    .query(async ({ input }) => {
+      let monthDate: Date | undefined;
+      if (input?.month) {
+        const [year, month] = input.month.split("-").map(Number);
+        monthDate = new Date(year, month - 1, 1);
+      }
+      return await metrics.calculateAllEngineerScores(monthDate);
+    }),
+
+  // Historial de scores de un ingeniero (últimos 6 meses)
+  engineerScoreHistory: protectedProcedure
+    .input(z.object({ engineerId: z.number() }))
+    .query(async ({ input }) => {
+      const history: any[] = [];
+      for (let i = 5; i >= 0; i--) {
+        const monthDate = new Date();
+        monthDate.setMonth(monthDate.getMonth() - i);
+        const score = await metrics.calculateEngineerScore(input.engineerId, monthDate);
+        if (score) {
+          history.push(score);
+        }
+      }
+      return history;
+    }),
 });

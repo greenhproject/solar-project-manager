@@ -520,3 +520,114 @@ export async function sendClientInvitationEmail(params: {
     html: content,
   });
 }
+
+
+/**
+ * Email de evaluación de desempeño mensual
+ * Envía felicitación o alerta de mejora según el score
+ */
+export async function sendPerformanceEvaluationEmail(params: {
+  toEmail: string;
+  engineerName: string;
+  month: string;
+  score: number;
+  level: "excelente" | "bueno" | "regular" | "necesita_mejora";
+  metrics: {
+    totalAssigned: number;
+    completedOnTime: number;
+    completedLate: number;
+    overdue: number;
+    onTimeRate: number;
+    completionRate: number;
+  };
+}): Promise<boolean> {
+  const { toEmail, engineerName, month, score, level, metrics } = params;
+
+  const levelConfig = {
+    excelente: { icon: "🏆", color: "#16a34a", title: "¡Excelente Desempeño!", message: "Tu rendimiento este mes ha sido excepcional. ¡Sigue así!" },
+    bueno: { icon: "👍", color: "#2563eb", title: "Buen Desempeño", message: "Tu rendimiento este mes ha sido bueno. Sigue mejorando." },
+    regular: { icon: "⚠️", color: "#d97706", title: "Desempeño Regular", message: "Tu rendimiento este mes necesita atención. Revisa los hitos pendientes." },
+    necesita_mejora: { icon: "🚨", color: "#dc2626", title: "Alerta: Necesitas Mejorar", message: "Tu rendimiento este mes está por debajo de lo esperado. Se requiere acción inmediata." },
+  };
+
+  const config = levelConfig[level];
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const [year, monthNum] = month.split("-").map(Number);
+  const monthName = `${monthNames[monthNum - 1]} ${year}`;
+
+  const content = getEmailTemplate(`
+    <div style="text-align: center; padding: 20px 0;">
+      <div style="font-size: 48px;">${config.icon}</div>
+      <h1 style="color: ${config.color}; margin: 10px 0;">${config.title}</h1>
+      <p style="color: #666; font-size: 14px;">Evaluación de Desempeño - ${monthName}</p>
+    </div>
+
+    <p>Hola <strong>${engineerName}</strong>,</p>
+    <p>${config.message}</p>
+
+    <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center;">
+      <div style="font-size: 56px; font-weight: bold; color: ${config.color};">${score}</div>
+      <div style="font-size: 14px; color: #666; margin-top: 4px;">Score de Desempeño (0-100)</div>
+    </div>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr style="background: #f1f5f9;">
+        <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: bold;">Métrica</td>
+        <td style="padding: 12px; border: 1px solid #e2e8f0; font-weight: bold; text-align: center;">Resultado</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; border: 1px solid #e2e8f0;">Hitos asignados en el mes</td>
+        <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center;">${metrics.totalAssigned}</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; border: 1px solid #e2e8f0;">Completados a tiempo</td>
+        <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center; color: #16a34a;">${metrics.completedOnTime}</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; border: 1px solid #e2e8f0;">Completados con retraso</td>
+        <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center; color: #d97706;">${metrics.completedLate}</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; border: 1px solid #e2e8f0;">Hitos vencidos actualmente</td>
+        <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center; color: #dc2626;">${metrics.overdue}</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; border: 1px solid #e2e8f0;">Tasa de cumplimiento a tiempo</td>
+        <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center;">${metrics.onTimeRate}%</td>
+      </tr>
+      <tr>
+        <td style="padding: 12px; border: 1px solid #e2e8f0;">Tasa de completación</td>
+        <td style="padding: 12px; border: 1px solid #e2e8f0; text-align: center;">${metrics.completionRate}%</td>
+      </tr>
+    </table>
+
+    ${level === "necesita_mejora" || level === "regular" ? `
+    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 20px 0; border-radius: 4px;">
+      <strong>Recomendaciones:</strong>
+      <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+        ${metrics.overdue > 0 ? `<li>Tienes ${metrics.overdue} hito(s) vencidos. Prioriza su completación o solicita reprogramación con justificación.</li>` : ""}
+        ${metrics.onTimeRate < 70 ? `<li>Tu tasa de cumplimiento a tiempo es ${metrics.onTimeRate}%. Revisa tu planificación y comunica bloqueos a tiempo.</li>` : ""}
+        ${metrics.completionRate < 50 ? `<li>Solo completaste el ${metrics.completionRate}% de los hitos programados. Coordina con tu supervisor si necesitas apoyo.</li>` : ""}
+      </ul>
+    </div>
+    ` : ""}
+
+    ${level === "excelente" ? `
+    <div style="background: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; margin: 20px 0; border-radius: 4px;">
+      <strong>🎉 ¡Felicitaciones!</strong>
+      <p style="margin: 8px 0 0 0;">Tu desempeño es ejemplar. Completaste ${metrics.completedOnTime} hitos a tiempo con una tasa del ${metrics.onTimeRate}%. ¡Sigue así!</p>
+    </div>
+    ` : ""}
+
+    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+      Este reporte es generado automáticamente por Solar Project Manager - Green House Project.<br>
+      Las métricas se calculan con base en los hitos asignados y su cumplimiento.
+    </p>
+  `);
+
+  return sendEmail({
+    to: toEmail,
+    subject: `${config.icon} Evaluación de Desempeño ${monthName} - Score: ${score}/100`,
+    html: content,
+  });
+}
