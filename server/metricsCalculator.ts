@@ -260,8 +260,15 @@ export async function calculateDashboardStats() {
   const completedMilestones = milestones.filter(
     (m: any) => m.status === "completed"
   ).length;
+  // Contar hitos vencidos: dueDate ya pasó Y status es pending o in_progress
+  const now = new Date();
   const overdueMilestones = milestones.filter(
-    (m: any) => m.status === "overdue"
+    (m: any) => {
+      if (m.status === "completed" || m.status === "cancelled") return false;
+      if (!m.dueDate) return false;
+      const dueDate = new Date(m.dueDate);
+      return dueDate < now && (m.status === "pending" || m.status === "in_progress" || m.status === "overdue");
+    }
   ).length;
 
   const averageProgress =
