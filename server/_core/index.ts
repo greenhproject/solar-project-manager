@@ -276,6 +276,25 @@ async function startServer() {
     } catch (error) {
       console.error("[CronInit] Error al inicializar cron de recordatorios:", error);
     }
+
+    // Cron para actualizar status de hitos vencidos (cada hora)
+    try {
+      const { cronScheduler } = await import("../cronScheduler");
+      const { updateOverdueMilestoneStatuses } = await import("../db");
+      cronScheduler.schedule({
+        name: "update-overdue-milestone-statuses",
+        cronExpression: "0 * * * *", // Cada hora
+        description: "Actualiza status de hitos vencidos (pending/in_progress → overdue)",
+        handler: async () => {
+          const updated = await updateOverdueMilestoneStatuses();
+          if (updated > 0) {
+            console.log(`[OverdueStatusCron] ${updated} hitos actualizados a status 'overdue'`);
+          }
+        },
+      });
+    } catch (error) {
+      console.error("[CronInit] Error al inicializar cron de status overdue:", error);
+    }
   });
 }
 

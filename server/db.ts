@@ -1,4 +1,4 @@
-import { eq, and, or, desc, asc, sql, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, or, desc, asc, sql, gte, lte, lt, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -484,6 +484,34 @@ export async function updateMilestone(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.update(milestones).set(data).where(eq(milestones.id, id));
+}
+
+/**
+ * Actualiza automáticamente el status de hitos vencidos.
+ * Hitos con dueDate < now y status pending/in_progress → overdue
+ * Retorna la cantidad de hitos actualizados.
+ */
+export async function updateOverdueMilestoneStatuses(): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const now = new Date();
+
+  const result = await db
+    .update(milestones)
+    .set({ status: "overdue" })
+    .where(
+      and(
+        lt(milestones.dueDate, now),
+        or(
+          eq(milestones.status, "pending"),
+          eq(milestones.status, "in_progress")
+        )
+      )
+    );
+
+  // MySQL returns affectedRows
+  const affectedRows = (result as any)[0]?.affectedRows || 0;
+  return affectedRows;
 }
 
 /**

@@ -28,14 +28,37 @@ export interface PredictionResult {
 }
 
 /**
+ * Filtra proyectos por ingeniero asignado si se proporciona engineerId
+ */
+function filterProjectsByEngineer(projects: any[], engineerId?: number): any[] {
+  if (!engineerId) return projects;
+  return projects.filter((p: any) => p.assignedEngineerId === engineerId);
+}
+
+/**
+ * Filtra hitos por ingeniero asignado si se proporciona engineerId
+ */
+function filterMilestonesByEngineer(milestones: any[], engineerId?: number, projects?: any[]): any[] {
+  if (!engineerId) return milestones;
+  // Filtrar hitos asignados directamente al ingeniero O que pertenecen a proyectos del ingeniero
+  const engineerProjectIds = projects
+    ? new Set(projects.filter((p: any) => p.assignedEngineerId === engineerId).map((p: any) => p.id))
+    : new Set<number>();
+  
+  return milestones.filter((m: any) => 
+    m.assignedUserId === engineerId || engineerProjectIds.has(m.projectId)
+  );
+}
+
+/**
  * Calcular velocidad del equipo por mes (últimos 6 meses)
  */
-export async function calculateTeamVelocity(): Promise<TeamVelocityMetric[]> {
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-
+export async function calculateTeamVelocity(engineerId?: number): Promise<TeamVelocityMetric[]> {
   const allProjects = await db.getAllProjects();
   const allMilestones = await db.getAllMilestones();
+
+  const filteredProjects = filterProjectsByEngineer(allProjects, engineerId);
+  const filteredMilestones = filterMilestonesByEngineer(allMilestones, engineerId, allProjects);
 
   const metrics: TeamVelocityMetric[] = [];
 
@@ -54,14 +77,14 @@ export async function calculateTeamVelocity(): Promise<TeamVelocityMetric[]> {
     );
 
     // Hitos completados en el mes
-    const completedMilestones = allMilestones.filter((m: any) => {
+    const completedMilestones = filteredMilestones.filter((m: any) => {
       if (!m.completedDate) return false;
       const completedDate = new Date(m.completedDate);
       return completedDate >= monthStart && completedDate <= monthEnd;
     });
 
     // Proyectos completados en el mes
-    const completedProjects = allProjects.filter((p: any) => {
+    const completedProjects = filteredProjects.filter((p: any) => {
       if (!p.actualEndDate) return false;
       const endDate = new Date(p.actualEndDate);
       return endDate >= monthStart && endDate <= monthEnd;
@@ -102,16 +125,15 @@ export async function calculateTeamVelocity(): Promise<TeamVelocityMetric[]> {
 /**
  * Calcular métricas por tipo de proyecto
  */
-export async function calculateProjectTypeMetrics(): Promise<
-  ProjectTypeMetric[]
-> {
+export async function calculateProjectTypeMetrics(engineerId?: number): Promise<ProjectTypeMetric[]> {
   const projects = await db.getAllProjects();
   const projectTypes = await db.getAllProjectTypes();
 
+  const filteredProjects = filterProjectsByEngineer(projects, engineerId);
   const metrics: ProjectTypeMetric[] = [];
 
   for (const type of projectTypes) {
-    const typeProjects = projects.filter(
+    const typeProjects = filteredProjects.filter(
       (p: any) => p.projectTypeId === type.id
     );
 
@@ -157,9 +179,11 @@ export async function calculateProjectTypeMetrics(): Promise<
 /**
  * Predecir fechas de finalización usando datos históricos
  */
-export async function predictProjectCompletion(): Promise<PredictionResult[]> {
-  const activeProjects = await db.getActiveProjects();
+export async function predictProjectCompletion(engineerId?: number): Promise<PredictionResult[]> {
+  const allActiveProjects = await db.getActiveProjects();
   const allProjects = await db.getAllProjects();
+  
+  const activeProjects = filterProjectsByEngineer(allActiveProjects, engineerId);
   const predictions: PredictionResult[] = [];
 
   for (const project of activeProjects) {
@@ -172,7 +196,6 @@ export async function predictProjectCompletion(): Promise<PredictionResult[]> {
     );
 
     if (similarProjects.length === 0) {
-      // Sin datos históricos, usar estimación original
       continue;
     }
 
@@ -201,10 +224,8 @@ export async function predictProjectCompletion(): Promise<PredictionResult[]> {
     let predictedTotalDays: number;
 
     if (progress > 0) {
-      // Usar progreso actual para estimar
       predictedTotalDays = Math.round((daysElapsed / progress) * 100);
     } else {
-      // Usar promedio histórico
       predictedTotalDays = Math.round(averageDuration);
     }
 
@@ -239,9 +260,12 @@ export async function predictProjectCompletion(): Promise<PredictionResult[]> {
 /**
  * Calcular estadísticas generales del dashboard
  */
-export async function calculateDashboardStats() {
-  const projects = await db.getAllProjects();
-  const milestones = await db.getAllMilestones();
+export async function calculateDashboardStats(engineerId?: number) {
+  const allProjects = await db.getAllProjects();
+  const allMilestones = await db.getAllMilestones();
+
+  const projects = filterProjectsByEngineer(allProjects, engineerId);
+  const milestones = filterMilestonesByEngineer(allMilestones, engineerId, allProjects);
 
   const totalProjects = projects.length;
   const activeProjects = projects.filter(

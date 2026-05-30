@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -5,6 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import {
   Loader2,
@@ -12,6 +20,7 @@ import {
   Clock,
   Target,
   AlertTriangle,
+  Users,
 } from "lucide-react";
 import { useTimezone } from "@/hooks/useTimezone";
 import {
@@ -34,14 +43,20 @@ const COLORS = ["#FF6B35", "#F7931E", "#FDC830", "#37B7C3", "#088395"];
 
 export default function AdvancedAnalytics() {
   const { formatDate: tzFormatDate } = useTimezone();
+  const [selectedEngineerId, setSelectedEngineerId] = useState<number | undefined>(undefined);
+
+  const queryInput = selectedEngineerId ? { engineerId: selectedEngineerId } : undefined;
+
+  const { data: engineers, isLoading: loadingEngineers } =
+    trpc.analytics.engineers.useQuery();
   const { data: velocity, isLoading: loadingVelocity } =
-    trpc.analytics.teamVelocity.useQuery();
+    trpc.analytics.teamVelocity.useQuery(queryInput);
   const { data: typeMetrics, isLoading: loadingTypes } =
-    trpc.analytics.projectTypeMetrics.useQuery();
+    trpc.analytics.projectTypeMetrics.useQuery(queryInput);
   const { data: predictions, isLoading: loadingPredictions } =
-    trpc.analytics.predictions.useQuery();
+    trpc.analytics.predictions.useQuery(queryInput);
   const { data: stats, isLoading: loadingStats } =
-    trpc.analytics.dashboardStats.useQuery();
+    trpc.analytics.dashboardStats.useQuery(queryInput);
 
   if (loadingVelocity || loadingTypes || loadingPredictions || loadingStats) {
     return (
@@ -53,12 +68,41 @@ export default function AdvancedAnalytics() {
 
   return (
     <div className="container py-4 sm:py-6 lg:py-8 space-y-6">
-      <div>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Análisis Avanzado</h1>
-        <p className="text-muted-foreground mt-1">
-          Métricas predictivas y análisis de rendimiento del equipo
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Análisis Avanzado</h1>
+          <p className="text-muted-foreground mt-1">
+            Métricas predictivas y análisis de rendimiento del equipo
+          </p>
+        </div>
+
+        {/* Filtro por Ingeniero */}
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          <Select
+            value={selectedEngineerId ? String(selectedEngineerId) : "all"}
+            onValueChange={(val) => setSelectedEngineerId(val === "all" ? undefined : Number(val))}
+          >
+            <SelectTrigger className="w-[200px] sm:w-[240px]">
+              <SelectValue placeholder="Filtrar por ingeniero" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los ingenieros</SelectItem>
+              {(engineers || []).map((eng) => (
+                <SelectItem key={eng.id} value={String(eng.id)}>
+                  {eng.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {selectedEngineerId && (
+        <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg px-4 py-2 text-sm text-orange-700 dark:text-orange-300">
+          Mostrando métricas filtradas para: <strong>{engineers?.find(e => e.id === selectedEngineerId)?.name || "Ingeniero"}</strong>
+        </div>
+      )}
 
       {/* Estadísticas Generales */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -242,11 +286,11 @@ export default function AdvancedAnalytics() {
               {predictions.map(prediction => (
                 <div
                   key={prediction.projectId}
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-2"
                 >
                   <div className="space-y-1">
                     <p className="font-medium">{prediction.projectName}</p>
-                    <div className="flex gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap gap-2 sm:gap-4 text-sm text-muted-foreground">
                       <span>
                         Estimado:{" "}
                         {tzFormatDate(prediction.estimatedEndDate)}
