@@ -1054,4 +1054,9 @@
 
 ## Fix: Filtrar clientes del selector de responsable de hito (30 May 2026)
 - [x] Filtrar selector de responsable para mostrar solo admin/engineer (excluir client)
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub
+
+## Fix: Hitos retrasados no aparecen + status no se revierte al reprogramar (04 Jun 2026)
+- [x] Al reprogramar un hito a fecha futura, revertir status de 'overdue' a 'pending' (requestReschedule + updateDueDate + cascada)
+- [x] Verificar que la página de Recordatorios muestra sección de Hitos Vencidos (agregado status 'overdue' al query getOverdueMilestones)
+- [x] Guardar checkpoint y push a GitHub

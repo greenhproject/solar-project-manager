@@ -1439,10 +1439,20 @@ export const appRouter = router({
           ? `${existingNotes}\n\n--- Reprogramación ---\n${rescheduleNote}`
           : `--- Reprogramación ---\n${rescheduleNote}`;
 
-        await db.updateMilestone(input.milestoneId, {
+        // Si la nueva fecha es futura y el hito estaba en overdue, revertir a pending
+        const now2 = new Date();
+        const updateData: any = {
           dueDate: input.newDueDate,
+          endDate: input.newDueDate, // Sincronizar endDate = dueDate
           notes: updatedNotes,
-        });
+        };
+        if (input.newDueDate > now2 && (milestone.status === 'overdue' || milestone.status === 'pending' || milestone.status === 'in_progress')) {
+          // Si la nueva fecha es futura, el hito ya no está vencido
+          if (milestone.status === 'overdue') {
+            updateData.status = 'pending';
+          }
+        }
+        await db.updateMilestone(input.milestoneId, updateData);
 
         // Registrar la reprogramación como nota en project_updates
         await db.createProjectUpdate({
@@ -1684,10 +1694,16 @@ export const appRouter = router({
         }
 
         // Actualizar fecha de vencimiento del hito seleccionado (endDate = dueDate siempre)
-        await db.updateMilestone(input.milestoneId, {
+        // Si la nueva fecha es futura y el hito estaba en overdue, revertir a pending
+        const nowCheck = new Date();
+        const dueDateUpdate: any = {
           dueDate: input.dueDate,
           endDate: input.dueDate,
-        });
+        };
+        if (input.dueDate > nowCheck && milestone.status === 'overdue') {
+          dueDateUpdate.status = 'pending';
+        }
+        await db.updateMilestone(input.milestoneId, dueDateUpdate);
 
         // Sincronizar con Google Calendar si existe eventId
         if (milestone.googleCalendarEventId) {
@@ -1766,12 +1782,17 @@ export const appRouter = router({
 
               // Actualizar el hito con startDate, endDate y durationDays
               const milestoneStart = new Date(previousDueDate);
-              await db.updateMilestone(subsequentMilestone.id, {
+              const cascadeUpdate: any = {
                 startDate: milestoneStart,
                 endDate: newDueDate,
                 durationDays: durationDays,
                 dueDate: newDueDate,
-              });
+              };
+              // Si la nueva fecha es futura y el hito estaba overdue, revertir a pending
+              if (newDueDate > nowCheck && subsequentMilestone.status === 'overdue') {
+                cascadeUpdate.status = 'pending';
+              }
+              await db.updateMilestone(subsequentMilestone.id, cascadeUpdate);
 
               // Sincronizar con Google Calendar si existe eventId
               if (subsequentMilestone.googleCalendarEventId) {

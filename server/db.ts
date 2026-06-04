@@ -571,7 +571,8 @@ export async function getOverdueMilestones() {
         lte(milestones.dueDate, now),
         or(
           eq(milestones.status, "pending"),
-          eq(milestones.status, "in_progress")
+          eq(milestones.status, "in_progress"),
+          eq(milestones.status, "overdue")
         )
       )
     )
