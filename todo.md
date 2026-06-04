@@ -1060,3 +1060,7 @@
 - [x] Al reprogramar un hito a fecha futura, revertir status de 'overdue' a 'pending' (requestReschedule + updateDueDate + cascada)
 - [x] Verificar que la página de Recordatorios muestra sección de Hitos Vencidos (agregado status 'overdue' al query getOverdueMilestones)
 - [x] Guardar checkpoint y push a GitHub
+
+## Fix: Dashboard muestra 0 en 'Con Retraso' cuando hay hitos vencidos (04 Jun 2026)
+- [x] getProjectStats() no incluía status 'overdue' en la consulta de hitos vencidos (mismo bug que getOverdueMilestones)
+- [x] Guardar checkpoint y push a GitHub

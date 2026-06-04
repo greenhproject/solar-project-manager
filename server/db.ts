@@ -292,7 +292,7 @@ export async function getProjectStats() {
   const allProjects = await db.select().from(projects);
 
   // Obtener hitos vencidos para contar proyectos con retraso
-  // (misma lógica que la página de Proyectos)
+  // (misma lógica que la página de Recordatorios)
   const overdueMilestonesList = await db
     .select({
       projectId: milestones.projectId,
@@ -303,7 +303,8 @@ export async function getProjectStats() {
         lte(milestones.dueDate, now),
         or(
           eq(milestones.status, "pending"),
-          eq(milestones.status, "in_progress")
+          eq(milestones.status, "in_progress"),
+          eq(milestones.status, "overdue")
         )
       )
     );
