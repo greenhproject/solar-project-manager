@@ -288,7 +288,11 @@ export async function getProjectStats() {
   const db = await getDb();
   if (!db) return { total: 0, active: 0, completed: 0, overdue: 0 };
 
-  const now = new Date(); // Usar Date real para comparación con timestamps de BD
+  const now = await getNowInConfiguredTimezone();
+  // Usar inicio del día actual: un hito está vencido si su dueDate es ANTES de hoy
+  const startOfToday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0
+  ));
   const allProjects = await db.select().from(projects);
 
   // Obtener hitos vencidos para contar proyectos con retraso
@@ -300,7 +304,7 @@ export async function getProjectStats() {
     .from(milestones)
     .where(
       and(
-        lte(milestones.dueDate, now),
+        lt(milestones.dueDate, startOfToday),
         or(
           eq(milestones.status, "pending"),
           eq(milestones.status, "in_progress"),
@@ -325,7 +329,7 @@ export async function getProjectStats() {
       p =>
         p.status !== "completed" &&
         p.status !== "cancelled" &&
-        (p.estimatedEndDate < now || projectIdsWithOverdueMilestones.has(p.id))
+        (p.estimatedEndDate < startOfToday || projectIdsWithOverdueMilestones.has(p.id))
     ).length,
   };
 }
@@ -495,14 +499,20 @@ export async function updateMilestone(
 export async function updateOverdueMilestoneStatuses(): Promise<number> {
   const db = await getDb();
   if (!db) return 0;
-  const now = new Date();
+  const now = await getNowInConfiguredTimezone();
+  
+  // Solo marcar como overdue hitos cuya fecha de vencimiento es ANTES del inicio de hoy
+  // (no marcar hitos que vencen hoy, esos aún están vigentes durante todo el día)
+  const startOfToday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0
+  ));
 
   const result = await db
     .update(milestones)
     .set({ status: "overdue" })
     .where(
       and(
-        lt(milestones.dueDate, now),
+        lt(milestones.dueDate, startOfToday),
         or(
           eq(milestones.status, "pending"),
           eq(milestones.status, "in_progress")
@@ -551,6 +561,12 @@ export async function getOverdueMilestones() {
   const db = await getDb();
   if (!db) return [];
   const now = await getNowInConfiguredTimezone();
+  
+  // Usar inicio del día actual como límite: un hito está vencido si su dueDate
+  // es ANTES del inicio de hoy (es decir, venció ayer o antes)
+  const startOfToday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0
+  ));
 
   return await db
     .select({
@@ -569,7 +585,7 @@ export async function getOverdueMilestones() {
     .innerJoin(projects, eq(milestones.projectId, projects.id))
     .where(
       and(
-        lte(milestones.dueDate, now),
+        lt(milestones.dueDate, startOfToday),
         or(
           eq(milestones.status, "pending"),
           eq(milestones.status, "in_progress"),
@@ -584,8 +600,14 @@ export async function getUpcomingMilestones(daysAhead: number = 7) {
   const db = await getDb();
   if (!db) return [];
   const now = await getNowInConfiguredTimezone();
-  const futureDate = new Date(now.getTime());
-  futureDate.setDate(futureDate.getDate() + daysAhead);
+  
+  // Usar inicio del día actual como límite inferior (incluir hitos que vencen hoy)
+  // y fin del día futuro como límite superior
+  const startOfToday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0
+  ));
+  const endOfFutureDay = new Date(startOfToday.getTime());
+  endOfFutureDay.setDate(endOfFutureDay.getDate() + daysAhead + 1); // inicio del día siguiente al rango
 
   return await db
     .select({
@@ -604,8 +626,8 @@ export async function getUpcomingMilestones(daysAhead: number = 7) {
     .innerJoin(projects, eq(milestones.projectId, projects.id))
     .where(
       and(
-        gte(milestones.dueDate, now),
-        lte(milestones.dueDate, futureDate),
+        gte(milestones.dueDate, startOfToday),
+        lt(milestones.dueDate, endOfFutureDay),
         or(
           eq(milestones.status, "pending"),
           eq(milestones.status, "in_progress")

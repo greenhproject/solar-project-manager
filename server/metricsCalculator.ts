@@ -9,6 +9,7 @@
  */
 
 import * as db from "./db";
+import { getNowInConfiguredTimezone } from "./timezone";
 
 export interface TeamVelocityMetric {
   month: string;
@@ -309,13 +310,16 @@ export async function calculateDashboardStats(engineerId?: number) {
   ).length;
   
   // Proyectos retrasados: proyectos del ingeniero que tienen hitos vencidos del ingeniero
-  const now = new Date();
+  const now = await getNowInConfiguredTimezone();
+  const startOfToday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0
+  ));
   const projectsWithOverdueMilestones = new Set(
     milestones
       .filter((m: any) => {
         if (m.status === "completed" || m.status === "cancelled") return false;
         if (!m.dueDate) return false;
-        return new Date(m.dueDate) < now;
+        return new Date(m.dueDate) < startOfToday;
       })
       .map((m: any) => m.projectId)
   );
@@ -329,13 +333,13 @@ export async function calculateDashboardStats(engineerId?: number) {
     (m: any) => m.status === "completed"
   ).length;
   
-  // Hitos vencidos: dueDate ya pasó Y status es pending/in_progress/overdue
+  // Hitos vencidos: dueDate es ANTES de hoy Y status es pending/in_progress/overdue
   const overdueMilestones = milestones.filter(
     (m: any) => {
       if (m.status === "completed" || m.status === "cancelled") return false;
       if (!m.dueDate) return false;
       const dueDate = new Date(m.dueDate);
-      return dueDate < now && (m.status === "pending" || m.status === "in_progress" || m.status === "overdue");
+      return dueDate < startOfToday && (m.status === "pending" || m.status === "in_progress" || m.status === "overdue");
     }
   ).length;
 
@@ -390,7 +394,10 @@ export async function calculateEngineerScore(engineerId: number, monthDate?: Dat
   const targetDate = monthDate || new Date();
   const monthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
   const monthEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59);
-  const now = new Date();
+  const now = await getNowInConfiguredTimezone();
+  const startOfTodayScore = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0
+  ));
 
   // Hitos asignados al ingeniero
   const engineerMilestones = allMilestones.filter((m: any) => m.assignedUserId === engineerId);
@@ -421,11 +428,11 @@ export async function calculateEngineerScore(engineerId: number, monthDate?: Dat
     return new Date(m.completedDate) > new Date(m.dueDate);
   });
 
-  // Hitos actualmente vencidos (no completados, dueDate pasó)
+  // Hitos actualmente vencidos (no completados, dueDate es ANTES de hoy)
   const currentlyOverdue = engineerMilestones.filter((m: any) => {
     if (m.status === "completed" || m.status === "cancelled") return false;
     if (!m.dueDate) return false;
-    return new Date(m.dueDate) < now;
+    return new Date(m.dueDate) < startOfTodayScore;
   });
 
   // Hitos activos (no completados, no cancelados)

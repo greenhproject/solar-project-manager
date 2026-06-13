@@ -1064,3 +1064,12 @@
 ## Fix: Dashboard muestra 0 en 'Con Retraso' cuando hay hitos vencidos (04 Jun 2026)
 - [x] getProjectStats() no incluía status 'overdue' en la consulta de hitos vencidos (mismo bug que getOverdueMilestones)
 - [x] Guardar checkpoint y push a GitHub
+
+## Fix: Hitos que vencen hoy desaparecen de Recordatorios (13 Jun 2026)
+- [x] Cambiar getOverdueMilestones para usar inicio del día (lt startOfToday) en vez de hora exacta
+- [x] Cambiar getUpcomingMilestones para usar inicio del día como límite inferior (gte startOfToday)
+- [x] Actualizar getProjectStats para usar misma lógica de inicio del día
+- [x] Actualizar updateOverdueMilestoneStatuses (cron) para solo marcar overdue hitos de ANTES de hoy
+- [x] Actualizar milestone-reminders.ts para consistencia
+- [x] Actualizar metricsCalculator.ts (calculateDashboardStats y calculatePerformanceScore)
+- [x] Guardar checkpoint y push a GitHub

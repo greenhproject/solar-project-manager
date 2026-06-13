@@ -10,7 +10,7 @@ import { milestones, projects, users, milestoneReminderConfig, milestoneReminder
 import { eq, and, lt, ne, isNull, isNotNull, sql } from "drizzle-orm";
 import { sendEmail } from "../emailService";
 import { sdk } from "../_core/sdk";
-import { getConfiguredTimezone } from "../timezone";
+import { getConfiguredTimezone, getNowInConfiguredTimezone } from "../timezone";
 
 /**
  * Función exportada que ejecuta la lógica de envío de recordatorios.
@@ -29,7 +29,11 @@ export async function processMilestoneReminders(): Promise<{ ok: boolean; summar
     return { ok: true, skipped: "disabled" };
   }
 
-  const now = new Date();
+  const now = await getNowInConfiguredTimezone();
+  // Solo considerar vencidos los hitos cuya fecha es ANTES del inicio de hoy
+  const startOfToday = new Date(Date.UTC(
+    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0
+  ));
   const overdueMilestones = await dbInst
     .select({
       milestone: milestones,
@@ -41,7 +45,7 @@ export async function processMilestoneReminders(): Promise<{ ok: boolean; summar
     .leftJoin(users, eq(milestones.assignedUserId, users.id))
     .where(
       and(
-        lt(milestones.dueDate, now),
+        lt(milestones.dueDate, startOfToday),
         ne(milestones.status, "completed"),
         isNull(milestones.completedDate)
       )
