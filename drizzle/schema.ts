@@ -954,3 +954,27 @@ export const milestoneReminderLogs = mysqlTable("milestone_reminder_logs", {
 
 export type MilestoneReminderLog = typeof milestoneReminderLogs.$inferSelect;
 export type InsertMilestoneReminderLog = typeof milestoneReminderLogs.$inferInsert;
+
+/**
+ * Tokens SSO persistentes
+ * Reemplaza el almacenamiento en memoria (Map) para ser compatible con
+ * múltiples instancias y sobrevivir reinicios del servidor.
+ * Los tokens son de uso único y expiran en 5 minutos.
+ */
+export const ssoTokens = mysqlTable("sso_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  userId: int("userId").notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  redirectTo: varchar("redirectTo", { length: 500 }),
+  used: boolean("used").default(false).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({
+  tokenIdx: index("sso_token_idx").on(table.token),
+  expiresIdx: index("sso_expires_idx").on(table.expiresAt),
+}));
+
+export type SsoToken = typeof ssoTokens.$inferSelect;
+export type InsertSsoToken = typeof ssoTokens.$inferInsert;

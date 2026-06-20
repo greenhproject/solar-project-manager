@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `sso_tokens` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`token` varchar(64) NOT NULL,\n\t`userId` int NOT NULL,\n\t`email` varchar(320) NOT NULL,\n\t`name` varchar(255) NOT NULL,\n\t`redirectTo` varchar(500),\n\t`used` boolean NOT NULL DEFAULT false,\n\t`expiresAt` timestamp NOT NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `sso_tokens_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `sso_tokens_token_unique` UNIQUE(`token`)\n);\nCREATE INDEX `sso_token_idx` ON `sso_tokens` (`token`);\nCREATE INDEX `sso_expires_idx` ON `sso_tokens` (`expiresAt`);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute CREATE TABLE IF NOT EXISTS `sso_tokens` (\n\t`id` int AUTO_INCREMENT NOT NULL,\n\t`token` varchar(64) NOT NULL,\n\t`userId` int NOT NULL,\n\t`email` varchar(320) NOT NULL,\n\t`name` varchar(255) NOT NULL,\n\t`redirectTo` varchar(500),\n\t`used` boolean NOT NULL DEFAULT false,\n\t`expiresAt` timestamp NOT NULL,\n\t`createdAt` timestamp NOT NULL DEFAULT (now()),\n\tCONSTRAINT `sso_tokens_id` PRIMARY KEY(`id`),\n\tCONSTRAINT `sso_tokens_token_unique` UNIQUE(`token`)\n);\nCREATE INDEX `sso_token_idx` ON `sso_tokens` (`token`);\nCREATE INDEX `sso_expires_idx` ON `sso_tokens` (`expiresAt`);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 681
+}

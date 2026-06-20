@@ -5,38 +5,104 @@
  * 
  * Flujo:
  * 1. App externa llama POST /api/sso/token con API Key + email del cliente
- * 2. Se genera un token temporal (válido 5 min)
+ * 2. Se genera un token temporal (válido 5 min) persistido en BD
  * 3. App externa redirige al usuario a /api/sso/login?token=xxx
  * 4. El servidor valida el token, crea sesión y redirige al portal
+ * 
+ * Seguridad:
+ * - Tokens persistidos en BD (no en memoria) para compatibilidad multi-instancia
+ * - Validación de redirectTo contra whitelist para prevenir Open Redirect
+ * - Tokens de uso único con TTL de 5 minutos
+ * - Rate limiting aplicado a nivel de router
  */
 import { Router } from "express";
 import crypto from "crypto";
-import { eq, and } from "drizzle-orm";
-import { users, apiKeys, clientProjectAccess } from "../../drizzle/schema";
+import { eq, and, lt } from "drizzle-orm";
+import { users, apiKeys, clientProjectAccess, ssoTokens } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { jwtAuthService, JWT_COOKIE_NAME } from "../_core/jwtAuth";
 import { getSessionCookieOptions } from "../_core/cookies";
 
 const ssoRouter = Router();
 
-// Store temporal de tokens SSO (en memoria, expiran en 5 min)
-const ssoTokens = new Map<string, { userId: number; email: string; name: string; createdAt: number; redirectTo?: string }>();
+/**
+ * Whitelist de rutas internas permitidas para redirectTo.
+ * Solo se permiten rutas relativas que empiecen con / y pertenezcan a la app.
+ * Esto previene Open Redirect attacks donde un atacante podría redirigir
+ * a un sitio malicioso.
+ */
+const ALLOWED_REDIRECT_PREFIXES = [
+  "/portal",
+  "/dashboard",
+  "/projects",
+  "/profile",
+  "/reminders",
+  "/milestones",
+  "/documents",
+  "/settings",
+];
 
-// Limpiar tokens expirados cada 5 minutos
-setInterval(() => {
-  const now = Date.now();
-  const entries = Array.from(ssoTokens.entries());
-  for (const [token, data] of entries) {
-    if (now - data.createdAt > 5 * 60 * 1000) {
-      ssoTokens.delete(token);
-    }
+/**
+ * Valida que una URL de redirección sea segura.
+ * Solo permite rutas relativas internas de la aplicación.
+ * Retorna la ruta validada o el fallback "/portal".
+ */
+function validateRedirectTo(redirectTo: string | undefined | null): string {
+  if (!redirectTo || typeof redirectTo !== "string") {
+    return "/portal";
   }
-}, 5 * 60 * 1000);
+
+  // Trim y normalizar
+  const cleaned = redirectTo.trim();
+
+  // Rechazar URLs absolutas (http://, https://, //, javascript:, data:, etc.)
+  if (/^(https?:\/\/|\/\/|javascript:|data:|vbscript:|file:)/i.test(cleaned)) {
+    console.warn(`[SSO] Redirect bloqueado (URL absoluta): ${cleaned}`);
+    return "/portal";
+  }
+
+  // Solo permitir rutas que empiecen con /
+  if (!cleaned.startsWith("/")) {
+    console.warn(`[SSO] Redirect bloqueado (no es ruta relativa): ${cleaned}`);
+    return "/portal";
+  }
+
+  // Verificar contra whitelist de prefijos
+  const isAllowed = ALLOWED_REDIRECT_PREFIXES.some(prefix => 
+    cleaned === prefix || cleaned.startsWith(prefix + "/") || cleaned.startsWith(prefix + "?")
+  );
+
+  if (!isAllowed) {
+    console.warn(`[SSO] Redirect bloqueado (no está en whitelist): ${cleaned}`);
+    return "/portal";
+  }
+
+  return cleaned;
+}
+
+/**
+ * Limpia tokens SSO expirados de la base de datos.
+ * Se ejecuta periódicamente para mantener la tabla limpia.
+ */
+async function cleanupExpiredSsoTokens(): Promise<void> {
+  try {
+    const dbInst = await getDb();
+    if (!dbInst) return;
+    
+    const now = new Date();
+    await dbInst.delete(ssoTokens).where(lt(ssoTokens.expiresAt, now));
+  } catch (error) {
+    console.error("[SSO] Error limpiando tokens expirados:", error);
+  }
+}
+
+// Limpiar tokens expirados cada 10 minutos
+setInterval(cleanupExpiredSsoTokens, 10 * 60 * 1000);
 
 /**
  * POST /api/sso/token
  * Genera un token SSO temporal para un usuario
- * Requiere API Key con permiso 'admin' o '*'
+ * Requiere API Key con permiso 'admin', 'sso' o '*'
  * 
  * Body: { email: string, redirectTo?: string }
  * Response: { token: string, loginUrl: string }
@@ -102,14 +168,21 @@ ssoRouter.post("/token", async (req, res) => {
       return res.status(403).json({ error: "Usuario rechazado" });
     }
 
-    // Generar token SSO temporal
+    // Validar redirectTo contra whitelist
+    const safeRedirectTo = validateRedirectTo(redirectTo);
+
+    // Generar token SSO y persistir en BD
     const token = crypto.randomBytes(32).toString("hex");
-    ssoTokens.set(token, {
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos
+
+    await dbInst.insert(ssoTokens).values({
+      token,
       userId: user.id,
       email: user.email || email,
       name: user.name || email.split("@")[0],
-      createdAt: Date.now(),
-      redirectTo,
+      redirectTo: safeRedirectTo,
+      expiresAt,
+      used: false,
     });
 
     // Construir la URL de login
@@ -141,28 +214,36 @@ ssoRouter.get("/login", async (req, res) => {
       return res.status(400).json({ error: "Token requerido" });
     }
 
-    // Validar token
-    const tokenData = ssoTokens.get(token);
-    if (!tokenData) {
-      return res.status(401).json({ error: "Token inválido o expirado" });
-    }
-
-    // Verificar que no haya expirado (5 min)
-    if (Date.now() - tokenData.createdAt > 5 * 60 * 1000) {
-      ssoTokens.delete(token);
-      return res.status(401).json({ error: "Token expirado" });
-    }
-
-    // Consumir token (uso único)
-    ssoTokens.delete(token);
-
-    // Obtener usuario
     const dbInst = await getDb();
     if (!dbInst) {
       return res.status(500).json({ error: "Error de base de datos" });
     }
 
-    const [user] = await dbInst.select().from(users).where(eq(users.id, tokenData.userId));
+    // Buscar token en BD (no usado y no expirado)
+    const now = new Date();
+    const [tokenRecord] = await dbInst.select().from(ssoTokens).where(
+      and(
+        eq(ssoTokens.token, token),
+        eq(ssoTokens.used, false)
+      )
+    );
+
+    if (!tokenRecord) {
+      return res.status(401).json({ error: "Token inválido o ya fue utilizado" });
+    }
+
+    // Verificar expiración
+    if (tokenRecord.expiresAt < now) {
+      // Marcar como usado para limpieza
+      await dbInst.update(ssoTokens).set({ used: true }).where(eq(ssoTokens.id, tokenRecord.id));
+      return res.status(401).json({ error: "Token expirado" });
+    }
+
+    // Consumir token (uso único) - marcar como usado
+    await dbInst.update(ssoTokens).set({ used: true }).where(eq(ssoTokens.id, tokenRecord.id));
+
+    // Obtener usuario
+    const [user] = await dbInst.select().from(users).where(eq(users.id, tokenRecord.userId));
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
@@ -173,8 +254,8 @@ ssoRouter.get("/login", async (req, res) => {
     // Crear sesión JWT usando el servicio existente
     const jwtToken = await jwtAuthService.createJWTSessionToken(
       user.id,
-      user.email || tokenData.email,
-      user.name || tokenData.name
+      user.email || tokenRecord.email,
+      user.name || tokenRecord.name
     );
     const cookieOptions = getSessionCookieOptions(req);
     res.cookie(JWT_COOKIE_NAME, jwtToken, {
@@ -182,8 +263,8 @@ ssoRouter.get("/login", async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
     });
 
-    // Redirigir al portal
-    const redirectTo = tokenData.redirectTo || "/portal";
+    // Redirigir al portal (ya validado contra whitelist)
+    const redirectTo = tokenRecord.redirectTo || "/portal";
     return res.redirect(redirectTo);
   } catch (error: any) {
     console.error("SSO login error:", error);

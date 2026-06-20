@@ -22,6 +22,13 @@
       "when": 1779751873928,
       "tag": "0002_flashy_aqueduct",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1781929127380,
+      "tag": "0003_crazy_guardsmen",
+      "breakpoints": true
     }
   ]
 }

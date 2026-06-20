@@ -8,6 +8,9 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { securityHeaders } from "../middleware/securityHeaders";
+import { generalLimiter, ssoLimiter, apiLimiter } from "../middleware/rateLimiter";
+import { trpcRateLimitMiddleware } from "../middleware/trpcRateLimiter";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -224,6 +227,12 @@ async function startServer() {
   // This allows Express to correctly detect HTTPS and set secure cookies
   app.set('trust proxy', 1);
 
+  // Security headers (Helmet)
+  app.use(securityHeaders);
+
+  // General rate limiting (200 req/min por IP)
+  app.use(generalLimiter);
+
   // Configure cookie parser
   app.use(cookieParser());
 
@@ -235,16 +244,17 @@ async function startServer() {
   // OpenSolar webhook endpoint
   const { registerWebhookRoutes } = await import("../webhookHandler");
   registerWebhookRoutes(app);
-  // API REST v1 para integración externa
+  // API REST v1 para integración externa (con rate limiting: 100 req/min)
   const { apiRouter } = await import("../routes/api-v1");
-  app.use("/api/v1", apiRouter);
-  // SSO routes para acceso desde apps externas (GHP Center)
+  app.use("/api/v1", apiLimiter, apiRouter);
+  // SSO routes para acceso desde apps externas (GHP Center) (con rate limiting: 10 req/min)
   const { ssoRouter } = await import("../routes/sso");
-  app.use("/api/sso", ssoRouter);
+  app.use("/api/sso", ssoLimiter, ssoRouter);
   // Milestone reminders heartbeat handler
   const { milestoneReminderRouter } = await import("../routes/milestone-reminders");
   app.use(milestoneReminderRouter);
-  // tRPC API
+  // tRPC API (con rate limiting selectivo para auth)
+  app.use("/api/trpc", trpcRateLimitMiddleware);
   app.use(
     "/api/trpc",
     createExpressMiddleware({

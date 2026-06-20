@@ -43,7 +43,7 @@ class JWTAuthService {
     options: { expiresInMs?: number } = {}
   ): Promise<string> {
     const issuedAt = Date.now();
-    const expiresInMs = options.expiresInMs ?? 30 * 24 * 60 * 60 * 1000; // 30 days
+    const expiresInMs = options.expiresInMs ?? 7 * 24 * 60 * 60 * 1000; // 7 days
     const expirationSeconds = Math.floor((issuedAt + expiresInMs) / 1000);
     const secretKey = this.getJWTSecret();
 
