@@ -978,3 +978,91 @@ export const ssoTokens = mysqlTable("sso_tokens", {
 
 export type SsoToken = typeof ssoTokens.$inferSelect;
 export type InsertSsoToken = typeof ssoTokens.$inferInsert;
+
+
+/**
+ * Aplicaciones SSO registradas
+ * Permite configurar qué aplicaciones externas pueden autenticar usuarios
+ * mediante Single Sign-On (SSO) con token JWT firmado.
+ * 
+ * Flujo:
+ * 1. El Hub genera un token JWT firmado con el secret compartido (CRM_SSO_SECRET)
+ * 2. La app destino recibe el token, lo verifica con su secret
+ * 3. Si es válido, crea sesión para el usuario
+ * 
+ * Cada app tiene su propia URL, secret, estado activo/inactivo y mapeo de roles.
+ */
+export const ssoApps = mysqlTable("sso_apps", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Identificación de la app
+  name: varchar("name", { length: 255 }).notNull(), // Nombre visible (ej: "CRM GHP", "Open Solar")
+  slug: varchar("slug", { length: 100 }).notNull().unique(), // Identificador único (ej: "crm-ghp")
+  description: text("description"), // Descripción de la app
+  url: varchar("url", { length: 500 }).notNull(), // URL base de la app (ej: "https://crm.ghp.center")
+  callbackUrl: varchar("callbackUrl", { length: 500 }), // URL de callback SSO (ej: "https://crm.ghp.center/api/sso/callback")
+  logoUrl: text("logoUrl"), // URL del logo de la app
+  
+  // Seguridad
+  ssoSecret: varchar("ssoSecret", { length: 255 }).notNull(), // Secret compartido para firmar tokens JWT
+  
+  // Modelo de autenticación
+  authModel: mysqlEnum("authModel", ["sso_jwt", "sso_redirect", "sso_action"]).default("sso_jwt").notNull(),
+  // sso_jwt: genera token JWT firmado con secret compartido
+  // sso_redirect: redirige al usuario con token temporal
+  // sso_action: SSO action + autenticación automática con JWT
+  
+  // Mapeo de roles (JSON): { "admin": "admin", "engineer": "gerente", "client": "asesor_comercial" }
+  roleMapping: text("roleMapping"),
+  
+  // Estado
+  isActive: boolean("isActive").default(false).notNull(),
+  
+  // Estadísticas
+  totalAccesses: int("totalAccesses").default(0).notNull(),
+  lastAccessAt: timestamp("lastAccessAt"),
+  
+  // Auditoría
+  createdBy: int("createdBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SsoApp = typeof ssoApps.$inferSelect;
+export type InsertSsoApp = typeof ssoApps.$inferInsert;
+
+/**
+ * Historial de accesos SSO
+ * Registra cada vez que un usuario accede a una app mediante SSO
+ * para auditoría y monitoreo de seguridad
+ */
+export const ssoAccessLogs = mysqlTable("sso_access_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // App y usuario
+  ssoAppId: int("ssoAppId").notNull(),
+  userId: int("userId").notNull(),
+  userName: varchar("userName", { length: 255 }),
+  userEmail: varchar("userEmail", { length: 320 }),
+  
+  // Rol asignado en la app destino
+  mappedRole: varchar("mappedRole", { length: 100 }),
+  
+  // Resultado
+  success: boolean("success").default(true).notNull(),
+  errorMessage: text("errorMessage"),
+  
+  // Metadata
+  ipAddress: varchar("ipAddress", { length: 45 }),
+  userAgent: text("userAgent"),
+  
+  // Timestamp
+  accessedAt: timestamp("accessedAt").defaultNow().notNull(),
+}, table => ({
+  appIdx: index("sso_log_app_idx").on(table.ssoAppId),
+  userIdx: index("sso_log_user_idx").on(table.userId),
+  accessedAtIdx: index("sso_log_accessed_idx").on(table.accessedAt),
+}));
+
+export type SsoAccessLog = typeof ssoAccessLogs.$inferSelect;
+export type InsertSsoAccessLog = typeof ssoAccessLogs.$inferInsert;

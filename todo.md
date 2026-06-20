@@ -1083,3 +1083,14 @@
 - [x] Reducir expiración JWT de 30 días a 7 días
 - [x] Verificar que todo compila y tests pasan (13 tests de seguridad OK)
 - [x] Checkpoint y push a GitHub
+
+## Sistema SSO para aplicaciones de terceros (20 Jun 2026)
+- [x] Crear tabla sso_apps en schema (nombre, url, secret, isActive, roleMapping, etc.)
+- [x] Crear tabla sso_access_logs para historial de accesos
+- [x] Agregar SSO_SECRET a env.ts
+- [x] Crear router tRPC ssoManagement (CRUD de apps, activar/desactivar, historial)
+- [x] Endpoint SSO /api/sso/token genera JWT con jose, mapeo de roles y log de accesos
+- [x] Crear componente frontend SsoSettings.tsx con UI de gestión
+- [x] Agregar sección SSO en Settings.tsx
+- [x] Tests del sistema SSO (17 tests pasando)
+- [ ] Checkpoint y push a GitHub

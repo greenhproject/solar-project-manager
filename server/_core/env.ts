@@ -14,4 +14,6 @@ export const ENV = {
   openSolarPassword: process.env.OPENSOLAR_PASSWORD ?? "",
   openSolarOrgId: process.env.OPENSOLAR_ORG_ID ?? "",
   openSolarWebhookSecret: process.env.OPENSOLAR_WEBHOOK_SECRET ?? "greenhproject-2025",
+  // SSO Secret global para firmar tokens entre apps del ecosistema GHP
+  ssoSecret: process.env.CRM_SSO_SECRET ?? process.env.SSO_SECRET ?? "",
 };

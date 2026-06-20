@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, Wrench, Bell, Mail, ChevronRight, Globe, Webhook, Key } from "lucide-react";
+import { Settings as SettingsIcon, Wrench, Bell, Mail, ChevronRight, Globe, Webhook, Key, Shield } from "lucide-react";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { SystemConfiguration } from "@/components/SystemConfiguration";
 import { AutoNotificationsManager } from "@/components/AutoNotificationsManager";
@@ -14,6 +14,7 @@ import { TimezoneSettings } from "@/components/TimezoneSettings";
 import { WebhookLogs } from "@/components/WebhookLogs";
 import { ApiKeysSettings } from "@/components/ApiKeysSettings";
 import { WebhookSettings } from "@/components/WebhookSettings";
+import { SsoSettings } from "@/components/SsoSettings";
 import { useLocation } from "wouter";
 
 export default function Settings() {
@@ -76,6 +77,15 @@ export default function Settings() {
           <NotificationSettings />
           <AutoNotificationsManager />
         </div>
+      </div>
+
+      {/* SSO */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Shield className="h-5 w-5 text-primary" />
+          SSO
+        </h2>
+        <SsoSettings />
       </div>
 
       {/* API Keys */}

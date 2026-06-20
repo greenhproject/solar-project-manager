@@ -21,6 +21,7 @@ import { metricsRouter } from "./metricsRouters";
 import { adminToolsRouter } from "./routes/admin-tools";
 import { clientPortalRouter } from "./routes/client-portal";
 import { milestoneReminderConfigRouter } from "./routes/milestone-reminder-config";
+import { ssoManagementRouter } from "./routes/sso-management";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
 import { appSettings, apiKeys, webhooks, outgoingWebhookLogs, users, clientProjectAccess } from "../drizzle/schema";
 import { eq, desc, sql } from "drizzle-orm";
@@ -3737,6 +3738,8 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
   // ============================================
   // GESTIÓN DE WEBHOOKS (ADMIN)
   // ============================================
+  ssoManagement: ssoManagementRouter,
+
   webhookManagement: router({
     // Listar webhooks
     list: adminProcedure.query(async () => {
