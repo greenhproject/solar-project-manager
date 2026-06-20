@@ -1093,4 +1093,4 @@
 - [x] Crear componente frontend SsoSettings.tsx con UI de gestión
 - [x] Agregar sección SSO en Settings.tsx
 - [x] Tests del sistema SSO (17 tests pasando)
-- [ ] Checkpoint y push a GitHub
+- [x] Checkpoint y push a GitHub

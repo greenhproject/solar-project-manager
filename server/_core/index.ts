@@ -208,6 +208,66 @@ async function runAutoMigrations() {
     `);
     console.log("[AutoMigration] milestone_reminder_logs table verified");
 
+    // Create sso_apps table if not exists
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS sso_apps (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(100) NOT NULL,
+        description TEXT,
+        url VARCHAR(500) NOT NULL,
+        callbackUrl VARCHAR(500),
+        logoUrl TEXT,
+        ssoSecret VARCHAR(255) NOT NULL,
+        authModel ENUM('sso_jwt', 'sso_redirect', 'sso_action') NOT NULL DEFAULT 'sso_jwt',
+        roleMapping TEXT,
+        isActive BOOLEAN NOT NULL DEFAULT FALSE,
+        totalAccesses INT NOT NULL DEFAULT 0,
+        lastAccessAt TIMESTAMP NULL,
+        createdBy INT NOT NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY slug_unique (slug)
+      )
+    `);
+    console.log("[AutoMigration] sso_apps table verified");
+
+    // Create sso_access_logs table if not exists
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS sso_access_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ssoAppId INT NOT NULL,
+        userId INT,
+        userName VARCHAR(255),
+        userEmail VARCHAR(255),
+        mappedRole VARCHAR(100),
+        success BOOLEAN NOT NULL DEFAULT TRUE,
+        errorMessage TEXT,
+        ipAddress VARCHAR(45),
+        accessedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX sso_log_app_idx (ssoAppId),
+        INDEX sso_log_user_idx (userId),
+        INDEX sso_log_date_idx (accessedAt)
+      )
+    `);
+    console.log("[AutoMigration] sso_access_logs table verified");
+
+    // Create sso_tokens table if not exists (for SSO login flow)
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS sso_tokens (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        token VARCHAR(255) NOT NULL,
+        userId INT NOT NULL,
+        redirectTo VARCHAR(500),
+        used BOOLEAN NOT NULL DEFAULT FALSE,
+        expiresAt TIMESTAMP NOT NULL,
+        createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY token_unique (token),
+        INDEX sso_token_expires_idx (expiresAt)
+      )
+    `);
+    console.log("[AutoMigration] sso_tokens table verified");
+
     conn.release();
     await pool.end();
     console.log("[AutoMigration] All tables verified");
