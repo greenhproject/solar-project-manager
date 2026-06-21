@@ -111,13 +111,13 @@ export function ApiKeysSettings() {
   return (
     <Card className="shadow-apple border-0">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Key className="h-5 w-5 text-orange-500" />
               API Keys
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Gestiona las keys de acceso para integración con aplicaciones externas
             </CardDescription>
           </div>
@@ -252,7 +252,7 @@ export function ApiKeysSettings() {
             {keys.map((key: any) => (
               <div
                 key={key.id}
-                className={`flex items-center justify-between p-3 rounded-lg border ${
+                className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border gap-2 sm:gap-0 ${
                   key.isActive
                     ? "border-gray-200 dark:border-gray-700"
                     : "border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 opacity-60"
@@ -289,7 +289,7 @@ export function ApiKeysSettings() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 ml-2">
+                <div className="flex items-center gap-1 ml-0 sm:ml-2 self-end sm:self-auto">
                   {key.isActive ? (
                     <Button
                       size="sm"
@@ -332,9 +332,10 @@ export function ApiKeysSettings() {
 
         {/* Link a documentación */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground break-all">
             Documentación de la API: <a href="/api-docs" className="text-orange-500 hover:underline font-medium">/api-docs</a>
-            {" · "}Base URL: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">{window.location.origin}/api/v1</code>
+            <br className="sm:hidden" />
+            <span className="hidden sm:inline">{" · "}</span>Base URL: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-[10px] sm:text-xs">{window.location.origin}/api/v1</code>
           </p>
         </div>
       </CardContent>

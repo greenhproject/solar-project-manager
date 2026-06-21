@@ -31,8 +31,8 @@ export default function Settings() {
 
       {/* Zona Horaria */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Globe className="h-5 w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Globe className="h-5 w-5 text-primary shrink-0" />
           Zona Horaria
         </h2>
         <TimezoneSettings />
@@ -40,8 +40,8 @@ export default function Settings() {
 
       {/* Configuración de Email */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Mail className="h-5 w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Mail className="h-5 w-5 text-primary shrink-0" />
           Servicio de Email
         </h2>
         <Card
@@ -69,8 +69,8 @@ export default function Settings() {
 
       {/* Notificaciones Push */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Bell className="h-5 w-5 text-primary shrink-0" />
           Notificaciones
         </h2>
         <div className="space-y-6">
@@ -81,8 +81,8 @@ export default function Settings() {
 
       {/* SSO */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Shield className="h-5 w-5 text-primary shrink-0" />
           SSO
         </h2>
         <SsoSettings />
@@ -90,8 +90,8 @@ export default function Settings() {
 
       {/* API Keys */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Key className="h-5 w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Key className="h-5 w-5 text-primary shrink-0" />
           API Keys
         </h2>
         <ApiKeysSettings />
@@ -104,8 +104,8 @@ export default function Settings() {
 
       {/* Webhooks de OpenSolar */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Webhook className="h-5 w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Webhook className="h-5 w-5 text-primary shrink-0" />
           Webhooks de OpenSolar
         </h2>
         <WebhookLogs />
@@ -113,8 +113,8 @@ export default function Settings() {
 
       {/* Configuración del Sistema */}
       <div>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Wrench className="h-5 w-5 text-primary" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+          <Wrench className="h-5 w-5 text-primary shrink-0" />
           Sistema
         </h2>
         <SystemConfiguration />

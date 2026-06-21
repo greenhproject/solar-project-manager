@@ -258,27 +258,30 @@ export function SystemConfiguration() {
     <div className="space-y-6">
       <Tabs defaultValue="project-types" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="project-types">
-            <FolderKanban className="w-4 h-4 mr-2" />
-            Tipos de Proyectos
+          <TabsTrigger value="project-types" className="text-[10px] sm:text-sm px-1 sm:px-3 gap-1">
+            <FolderKanban className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+            <span className="hidden sm:inline">Tipos de Proyectos</span>
+            <span className="sm:hidden">Tipos</span>
           </TabsTrigger>
-          <TabsTrigger value="milestone-templates">
-            <ListTodo className="w-4 h-4 mr-2" />
-            Plantillas de Hitos
+          <TabsTrigger value="milestone-templates" className="text-[10px] sm:text-sm px-1 sm:px-3 gap-1">
+            <ListTodo className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+            <span className="hidden sm:inline">Plantillas de Hitos</span>
+            <span className="sm:hidden">Plantillas</span>
           </TabsTrigger>
-          <TabsTrigger value="business-days">
-            <CalendarDays className="w-4 h-4 mr-2" />
-            Días Hábiles
+          <TabsTrigger value="business-days" className="text-[10px] sm:text-sm px-1 sm:px-3 gap-1">
+            <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+            <span className="hidden sm:inline">Días Hábiles</span>
+            <span className="sm:hidden">Días</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="project-types" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                  <CardTitle>Tipos de Proyectos</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Tipos de Proyectos</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Define las categorías de proyectos solares que tu equipo
                     gestiona
                   </CardDescription>
@@ -288,7 +291,7 @@ export function SystemConfiguration() {
                   onOpenChange={setProjectTypeDialog}
                 >
                   <DialogTrigger asChild>
-                    <Button onClick={resetProjectTypeForm}>
+                    <Button size="sm" onClick={resetProjectTypeForm}>
                       <Plus className="w-4 h-4 mr-2" />
                       Nuevo Tipo
                     </Button>
@@ -326,7 +329,7 @@ export function SystemConfiguration() {
                           rows={3}
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="pt-color">Color</Label>
                           <Input
@@ -372,16 +375,16 @@ export function SystemConfiguration() {
                 {projectTypes.map((type: any) => (
                   <div
                     key={type.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors gap-2"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div
-                        className="w-4 h-4 rounded"
+                        className="w-4 h-4 rounded shrink-0"
                         style={{ backgroundColor: type.color }}
                       />
-                      <div>
-                        <p className="font-medium">{type.name}</p>
-                        <p className="text-xs text-muted-foreground">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm sm:text-base truncate">{type.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">
                           {type.description || "Sin descripción"} •{" "}
                           {type.estimatedDurationDays} días
                         </p>
@@ -409,10 +412,10 @@ export function SystemConfiguration() {
         <TabsContent value="milestone-templates" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                  <CardTitle>Plantillas de Hitos</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Plantillas de Hitos</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     Define los hitos predeterminados para cada tipo de proyecto.
                     Puedes asignar un responsable por defecto que se precargará al crear nuevos proyectos.
                   </CardDescription>
@@ -422,7 +425,7 @@ export function SystemConfiguration() {
                   onOpenChange={setTemplateDialog}
                 >
                   <DialogTrigger asChild>
-                    <Button onClick={resetTemplateForm}>
+                    <Button size="sm" onClick={resetTemplateForm}>
                       <Plus className="w-4 h-4 mr-2" />
                       Nueva Plantilla
                     </Button>
@@ -480,7 +483,7 @@ export function SystemConfiguration() {
                           rows={3}
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="t-order">Orden</Label>
                           <Input
@@ -579,8 +582,8 @@ export function SystemConfiguration() {
                             }}
                             className="space-y-2"
                             renderItem={(template: any, index: number) => (
-                              <div className="flex items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors bg-card">
-                                <div className="flex-1">
+                              <div className="flex items-center justify-between p-3 border rounded hover:bg-accent/50 transition-colors bg-card gap-2">
+                                <div className="flex-1 min-w-0">
                                   <p className="font-medium text-sm">
                                     {index + 1}. {template.name}
                                   </p>

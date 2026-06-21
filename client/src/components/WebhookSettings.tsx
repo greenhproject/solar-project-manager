@@ -114,13 +114,13 @@ export function WebhookSettings() {
   return (
     <Card className="shadow-apple border-0">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Webhook className="h-5 w-5 text-orange-500" />
               Webhooks Salientes
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Notifica a aplicaciones externas cuando ocurren eventos en tus proyectos
             </CardDescription>
           </div>
@@ -252,7 +252,7 @@ export function WebhookSettings() {
             {webhooksList.map((wh: any) => (
               <div key={wh.id} className="space-y-2">
                 <div
-                  className={`flex items-center justify-between p-3 rounded-lg border ${
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border gap-2 sm:gap-0 ${
                     wh.isActive
                       ? "border-gray-200 dark:border-gray-700"
                       : "border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 opacity-60"
@@ -284,7 +284,7 @@ export function WebhookSettings() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 ml-2">
+                  <div className="flex items-center gap-1 ml-0 sm:ml-2 self-end sm:self-auto flex-wrap">
                     <Button
                       size="sm"
                       variant="ghost"
@@ -335,7 +335,7 @@ export function WebhookSettings() {
                     ) : (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {logs.map((log: any) => (
-                          <div key={log.id} className="flex items-center gap-2 text-xs">
+                          <div key={log.id} className="flex flex-wrap items-center gap-1 sm:gap-2 text-xs">
                             {log.success ? (
                               <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
                             ) : (
@@ -371,8 +371,8 @@ export function WebhookSettings() {
 
         {/* Info de eventos */}
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-muted-foreground">
-            Los webhooks se envían como POST con firma HMAC-SHA256 en el header <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">X-Webhook-Signature</code>.
+          <p className="text-xs text-muted-foreground break-words">
+            Los webhooks se envían como POST con firma HMAC-SHA256 en el header <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded text-[10px] sm:text-xs break-all">X-Webhook-Signature</code>.
             Se desactivan automáticamente después de 10 fallos consecutivos.
           </p>
         </div>

@@ -129,14 +129,14 @@ export function SsoSettings() {
       {/* Header con estadísticas */}
       <Card className="shadow-apple border-0">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="p-3 rounded-lg bg-blue-100 dark:bg-blue-900/30 shrink-0">
                 <Shield className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <CardTitle>Single Sign-On (SSO)</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base sm:text-lg">Single Sign-On (SSO)</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Configura qué aplicaciones usan SSO automático.
                   Cuando está activo, al hacer clic en la tarjeta del Dashboard los usuarios son autenticados directamente con su cuenta GHP sin ingresar credenciales adicionales.
                 </CardDescription>
@@ -148,7 +148,7 @@ export function SsoSettings() {
                   <Plus className="h-4 w-4 mr-2" /> Nueva App
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
                 <DialogHeader>
                   <DialogTitle>Registrar App SSO</DialogTitle>
                   <DialogDescription>
@@ -156,7 +156,7 @@ export function SsoSettings() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Nombre *</Label>
                       <Input placeholder="CRM GHP" value={name} onChange={e => setName(e.target.value)} />
@@ -239,18 +239,18 @@ export function SsoSettings() {
 
           {/* Stats */}
           {stats && (
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="text-2xl font-bold">{stats.totalApps}</div>
-                <div className="text-xs text-muted-foreground">Apps Registradas</div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
+              <div className="text-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-lg sm:text-2xl font-bold">{stats.totalApps}</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Apps</div>
               </div>
-              <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{stats.activeApps}</div>
-                <div className="text-xs text-muted-foreground">Activas</div>
+              <div className="text-center p-2 sm:p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <div className="text-lg sm:text-2xl font-bold text-green-600">{stats.activeApps}</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Activas</div>
               </div>
-              <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{stats.totalAccesses}</div>
-                <div className="text-xs text-muted-foreground">Accesos Totales</div>
+              <div className="text-center p-2 sm:p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <div className="text-lg sm:text-2xl font-bold text-blue-600">{stats.totalAccesses}</div>
+                <div className="text-[10px] sm:text-xs text-muted-foreground">Accesos</div>
               </div>
             </div>
           )}
@@ -300,36 +300,36 @@ export function SsoSettings() {
               {apps.map((app) => (
                 <div
                   key={app.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors gap-3"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-3 h-3 rounded-full ${app.isActive ? "bg-green-500" : "bg-gray-300"}`} />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{app.name}</span>
-                        <Badge variant={app.isActive ? "default" : "secondary"} className="text-xs">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+                    <div className={`w-3 h-3 rounded-full shrink-0 mt-1 sm:mt-0 ${app.isActive ? "bg-green-500" : "bg-gray-300"}`} />
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                        <span className="font-medium text-sm sm:text-base">{app.name}</span>
+                        <Badge variant={app.isActive ? "default" : "secondary"} className="text-[10px] sm:text-xs">
                           {app.isActive ? "Activa" : "Inactiva"}
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-[10px] sm:text-xs">
                           {authModelLabels[app.authModel] || app.authModel}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                        <a href={app.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-blue-500">
-                          {app.url} <ExternalLink className="h-3 w-3" />
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground mt-1">
+                        <a href={app.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-blue-500 truncate max-w-[200px] sm:max-w-none">
+                          {app.url} <ExternalLink className="h-3 w-3 shrink-0" />
                         </a>
                         <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" /> {app.totalAccesses} accesos
+                          <Users className="h-3 w-3" /> {app.totalAccesses}
                         </span>
                         {app.lastAccessAt && (
                           <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" /> Último: {new Date(app.lastAccessAt).toLocaleDateString("es-CO")}
+                            <Clock className="h-3 w-3" /> {new Date(app.lastAccessAt).toLocaleDateString("es-CO")}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto">
                     <Button
                       size="sm"
                       variant="ghost"
@@ -448,18 +448,19 @@ export function SsoSettings() {
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {logs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between py-2 px-3 border-b last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${log.success ? "bg-green-500" : "bg-red-500"}`} />
-                    <div>
-                      <span className="font-medium text-sm">{log.userName || log.userEmail}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{log.userEmail}</span>
+                <div key={log.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-2 px-3 border-b last:border-0 gap-1">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${log.success ? "bg-green-500" : "bg-red-500"}`} />
+                    <div className="min-w-0">
+                      <span className="font-medium text-sm truncate block">{log.userName || log.userEmail}</span>
+                      <span className="text-xs text-muted-foreground block sm:hidden truncate">{log.userEmail}</span>
+                      <span className="text-xs text-muted-foreground ml-2 hidden sm:inline">{log.userEmail}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <Badge variant="outline" className="text-xs">{log.appName || "App"}</Badge>
-                    {log.mappedRole && <Badge variant="secondary" className="text-xs">{log.mappedRole}</Badge>}
-                    <span>{new Date(log.accessedAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}</span>
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-3 text-xs text-muted-foreground pl-4 sm:pl-0">
+                    <Badge variant="outline" className="text-[10px] sm:text-xs">{log.appName || "App"}</Badge>
+                    {log.mappedRole && <Badge variant="secondary" className="text-[10px] sm:text-xs">{log.mappedRole}</Badge>}
+                    <span className="text-[10px] sm:text-xs">{new Date(log.accessedAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}</span>
                   </div>
                 </div>
               ))}
