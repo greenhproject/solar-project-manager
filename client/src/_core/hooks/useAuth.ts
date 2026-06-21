@@ -54,14 +54,9 @@ export function useAuth(options?: UseAuthOptions) {
       utils.auth.me.setData(undefined, null);
       await utils.auth.me.invalidate();
       
-      // Redirigir según el sistema de autenticación
-      if (isAuth0Configured()) {
-        // Para Auth0, redirigir a la home page
-        window.location.href = '/';
-      } else {
-        // Para Manus OAuth, redirigir a la URL de login de Manus
-        window.location.href = getLoginUrl();
-      }
+      // Siempre redirigir a la home page después del logout
+      // La home page mostrará el botón de login apropiado
+      window.location.href = '/';
     }
   }, [logoutMutation, utils]);
 

@@ -89,13 +89,15 @@ function ClientLogoutButton() {
   const manusAuth = useAuth();
   const auth0 = useAuth0Custom();
   const isUsingAuth0 = isAuth0Configured();
+  const meQuery = trpc.auth.me.useQuery(undefined, { retry: false, refetchOnWindowFocus: false, staleTime: 5 * 60 * 1000 });
 
   const handleLogout = () => {
-    if (isUsingAuth0) {
-      // Auth0: cierra sesión completamente en Auth0 y redirige a la home
+    // Si el usuario ingresó por SSO, no hacer logout de Auth0
+    if (meQuery.data?.loginMethod === 'sso') {
+      manusAuth.logout();
+    } else if (isUsingAuth0) {
       auth0.logout();
     } else {
-      // JWT/Manus: limpia localStorage y redirige al login
       manusAuth.logout();
     }
   };

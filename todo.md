@@ -1103,3 +1103,22 @@
 - [x] Configurar CRM_SSO_SECRET como variable de entorno
 - [x] Tests (7/7 pasando)
 - [x] Checkpoint y push a GitHub
+
+## Panel SSO Unificado (20 Jun 2026)
+- [x] Reescribir SsoSettings.tsx como panel unificado eliminando redundancia
+- [x] URL de callback visible y copiable
+- [x] Secret compartido: ver/copiar/generar/renovar con toggle de visibilidad
+- [x] Aplicaciones conectadas con gestión completa (crear, activar, desactivar, eliminar)
+- [x] Historial de accesos integrado en el mismo panel
+- [x] Estadísticas de apps/activas/accesos en header
+- [x] Responsive para móviles
+- [x] Checkpoint y push a GitHub
+
+## Fix: Login post-SSO redirige a Auth0 en vez de Hub GHP (21 Jun 2026)
+- [x] Detectar origen de sesión SSO (loginMethod en usuario) en frontend
+- [x] Cuando sesión SSO expira, redirigir al Hub GHP en vez de Auth0
+- [x] Botón "Iniciar Sesión" en Home debe redirigir según contexto (SSO vs Auth0)
+- [x] Backend context.ts: verificar JWT cookie PRIMERO (SSO) antes de Auth0
+- [x] MainLayout: habilitar meQuery siempre para detectar sesiones SSO sin Auth0
+- [x] Sidebar/ClientPortal logout: respetar loginMethod del usuario
+- [ ] Checkpoint y push a GitHub

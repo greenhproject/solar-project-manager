@@ -39,27 +39,27 @@ export default function Home() {
   const auth0 = useAuth0Custom();
   const [, setLocation] = useLocation();
   
-  const useAuth0 = isAuth0Configured();
-  const useManusAuth = isManusEnvironment() && !useAuth0;
+  const useAuth0Flag = isAuth0Configured();
+  const useManusAuth = isManusEnvironment() && !useAuth0Flag;
   
-  const isAuthenticated = useAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
-  const loading = useAuth0 ? auth0.isLoading : manusAuth.loading;
-
-  // Redirigir según el rol del usuario (siempre usar manusAuth.user que viene del backend con el rol real)
+  // Verificar sesión del backend (detecta tanto JWT/SSO como Auth0)
   const backendUser = manusAuth.user;
+  const isAuthenticated = useAuth0Flag ? (auth0.isAuthenticated || !!backendUser) : manusAuth.isAuthenticated;
+  const loading = useAuth0Flag ? (auth0.isLoading || manusAuth.loading) : manusAuth.loading;
+
+  // Redirigir según el rol del usuario
   useEffect(() => {
-    if (isAuthenticated && backendUser) {
+    if (backendUser) {
       if ((backendUser as any).role === "client") {
         window.location.href = "/portal";
       } else {
         window.location.href = "/dashboard";
       }
-    } else if (isAuthenticated && !backendUser && !manusAuth.loading) {
+    } else if (auth0.isAuthenticated && !backendUser && !manusAuth.loading) {
       // Autenticado en Auth0 pero sin datos del backend aún - ir al dashboard
-      // El MainLayout se encargará de redirigir si es cliente
       window.location.href = "/dashboard";
     }
-  }, [isAuthenticated, backendUser, manusAuth.loading]);
+  }, [backendUser, auth0.isAuthenticated, manusAuth.loading]);
 
   if (loading) {
     return (
@@ -72,7 +72,7 @@ export default function Home() {
   }
 
   const handleLoginClick = () => {
-    if (useAuth0) {
+    if (useAuth0Flag) {
       auth0.login();
     } else if (useManusAuth) {
       handleLogin(getLoginUrl());
@@ -82,7 +82,7 @@ export default function Home() {
   };
 
   const handleSignupClick = () => {
-    if (useAuth0) {
+    if (useAuth0Flag) {
       // Auth0 maneja el registro directamente con screen_hint: 'signup'
       auth0.signup();
     } else if (useManusAuth) {
