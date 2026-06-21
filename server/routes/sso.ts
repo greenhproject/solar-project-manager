@@ -321,4 +321,149 @@ ssoRouter.post("/validate", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/sso/callback?token=xxx
+ * Endpoint receptor de SSO desde el Hub GHP.
+ * Recibe un JWT firmado con CRM_SSO_SECRET directamente del Hub.
+ * 
+ * Flujo:
+ * 1. El Hub genera un JWT firmado con CRM_SSO_SECRET conteniendo: sub, email, name, role
+ * 2. El Hub redirige al usuario a https://spm.ghp.center/api/sso/callback?token=JWT
+ * 3. SPM verifica la firma del JWT con CRM_SSO_SECRET
+ * 4. SPM busca o crea el usuario basado en el email
+ * 5. SPM crea sesión local (cookie) y redirige al dashboard
+ */
+ssoRouter.get("/callback", async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ error: "Token JWT requerido" });
+    }
+
+    // Verificar que tenemos el secret configurado
+    const ssoSecret = process.env.CRM_SSO_SECRET || process.env.SSO_SECRET;
+    if (!ssoSecret) {
+      console.error("[SSO Callback] CRM_SSO_SECRET no configurado");
+      return res.status(500).json({ error: "SSO no configurado en el servidor" });
+    }
+
+    // Verificar y decodificar el JWT del Hub
+    const { jwtVerify } = await import("jose");
+    const secretKey = new TextEncoder().encode(ssoSecret);
+    
+    let payload: any;
+    try {
+      const result = await jwtVerify(token, secretKey, {
+        algorithms: ["HS256"],
+      });
+      payload = result.payload;
+    } catch (jwtError: any) {
+      console.error("[SSO Callback] JWT inválido:", jwtError.message);
+      return res.status(401).json({ error: "Token JWT inválido o expirado" });
+    }
+
+    // Extraer datos del usuario del token
+    const email = payload.email || payload.sub;
+    const name = payload.name || payload.nombre || email?.split("@")[0] || "Usuario";
+    const role = payload.role || payload.rol || "engineer";
+
+    if (!email) {
+      return res.status(400).json({ error: "Token no contiene email del usuario" });
+    }
+
+    // Buscar o crear usuario en SPM
+    const dbInst = await getDb();
+    if (!dbInst) {
+      return res.status(500).json({ error: "Error de base de datos" });
+    }
+
+    let [user] = await dbInst.select().from(users).where(eq(users.email, email));
+
+    if (!user) {
+      // Crear usuario automáticamente (viene autenticado del Hub)
+      // Mapear rol del Hub al rol de SPM
+      const spmRole = mapHubRoleToSpm(role);
+      
+      const result = await dbInst.insert(users).values({
+        email,
+        name,
+        role: spmRole,
+        status: "approved",
+        loginMethod: "sso",
+      });
+      const insertId = (result as any)[0]?.insertId || (result as any).insertId;
+      [user] = await dbInst.select().from(users).where(eq(users.id, insertId));
+    }
+
+    if (!user) {
+      return res.status(500).json({ error: "Error al obtener/crear usuario" });
+    }
+
+    // Verificar que el usuario no esté rechazado
+    if ((user as any).status === "rejected") {
+      return res.status(403).json({ error: "Usuario rechazado en esta aplicación" });
+    }
+
+    // Actualizar último acceso
+    await dbInst.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, user.id));
+
+    // Crear sesión JWT local de SPM
+    const jwtToken = await jwtAuthService.createJWTSessionToken(
+      user.id,
+      user.email || email,
+      user.name || name
+    );
+    const cookieOptions = getSessionCookieOptions(req);
+    res.cookie(JWT_COOKIE_NAME, jwtToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    });
+
+    // Redirigir según el rol
+    const redirectPath = getRedirectByRole(user.role);
+    console.log(`[SSO Callback] Login exitoso: ${email} (${user.role}) → ${redirectPath}`);
+    return res.redirect(redirectPath);
+  } catch (error: any) {
+    console.error("[SSO Callback] Error:", error);
+    return res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+/**
+ * Mapea roles del Hub GHP a roles de SPM
+ */
+function mapHubRoleToSpm(hubRole: string): "admin" | "engineer" | "ingeniero_tramites" | "client" {
+  const roleMap: Record<string, "admin" | "engineer" | "ingeniero_tramites" | "client"> = {
+    admin: "admin",
+    administrador: "admin",
+    gerente: "engineer",
+    engineer: "engineer",
+    ingeniero: "engineer",
+    asesor_comercial: "ingeniero_tramites",
+    ingeniero_tramites: "ingeniero_tramites",
+    consultor: "ingeniero_tramites",
+    client: "client",
+    cliente: "client",
+  };
+  return roleMap[hubRole.toLowerCase()] || "engineer";
+}
+
+/**
+ * Determina la ruta de redirección según el rol del usuario
+ */
+function getRedirectByRole(role: string): string {
+  switch (role) {
+    case "admin":
+      return "/dashboard";
+    case "engineer":
+    case "ingeniero_tramites":
+      return "/my-projects";
+    case "client":
+      return "/portal";
+    default:
+      return "/dashboard";
+  }
+}
+
 export { ssoRouter };

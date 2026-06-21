@@ -1094,3 +1094,12 @@
 - [x] Agregar sección SSO en Settings.tsx
 - [x] Tests del sistema SSO (17 tests pasando)
 - [x] Checkpoint y push a GitHub
+
+## Endpoint receptor SSO /api/sso/callback (20 Jun 2026)
+- [x] Crear endpoint /api/sso/callback que reciba token JWT del Hub
+- [x] Verificar firma del token con CRM_SSO_SECRET
+- [x] Buscar o crear usuario en SPM basado en email del token
+- [x] Crear sesión local (cookie JWT de SPM) y redirigir al dashboard
+- [x] Configurar CRM_SSO_SECRET como variable de entorno
+- [x] Tests (7/7 pasando)
+- [x] Checkpoint y push a GitHub
