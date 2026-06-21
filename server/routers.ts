@@ -3318,6 +3318,87 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           });
         return { success: true, includeWeekends: input.includeWeekends };
       }),
+
+    // Obtener configuración SSO (callback URL + secret para compartir)
+    getSsoConfig: adminProcedure.query(async () => {
+      try {
+        const dbInst = await db.getDb();
+        if (!dbInst) return { callbackUrl: "", ssoSecret: "", ssoSecretConfigured: false };
+        
+        const [callbackRow] = await dbInst
+          .select()
+          .from(appSettings)
+          .where(eq(appSettings.settingKey, "sso_callback_url"))
+          .limit(1);
+        const [secretRow] = await dbInst
+          .select()
+          .from(appSettings)
+          .where(eq(appSettings.settingKey, "crm_sso_secret"))
+          .limit(1);
+        
+        // También verificar si hay env variable configurada
+        const envSecret = process.env.CRM_SSO_SECRET || process.env.SSO_SECRET || "";
+        const storedSecret = secretRow?.settingValue || "";
+        const effectiveSecret = storedSecret || envSecret;
+        
+        return {
+          callbackUrl: callbackRow?.settingValue || "https://spm.ghp.center/api/sso/callback",
+          ssoSecret: effectiveSecret,
+          ssoSecretPreview: effectiveSecret ? `${effectiveSecret.substring(0, 12)}...${effectiveSecret.substring(effectiveSecret.length - 4)}` : "",
+          ssoSecretConfigured: !!effectiveSecret,
+          source: storedSecret ? "database" : (envSecret ? "env" : "none"),
+        };
+      } catch {
+        return { callbackUrl: "https://spm.ghp.center/api/sso/callback", ssoSecret: "", ssoSecretConfigured: false, ssoSecretPreview: "", source: "none" };
+      }
+    }),
+
+    // Guardar configuración SSO (callback URL + secret)
+    setSsoConfig: adminProcedure
+      .input(z.object({
+        callbackUrl: z.string().optional(),
+        ssoSecret: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const dbInst = await db.getDb();
+        if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database not available" });
+
+        if (input.callbackUrl !== undefined) {
+          await dbInst
+            .insert(appSettings)
+            .values({
+              settingKey: "sso_callback_url",
+              settingValue: input.callbackUrl,
+              description: "URL de callback SSO para recibir tokens del Hub",
+              updatedBy: ctx.user.id,
+            })
+            .onDuplicateKeyUpdate({
+              set: {
+                settingValue: input.callbackUrl,
+                updatedBy: ctx.user.id,
+              },
+            });
+        }
+
+        if (input.ssoSecret !== undefined && input.ssoSecret.length > 0) {
+          await dbInst
+            .insert(appSettings)
+            .values({
+              settingKey: "crm_sso_secret",
+              settingValue: input.ssoSecret,
+              description: "Secret compartido con el Hub GHP para verificar tokens JWT de SSO",
+              updatedBy: ctx.user.id,
+            })
+            .onDuplicateKeyUpdate({
+              set: {
+                settingValue: input.ssoSecret,
+                updatedBy: ctx.user.id,
+              },
+            });
+        }
+
+        return { success: true };
+      }),
   }),
 
   // ==========================================

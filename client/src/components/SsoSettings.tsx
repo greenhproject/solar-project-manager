@@ -124,8 +124,141 @@ export function SsoSettings() {
     sso_action: "SSO Action + JWT",
   };
 
+  // SSO Config query
+  const { data: ssoConfig, isLoading: ssoConfigLoading } = trpc.appSettings.getSsoConfig.useQuery();
+  const saveSsoConfigMutation = trpc.appSettings.setSsoConfig.useMutation({
+    onSuccess: () => {
+      utils.appSettings.getSsoConfig.invalidate();
+      toast.success("Configuración SSO guardada correctamente");
+      setEditingSecret(false);
+    },
+    onError: (err) => toast.error(err.message || "Error al guardar configuración SSO"),
+  });
+
+  const [editingSecret, setEditingSecret] = useState(false);
+  const [newSecret, setNewSecret] = useState("");
+  const [copiedCallback, setCopiedCallback] = useState(false);
+  const [copiedSecret, setCopiedSecret] = useState(false);
+  const [showFullSecret, setShowFullSecret] = useState(false);
+
+  function copyCallbackUrl() {
+    const url = ssoConfig?.callbackUrl || "https://spm.ghp.center/api/sso/callback";
+    navigator.clipboard.writeText(url);
+    setCopiedCallback(true);
+    setTimeout(() => setCopiedCallback(false), 2000);
+    toast.success("URL de Callback copiada");
+  }
+
+  function copySecret() {
+    if (ssoConfig?.ssoSecret) {
+      navigator.clipboard.writeText(ssoConfig.ssoSecret);
+      setCopiedSecret(true);
+      setTimeout(() => setCopiedSecret(false), 2000);
+      toast.success("Secret copiado al portapapeles");
+    }
+  }
+
+  function handleSaveSecret() {
+    if (!newSecret.trim()) {
+      toast.error("El secret no puede estar vacío");
+      return;
+    }
+    saveSsoConfigMutation.mutate({ ssoSecret: newSecret.trim() });
+  }
+
   return (
     <div className="space-y-6">
+      {/* Credenciales SSO - URL de Callback y Secret */}
+      <Card className="shadow-apple border-0">
+        <CardHeader>
+          <div className="flex items-start gap-3">
+            <div className="p-3 rounded-lg bg-green-100 dark:bg-green-900/30 shrink-0">
+              <Key className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <div>
+              <CardTitle className="text-base sm:text-lg">Credenciales SSO</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Comparte estos datos con el Hub GHP para configurar la conexión SSO hacia esta aplicación.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* URL de Callback */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">URL de Callback SSO</Label>
+            <p className="text-xs text-muted-foreground">Esta es la URL que el Hub debe usar para redirigir usuarios autenticados a esta app.</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 bg-gray-100 dark:bg-gray-800 p-2.5 rounded text-xs sm:text-sm font-mono break-all border">
+                {ssoConfig?.callbackUrl || "https://spm.ghp.center/api/sso/callback"}
+              </code>
+              <Button size="sm" variant="outline" onClick={copyCallbackUrl} className="shrink-0">
+                {copiedCallback ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Secret compartido */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Secret Compartido (CRM_SSO_SECRET)</Label>
+            <p className="text-xs text-muted-foreground">
+              El Hub firma los tokens JWT con este secret. Debe ser el mismo valor en ambas aplicaciones.
+              {ssoConfig?.source === "database" && <Badge variant="outline" className="ml-2 text-[10px]">Guardado en BD</Badge>}
+              {ssoConfig?.source === "env" && <Badge variant="outline" className="ml-2 text-[10px]">Variable de entorno</Badge>}
+            </p>
+            
+            {ssoConfig?.ssoSecretConfigured && !editingSecret ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 bg-gray-100 dark:bg-gray-800 p-2.5 rounded text-xs sm:text-sm font-mono border">
+                    {showFullSecret ? ssoConfig.ssoSecret : ssoConfig.ssoSecretPreview}
+                  </code>
+                  <Button size="sm" variant="outline" onClick={() => setShowFullSecret(!showFullSecret)} className="shrink-0 text-xs">
+                    {showFullSecret ? "Ocultar" : "Ver"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={copySecret} className="shrink-0">
+                    {copiedSecret ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => { setEditingSecret(true); setNewSecret(""); }} className="text-xs text-orange-600">
+                  <RefreshCw className="h-3 w-3 mr-1" /> Cambiar Secret
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="password"
+                    placeholder="Pega aquí el secret compartido con el Hub..."
+                    value={newSecret}
+                    onChange={e => setNewSecret(e.target.value)}
+                    className="flex-1 font-mono text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveSecret}
+                    disabled={saveSsoConfigMutation.isPending || !newSecret.trim()}
+                    className="bg-green-600 hover:bg-green-700 shrink-0"
+                  >
+                    {saveSsoConfigMutation.isPending ? "Guardando..." : "Guardar"}
+                  </Button>
+                </div>
+                {editingSecret && (
+                  <Button size="sm" variant="ghost" onClick={() => setEditingSecret(false)} className="text-xs">
+                    Cancelar
+                  </Button>
+                )}
+                {!ssoConfig?.ssoSecretConfigured && (
+                  <p className="text-xs text-orange-600 flex items-center gap-1">
+                    <Shield className="h-3 w-3" /> Secret no configurado. El SSO no funcionará hasta que lo configures.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header con estadísticas */}
       <Card className="shadow-apple border-0">
         <CardHeader>

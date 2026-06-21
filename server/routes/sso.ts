@@ -341,10 +341,29 @@ ssoRouter.get("/callback", async (req, res) => {
       return res.status(400).json({ error: "Token JWT requerido" });
     }
 
-    // Verificar que tenemos el secret configurado
-    const ssoSecret = process.env.CRM_SSO_SECRET || process.env.SSO_SECRET;
+    // Verificar que tenemos el secret configurado (prioridad: BD > env)
+    let ssoSecret = process.env.CRM_SSO_SECRET || process.env.SSO_SECRET || "";
+    
+    // Intentar leer desde app_settings en BD como fuente primaria
+    try {
+      const dbInstForSecret = await getDb();
+      if (dbInstForSecret) {
+        const { appSettings } = await import("../../drizzle/schema");
+        const [secretRow] = await dbInstForSecret
+          .select()
+          .from(appSettings)
+          .where(eq(appSettings.settingKey, "crm_sso_secret"))
+          .limit(1);
+        if (secretRow?.settingValue) {
+          ssoSecret = secretRow.settingValue;
+        }
+      }
+    } catch (e) {
+      // Si falla leer de BD, usar env variable
+    }
+    
     if (!ssoSecret) {
-      console.error("[SSO Callback] CRM_SSO_SECRET no configurado");
+      console.error("[SSO Callback] CRM_SSO_SECRET no configurado ni en BD ni en env");
       return res.status(500).json({ error: "SSO no configurado en el servidor" });
     }
 
