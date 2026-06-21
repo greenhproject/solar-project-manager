@@ -399,11 +399,12 @@ ssoRouter.get("/callback", async (req, res) => {
 
     let [user] = await dbInst.select().from(users).where(eq(users.email, email));
 
+    // Mapear rol del Hub al rol de SPM
+    const spmRole = mapHubRoleToSpm(role);
+    console.log(`[SSO Callback] Rol del Hub: "${role}" → Rol SPM: "${spmRole}"`);
+
     if (!user) {
       // Crear usuario automáticamente (viene autenticado del Hub)
-      // Mapear rol del Hub al rol de SPM
-      const spmRole = mapHubRoleToSpm(role);
-      
       const result = await dbInst.insert(users).values({
         email,
         name,
@@ -413,6 +414,33 @@ ssoRouter.get("/callback", async (req, res) => {
       });
       const insertId = (result as any)[0]?.insertId || (result as any).insertId;
       [user] = await dbInst.select().from(users).where(eq(users.id, insertId));
+      console.log(`[SSO Callback] Usuario creado: ${email} con rol ${spmRole}`);
+    } else {
+      // Usuario existente: SIEMPRE actualizar el rol con el mapeo del Hub
+      // El Hub es la fuente de verdad para roles cuando se usa SSO
+      const updateData: Record<string, any> = {
+        loginMethod: "sso",
+        lastSignedIn: new Date(),
+        status: "approved", // Si viene del Hub, está aprobado
+      };
+      
+      // Actualizar rol según el mapeo del Hub
+      // El rol del Hub siempre tiene prioridad sobre el rol local
+      if (user.role !== spmRole) {
+        console.log(`[SSO Callback] Actualizando rol de ${user.role} → ${spmRole} para ${email}`);
+        updateData.role = spmRole;
+      }
+      
+      // Actualizar nombre si viene del Hub y es diferente
+      if (name && name !== email.split("@")[0] && user.name !== name) {
+        updateData.name = name;
+      }
+      
+      await dbInst.update(users).set(updateData).where(eq(users.id, user.id));
+      
+      // Re-leer el usuario actualizado
+      [user] = await dbInst.select().from(users).where(eq(users.id, user.id));
+      console.log(`[SSO Callback] Usuario existente actualizado: ${email} → rol: ${user.role}`);
     }
 
     if (!user) {
@@ -423,9 +451,6 @@ ssoRouter.get("/callback", async (req, res) => {
     if ((user as any).status === "rejected") {
       return res.status(403).json({ error: "Usuario rechazado en esta aplicación" });
     }
-
-    // Actualizar último acceso
-    await dbInst.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, user.id));
 
     // Crear sesión JWT local de SPM
     const jwtToken = await jwtAuthService.createJWTSessionToken(

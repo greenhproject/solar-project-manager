@@ -1121,4 +1121,10 @@
 - [x] Backend context.ts: verificar JWT cookie PRIMERO (SSO) antes de Auth0
 - [x] MainLayout: habilitar meQuery siempre para detectar sesiones SSO sin Auth0
 - [x] Sidebar/ClientPortal logout: respetar loginMethod del usuario
+- [x] Checkpoint y push a GitHub
+
+## Fix: SSO callback no actualiza rol de usuario existente (21 Jun 2026)
+- [x] SSO callback debe actualizar el rol del usuario existente con el mapeo del Hub
+- [x] Actualizar loginMethod a 'sso' cuando usuario existente entra por SSO
+- [x] Verificar que greenhproject@gmail.com mantiene rol admin al entrar por SSO
 - [ ] Checkpoint y push a GitHub
