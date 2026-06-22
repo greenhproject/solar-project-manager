@@ -389,14 +389,11 @@ ssoRouter.get("/callback", async (req, res) => {
     }
 
     // Extraer datos del usuario del token
-    console.log(`[SSO Callback] Payload JWT completo:`, JSON.stringify(payload, null, 2));
+    // SIMPLIFICADO: Solo usamos email y name. NO tocamos roles.
+    // Los roles se gestionan exclusivamente desde Gestión de Usuarios (UI admin).
     const email = payload.email || payload.sub;
     const name = payload.name || payload.nombre || email?.split("@")[0] || "Usuario";
-    // Buscar rol en múltiples campos posibles del JWT
-    // IMPORTANTE: .trim() para eliminar espacios que el Hub pueda agregar
-    const rawRole = payload.role || payload.rol || payload.mapped_role || payload.appRole || payload.app_role || "engineer";
-    const role = typeof rawRole === 'string' ? rawRole.trim() : String(rawRole).trim();
-    console.log(`[SSO Callback] Email: ${email}, Name: ${name}, Role extraído: "${role}" (raw: "${rawRole}")`);
+    console.log(`[SSO Callback] Email: ${email}, Name: ${name}`);
 
     if (!email) {
       return res.status(400).json({ error: "Token no contiene email del usuario" });
@@ -410,53 +407,34 @@ ssoRouter.get("/callback", async (req, res) => {
 
     let [user] = await dbInst.select().from(users).where(eq(users.email, email));
 
-    // Mapear rol del Hub al rol de SPM
-    const spmRole = mapHubRoleToSpm(role);
-    console.log(`[SSO Callback] Rol del Hub: "${role}" → Rol SPM: "${spmRole}"`);
-
     if (!user) {
-      // Crear usuario automáticamente (viene autenticado del Hub)
+      // Crear usuario nuevo con rol 'client' por defecto
+      // El admin lo cambiará desde Gestión de Usuarios si necesita otro rol
       const result = await dbInst.insert(users).values({
         email,
         name,
-        role: spmRole,
+        role: "client",
         status: "approved",
         loginMethod: "sso",
       });
       const insertId = (result as any)[0]?.insertId || (result as any).insertId;
       [user] = await dbInst.select().from(users).where(eq(users.id, insertId));
-      console.log(`[SSO Callback] Usuario creado: ${email} con rol ${spmRole}`);
+      console.log(`[SSO Callback] Usuario creado: ${email} con rol client (default)`);
     } else {
-      // Usuario existente: actualizar datos pero con precauciones
-      // NO sobrescribir loginMethod si el usuario ya usa Auth0 (evita romper logout)
-      // NO degradar admin a un rol menor (admin es el rol más alto)
+      // Usuario existente: solo actualizar lastSignedIn y status
+      // NUNCA tocar el rol - se gestiona desde UI admin
       const updateData: Record<string, any> = {
         lastSignedIn: new Date(),
-        status: "approved", // Si viene del Hub, está aprobado
+        status: "approved",
       };
       
-      // Solo setear loginMethod a 'sso' si el usuario NO tiene loginMethod previo
-      // o si ya era 'sso'. Si tiene 'google' (Auth0), NO sobrescribir.
+      // Solo setear loginMethod a 'sso' si no tiene uno previo o ya era 'sso'
       if (!user.loginMethod || user.loginMethod === 'sso') {
         updateData.loginMethod = "sso";
-      } else {
-        console.log(`[SSO Callback] Manteniendo loginMethod existente: ${user.loginMethod} (no sobrescribir con 'sso')`);
       }
       
-      // Actualizar rol según el mapeo del Hub, PERO:
-      // - NO degradar admin a un rol menor (admin es el rol más alto en SPM)
-      // - Solo actualizar si el nuevo rol es diferente y no es una degradación de admin
-      if (user.role !== spmRole) {
-        if (user.role === 'admin' && spmRole !== 'admin') {
-          console.log(`[SSO Callback] NO degradar admin → ${spmRole} para ${email}. Admin se mantiene.`);
-        } else {
-          console.log(`[SSO Callback] Actualizando rol de ${user.role} → ${spmRole} para ${email}`);
-          updateData.role = spmRole;
-        }
-      }
-      
-      // Actualizar nombre si viene del Hub y es diferente
-      if (name && name !== email.split("@")[0] && user.name !== name) {
+      // Actualizar nombre si viene del Hub y el usuario no tiene nombre
+      if (name && name !== email.split("@")[0] && (!user.name || !user.name.trim())) {
         updateData.name = name;
       }
       
@@ -464,18 +442,18 @@ ssoRouter.get("/callback", async (req, res) => {
       
       // Re-leer el usuario actualizado
       [user] = await dbInst.select().from(users).where(eq(users.id, user.id));
-      console.log(`[SSO Callback] Usuario existente actualizado: ${email} → rol: ${user.role}, loginMethod: ${user.loginMethod}`);
+      console.log(`[SSO Callback] Login exitoso: ${email} (rol: ${user.role}) - rol NO modificado`);
     }
 
     if (!user) {
       return res.status(500).json({ error: "Error al obtener/crear usuario" });
     }
 
-    // PROTECCIÓN EXTRA: Forzar admin para el usuario maestro con UPDATE directo
+    // ÚNICA EXCEPCIÓN: greenhproject@gmail.com siempre es admin (safety net)
     if (email === "greenhproject@gmail.com" && user.role !== "admin") {
       await dbInst.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
       user = { ...user, role: "admin" };
-      console.log(`[SSO Callback] FORCED admin role via direct UPDATE for ${email}`);
+      console.log(`[SSO Callback] Safety net: forced admin for master user ${email}`);
     }
 
     // Verificar que el usuario no esté rechazado
@@ -505,24 +483,6 @@ ssoRouter.get("/callback", async (req, res) => {
   }
 });
 
-/**
- * Mapea roles del Hub GHP a roles de SPM
- */
-function mapHubRoleToSpm(hubRole: string): "admin" | "engineer" | "ingeniero_tramites" | "client" {
-  const roleMap: Record<string, "admin" | "engineer" | "ingeniero_tramites" | "client"> = {
-    admin: "admin",
-    administrador: "admin",
-    gerente: "engineer",
-    engineer: "engineer",
-    ingeniero: "engineer",
-    asesor_comercial: "ingeniero_tramites",
-    ingeniero_tramites: "ingeniero_tramites",
-    consultor: "ingeniero_tramites",
-    client: "client",
-    cliente: "client",
-  };
-  return roleMap[hubRole.trim().toLowerCase()] || "engineer";
-}
 
 /**
  * Determina la ruta de redirección según el rol del usuario

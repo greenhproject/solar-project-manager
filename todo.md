@@ -1160,3 +1160,13 @@
 - [x] Verificar TypeScript compila sin errores (exit code 0)
 - [x] Verificar tests de auth pasan (auth.logout + sso-callback: 9 tests passing)
 - [ ] Push a GitHub y verificar deploy en Railway
+
+## Simplificación de Auth: Login solo valida email, NO toca roles (22 Jun 2026)
+
+- [x] upsertUser en db.ts: NUNCA incluir role en onDuplicateKeyUpdate (excepto admin maestro)
+- [x] auth0Service.ts: No pasar role al hacer upsert de usuario existente
+- [x] SSO callback: Eliminar mapeo de roles del Hub, solo autenticar por email
+- [x] Mantener protección: greenhproject@gmail.com siempre es admin (hardcoded)
+- [x] Nuevos usuarios: role='client' por defecto (admin lo cambia desde UI)
+- [x] Verificar TypeScript y tests
+- [ ] Push a GitHub para deploy en Railway

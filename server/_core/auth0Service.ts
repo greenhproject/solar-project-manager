@@ -1,7 +1,10 @@
 /**
  * Servicio de autenticación con Auth0
  * 
- * Este servicio valida tokens JWT de Auth0 y gestiona usuarios
+ * Este servicio valida tokens JWT de Auth0 y gestiona usuarios.
+ * IMPORTANTE: El login NUNCA modifica roles. Los roles se gestionan
+ * exclusivamente desde la UI de Gestión de Usuarios (admin).
+ * Única excepción: greenhproject@gmail.com siempre es admin.
  */
 
 import { ForbiddenError } from "@shared/_core/errors";
@@ -49,7 +52,8 @@ class Auth0Service {
   }
 
   /**
-   * Autenticar una solicitud usando un token de Auth0
+   * Autenticar una solicitud usando un token de Auth0.
+   * Solo identifica al usuario por email. NO modifica roles.
    */
   async authenticateRequest(req: Request): Promise<User> {
     // Obtener el token del header Authorization
@@ -61,11 +65,6 @@ class Auth0Service {
     }
 
     const token = authHeader.substring(7); // Remover 'Bearer '
-    
-    console.log("[Auth0] Authenticating request", {
-      hasToken: !!token,
-      tokenLength: token?.length,
-    });
 
     // Verificar el token con Auth0
     const payload = await this.verifyAuth0Token(token);
@@ -76,45 +75,27 @@ class Auth0Service {
     }
 
     // Extraer información del usuario del token
-    const auth0UserId = payload.sub as string; // e.g., "auth0|123456"
+    const auth0UserId = payload.sub as string; // e.g., "google-oauth2|123456"
     
     // Leer email y name de los headers HTTP personalizados
-    // El frontend envía estos valores desde el objeto user de Auth0
     let email = req.headers['x-user-email'] as string | undefined;
     let name = req.headers['x-user-name'] as string | undefined;
     
-    console.log("[Auth0] User info from headers:", {
-      email,
-      name,
-    });
+    console.log("[Auth0] Token verified", { sub: auth0UserId, email, name });
 
-    console.log("[Auth0] Token verified", {
-      sub: auth0UserId,
-      email,
-      name,
-    });
-
-    // Buscar o crear el usuario en la base de datos
-    // Usamos el sub de Auth0 como openId para compatibilidad
+    // Buscar usuario por openId (sub de Auth0)
     let user = await db.getUserByOpenId(auth0UserId);
 
-    // Si no existe usuario con este sub, pero existe con el email, actualizar el openId
+    // Si no existe con este sub, buscar por email
     if (!user && email) {
       const existingUserByEmail = await db.getUserByEmail(email);
       if (existingUserByEmail) {
-        console.log("[Auth0] Found existing user with email, updating openId", {
-          existingUserId: existingUserByEmail.id,
-          existingOpenId: existingUserByEmail.openId,
-          newOpenId: auth0UserId,
+        console.log("[Auth0] Found existing user by email, updating openId", {
+          userId: existingUserByEmail.id,
           email,
         });
         
-        // Actualizar el openId del usuario existente en lugar de crear uno nuevo
-        const ADMIN_SUB = "google-oauth2|106723310869919984535";
-        const role = auth0UserId === ADMIN_SUB ? "admin" : existingUserByEmail.role;
-        
-        // Usar el openId existente para el upsert, no el nuevo
-        // Solo actualizar nombre si el usuario NO tiene nombre guardado
+        // Actualizar solo openId, name y lastSignedIn - NO tocar rol
         const updatedName = existingUserByEmail.name && existingUserByEmail.name.trim() 
           ? existingUserByEmail.name 
           : (name || existingUserByEmail.name);
@@ -123,13 +104,9 @@ class Auth0Service {
           openId: existingUserByEmail.openId!,
           name: updatedName,
           email: email,
-          role: role,
           lastSignedIn: new Date(),
         });
         
-        console.log("[Auth0] User updated successfully");
-        
-        // Retornar el usuario con el openId existente
         user = await db.getUserByOpenId(existingUserByEmail.openId!);
         
         if (!user) {
@@ -141,22 +118,16 @@ class Auth0Service {
     }
 
     if (!user) {
-      console.log("[Auth0] User not found, creating new user");
-      
-      // Crear nuevo usuario
-      // Asignar rol admin al sub específico de greenhproject@gmail.com
-      const ADMIN_SUB = "google-oauth2|106723310869919984535";
-      const role = auth0UserId === ADMIN_SUB ? "admin" : "client";
+      // Crear nuevo usuario - role será 'client' por defecto (schema default)
+      // El admin lo cambiará desde Gestión de Usuarios si necesita otro rol
+      console.log("[Auth0] Creating new user:", email);
       
       await db.upsertUser({
         openId: auth0UserId,
         name: name || null,
         email: email || null,
-        role: role,
         lastSignedIn: new Date(),
       });
-      
-      console.log("[Auth0] User created with role:", role);
 
       user = await db.getUserByOpenId(auth0UserId);
       
@@ -193,43 +164,21 @@ class Auth0Service {
         }
       }
     } else {
-      // Actualizar última vez que inició sesión
-      // Si es el sub de greenhproject@gmail.com, actualizar rol a admin
-      const ADMIN_SUB = "google-oauth2|106723310869919984535";
-      const role = auth0UserId === ADMIN_SUB ? "admin" : user.role;
-      
-      // Solo actualizar nombre si el usuario NO tiene nombre guardado
-      // Esto permite que los usuarios editen su nombre sin que se sobrescriba
+      // Usuario existente: solo actualizar lastSignedIn y loginMethod
+      // NO tocar el rol - se gestiona exclusivamente desde UI admin
       const updatedName = user.name && user.name.trim() ? user.name : (name || user.name);
       
-      console.log(`[Auth0] Updating existing user: openId=${auth0UserId}, email=${email}, role=${role}, currentRole=${user.role}`);
+      console.log(`[Auth0] Existing user login: ${email} (role: ${user.role}) - role NOT modified`);
       
       await db.upsertUser({
         openId: auth0UserId,
         name: updatedName,
         email: email || user.email,
-        loginMethod: "google", // Restaurar loginMethod a 'google' cuando entra por Auth0
-        role: role,
+        loginMethod: "google",
         lastSignedIn: new Date(),
       });
       
-      // PROTECCIÓN EXTRA: Forzar admin directamente con UPDATE para el usuario maestro
-      // Esto es un safety net en caso de que onDuplicateKeyUpdate tenga problemas
-      if (role === "admin" || email === "greenhproject@gmail.com" || auth0UserId === ADMIN_SUB) {
-        const { users } = await import("../../drizzle/schema");
-        const { eq } = await import("drizzle-orm");
-        const dbInst = await db.getDb();
-        if (dbInst) {
-          await dbInst.update(users).set({ role: "admin", loginMethod: "google" }).where(eq(users.openId, auth0UserId));
-          console.log(`[Auth0] FORCED admin role via direct UPDATE for ${email}`);
-        }
-      }
-      
-      if (role === "admin" && user.role !== "admin") {
-        console.log("[Auth0] User role updated to admin for sub:", auth0UserId);
-      }
-      
-      // Recargar usuario para obtener el rol actualizado
+      // Recargar usuario
       user = await db.getUserByOpenId(auth0UserId);
       
       if (!user) {
