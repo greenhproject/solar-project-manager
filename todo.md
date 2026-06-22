@@ -1142,4 +1142,10 @@
 - [x] Logout: verificar sesión Auth0 activa (no solo loginMethod de BD) para decidir qué logout usar
 - [x] DB fix: restaurar loginMethod='google' y role='admin' para greenhproject@gmail.com
 - [x] Tests: 13 tests pasando (sso-auth-fix.test.ts)
+- [x] Checkpoint y push a GitHub (commit 4bc1202)
+
+## Fix: SSO redirige a /portal en vez de /dashboard para admin (22 Jun 2026)
+- [x] SSO login (token-based): redirigir según rol del usuario en vez de siempre a /portal
+- [x] ClientPortal.tsx: si usuario es admin/engineer, redirigir automáticamente a /dashboard o /projects
+- [x] Fix TS2872 error en milestone-reminder-config.ts (rows.length check en vez de !config)
 - [ ] Checkpoint y push a GitHub

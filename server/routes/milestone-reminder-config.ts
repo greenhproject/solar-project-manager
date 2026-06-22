@@ -48,12 +48,13 @@ export const milestoneReminderConfigRouter = router({
   getConfig: adminProcedure.query(async ({ ctx }) => {
     const dbInst = await db.getDb();
     if (!dbInst) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB no disponible" });
-    const [config] = await dbInst.select().from(milestoneReminderConfig).limit(1);
+    const rows = await dbInst.select().from(milestoneReminderConfig).limit(1);
     
     // Agregar info del cron activo
     const cronInfo = cronScheduler.getJobInfo("milestone-overdue-reminders");
     
-    if (!config) return null;
+    if (rows.length === 0) return null;
+    const config = rows[0];
     return {
       ...config,
       cronActive: !!cronInfo,

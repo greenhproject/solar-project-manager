@@ -36,6 +36,13 @@ export default function ClientPortal() {
     return null;
   }
 
+  // Si el usuario es admin o engineer, redirigir al dashboard
+  // El portal es solo para clientes
+  if (user.role === "admin" || user.role === "engineer" || user.role === "ingeniero_tramites") {
+    navigate(user.role === "admin" ? "/dashboard" : "/projects");
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50">
       {/* Header */}

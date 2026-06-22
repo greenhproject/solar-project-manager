@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, name, status, openSolarId, createdAt FROM projects ORDER BY id DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT id, name, status, openSolarId, createdAt FROM projects ORDER BY id DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "90001",
+      "name": "Proyecto para Eliminar Test",
+      "status": "planning",
+      "openSolarId": "NULL",
+      "createdAt": "2025-11-30 22:16:11"
+    },
+    {
+      "id": "60001",
+      "name": "Proyecto Test Progreso",
+      "status": "planning",
+      "openSolarId": "NULL",
+      "createdAt": "2025-11-29 00:31:03"
+    },
+    {
+      "id": "30003",
+      "name": "Proyecto Test Progreso",
+      "status": "planning",
+      "openSolarId": "NULL",
+      "createdAt": "2025-11-28 23:39:23"
+    },
+    {
+      "id": "30002",
+      "name": "Proyecto Test Progreso",
+      "status": "planning",
+      "openSolarId": "NULL",
+      "createdAt": "2025-11-28 23:38:58"
+    },
+    {
+      "id": "30001",
+      "name": "proyecto de prueba 2",
+      "status": "completed",
+      "openSolarId": "NULL",
+      "createdAt": "2025-11-28 23:19:11"
+    },
+    {
+      "id": "1",
+      "name": "proyecto de prueba",
+      "status": "in_progress",
+      "openSolarId": "123456",
+      "createdAt": "2025-11-27 00:11:04"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tstatus\topenSolarId\tcreatedAt\n90001\tProyecto para Eliminar Test\tplanning\tNULL\t2025-11-30 22:16:11\n60001\tProyecto Test Progreso\tplanning\tNULL\t2025-11-29 00:31:03\n30003\tProyecto Test Progreso\tplanning\tNULL\t2025-11-28 23:39:23\n30002\tProyecto Test Progreso\tplanning\tNULL\t2025-11-28 23:38:58\n30001\tproyecto de prueba 2\tcompleted\tNULL\t2025-11-28 23:19:11\n1\tproyecto de prueba\tin_progress\t123456\t2025-11-27 00:11:04\n",
+  "stderr": "",
+  "execution_time_ms": 272
+}

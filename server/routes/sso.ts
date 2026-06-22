@@ -263,8 +263,14 @@ ssoRouter.get("/login", async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
     });
 
-    // Redirigir al portal (ya validado contra whitelist)
-    const redirectTo = tokenRecord.redirectTo || "/portal";
+    // Redirigir según el rol del usuario si no hay redirectTo explícito
+    // Esto permite que admins/engineers lleguen a su dashboard correcto
+    let redirectTo = tokenRecord.redirectTo;
+    if (!redirectTo || redirectTo === "/portal") {
+      // Si no hay redirectTo o es el default /portal, usar redirección por rol
+      redirectTo = getRedirectByRole(user.role as string);
+    }
+    console.log(`[SSO Login] Redirigiendo ${user.email} (${user.role}) → ${redirectTo}`);
     return res.redirect(redirectTo);
   } catch (error: any) {
     console.error("SSO login error:", error);

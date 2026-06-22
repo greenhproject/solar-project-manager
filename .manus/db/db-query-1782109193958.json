@@ -1,0 +1,22 @@
+{
+  "query": "SELECT status, COUNT(*) as count FROM projects GROUP BY status ORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT status, COUNT(*) as count FROM projects GROUP BY status ORDER BY count DESC;",
+  "rows": [
+    {
+      "status": "planning",
+      "count": "4"
+    },
+    {
+      "status": "in_progress",
+      "count": "1"
+    },
+    {
+      "status": "completed",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "status\tcount\nplanning\t4\nin_progress\t1\ncompleted\t1\n",
+  "stderr": "",
+  "execution_time_ms": 260
+}
