@@ -1127,4 +1127,4 @@
 - [x] SSO callback debe actualizar el rol del usuario existente con el mapeo del Hub
 - [x] Actualizar loginMethod a 'sso' cuando usuario existente entra por SSO
 - [x] Verificar que greenhproject@gmail.com mantiene rol admin al entrar por SSO
-- [ ] Checkpoint y push a GitHub
+- [x] Checkpoint y push a GitHub

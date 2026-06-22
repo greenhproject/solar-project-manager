@@ -383,9 +383,12 @@ ssoRouter.get("/callback", async (req, res) => {
     }
 
     // Extraer datos del usuario del token
+    console.log(`[SSO Callback] Payload JWT completo:`, JSON.stringify(payload, null, 2));
     const email = payload.email || payload.sub;
     const name = payload.name || payload.nombre || email?.split("@")[0] || "Usuario";
-    const role = payload.role || payload.rol || "engineer";
+    // Buscar rol en múltiples campos posibles del JWT
+    const role = payload.role || payload.rol || payload.mapped_role || payload.appRole || payload.app_role || "engineer";
+    console.log(`[SSO Callback] Email: ${email}, Name: ${name}, Role extraído: ${role}`);
 
     if (!email) {
       return res.status(400).json({ error: "Token no contiene email del usuario" });
@@ -502,7 +505,7 @@ function getRedirectByRole(role: string): string {
       return "/dashboard";
     case "engineer":
     case "ingeniero_tramites":
-      return "/my-projects";
+      return "/projects";
     case "client":
       return "/portal";
     default:
