@@ -63,10 +63,18 @@ export async function createContext(
     }
     
     // Si no se autenticó por Auth0, intentar Manus OAuth
-    if (!user && isManusEnvironment()) {
+    // IMPORTANTE: Solo usar Manus OAuth si Auth0 NO está configurado
+    // En Railway/producción, Auth0 es el sistema principal y Manus OAuth no aplica
+    if (!user && isManusEnvironment() && !isAuth0Environment()) {
       console.log('[Context] Using Manus OAuth authentication');
-      user = await sdk.authenticateRequest(opts.req);
-      console.log('[Context] Manus OAuth user:', user ? `${user.email} (${user.id})` : 'null');
+      try {
+        user = await sdk.authenticateRequest(opts.req);
+        console.log('[Context] Manus OAuth user:', user ? `${user.email} (${user.id})` : 'null');
+      } catch (manusError) {
+        // Manus OAuth falló - no es un error crítico, simplemente no hay sesión
+        console.log('[Context] Manus OAuth failed, no session');
+        user = null;
+      }
     }
   } catch (error) {
     // Authentication is optional for public procedures.

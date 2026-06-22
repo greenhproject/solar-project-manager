@@ -387,8 +387,10 @@ ssoRouter.get("/callback", async (req, res) => {
     const email = payload.email || payload.sub;
     const name = payload.name || payload.nombre || email?.split("@")[0] || "Usuario";
     // Buscar rol en múltiples campos posibles del JWT
-    const role = payload.role || payload.rol || payload.mapped_role || payload.appRole || payload.app_role || "engineer";
-    console.log(`[SSO Callback] Email: ${email}, Name: ${name}, Role extraído: ${role}`);
+    // IMPORTANTE: .trim() para eliminar espacios que el Hub pueda agregar
+    const rawRole = payload.role || payload.rol || payload.mapped_role || payload.appRole || payload.app_role || "engineer";
+    const role = typeof rawRole === 'string' ? rawRole.trim() : String(rawRole).trim();
+    console.log(`[SSO Callback] Email: ${email}, Name: ${name}, Role extraído: "${role}" (raw: "${rawRole}")`);
 
     if (!email) {
       return res.status(400).json({ error: "Token no contiene email del usuario" });
@@ -493,7 +495,7 @@ function mapHubRoleToSpm(hubRole: string): "admin" | "engineer" | "ingeniero_tra
     client: "client",
     cliente: "client",
   };
-  return roleMap[hubRole.toLowerCase()] || "engineer";
+  return roleMap[hubRole.trim().toLowerCase()] || "engineer";
 }
 
 /**
