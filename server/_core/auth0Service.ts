@@ -202,6 +202,8 @@ class Auth0Service {
       // Esto permite que los usuarios editen su nombre sin que se sobrescriba
       const updatedName = user.name && user.name.trim() ? user.name : (name || user.name);
       
+      console.log(`[Auth0] Updating existing user: openId=${auth0UserId}, email=${email}, role=${role}, currentRole=${user.role}`);
+      
       await db.upsertUser({
         openId: auth0UserId,
         name: updatedName,
@@ -210,6 +212,18 @@ class Auth0Service {
         role: role,
         lastSignedIn: new Date(),
       });
+      
+      // PROTECCIÓN EXTRA: Forzar admin directamente con UPDATE para el usuario maestro
+      // Esto es un safety net en caso de que onDuplicateKeyUpdate tenga problemas
+      if (role === "admin" || email === "greenhproject@gmail.com" || auth0UserId === ADMIN_SUB) {
+        const { users } = await import("../../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        const dbInst = await db.getDb();
+        if (dbInst) {
+          await dbInst.update(users).set({ role: "admin", loginMethod: "google" }).where(eq(users.openId, auth0UserId));
+          console.log(`[Auth0] FORCED admin role via direct UPDATE for ${email}`);
+        }
+      }
       
       if (role === "admin" && user.role !== "admin") {
         console.log("[Auth0] User role updated to admin for sub:", auth0UserId);

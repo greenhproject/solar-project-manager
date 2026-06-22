@@ -471,6 +471,13 @@ ssoRouter.get("/callback", async (req, res) => {
       return res.status(500).json({ error: "Error al obtener/crear usuario" });
     }
 
+    // PROTECCIÓN EXTRA: Forzar admin para el usuario maestro con UPDATE directo
+    if (email === "greenhproject@gmail.com" && user.role !== "admin") {
+      await dbInst.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
+      user = { ...user, role: "admin" };
+      console.log(`[SSO Callback] FORCED admin role via direct UPDATE for ${email}`);
+    }
+
     // Verificar que el usuario no esté rechazado
     if ((user as any).status === "rejected") {
       return res.status(403).json({ error: "Usuario rechazado en esta aplicación" });

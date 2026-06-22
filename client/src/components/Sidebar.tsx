@@ -61,7 +61,10 @@ export function Sidebar({ className }: SidebarProps) {
   // Siempre usar los datos del backend (meQuery) para obtener el rol correcto
   const user = meQuery.data ?? manusAuth.user ?? null;
   
-  const isAuthenticated = isUsingAuth0 ? auth0.isAuthenticated : manusAuth.isAuthenticated;
+  // isAuthenticated es true si CUALQUIER método de auth está activo:
+  // - Auth0 está autenticado, O
+  // - meQuery devolvió datos (usuario tiene sesión JWT/cookie válida)
+  const isAuthenticated = (isUsingAuth0 && auth0.isAuthenticated) || !!meQuery.data || manusAuth.isAuthenticated;
 
   const handleLogout = () => {
     toast.success("Cerrando sesión...");

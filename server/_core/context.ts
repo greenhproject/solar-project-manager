@@ -101,6 +101,13 @@ export async function createContext(
     user = null;
   }
 
+  // PROTECCIÓN FINAL: Si el usuario es el admin maestro pero la BD tiene rol incorrecto,
+  // forzar admin en el contexto (safety net contra race conditions de BD)
+  if (user && user.email === "greenhproject@gmail.com" && user.role !== "admin") {
+    console.log(`[Context] OVERRIDE: Forcing admin role for master user ${user.email} (was: ${user.role})`);
+    user = { ...user, role: "admin" } as User;
+  }
+
   return {
     req: opts.req,
     res: opts.res,
