@@ -206,6 +206,7 @@ class Auth0Service {
         openId: auth0UserId,
         name: updatedName,
         email: email || user.email,
+        loginMethod: "google", // Restaurar loginMethod a 'google' cuando entra por Auth0
         role: role,
         lastSignedIn: new Date(),
       });

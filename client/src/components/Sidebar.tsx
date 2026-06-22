@@ -65,18 +65,18 @@ export function Sidebar({ className }: SidebarProps) {
 
   const handleLogout = () => {
     toast.success("Cerrando sesión...");
-    // Si el usuario ingresó por SSO (loginMethod === 'sso'), no hacer logout de Auth0
-    // Solo limpiar la sesión local y redirigir a la home
-    if (meQuery.data?.loginMethod === 'sso') {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user_email');
-      localStorage.removeItem('auth_user_name');
-      localStorage.removeItem('manus-runtime-user-info');
-      // Llamar logout del backend para limpiar cookie JWT
-      manusAuth.logout();
-    } else if (isUsingAuth0) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user_email');
+    localStorage.removeItem('auth_user_name');
+    localStorage.removeItem('manus-runtime-user-info');
+    localStorage.removeItem('sso_login_origin');
+    
+    // Decidir qué tipo de logout hacer:
+    // Si Auth0 SDK tiene sesión activa, SIEMPRE cerrarla (evita re-login automático)
+    if (isUsingAuth0 && auth0.isAuthenticated) {
       auth0.logout();
     } else {
+      // Usuario puro SSO o sin Auth0 - solo limpiar cookie y redirigir
       manusAuth.logout();
     }
   };

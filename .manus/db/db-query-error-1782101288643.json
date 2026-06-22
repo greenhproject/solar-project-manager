@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, email, name, role, loginMethod, openId, auth0Id, createdAt FROM users WHERE email = 'greenhproject@gmail.com' ORDER BY createdAt ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT id, email, name, role, loginMethod, openId, auth0Id, createdAt FROM users WHERE email = 'greenhproject@gmail.com' ORDER BY createdAt ASC;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'auth0id' in 'field list'"
+  ]
+}

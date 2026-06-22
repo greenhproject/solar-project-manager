@@ -421,19 +421,32 @@ ssoRouter.get("/callback", async (req, res) => {
       [user] = await dbInst.select().from(users).where(eq(users.id, insertId));
       console.log(`[SSO Callback] Usuario creado: ${email} con rol ${spmRole}`);
     } else {
-      // Usuario existente: SIEMPRE actualizar el rol con el mapeo del Hub
-      // El Hub es la fuente de verdad para roles cuando se usa SSO
+      // Usuario existente: actualizar datos pero con precauciones
+      // NO sobrescribir loginMethod si el usuario ya usa Auth0 (evita romper logout)
+      // NO degradar admin a un rol menor (admin es el rol más alto)
       const updateData: Record<string, any> = {
-        loginMethod: "sso",
         lastSignedIn: new Date(),
         status: "approved", // Si viene del Hub, está aprobado
       };
       
-      // Actualizar rol según el mapeo del Hub
-      // El rol del Hub siempre tiene prioridad sobre el rol local
+      // Solo setear loginMethod a 'sso' si el usuario NO tiene loginMethod previo
+      // o si ya era 'sso'. Si tiene 'google' (Auth0), NO sobrescribir.
+      if (!user.loginMethod || user.loginMethod === 'sso') {
+        updateData.loginMethod = "sso";
+      } else {
+        console.log(`[SSO Callback] Manteniendo loginMethod existente: ${user.loginMethod} (no sobrescribir con 'sso')`);
+      }
+      
+      // Actualizar rol según el mapeo del Hub, PERO:
+      // - NO degradar admin a un rol menor (admin es el rol más alto en SPM)
+      // - Solo actualizar si el nuevo rol es diferente y no es una degradación de admin
       if (user.role !== spmRole) {
-        console.log(`[SSO Callback] Actualizando rol de ${user.role} → ${spmRole} para ${email}`);
-        updateData.role = spmRole;
+        if (user.role === 'admin' && spmRole !== 'admin') {
+          console.log(`[SSO Callback] NO degradar admin → ${spmRole} para ${email}. Admin se mantiene.`);
+        } else {
+          console.log(`[SSO Callback] Actualizando rol de ${user.role} → ${spmRole} para ${email}`);
+          updateData.role = spmRole;
+        }
       }
       
       // Actualizar nombre si viene del Hub y es diferente
@@ -445,7 +458,7 @@ ssoRouter.get("/callback", async (req, res) => {
       
       // Re-leer el usuario actualizado
       [user] = await dbInst.select().from(users).where(eq(users.id, user.id));
-      console.log(`[SSO Callback] Usuario existente actualizado: ${email} → rol: ${user.role}`);
+      console.log(`[SSO Callback] Usuario existente actualizado: ${email} → rol: ${user.role}, loginMethod: ${user.loginMethod}`);
     }
 
     if (!user) {

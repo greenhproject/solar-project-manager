@@ -1134,3 +1134,12 @@
 - [x] context.ts: no usar Manus OAuth cuando Auth0 está configurado (evita error 403 en Railway)
 - [x] Ambos sistemas coexisten: SSO (cookie JWT) + Auth0 (Bearer token) en producción
 - [x] Checkpoint y push a GitHub
+
+## Fix: Logout no funciona + Proyectos diferentes entre Auth0 y SSO (22 Jun 2026)
+- [x] SSO callback NO debe sobrescribir loginMethod si usuario ya tiene uno (Auth0 user)
+- [x] SSO callback NO debe degradar rol admin (admin es el rol más alto)
+- [x] Auth0Service debe restaurar loginMethod cuando usuario entra por Auth0
+- [x] Logout: verificar sesión Auth0 activa (no solo loginMethod de BD) para decidir qué logout usar
+- [x] DB fix: restaurar loginMethod='google' y role='admin' para greenhproject@gmail.com
+- [x] Tests: 13 tests pasando (sso-auth-fix.test.ts)
+- [ ] Checkpoint y push a GitHub

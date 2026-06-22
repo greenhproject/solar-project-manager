@@ -1,0 +1,18 @@
+{
+  "query": "SELECT loginMethod, COUNT(*) as count FROM users GROUP BY loginMethod;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT loginMethod, COUNT(*) as count FROM users GROUP BY loginMethod;",
+  "rows": [
+    {
+      "loginMethod": "NULL",
+      "count": "977"
+    },
+    {
+      "loginMethod": "google",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "loginMethod\tcount\nNULL\t977\ngoogle\t1\n",
+  "stderr": "",
+  "execution_time_ms": 262
+}

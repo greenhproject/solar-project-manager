@@ -53,11 +53,12 @@ export const milestoneReminderConfigRouter = router({
     // Agregar info del cron activo
     const cronInfo = cronScheduler.getJobInfo("milestone-overdue-reminders");
     
+    if (!config) return null;
     return {
       ...config,
       cronActive: !!cronInfo,
       cronLastExecuted: cronInfo?.lastExecutedAt || null,
-    } || null;
+    };
   }),
 
   // Actualizar configuración

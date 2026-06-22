@@ -223,14 +223,22 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     localStorage.removeItem('manus-runtime-user-info');
     localStorage.removeItem('sso_login_origin');
     
-    // Si el usuario vino por SSO (loginMethod === 'sso'), no hacer logout de Auth0
-    const userData = meQuery.data || ssoCheckQuery.data;
-    if (userData?.loginMethod === 'sso') {
-      window.location.href = '/';
-    } else {
+    // Decidir qué tipo de logout hacer:
+    // 1. Si Auth0 SDK tiene sesión activa, SIEMPRE hacer auth0.logout() para limpiarla
+    //    (esto evita que Auth0 re-autentique automáticamente al volver a /)
+    // 2. Solo redirigir a '/' si NO hay sesión Auth0 activa (ej: usuario puro SSO)
+    if (auth0.isAuthenticated) {
+      // Auth0 tiene sesión activa - DEBE cerrarla para evitar re-login automático
       auth0.logout();
+    } else {
+      // No hay sesión Auth0 (usuario puro SSO) - solo limpiar cookie y redirigir
+      // Llamar al endpoint de logout del backend para limpiar la cookie JWT
+      fetch('/api/trpc/auth.logout', { method: 'POST', credentials: 'include' })
+        .finally(() => {
+          window.location.href = '/';
+        });
     }
-  }, [auth0, meQuery.data, ssoCheckQuery.data]);
+  }, [auth0]);
 
   // Función de reintentar
   const handleRetry = useCallback(async () => {

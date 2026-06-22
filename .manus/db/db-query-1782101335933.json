@@ -1,0 +1,14 @@
+{
+  "query": "SELECT createdBy, COUNT(*) as count FROM projects GROUP BY createdBy ORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3kTaiYRMPpnS3sR.0520b5f522a4 --database i9L9SEfcrUSsT5mzwNhmmi --execute SELECT createdBy, COUNT(*) as count FROM projects GROUP BY createdBy ORDER BY count DESC;",
+  "rows": [
+    {
+      "createdBy": "1",
+      "count": "6"
+    }
+  ],
+  "messages": [],
+  "stdout": "createdBy\tcount\n1\t6\n",
+  "stderr": "",
+  "execution_time_ms": 260
+}
