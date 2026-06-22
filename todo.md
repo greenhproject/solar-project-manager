@@ -1128,3 +1128,9 @@
 - [x] Actualizar loginMethod a 'sso' cuando usuario existente entra por SSO
 - [x] Verificar que greenhproject@gmail.com mantiene rol admin al entrar por SSO
 - [x] Checkpoint y push a GitHub
+
+## Fix: Rol SSO con espacio + Auth0 login directo (21 Jun 2026)
+- [x] Hub GHP envía rol con espacio ("Admin ") - agregar .trim() al extraer rol del JWT
+- [x] context.ts: no usar Manus OAuth cuando Auth0 está configurado (evita error 403 en Railway)
+- [x] Ambos sistemas coexisten: SSO (cookie JWT) + Auth0 (Bearer token) en producción
+- [x] Checkpoint y push a GitHub

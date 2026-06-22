@@ -106,20 +106,37 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
   const auth0 = useAuth0Custom();
   const [backendTimeout, setBackendTimeout] = useState(false);
   const [isRefreshingToken, setIsRefreshingToken] = useState(false);
+  const [ssoChecked, setSsoChecked] = useState(false);
   const backendRetryCountRef = useRef(0);
   const utils = trpc.useUtils();
   
-  // Verificar sesión del backend (JWT cookie o Auth0 token)
-  // IMPORTANTE: Habilitar SIEMPRE para detectar sesiones SSO (cookie JWT)
-  // incluso cuando Auth0 no está autenticado
-  const meQuery = trpc.auth.me.useQuery(undefined, {
-    retry: 1,
+  // FASE 1: Verificar si hay sesión SSO activa (cookie JWT)
+  // Esta query se ejecuta SIEMPRE al cargar para detectar sesiones SSO
+  // Si no hay cookie JWT ni Bearer token, el backend devuelve null (no error)
+  const ssoCheckQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
-    // Habilitar siempre - el backend verifica JWT cookie primero (SSO)
-    // y luego Auth0 Bearer token si existe
-    enabled: true,
+    // Solo ejecutar esta verificación inicial una vez
+    enabled: !ssoChecked && !auth0.isAuthenticated,
+  });
+
+  // Marcar SSO como verificado cuando la query termina
+  useEffect(() => {
+    if (!auth0.isAuthenticated && (ssoCheckQuery.data || ssoCheckQuery.error || ssoCheckQuery.isSuccess)) {
+      setSsoChecked(true);
+    }
+  }, [ssoCheckQuery.data, ssoCheckQuery.error, ssoCheckQuery.isSuccess, auth0.isAuthenticated]);
+
+  // FASE 2: Verificar sesión Auth0 (con Bearer token)
+  // Solo se habilita cuando Auth0 está autenticado Y tiene token
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+    enabled: auth0.isAuthenticated && !!auth0.accessToken && !auth0.tokenError,
   });
 
   // Monitorear y enviar notificaciones automáticas
@@ -160,10 +177,11 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
   // Sync user theme from DB to ThemeContext
   const { setTheme } = useTheme();
   useEffect(() => {
-    if (meQuery.data?.theme) {
-      setTheme(meQuery.data.theme as "light" | "dark" | "system");
+    const userData = meQuery.data || ssoCheckQuery.data;
+    if (userData?.theme) {
+      setTheme(userData.theme as "light" | "dark" | "system");
     }
-  }, [meQuery.data?.theme, setTheme]);
+  }, [meQuery.data?.theme, ssoCheckQuery.data?.theme, setTheme]);
 
   // Reset retry counter cuando la query tiene éxito
   useEffect(() => {
@@ -173,18 +191,18 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     }
   }, [meQuery.data]);
 
-  // Timeout: si después de 15 segundos no hay respuesta del backend
+  // Timeout: si después de 20 segundos con token válido el backend no responde
   useEffect(() => {
-    if (!meQuery.data && !meQuery.error && meQuery.isLoading) {
+    if (auth0.isAuthenticated && auth0.accessToken && !meQuery.data && !auth0.tokenError && !isRefreshingToken) {
       const timer = setTimeout(() => {
         if (!meQuery.data && backendRetryCountRef.current >= 2) {
-          console.log('[MainLayout] Backend verification timeout after retries');
+          console.log('[MainLayout Auth0] Backend verification timeout after retries');
           setBackendTimeout(true);
         }
-      }, 15000);
+      }, 20000);
       return () => clearTimeout(timer);
     }
-  }, [meQuery.data, meQuery.error, meQuery.isLoading]);
+  }, [auth0.isAuthenticated, auth0.accessToken, auth0.tokenError, meQuery.data, isRefreshingToken]);
 
   // Función de logout - respeta el origen de la sesión
   const handleFullLogout = useCallback(() => {
@@ -195,14 +213,13 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     localStorage.removeItem('sso_login_origin');
     
     // Si el usuario vino por SSO (loginMethod === 'sso'), no hacer logout de Auth0
-    // Solo limpiar la sesión local y redirigir a la home
-    if (meQuery.data?.loginMethod === 'sso') {
-      // Logout solo local - no tocar Auth0
+    const userData = meQuery.data || ssoCheckQuery.data;
+    if (userData?.loginMethod === 'sso') {
       window.location.href = '/';
     } else {
       auth0.logout();
     }
-  }, [auth0, meQuery.data]);
+  }, [auth0, meQuery.data, ssoCheckQuery.data]);
 
   // Función de reintentar
   const handleRetry = useCallback(async () => {
@@ -210,7 +227,6 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     backendRetryCountRef.current = 0;
     
     if (auth0.isAuthenticated) {
-      // Intentar renovar el token primero
       setIsRefreshingToken(true);
       const refreshed = await auth0.refreshToken();
       setIsRefreshingToken(false);
@@ -221,7 +237,6 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
         window.location.reload();
       }
     } else {
-      // No hay sesión Auth0, simplemente recargar para re-verificar cookie JWT
       window.location.reload();
     }
   }, [auth0, utils]);
@@ -231,20 +246,28 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     auth0.login();
   }, [auth0]);
 
-  // === PASO 1: Cargando datos del backend ===
-  if (meQuery.isLoading && !meQuery.data) {
+  // Determinar el usuario activo (puede venir de SSO o de Auth0)
+  const activeUser = meQuery.data || ssoCheckQuery.data;
+
+  // === PASO 1: Auth0 SDK cargando ===
+  if (auth0.isLoading) {
+    return <LoadingScreen message="Cargando..." />;
+  }
+
+  // === PASO 2: Verificando SSO (cookie JWT) - solo si Auth0 no está autenticado ===
+  if (!auth0.isAuthenticated && !ssoChecked) {
     return <LoadingScreen message="Verificando sesión..." />;
   }
 
-  // === PASO 2: Usuario autenticado (ya sea por JWT/SSO o por Auth0) ===
-  if (meQuery.data) {
+  // === PASO 3: Usuario autenticado por SSO (cookie JWT) ===
+  if (!auth0.isAuthenticated && ssoChecked && ssoCheckQuery.data) {
     // Redirigir clientes al portal
-    if (meQuery.data.role === "client") {
+    if (ssoCheckQuery.data.role === "client") {
       window.location.href = "/portal";
       return <LoadingScreen message="Redirigiendo al portal..." />;
     }
 
-    // Todo listo - mostrar la app
+    // Mostrar la app con sesión SSO
     return (
       <div className="flex h-screen overflow-hidden bg-gray-50">
         <Sidebar />
@@ -255,12 +278,7 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     );
   }
 
-  // === PASO 3: Auth0 SDK cargando ===
-  if (auth0.isLoading) {
-    return <LoadingScreen message="Cargando..." />;
-  }
-
-  // === PASO 4: Auth0 autenticado pero backend no reconoce (token error) ===
+  // === PASO 4: Auth0 autenticado pero error al obtener token ===
   if (auth0.isAuthenticated && auth0.tokenError) {
     return (
       <SessionExpiredScreen
@@ -280,8 +298,13 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     return <LoadingScreen message="Renovando sesión..." />;
   }
 
-  // === PASO 7: Backend timeout ===
-  if (backendTimeout) {
+  // === PASO 7: Auth0 autenticado con token, esperando backend ===
+  if (auth0.isAuthenticated && auth0.accessToken && !meQuery.data && !meQuery.error) {
+    return <LoadingScreen message="Verificando sesión..." />;
+  }
+
+  // === PASO 8: Backend timeout ===
+  if (backendTimeout && !meQuery.data) {
     return (
       <SessionExpiredScreen
         onLogin={handleFullLogout}
@@ -290,8 +313,8 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     );
   }
 
-  // === PASO 8: Backend error con Auth0 autenticado ===
-  if (meQuery.error && auth0.isAuthenticated && backendRetryCountRef.current >= 2) {
+  // === PASO 9: Backend error después de reintentos ===
+  if (meQuery.error && auth0.isAuthenticated && backendRetryCountRef.current >= 2 && !isRefreshingToken) {
     return (
       <SessionExpiredScreen
         onLogin={handleFullLogout}
@@ -300,7 +323,31 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     );
   }
 
-  // === PASO 9: No autenticado en ningún sistema → mostrar login ===
+  // === PASO 10: Backend error pero aún reintentando ===
+  if (meQuery.error && backendRetryCountRef.current < 2) {
+    return <LoadingScreen message="Verificando sesión..." />;
+  }
+
+  // === PASO 11: Auth0 autenticado y backend reconoce al usuario ===
+  if (meQuery.data) {
+    // Redirigir clientes al portal
+    if (meQuery.data.role === "client") {
+      window.location.href = "/portal";
+      return <LoadingScreen message="Redirigiendo al portal..." />;
+    }
+
+    // Todo listo - mostrar la app
+    return (
+      <div className="flex h-screen overflow-hidden bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-3 pt-14 sm:p-4 sm:pt-14 lg:p-8 lg:pt-8 pb-20 lg:pb-8">{children}</div>
+        </main>
+      </div>
+    );
+  }
+
+  // === PASO 12: No autenticado en ningún sistema → mostrar login ===
   return <LoginScreen onLogin={handleLogin} />;
 }
 
