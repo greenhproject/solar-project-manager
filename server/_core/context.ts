@@ -29,24 +29,50 @@ function hasJWTSessionCookie(req: CreateExpressContextOptions["req"]): boolean {
   return req.headers.cookie.includes(JWT_COOKIE_NAME + "=");
 }
 
+/**
+ * Verifica si la request tiene un Bearer token de Auth0 en el header Authorization.
+ */
+function hasAuth0BearerToken(req: CreateExpressContextOptions["req"]): boolean {
+  const authHeader = req.headers.authorization;
+  return !!authHeader && authHeader.startsWith('Bearer ');
+}
+
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
   try {
-    // Prioridad de autenticación:
-    // 1. JWT local (cookie) - para sesiones SSO y login directo con JWT
-    //    Se verifica PRIMERO porque los usuarios SSO no tienen sesión Auth0
-    // 2. Auth0 (si está configurado y hay Bearer token - para Railway/producción)
+    // Prioridad de autenticación ACTUALIZADA:
+    // 
+    // REGLA CLAVE: Si hay AMBOS (cookie JWT Y Bearer token Auth0), preferir Auth0.
+    // Razón: Auth0 es la sesión más reciente del usuario web, y el auth0Service
+    // actualiza el rol correctamente. La cookie JWT puede tener datos desactualizados
+    // (ej: rol 'client' cuando el usuario es realmente 'admin').
+    //
+    // 1. Auth0 Bearer token (si está configurado y presente) - PRIORIDAD para usuarios web
+    // 2. JWT cookie (solo si NO hay Bearer token) - para sesiones SSO puras
     // 3. OAuth de Manus (si estamos en entorno Manus - para desarrollo)
     
-    if (hasJWTSessionCookie(opts.req)) {
-      // Intentar autenticar con JWT local primero (SSO sessions)
+    // PASO 1: Si hay Bearer token de Auth0, usarlo PRIMERO (tiene prioridad)
+    if (isAuth0Environment() && hasAuth0BearerToken(opts.req)) {
+      try {
+        console.log('[Context] Using Auth0 authentication (Bearer token present)');
+        user = await auth0Service.authenticateRequest(opts.req);
+        console.log('[Context] Auth0 user:', user ? `${user.email} (${user.id}) role:${user.role}` : 'null');
+      } catch (auth0Error) {
+        // Auth0 falló - continuar con JWT cookie como fallback
+        console.log('[Context] Auth0 authentication failed, trying JWT cookie fallback');
+        user = null;
+      }
+    }
+    
+    // PASO 2: Si no se autenticó por Auth0, intentar JWT cookie (sesiones SSO puras)
+    if (!user && hasJWTSessionCookie(opts.req)) {
       try {
         user = await jwtAuthService.authenticateRequest(opts.req);
         if (user) {
-          console.log('[Context] JWT session user:', `${user.email} (${user.id})`);
+          console.log('[Context] JWT session user:', `${user.email} (${user.id}) role:${user.role}`);
         }
       } catch (jwtError) {
         // JWT inválido o expirado - continuar con otros métodos
@@ -55,14 +81,7 @@ export async function createContext(
       }
     }
     
-    // Si no se autenticó por JWT, intentar Auth0 (si hay Bearer token)
-    if (!user && isAuth0Environment() && opts.req.headers.authorization) {
-      console.log('[Context] Using Auth0 authentication');
-      user = await auth0Service.authenticateRequest(opts.req);
-      console.log('[Context] Auth0 user:', user ? `${user.email} (${user.id})` : 'null');
-    }
-    
-    // Si no se autenticó por Auth0, intentar Manus OAuth
+    // PASO 3: Si no se autenticó por Auth0 ni JWT, intentar Manus OAuth
     // IMPORTANTE: Solo usar Manus OAuth si Auth0 NO está configurado
     // En Railway/producción, Auth0 es el sistema principal y Manus OAuth no aplica
     if (!user && isManusEnvironment() && !isAuth0Environment()) {

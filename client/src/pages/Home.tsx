@@ -50,7 +50,8 @@ export default function Home() {
   // Redirigir según el rol del usuario
   useEffect(() => {
     if (backendUser) {
-      if ((backendUser as any).role === "client") {
+      // Redirigir clientes al portal, EXCEPTO al admin maestro
+      if ((backendUser as any).role === "client" && (backendUser as any).email !== "greenhproject@gmail.com") {
         window.location.href = "/portal";
       } else {
         window.location.href = "/dashboard";

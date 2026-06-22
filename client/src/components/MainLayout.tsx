@@ -153,6 +153,24 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
   // Monitorear y enviar notificaciones automáticas
   useNotificationMonitor();
 
+  // Cuando Auth0 se autentica exitosamente, limpiar la cookie JWT vieja
+  // para evitar conflictos de prioridad en el backend
+  useEffect(() => {
+    if (auth0.isAuthenticated && auth0.accessToken) {
+      // Limpiar cookie JWT del SSO para que el backend use solo Auth0 Bearer
+      fetch('/api/trpc/auth.logout', { 
+        method: 'POST', 
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth0.accessToken}`,
+        }
+      }).catch(() => {
+        // Ignorar errores - es solo limpieza de cookie
+      });
+    }
+  }, [auth0.isAuthenticated, auth0.accessToken]);
+
   // Cuando el backend devuelve error y Auth0 está autenticado, intentar renovar el token
   useEffect(() => {
     if (!meQuery.error || !auth0.isAuthenticated || !auth0.accessToken || auth0.tokenError) {
@@ -265,8 +283,11 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     auth0.login();
   }, [auth0]);
 
-  // Determinar el usuario activo (puede venir de SSO o de Auth0)
-  const activeUser = meQuery.data || ssoCheckQuery.data;
+  // Determinar el usuario activo:
+  // REGLA CLAVE: Si Auth0 está autenticado, SOLO usar meQuery (nunca ssoCheckQuery)
+  // porque meQuery usa el Bearer token que el backend resuelve con prioridad y rol actualizado.
+  // ssoCheckQuery usa la cookie JWT que puede tener un rol desactualizado.
+  const activeUser = auth0.isAuthenticated ? meQuery.data : (meQuery.data || ssoCheckQuery.data);
 
   // === PASO 1: Auth0 SDK cargando ===
   if (auth0.isLoading) {
@@ -278,10 +299,11 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
     return <LoadingScreen message="Verificando sesión..." />;
   }
 
-  // === PASO 3: Usuario autenticado por SSO (cookie JWT) ===
+  // === PASO 3: Usuario autenticado por SSO (cookie JWT) - SOLO si Auth0 NO está autenticado ===
+  // IMPORTANTE: Si Auth0 está autenticado, NUNCA entrar aquí. Auth0 tiene prioridad.
   if (!auth0.isAuthenticated && ssoChecked && ssoCheckQuery.data) {
-    // Redirigir clientes al portal
-    if (ssoCheckQuery.data.role === "client") {
+    // Redirigir clientes al portal (pero NUNCA al admin maestro)
+    if (ssoCheckQuery.data.role === "client" && ssoCheckQuery.data.email !== "greenhproject@gmail.com") {
       window.location.href = "/portal";
       return <LoadingScreen message="Redirigiendo al portal..." />;
     }
@@ -349,8 +371,8 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
 
   // === PASO 11: Auth0 autenticado y backend reconoce al usuario ===
   if (meQuery.data) {
-    // Redirigir clientes al portal
-    if (meQuery.data.role === "client") {
+    // Redirigir clientes al portal (pero NUNCA al admin maestro)
+    if (meQuery.data.role === "client" && meQuery.data.email !== "greenhproject@gmail.com") {
       window.location.href = "/portal";
       return <LoadingScreen message="Redirigiendo al portal..." />;
     }

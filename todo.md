@@ -1148,4 +1148,4 @@
 - [x] SSO login (token-based): redirigir según rol del usuario en vez de siempre a /portal
 - [x] ClientPortal.tsx: si usuario es admin/engineer, redirigir automáticamente a /dashboard o /projects
 - [x] Fix TS2872 error en milestone-reminder-config.ts (rows.length check en vez de !config)
-- [ ] Checkpoint y push a GitHub
+- [x] Checkpoint y push a GitHub (commit 70ea43e)
