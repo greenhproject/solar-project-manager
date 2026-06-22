@@ -1149,3 +1149,14 @@
 - [x] ClientPortal.tsx: si usuario es admin/engineer, redirigir automáticamente a /dashboard o /projects
 - [x] Fix TS2872 error en milestone-reminder-config.ts (rows.length check en vez de !config)
 - [x] Checkpoint y push a GitHub (commit 70ea43e)
+
+## Fix: Roles sobrescritos a 'client' en cada login (22 Jun 2026)
+
+- [x] Corregir rol de Jean Arias (proyectos@greenhproject.com) a 'engineer' en BD producción
+- [x] Corregir rol de greenhproject@gmail.com a 'admin' en BD producción
+- [x] Identificar causa raíz: upsertUser incluía role='client' en updateSet cuando no se pasaba rol explícito
+- [x] Fix: NO incluir role en onDuplicateKeyUpdate cuando no se pasa explícitamente (preservar rol existente)
+- [x] Actualizar test auth.logout para reflejar que logout limpia 2 cookies (OAuth + JWT)
+- [x] Verificar TypeScript compila sin errores (exit code 0)
+- [x] Verificar tests de auth pasan (auth.logout + sso-callback: 9 tests passing)
+- [ ] Push a GitHub y verificar deploy en Railway

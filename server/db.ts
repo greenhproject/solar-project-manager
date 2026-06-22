@@ -93,21 +93,26 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = user.lastSignedIn;
     }
 
-    // Asignar rol de admin al propietario y usuario maestro, engineer por defecto a otros
+    // Asignar rol:
+    // - Para INSERT (nuevo usuario): usar rol pasado, o 'admin' si es maestro, o 'client' por defecto
+    // - Para UPDATE (usuario existente): SOLO actualizar rol si se pasa explícitamente
+    //   Esto evita que el login sobrescriba roles existentes a 'client'
     if (
       user.email === "greenhproject@gmail.com" ||
       user.openId === ENV.ownerOpenId
     ) {
-      // Usuario maestro siempre es admin
+      // Usuario maestro siempre es admin (tanto INSERT como UPDATE)
       values.role = "admin";
       updateSet.role = "admin";
     } else if (user.role !== undefined) {
+      // Rol pasado explícitamente: usar en INSERT y UPDATE
       values.role = user.role;
       updateSet.role = user.role;
     } else {
-      // Por defecto, nuevos usuarios son clientes
+      // Sin rol explícito: asignar 'client' solo para INSERT (nuevos usuarios)
+      // NO incluir role en updateSet - preservar el rol existente del usuario
       values.role = "client";
-      updateSet.role = "client";
+      // updateSet.role NO se establece aquí - el usuario existente mantiene su rol
     }
 
     if (!values.lastSignedIn) {
