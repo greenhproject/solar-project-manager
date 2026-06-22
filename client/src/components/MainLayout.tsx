@@ -111,23 +111,34 @@ function MainLayoutAuth0({ children }: MainLayoutProps) {
   const utils = trpc.useUtils();
   
   // FASE 1: Verificar si hay sesión SSO activa (cookie JWT)
-  // Esta query se ejecuta SIEMPRE al cargar para detectar sesiones SSO
+  // Esta query se ejecuta solo cuando Auth0 SDK terminó de cargar y NO hay sesión Auth0
   // Si no hay cookie JWT ni Bearer token, el backend devuelve null (no error)
   const ssoCheckQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
     refetchOnReconnect: false,
-    // Solo ejecutar esta verificación inicial una vez
-    enabled: !ssoChecked && !auth0.isAuthenticated,
+    // Solo ejecutar cuando Auth0 terminó de cargar, no está autenticado, y aún no verificamos SSO
+    enabled: !ssoChecked && !auth0.isLoading && !auth0.isAuthenticated,
   });
 
-  // Marcar SSO como verificado cuando la query termina
+  // Marcar SSO como verificado cuando la query termina (éxito o error)
   useEffect(() => {
-    if (!auth0.isAuthenticated && (ssoCheckQuery.data || ssoCheckQuery.error || ssoCheckQuery.isSuccess)) {
+    if (!auth0.isAuthenticated && !auth0.isLoading && ssoCheckQuery.isFetched) {
       setSsoChecked(true);
     }
-  }, [ssoCheckQuery.data, ssoCheckQuery.error, ssoCheckQuery.isSuccess, auth0.isAuthenticated]);
+  }, [ssoCheckQuery.isFetched, auth0.isAuthenticated, auth0.isLoading]);
+
+  // Timeout de seguridad: si después de 5 segundos no se resuelve el SSO check, marcar como verificado
+  useEffect(() => {
+    if (!ssoChecked && !auth0.isLoading && !auth0.isAuthenticated) {
+      const timer = setTimeout(() => {
+        console.log('[MainLayout] SSO check timeout - marking as checked');
+        setSsoChecked(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [ssoChecked, auth0.isLoading, auth0.isAuthenticated]);
 
   // FASE 2: Verificar sesión Auth0 (con Bearer token)
   // Solo se habilita cuando Auth0 está autenticado Y tiene token
