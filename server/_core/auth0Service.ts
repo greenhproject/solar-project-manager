@@ -54,6 +54,14 @@ class Auth0Service {
   /**
    * Autenticar una solicitud usando un token de Auth0.
    * Solo identifica al usuario por email. NO modifica roles.
+   * 
+   * Flujo:
+   * 1. Verificar token JWT de Auth0
+   * 2. Buscar usuario por openId (sub de Auth0)
+   * 3. Si no existe por openId, buscar por email
+   *    - Si existe por email: MIGRAR su openId al nuevo sub de Auth0 (UPDATE directo)
+   *    - Si no existe: crear nuevo usuario
+   * 4. Si existe por openId: actualizar lastSignedIn
    */
   async authenticateRequest(req: Request): Promise<User> {
     // Obtener el token del header Authorization
@@ -83,92 +91,14 @@ class Auth0Service {
     
     console.log("[Auth0] Token verified", { sub: auth0UserId, email, name });
 
-    // Buscar usuario por openId (sub de Auth0)
+    // PASO 1: Buscar usuario por openId (sub de Auth0)
     let user = await db.getUserByOpenId(auth0UserId);
 
-    // Si no existe con este sub, buscar por email
-    if (!user && email) {
-      const existingUserByEmail = await db.getUserByEmail(email);
-      if (existingUserByEmail) {
-        console.log("[Auth0] Found existing user by email, updating openId", {
-          userId: existingUserByEmail.id,
-          email,
-        });
-        
-        // Actualizar solo openId, name y lastSignedIn - NO tocar rol
-        const updatedName = existingUserByEmail.name && existingUserByEmail.name.trim() 
-          ? existingUserByEmail.name 
-          : (name || existingUserByEmail.name);
-        
-        await db.upsertUser({
-          openId: existingUserByEmail.openId!,
-          name: updatedName,
-          email: email,
-          lastSignedIn: new Date(),
-        });
-        
-        user = await db.getUserByOpenId(existingUserByEmail.openId!);
-        
-        if (!user) {
-          throw ForbiddenError("Failed to update user");
-        }
-        
-        return user;
-      }
-    }
-
-    if (!user) {
-      // Crear nuevo usuario - role será 'client' por defecto (schema default)
-      // El admin lo cambiará desde Gestión de Usuarios si necesita otro rol
-      console.log("[Auth0] Creating new user:", email);
-      
-      await db.upsertUser({
-        openId: auth0UserId,
-        name: name || null,
-        email: email || null,
-        lastSignedIn: new Date(),
-      });
-
-      user = await db.getUserByOpenId(auth0UserId);
-      
-      if (!user) {
-        throw ForbiddenError("Failed to create user");
-      }
-
-      // Auto-vincular proyectos existentes por email del cliente
-      if (email) {
-        try {
-          const { projects, clientProjectAccess } = await import("../../drizzle/schema");
-          const { eq } = await import("drizzle-orm");
-          const dbInst = await db.getDb();
-          if (dbInst) {
-            const matchingProjects = await dbInst.select({ id: projects.id })
-              .from(projects)
-              .where(eq(projects.clientEmail, email));
-            
-            if (matchingProjects.length > 0) {
-              for (const proj of matchingProjects) {
-                await dbInst.insert(clientProjectAccess).values({
-                  clientUserId: user.id,
-                  projectId: proj.id,
-                  canViewFiles: true,
-                  canViewUpdates: true,
-                  grantedBy: user.id,
-                }).onDuplicateKeyUpdate({ set: { canViewFiles: true } });
-              }
-              console.log(`[Auth0] Auto-vinculados ${matchingProjects.length} proyectos para ${email}`);
-            }
-          }
-        } catch (err) {
-          console.error("[Auth0] Error auto-vinculando proyectos:", err);
-        }
-      }
-    } else {
-      // Usuario existente: solo actualizar lastSignedIn y loginMethod
-      // NO tocar el rol - se gestiona exclusivamente desde UI admin
+    if (user) {
+      // Usuario ya existe con este openId de Auth0 - solo actualizar lastSignedIn
       const updatedName = user.name && user.name.trim() ? user.name : (name || user.name);
       
-      console.log(`[Auth0] Existing user login: ${email} (role: ${user.role}) - role NOT modified`);
+      console.log(`[Auth0] Existing user login (by openId): ${user.email} (role: ${user.role}) - role NOT modified`);
       
       await db.upsertUser({
         openId: auth0UserId,
@@ -184,6 +114,102 @@ class Auth0Service {
       if (!user) {
         throw ForbiddenError("Failed to reload user");
       }
+      
+      return user;
+    }
+
+    // PASO 2: No existe por openId - buscar por email
+    if (email) {
+      const existingUserByEmail = await db.getUserByEmail(email);
+      if (existingUserByEmail) {
+        // Usuario existe con OTRO openId (ej: creado por SSO con jwt_xxx)
+        // MIGRAR: actualizar su openId al nuevo sub de Auth0 usando UPDATE directo
+        // Esto evita el conflicto de UNIQUE en email al intentar INSERT
+        console.log("[Auth0] Migrating user openId from SSO to Auth0", {
+          userId: existingUserByEmail.id,
+          email,
+          oldOpenId: existingUserByEmail.openId,
+          newOpenId: auth0UserId,
+          role: existingUserByEmail.role,
+        });
+        
+        const updatedName = existingUserByEmail.name && existingUserByEmail.name.trim() 
+          ? existingUserByEmail.name 
+          : (name || existingUserByEmail.name);
+        
+        // UPDATE directo por ID - no upsert (evita conflicto UNIQUE en email)
+        await db.updateUserOpenIdAndLogin(existingUserByEmail.id, {
+          openId: auth0UserId,
+          name: updatedName,
+          loginMethod: "google",
+          lastSignedIn: new Date(),
+        });
+        
+        // Recargar usuario con el nuevo openId
+        user = await db.getUserByOpenId(auth0UserId);
+        
+        if (!user) {
+          // Fallback: buscar por ID
+          user = await db.getUserById(existingUserByEmail.id);
+        }
+        
+        if (!user) {
+          throw ForbiddenError("Failed to migrate user openId");
+        }
+        
+        console.log(`[Auth0] User migrated successfully: ${email} (role: ${user.role})`);
+        return user;
+      }
+    }
+
+    // PASO 3: Usuario completamente nuevo - crear
+    // Solo crear si tenemos email (sin email no podemos identificar al usuario)
+    if (!email) {
+      console.error("[Auth0] Cannot create user without email", { sub: auth0UserId });
+      throw ForbiddenError("Email required for new user registration");
+    }
+    
+    console.log("[Auth0] Creating new user:", email);
+    
+    await db.upsertUser({
+      openId: auth0UserId,
+      name: name || null,
+      email: email,
+      loginMethod: "google",
+      lastSignedIn: new Date(),
+    });
+
+    user = await db.getUserByOpenId(auth0UserId);
+    
+    if (!user) {
+      throw ForbiddenError("Failed to create user");
+    }
+
+    // Auto-vincular proyectos existentes por email del cliente
+    try {
+      const { projects, clientProjectAccess } = await import("../../drizzle/schema");
+      const { eq } = await import("drizzle-orm");
+      const dbInst = await db.getDb();
+      if (dbInst) {
+        const matchingProjects = await dbInst.select({ id: projects.id })
+          .from(projects)
+          .where(eq(projects.clientEmail, email));
+        
+        if (matchingProjects.length > 0) {
+          for (const proj of matchingProjects) {
+            await dbInst.insert(clientProjectAccess).values({
+              clientUserId: user.id,
+              projectId: proj.id,
+              canViewFiles: true,
+              canViewUpdates: true,
+              grantedBy: user.id,
+            }).onDuplicateKeyUpdate({ set: { canViewFiles: true } });
+          }
+          console.log(`[Auth0] Auto-vinculados ${matchingProjects.length} proyectos para ${email}`);
+        }
+      }
+    } catch (err) {
+      console.error("[Auth0] Error auto-vinculando proyectos:", err);
     }
 
     return user;

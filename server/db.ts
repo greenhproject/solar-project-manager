@@ -159,6 +159,34 @@ export async function getUserById(userId: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+/**
+ * Actualizar openId y datos de login de un usuario existente por ID.
+ * Usa UPDATE directo (no upsert) para evitar conflictos de UNIQUE en email
+ * cuando se migra un usuario de SSO a Auth0.
+ */
+export async function updateUserOpenIdAndLogin(
+  userId: number,
+  data: {
+    openId: string;
+    name?: string | null;
+    loginMethod?: string;
+    lastSignedIn?: Date;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: Record<string, unknown> = {
+    openId: data.openId,
+  };
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.loginMethod) updateData.loginMethod = data.loginMethod;
+  if (data.lastSignedIn) updateData.lastSignedIn = data.lastSignedIn;
+
+  await db.update(users).set(updateData).where(eq(users.id, userId));
+  console.log(`[Database] Updated openId for user ${userId} to ${data.openId}`);
+}
+
 // ============================================
 // GESTIÓN DE TIPOS DE PROYECTO
 // ============================================

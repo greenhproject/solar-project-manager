@@ -1169,4 +1169,23 @@
 - [x] Mantener protección: greenhproject@gmail.com siempre es admin (hardcoded)
 - [x] Nuevos usuarios: role='client' por defecto (admin lo cambia desde UI)
 - [x] Verificar TypeScript y tests
+- [x] Push a GitHub para deploy en Railway
+
+## Bug: Dashboard stats en 0 y Recordatorios vacíos para engineers (22 Jun 2026)
+
+- [x] Investigar por qué dashboard muestra Total/En Progreso/Completados/Con Retraso = 0 para engineers
+- [x] Investigar por qué Recordatorios muestra "No hay hitos próximos a vencer" cuando debería haber
+- [x] Causa raíz: usuarios tenían rol 'client' en BD (ya corregido) + Auth0 login creaba usuario fantasma
+- [x] Corregir roles en BD producción
+- [ ] Push a GitHub para deploy en Railway
+
+## Bug: Login Auth0/Google se queda en "Verificando sesión..." infinito (23 Jun 2026)
+
+- [x] Identificar causa: upsertUser falla con 'Duplicate entry email' cuando openId es diferente
+- [x] Problema: usuario SSO (openId=jwt_xxx) y Auth0 (openId=google-oauth2|xxx) comparten email
+- [x] Fix: auth0Service.ts usa UPDATE directo (updateUserOpenIdAndLogin) para migrar openId sin conflicto
+- [x] Nueva función db.ts: updateUserOpenIdAndLogin - UPDATE por ID, no INSERT
+- [x] Protección: si no hay email en token, rechazar (no crear usuarios fantasma)
+- [x] Limpiar BD: eliminar usuario fantasma (id 71579), migrar openId de Jean Arias
+- [x] Verificar TypeScript compila sin errores
 - [ ] Push a GitHub para deploy en Railway
