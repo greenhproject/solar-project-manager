@@ -580,80 +580,30 @@ export default function UserManagement() {
             <div className="grid gap-4">
               {clientUsers.map(user => (
                 <Card key={user.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-bold text-lg">
+                  <CardHeader className="p-4">
+                    <div className="flex flex-col gap-3">
+                      {/* Fila superior: Avatar + Info + Delete */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-bold text-sm">
                           {user.name?.charAt(0).toUpperCase() || "C"}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg">
-                              {user.name || "Sin nombre"}
-                            </CardTitle>
-                            <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                              Cliente
-                            </Badge>
-                          </div>
-                          <CardDescription className="mt-1">
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-base truncate">
+                            {user.name || "Sin nombre"}
+                          </CardTitle>
+                          <CardDescription className="mt-0.5 text-xs truncate">
                             {user.email}
                           </CardDescription>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            <span>
-                              Último acceso:{" "}
-                              {tzFormatRelative(user.lastSignedIn)}
-                            </span>
-                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Último acceso: {tzFormatRelative(user.lastSignedIn)}
+                          </p>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <Select
-                          value={user.role}
-                          onValueChange={value =>
-                            handleRoleChange(
-                              user.id,
-                              value as "admin" | "engineer" | "ingeniero_tramites" | "client"
-                            )
-                          }
-                          disabled={updatingUserId === user.id}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">
-                              <div className="flex items-center gap-2">
-                                <Shield className="h-4 w-4" />
-                                Admin
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="engineer">
-                              <div className="flex items-center gap-2">
-                                <Wrench className="h-4 w-4" />
-                                Ingeniero
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="ingeniero_tramites">
-                              <div className="flex items-center gap-2">
-                                <Wrench className="h-4 w-4" />
-                                Ing. Trámites
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="client">
-                              <div className="flex items-center gap-2">
-                                <UserPlus className="h-4 w-4" />
-                                Cliente
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              className="shrink-0 text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -678,6 +628,50 @@ export default function UserManagement() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                      </div>
+                      {/* Fila inferior: Selector de rol */}
+                      <div className="flex items-center gap-2 pl-13">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Rol:</span>
+                        <Select
+                          value={user.role}
+                          onValueChange={value =>
+                            handleRoleChange(
+                              user.id,
+                              value as "admin" | "engineer" | "ingeniero_tramites" | "client"
+                            )
+                          }
+                          disabled={updatingUserId === user.id}
+                        >
+                          <SelectTrigger className="w-[130px] h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-3.5 w-3.5" />
+                                Admin
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="engineer">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-3.5 w-3.5" />
+                                Ingeniero
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="ingeniero_tramites">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-3.5 w-3.5" />
+                                Ing. Trámites
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="client">
+                              <div className="flex items-center gap-2">
+                                <UserPlus className="h-3.5 w-3.5" />
+                                Cliente
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </CardHeader>

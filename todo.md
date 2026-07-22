@@ -1193,4 +1193,4 @@
 ## Fix: Permitir cambiar rol de usuarios desde pestaña Clientes (22 Jul 2026)
 
 - [x] Agregar opción para cambiar rol desde la vista de Clientes en Gestión de Usuarios
-- [ ] Checkpoint y push a GitHub
+- [x] Checkpoint y push a GitHub (commit 2e98383)
