@@ -607,6 +607,47 @@ export default function UserManagement() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
+                        <Select
+                          value={user.role}
+                          onValueChange={value =>
+                            handleRoleChange(
+                              user.id,
+                              value as "admin" | "engineer" | "ingeniero_tramites" | "client"
+                            )
+                          }
+                          disabled={updatingUserId === user.id}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-4 w-4" />
+                                Admin
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="engineer">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-4 w-4" />
+                                Ingeniero
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="ingeniero_tramites">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-4 w-4" />
+                                Ing. Trámites
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="client">
+                              <div className="flex items-center gap-2">
+                                <UserPlus className="h-4 w-4" />
+                                Cliente
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
