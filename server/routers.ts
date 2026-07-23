@@ -314,7 +314,7 @@ export const appRouter = router({
     // Actualizar rol de usuario
     updateRole: adminProcedure
       .input(
-        z.object({ userId: z.number(), role: z.enum(["admin", "engineer", "ingeniero_tramites", "client"]) })
+        z.object({ userId: z.number(), role: z.enum(["admin", "engineer", "ingeniero_tramites", "admin_financiero", "client"]) })
       )
       .mutation(async ({ input }) => {
         const user = await db.getUserById(input.userId);
@@ -339,7 +339,7 @@ export const appRouter = router({
 
     // Aprobar usuario pendiente
     approveUser: adminProcedure
-      .input(z.object({ userId: z.number(), role: z.enum(["admin", "engineer", "ingeniero_tramites", "client"]).default("engineer") }))
+      .input(z.object({ userId: z.number(), role: z.enum(["admin", "engineer", "ingeniero_tramites", "admin_financiero", "client"]).default("engineer") }))
       .mutation(async ({ input }) => {
         const user = await db.getUserById(input.userId);
         if (!user) {
@@ -558,8 +558,8 @@ export const appRouter = router({
   projects: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       let projectList;
-      // Administradores ven todos los proyectos
-      if (ctx.user.role === "admin") {
+      // Administradores y admin_financiero ven todos los proyectos
+      if (ctx.user.role === "admin" || ctx.user.role === "admin_financiero") {
         projectList = await db.getAllProjects();
       } else {
         // Usuarios normales solo ven proyectos donde tienen hitos asignados
@@ -569,9 +569,9 @@ export const appRouter = router({
       // Obtener hitos vencidos para marcar proyectos con retraso por hitos
       const overdueMilestones = await db.getOverdueMilestones();
       
-      // Para admin: mostrar todos los hitos vencidos
+      // Para admin y admin_financiero: mostrar todos los hitos vencidos
       // Para otros roles: filtrar solo hitos vencidos asignados al usuario actual
-      const relevantOverdueMilestones = ctx.user.role === "admin"
+      const relevantOverdueMilestones = (ctx.user.role === "admin" || ctx.user.role === "admin_financiero")
         ? overdueMilestones
         : overdueMilestones.filter(m => m.assignedUserId === ctx.user.id);
       
@@ -607,6 +607,7 @@ export const appRouter = router({
         
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "admin_financiero" &&
           project.assignedEngineerId !== ctx.user.id &&
           !hasAssignedMilestones
         ) {
@@ -828,8 +829,8 @@ export const appRouter = router({
       }),
 
     stats: protectedProcedure.query(async ({ ctx }) => {
-      // Estadísticas generales solo para admin
-      if (ctx.user.role === "admin") {
+      // Estadísticas generales para admin y admin_financiero
+      if (ctx.user.role === "admin" || ctx.user.role === "admin_financiero") {
         return await db.getProjectStats();
       } else {
         // Para ingenieros y otros roles, calcular stats basados en hitos asignados
@@ -1097,8 +1098,8 @@ export const appRouter = router({
     getAll: protectedProcedure.query(async ({ ctx }) => {
       const allMilestones = await db.getAllMilestones();
 
-      // Si no es admin, filtrar solo los hitos ASIGNADOS al usuario (no todos los del proyecto)
-      if (ctx.user.role !== "admin") {
+      // Si no es admin ni admin_financiero, filtrar solo los hitos ASIGNADOS al usuario
+      if (ctx.user.role !== "admin" && ctx.user.role !== "admin_financiero") {
         return allMilestones.filter(m => m.assignedUserId === ctx.user.id);
       }
 
@@ -1116,8 +1117,8 @@ export const appRouter = router({
           });
         }
 
-        // Solo admin ve todos los hitos del proyecto
-        if (ctx.user.role === "admin") {
+        // Admin y admin_financiero ven todos los hitos del proyecto
+        if (ctx.user.role === "admin" || ctx.user.role === "admin_financiero") {
           return await db.getMilestonesByProjectId(input.projectId);
         }
 
@@ -1260,6 +1261,26 @@ export const appRouter = router({
             code: "NOT_FOUND",
             message: "Hito no encontrado",
           });
+        }
+
+        // admin_financiero solo puede cambiar status de sus propios hitos asignados
+        if (ctx.user.role === "admin_financiero") {
+          if (milestone.assignedUserId !== ctx.user.id) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Solo puedes modificar los hitos que te están asignados",
+            });
+          }
+          // Solo permitir cambiar status y completedDate, no otros campos
+          const allowedFields = ['status', 'completedDate'];
+          const attemptedFields = Object.keys(updateData).filter(k => updateData[k] !== undefined);
+          const disallowed = attemptedFields.filter(f => !allowedFields.includes(f));
+          if (disallowed.length > 0) {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "Solo puedes marcar como completado tus hitos asignados",
+            });
+          }
         }
 
         await db.updateMilestone(id, updateData);
@@ -2526,7 +2547,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
 
         // Verificar permisos: admin, engineer e ingeniero_tramites pueden subir archivos
         // Todos los miembros del equipo pueden subir archivos a cualquier proyecto
-        if (!ctx.user.role || !['admin', 'engineer', 'ingeniero_tramites'].includes(ctx.user.role)) {
+        if (!ctx.user.role || !['admin', 'engineer', 'ingeniero_tramites', 'admin_financiero'].includes(ctx.user.role)) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "No tienes permiso para subir archivos a este proyecto",
@@ -2560,8 +2581,8 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           });
         }
 
-        // Verificar permisos: admin, engineer e ingeniero_tramites pueden ver archivos
-        if (!ctx.user.role || !['admin', 'engineer', 'ingeniero_tramites'].includes(ctx.user.role)) {
+        // Verificar permisos: admin, engineer, ingeniero_tramites y admin_financiero pueden ver archivos
+        if (!ctx.user.role || !['admin', 'engineer', 'ingeniero_tramites', 'admin_financiero'].includes(ctx.user.role)) {
           throw new TRPCError({
             code: "FORBIDDEN",
             message: "No tienes permiso para ver archivos de este proyecto",

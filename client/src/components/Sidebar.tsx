@@ -89,49 +89,49 @@ export function Sidebar({ className }: SidebarProps) {
       icon: LayoutDashboard,
       label: "Dashboard",
       href: "/dashboard",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: FolderKanban,
       label: "Proyectos",
       href: "/projects",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: BarChart3,
       label: "Análisis",
       href: "/analytics",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: TrendingUp,
       label: "Análisis Avanzado",
       href: "/advanced-analytics",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: GanttChartSquare,
       label: "Diagrama de Gantt",
       href: "/gantt",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: Calendar,
       label: "Calendario",
       href: "/calendar",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: Bell,
       label: "Recordatorios",
       href: "/reminders",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: Mail,
       label: "Notificaciones",
       href: "/notifications",
-      roles: ["admin", "engineer", "ingeniero_tramites"],
+      roles: ["admin", "engineer", "ingeniero_tramites", "admin_financiero"],
     },
     {
       icon: Sparkles,
@@ -222,6 +222,8 @@ export function Sidebar({ className }: SidebarProps) {
                   "inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium",
                   user.role === "admin"
                     ? "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+                    : user.role === "admin_financiero"
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
                     : user.role === "ingeniero_tramites"
                     ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
                     : "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
@@ -229,6 +231,8 @@ export function Sidebar({ className }: SidebarProps) {
               >
                 {user.role === "admin" 
                   ? "Admin" 
+                  : user.role === "admin_financiero"
+                  ? "Admin Financiero"
                   : user.role === "ingeniero_tramites"
                   ? "Ingeniero de Trámites"
                   : "Ingeniero"}

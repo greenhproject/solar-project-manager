@@ -1194,3 +1194,17 @@
 
 - [x] Agregar opción para cambiar rol desde la vista de Clientes en Gestión de Usuarios
 - [x] Checkpoint y push a GitHub (commit 2e98383)
+
+## Feature: Nuevo rol Admin Financiero (23 Jul 2026)
+
+- [x] Agregar 'admin_financiero' al enum de roles en drizzle/schema.ts
+- [x] Push migración de BD (ALTER TABLE directo)
+- [x] Backend: admin_financiero ve TODOS los proyectos (como admin)
+- [x] Backend: admin_financiero ve TODOS los hitos de un proyecto
+- [x] Backend: admin_financiero solo puede marcar como completados sus hitos asignados
+- [x] Backend: admin_financiero NO puede crear/editar proyectos
+- [x] Frontend: routing y dashboard para admin_financiero (vista financiera/global)
+- [x] Frontend: dentro de proyecto, ver todos los hitos pero solo interactuar con los propios
+- [x] UserManagement: agregar admin_financiero al selector de roles
+- [x] Recordatorios: admin_financiero ve sus hitos asignados
+- [ ] Checkpoint y push a GitHub

@@ -22,7 +22,7 @@ export const users = mysqlTable("users", {
   avatarUrl: text("avatarUrl"), // URL del avatar personalizado en S3
   theme: mysqlEnum("theme", ["light", "dark", "system"]).default("system"), // Tema preferido del usuario
   loginMethod: varchar("loginMethod", { length: 64 }), // 'oauth' o 'jwt'
-  role: mysqlEnum("role", ["admin", "engineer", "ingeniero_tramites", "client"]).default("client").notNull(),
+  role: mysqlEnum("role", ["admin", "engineer", "ingeniero_tramites", "admin_financiero", "client"]).default("client").notNull(),
   status: mysqlEnum("accountStatus", ["pending", "approved", "rejected"]).default("pending").notNull(),
   jobTitle: varchar("jobTitle", { length: 255 }), // Cargo del usuario
   createdAt: timestamp("createdAt").defaultNow().notNull(),

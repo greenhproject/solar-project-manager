@@ -645,7 +645,7 @@ export default function ProjectDetail() {
           <TabsContent value="milestones" className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
               <h2 className="text-lg sm:text-2xl font-bold">Hitos del Proyecto</h2>
-              <div className="flex gap-2 flex-wrap">
+              {user?.role !== "admin_financiero" && <div className="flex gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   className="gap-1 sm:gap-2 text-xs sm:text-sm"
@@ -774,7 +774,7 @@ export default function ProjectDetail() {
                   </div>
                 </DialogContent>
               </Dialog>
-              </div>
+              </div>}
             </div>
 
             {milestones && milestones.length > 0 ? (
@@ -800,6 +800,8 @@ export default function ProjectDetail() {
                             )
                           }
                           className="mt-1 flex-shrink-0"
+                          disabled={user?.role === "admin_financiero" && (milestone as any).assignedUserId !== user?.id}
+                          title={user?.role === "admin_financiero" && (milestone as any).assignedUserId !== user?.id ? "Solo puedes completar tus hitos asignados" : undefined}
                         >
                           {milestone.status === "completed" ? (
                             <CheckCircle2 className="h-6 w-6 text-green-500" />
@@ -825,7 +827,7 @@ export default function ProjectDetail() {
                           )}
 
                           {/* Asignación de responsable */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3">
+                          {user?.role !== "admin_financiero" && <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3">
                             <div>
                               <Label className="text-xs text-muted-foreground mb-1 block">Responsable</Label>
                               <Select
@@ -857,7 +859,7 @@ export default function ProjectDetail() {
                               </Select>
                             </div>
                             
-                          </div>
+                          </div>}
 
                           {/* Fechas de inicio, fin (=vencimiento) y duración - Sincronizados */}
                           <div className="grid grid-cols-2 sm:grid-cols-[1fr_1fr_5rem] gap-2 sm:gap-4 mb-2">

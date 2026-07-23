@@ -106,6 +106,11 @@ export default function Dashboard() {
                   Admin
                 </Badge>
               )}
+              {currentUser.role === "admin_financiero" && (
+                <Badge variant="default" className="ml-2 bg-emerald-500">
+                  Admin Financiero
+                </Badge>
+              )}
             </p>
           </div>
 
@@ -248,7 +253,7 @@ export default function Dashboard() {
             <div className="min-w-0">
               <CardTitle className="text-lg sm:text-xl">Proyectos Recientes</CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                {currentUser.role === "admin"
+                {(currentUser.role === "admin" || currentUser.role === "admin_financiero")
                   ? "Todos los proyectos del sistema"
                   : "Tus proyectos asignados"}
               </CardDescription>

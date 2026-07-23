@@ -478,7 +478,7 @@ export default function Projects() {
                 <span className="text-destructive font-medium">
                   {filteredProjects.length} proyecto(s) requieren atención urgente
                 </span>
-              ) : user.role === "admin" ? (
+              ) : (user.role === "admin" || user.role === "admin_financiero") ? (
                 "Gestiona todos los proyectos del sistema"
               ) : (
                 "Tus proyectos asignados"

@@ -51,11 +51,11 @@ export default function UserManagement() {
   const approveUser = trpc.users.approveUser.useMutation();
   const rejectUser = trpc.users.rejectUser.useMutation();
   const [updatingUserId, setUpdatingUserId] = useState<number | null>(null);
-  const [approveRole, setApproveRole] = useState<"admin" | "engineer" | "ingeniero_tramites" | "client">("engineer");
+  const [approveRole, setApproveRole] = useState<"admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client">("engineer");
 
   const handleRoleChange = async (
     userId: number,
-    newRole: "admin" | "engineer" | "ingeniero_tramites" | "client"
+    newRole: "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
   ) => {
     setUpdatingUserId(userId);
     try {
@@ -113,7 +113,7 @@ export default function UserManagement() {
     );
   }
 
-  const adminUsers = users?.filter(u => u.role === "admin") || [];
+  const adminUsers = users?.filter(u => u.role === "admin" || u.role === "admin_financiero") || [];
   const engineerUsers = users?.filter(u => u.role === "engineer" || u.role === "ingeniero_tramites") || [];
   const clientUsers = users?.filter(u => u.role === "client") || [];
   const pendingCount = pendingUsers?.length || 0;
@@ -243,6 +243,12 @@ export default function UserManagement() {
                                 Admin
                               </div>
                             </SelectItem>
+                            <SelectItem value="admin_financiero">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-4 w-4" />
+                                Admin Financiero
+                              </div>
+                            </SelectItem>
                             <SelectItem value="client">
                               <div className="flex items-center gap-2">
                                 <UserPlus className="h-4 w-4" />
@@ -352,7 +358,7 @@ export default function UserManagement() {
                             onValueChange={value =>
                               handleRoleChange(
                                 user.id,
-                                value as "admin" | "engineer" | "ingeniero_tramites" | "client"
+                                value as "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
                               )
                             }
                             disabled={updatingUserId === user.id}
@@ -365,6 +371,12 @@ export default function UserManagement() {
                                 <div className="flex items-center gap-2">
                                   <Shield className="h-4 w-4" />
                                   Admin
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="admin_financiero">
+                                <div className="flex items-center gap-2">
+                                  <Shield className="h-4 w-4" />
+                                  Admin Financiero
                                 </div>
                               </SelectItem>
                               <SelectItem value="engineer">
@@ -488,7 +500,7 @@ export default function UserManagement() {
                           onValueChange={value =>
                             handleRoleChange(
                               user.id,
-                              value as "admin" | "engineer" | "ingeniero_tramites" | "client"
+                              value as "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
                             )
                           }
                           disabled={updatingUserId === user.id}
@@ -501,6 +513,12 @@ export default function UserManagement() {
                               <div className="flex items-center gap-2">
                                 <Shield className="h-4 w-4" />
                                 Admin
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="admin_financiero">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-4 w-4" />
+                                Admin Financiero
                               </div>
                             </SelectItem>
                             <SelectItem value="engineer">
@@ -637,7 +655,7 @@ export default function UserManagement() {
                           onValueChange={value =>
                             handleRoleChange(
                               user.id,
-                              value as "admin" | "engineer" | "ingeniero_tramites" | "client"
+                              value as "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
                             )
                           }
                           disabled={updatingUserId === user.id}
@@ -650,6 +668,12 @@ export default function UserManagement() {
                               <div className="flex items-center gap-2">
                                 <Shield className="h-3.5 w-3.5" />
                                 Admin
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="admin_financiero">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-3.5 w-3.5" />
+                                Admin Fin.
                               </div>
                             </SelectItem>
                             <SelectItem value="engineer">
