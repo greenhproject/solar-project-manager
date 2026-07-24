@@ -1208,3 +1208,9 @@
 - [x] UserManagement: agregar admin_financiero al selector de roles
 - [x] Recordatorios: admin_financiero ve sus hitos asignados
 - [ ] Checkpoint y push a GitHub
+
+## Bug: Cambio de rol no funciona + responsive roto en Activos (24 Jul 2026)
+
+- [ ] Verificar que BD producción tenga admin_financiero en enum
+- [ ] Fix responsive: dropdown de rol se superpone con nombre en móviles (tab Activos/Admins)
+- [ ] Checkpoint y push a GitHub

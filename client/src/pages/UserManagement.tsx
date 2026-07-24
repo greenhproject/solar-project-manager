@@ -320,125 +320,121 @@ export default function UserManagement() {
                 key={user.id}
                 className={isMaster ? "border-2 border-orange-500" : ""}
               >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-lg">
+                <CardHeader className="p-4">
+                  <div className="flex flex-col gap-3">
+                    {/* Row 1: Avatar + Name + Delete */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-amber-400 flex items-center justify-center text-white font-bold text-sm">
                         {user.name?.charAt(0).toUpperCase() || "U"}
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <CardTitle className="text-lg">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <CardTitle className="text-base truncate">
                             {user.name || "Sin nombre"}
                           </CardTitle>
                           {isMaster && (
-                            <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 gap-1">
+                            <Badge className="bg-gradient-to-r from-orange-500 to-amber-500 gap-1 text-xs">
                               <Crown className="h-3 w-3" />
                               Usuario Maestro
                             </Badge>
                           )}
-                          {isCurrentUser && <Badge variant="outline">Tú</Badge>}
+                          {isCurrentUser && <Badge variant="outline" className="text-xs">Tú</Badge>}
                         </div>
-                        <CardDescription className="mt-1">
+                        <CardDescription className="mt-0.5 truncate text-sm">
                           {user.email}
                         </CardDescription>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
-                          <span>
-                            Último acceso:{" "}
-                            {tzFormatRelative(user.lastSignedIn)}
-                          </span>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Último acceso: {tzFormatRelative(user.lastSignedIn)}
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-4">
                       {!isMaster && (
-                        <>
-                          <Select
-                            value={user.role}
-                            onValueChange={value =>
-                              handleRoleChange(
-                                user.id,
-                                value as "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
-                              )
-                            }
-                            disabled={updatingUserId === user.id}
-                          >
-                            <SelectTrigger className="w-[140px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">
-                                <div className="flex items-center gap-2">
-                                  <Shield className="h-4 w-4" />
-                                  Admin
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="admin_financiero">
-                                <div className="flex items-center gap-2">
-                                  <Shield className="h-4 w-4" />
-                                  Admin Financiero
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="engineer">
-                                <div className="flex items-center gap-2">
-                                  <Wrench className="h-4 w-4" />
-                                  Ingeniero
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="ingeniero_tramites">
-                                <div className="flex items-center gap-2">
-                                  <Wrench className="h-4 w-4" />
-                                  Ing. Trámites
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="client">
-                                <div className="flex items-center gap-2">
-                                  <UserPlus className="h-4 w-4" />
-                                  Cliente
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:bg-red-900/20"
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="shrink-0 text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. Se eliminará permanentemente el usuario {user.name}.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="bg-red-600 hover:bg-red-700"
                               >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  ¿Eliminar usuario?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. Se eliminará
-                                  permanentemente el usuario {user.name}.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteUser(user.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Eliminar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </>
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                       {isMaster && (
-                        <Badge variant="outline" className="text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                        <Badge variant="outline" className="shrink-0 text-gray-500 dark:text-gray-400">
                           Protegido
                         </Badge>
                       )}
                     </div>
+                    {/* Row 2: Role selector */}
+                    {!isMaster && (
+                      <div className="flex items-center gap-2 pl-13">
+                        <span className="text-xs text-gray-500">Rol:</span>
+                        <Select
+                          value={user.role}
+                          onValueChange={value =>
+                            handleRoleChange(
+                              user.id,
+                              value as "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
+                            )
+                          }
+                          disabled={updatingUserId === user.id}
+                        >
+                          <SelectTrigger className="w-[160px] h-8 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-3 w-3" />
+                                Admin
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="admin_financiero">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-3 w-3" />
+                                Admin Financiero
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="engineer">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-3 w-3" />
+                                Ingeniero
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="ingeniero_tramites">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-3 w-3" />
+                                Ing. Trámites
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="client">
+                              <div className="flex items-center gap-2">
+                                <UserPlus className="h-3 w-3" />
+                                Cliente
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
                 </CardHeader>
               </Card>
@@ -468,98 +464,42 @@ export default function UserManagement() {
 
               return (
                 <Card key={user.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-indigo-400 flex items-center justify-center text-white font-bold text-lg">
+                  <CardHeader className="p-4">
+                    <div className="flex flex-col gap-3">
+                      {/* Row 1: Avatar + Name + Delete */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-indigo-400 flex items-center justify-center text-white font-bold text-sm">
                           {user.name?.charAt(0).toUpperCase() || "U"}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <CardTitle className="text-lg">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <CardTitle className="text-base truncate">
                               {user.name || "Sin nombre"}
                             </CardTitle>
-                            {isCurrentUser && (
-                              <Badge variant="outline">Tú</Badge>
-                            )}
+                            {isCurrentUser && <Badge variant="outline" className="text-xs">Tú</Badge>}
                           </div>
-                          <CardDescription className="mt-1">
+                          <CardDescription className="mt-0.5 truncate text-sm">
                             {user.email}
                           </CardDescription>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            <span>
-                              Último acceso:{" "}
-                              {tzFormatRelative(user.lastSignedIn)}
-                            </span>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Último acceso: {tzFormatRelative(user.lastSignedIn)}
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2 ml-4">
-                        <Select
-                          value={user.role}
-                          onValueChange={value =>
-                            handleRoleChange(
-                              user.id,
-                              value as "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
-                            )
-                          }
-                          disabled={updatingUserId === user.id}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="admin">
-                              <div className="flex items-center gap-2">
-                                <Shield className="h-4 w-4" />
-                                Admin
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="admin_financiero">
-                              <div className="flex items-center gap-2">
-                                <Shield className="h-4 w-4" />
-                                Admin Financiero
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="engineer">
-                              <div className="flex items-center gap-2">
-                                <Wrench className="h-4 w-4" />
-                                Ingeniero
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="ingeniero_tramites">
-                              <div className="flex items-center gap-2">
-                                <Wrench className="h-4 w-4" />
-                                Ing. Trámites
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="client">
-                              <div className="flex items-center gap-2">
-                                <UserPlus className="h-4 w-4" />
-                                Cliente
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              className="shrink-0 text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                ¿Eliminar usuario?
-                              </AlertDialogTitle>
+                              <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Esta acción no se puede deshacer. Se eliminará
-                                permanentemente el usuario {user.name}.
+                                Esta acción no se puede deshacer. Se eliminará permanentemente el usuario {user.name}.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -573,6 +513,56 @@ export default function UserManagement() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                      </div>
+                      {/* Row 2: Role selector */}
+                      <div className="flex items-center gap-2 pl-13">
+                        <span className="text-xs text-gray-500">Rol:</span>
+                        <Select
+                          value={user.role}
+                          onValueChange={value =>
+                            handleRoleChange(
+                              user.id,
+                              value as "admin" | "engineer" | "ingeniero_tramites" | "admin_financiero" | "client"
+                            )
+                          }
+                          disabled={updatingUserId === user.id}
+                        >
+                          <SelectTrigger className="w-[160px] h-8 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-3 w-3" />
+                                Admin
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="admin_financiero">
+                              <div className="flex items-center gap-2">
+                                <Shield className="h-3 w-3" />
+                                Admin Financiero
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="engineer">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-3 w-3" />
+                                Ingeniero
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="ingeniero_tramites">
+                              <div className="flex items-center gap-2">
+                                <Wrench className="h-3 w-3" />
+                                Ing. Trámites
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="client">
+                              <div className="flex items-center gap-2">
+                                <UserPlus className="h-3 w-3" />
+                                Cliente
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </CardHeader>
