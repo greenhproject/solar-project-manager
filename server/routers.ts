@@ -1463,7 +1463,35 @@ export const appRouter = router({
 
         // Si la nueva fecha es futura y el hito estaba en overdue, revertir a pending
         const now2 = new Date();
+        
+        // Calcular nueva startDate: mantener la misma duración si existe, sino usar newDueDate como start
+        const durationDays = milestone.durationDays || 1;
+        let newStartDate: Date;
+        if (milestone.startDate && milestone.endDate) {
+          // Si tenía startDate y endDate, recalcular startDate manteniendo la duración
+          // newStartDate = newDueDate - durationDays
+          const { subtractBusinessDays } = await import("../shared/businessDays");
+          let includeWeekends = false;
+          try {
+            const { appSettings } = await import("../drizzle/schema");
+            const { eq } = await import("drizzle-orm");
+            const dbInst = await db.getDb();
+            const settingResult = dbInst ? await dbInst
+              .select()
+              .from(appSettings)
+              .where(eq(appSettings.settingKey, "include_weekends"))
+              .limit(1) : [];
+            if (settingResult.length > 0 && settingResult[0].settingValue === "true") {
+              includeWeekends = true;
+            }
+          } catch (e) { /* default false */ }
+          newStartDate = subtractBusinessDays(input.newDueDate, durationDays, includeWeekends);
+        } else {
+          newStartDate = input.newDueDate; // Si no tenía startDate, usar la nueva fecha
+        }
+        
         const updateData: any = {
+          startDate: newStartDate,
           dueDate: input.newDueDate,
           endDate: input.newDueDate, // Sincronizar endDate = dueDate
           notes: updatedNotes,
@@ -1477,6 +1505,7 @@ export const appRouter = router({
         await db.updateMilestone(input.milestoneId, updateData);
 
         // Registrar la reprogramación como nota en project_updates
+        const project = await db.getProjectById(milestone.projectId);
         await db.createProjectUpdate({
           projectId: milestone.projectId,
           updateType: "note_added",
@@ -1486,6 +1515,67 @@ export const appRouter = router({
           newValue: JSON.stringify({ dueDate: input.newDueDate }),
           createdBy: ctx.user.id,
         });
+
+        // Enviar notificación por email al responsable del hito (si es diferente al que reprograma)
+        if (milestone.assignedUserId && milestone.assignedUserId !== ctx.user.id) {
+          try {
+            const assignedUser = await db.getUserById(milestone.assignedUserId);
+            if (assignedUser && assignedUser.email) {
+              const { sendEmail } = await import("./emailService");
+              const newDateFormatted = input.newDueDate.toLocaleDateString('es-CO', { timeZone: tz });
+              await sendEmail({
+                to: assignedUser.email,
+                subject: `📅 Hito reprogramado: ${milestone.name}`,
+                html: `
+                  <h2>Tu hito ha sido reprogramado</h2>
+                  <p>Hola ${assignedUser.name || 'Usuario'},</p>
+                  <p><strong>${userName}</strong> ha reprogramado el siguiente hito:</p>
+                  <ul>
+                    <li><strong>Proyecto:</strong> ${project?.name || 'Proyecto'}</li>
+                    <li><strong>Hito:</strong> ${milestone.name}</li>
+                    <li><strong>Fecha anterior:</strong> ${oldDateStr}</li>
+                    <li><strong>Nueva fecha:</strong> ${newDateFormatted}</li>
+                    <li><strong>Justificación:</strong> ${input.justification}</li>
+                  </ul>
+                  <p>Por favor, ten en cuenta la nueva fecha de vencimiento.</p>
+                `,
+              });
+              console.log(`[Reschedule] Notificación enviada a responsable: ${assignedUser.email}`);
+            }
+          } catch (error) {
+            console.error("[Reschedule] Error enviando notificación al responsable:", error);
+          }
+        }
+
+        // Enviar copia al remitente para trazabilidad
+        if (ctx.user.email) {
+          try {
+            const { sendEmail } = await import("./emailService");
+            const responsableName = milestone.assignedUserId 
+              ? (await db.getUserById(milestone.assignedUserId))?.name || 'Sin asignar'
+              : 'Sin asignar';
+            const newDateFormatted = input.newDueDate.toLocaleDateString('es-CO', { timeZone: tz });
+            await sendEmail({
+              to: ctx.user.email,
+              subject: `📅 Confirmación: Reprogramaste el hito "${milestone.name}"`,
+              html: `
+                <h2>Confirmación de reprogramación</h2>
+                <p>Hola ${userName},</p>
+                <p>Has reprogramado exitosamente el siguiente hito:</p>
+                <ul>
+                  <li><strong>Proyecto:</strong> ${project?.name || 'Proyecto'}</li>
+                  <li><strong>Hito:</strong> ${milestone.name}</li>
+                  <li><strong>Responsable:</strong> ${responsableName}</li>
+                  <li><strong>Fecha anterior:</strong> ${oldDateStr}</li>
+                  <li><strong>Nueva fecha:</strong> ${newDateFormatted}</li>
+                  <li><strong>Justificación:</strong> ${input.justification}</li>
+                </ul>
+              `,
+            });
+          } catch (error) {
+            console.error("[Reschedule] Error enviando copia al remitente:", error);
+          }
+        }
 
         return { success: true, projectId: milestone.projectId };
       }),
@@ -1716,12 +1806,33 @@ export const appRouter = router({
         }
 
         // Actualizar fecha de vencimiento del hito seleccionado (endDate = dueDate siempre)
-        // Si la nueva fecha es futura y el hito estaba en overdue, revertir a pending
+        // También recalcular startDate manteniendo la duración
         const nowCheck = new Date();
         const dueDateUpdate: any = {
           dueDate: input.dueDate,
           endDate: input.dueDate,
         };
+        
+        // Recalcular startDate basado en la duración del hito
+        if (milestone.startDate && milestone.durationDays) {
+          const { subtractBusinessDays } = await import("../shared/businessDays");
+          let includeWeekends = false;
+          try {
+            const { appSettings } = await import("../drizzle/schema");
+            const { eq } = await import("drizzle-orm");
+            const dbInst = await db.getDb();
+            const settingResult = dbInst ? await dbInst
+              .select()
+              .from(appSettings)
+              .where(eq(appSettings.settingKey, "include_weekends"))
+              .limit(1) : [];
+            if (settingResult.length > 0 && settingResult[0].settingValue === "true") {
+              includeWeekends = true;
+            }
+          } catch (e) { /* default false */ }
+          dueDateUpdate.startDate = subtractBusinessDays(input.dueDate, milestone.durationDays, includeWeekends);
+        }
+        
         if (input.dueDate > nowCheck && milestone.status === 'overdue') {
           dueDateUpdate.status = 'pending';
         }

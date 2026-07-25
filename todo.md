@@ -1211,6 +1211,17 @@
 
 ## Bug: Cambio de rol no funciona + responsive roto en Activos (24 Jul 2026)
 
-- [ ] Verificar que BD producción tenga admin_financiero en enum
-- [ ] Fix responsive: dropdown de rol se superpone con nombre en móviles (tab Activos/Admins)
+- [x] Verificar que BD producción tenga admin_financiero en enum
+- [x] Fix responsive: dropdown de rol se superpone con nombre en móviles (tab Activos/Admins)
+- [x] Checkpoint y push a GitHub (commit 1cda3e7)
+
+## Bug: Reprogramación de hitos no actualiza fechas correctamente (25 Jul 2026)
+
+- [x] Investigar lógica de reprogramación en backend (milestones.reschedule)
+- [x] Fix: cuando se reprograma, actualizar startDate recalculando con duración
+- [x] Fix: enviar notificación al responsable cuando su hito es reprogramado
+- [x] Fix: enviar copia al remitente para trazabilidad
+- [x] Fix: también corregido updateDueDate para recalcular startDate
+- [x] Verificar que las notificaciones/recordatorios usen las fechas actualizadas
+- [x] Nueva función subtractBusinessDays en shared/businessDays.ts
 - [ ] Checkpoint y push a GitHub

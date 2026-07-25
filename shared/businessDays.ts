@@ -69,3 +69,31 @@ export function calculateEndDate(
   const start = typeof startDate === 'string' ? new Date(startDate) : new Date(startDate);
   return addBusinessDays(start, durationDays, includeWeekends);
 }
+
+/**
+ * Resta N días hábiles a una fecha
+ * Si includeWeekends es true, resta días calendario normales
+ */
+export function subtractBusinessDays(
+  endDate: Date,
+  days: number,
+  includeWeekends: boolean = false
+): Date {
+  const result = new Date(endDate);
+  
+  if (includeWeekends) {
+    result.setDate(result.getDate() - days);
+    return result;
+  }
+
+  let subtractedDays = 0;
+  while (subtractedDays < days) {
+    result.setDate(result.getDate() - 1);
+    const dayOfWeek = result.getDay();
+    // 0 = Domingo, 6 = Sábado
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      subtractedDays++;
+    }
+  }
+  return result;
+}
