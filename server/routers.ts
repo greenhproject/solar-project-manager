@@ -2530,6 +2530,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         // Verificar permisos
         if (
           ctx.user.role !== "admin" &&
+          ctx.user.role !== "admin_financiero" &&
           ctx.user.role !== "ingeniero_tramites" &&
           project.assignedEngineerId !== ctx.user.id
         ) {
@@ -2587,7 +2588,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         })
       )
       .mutation(async ({ input, ctx }) => {
-        if (ctx.user.role !== "admin") {
+        if (ctx.user.role !== "admin" && ctx.user.role !== "admin_financiero") {
           throw new TRPCError({
             code: "FORBIDDEN",
             message:

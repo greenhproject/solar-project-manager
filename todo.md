@@ -1224,4 +1224,10 @@
 - [x] Fix: también corregido updateDueDate para recalcular startDate
 - [x] Verificar que las notificaciones/recordatorios usen las fechas actualizadas
 - [x] Nueva función subtractBusinessDays en shared/businessDays.ts
+- [x] Checkpoint y push a GitHub (commit dc1a64a)
+
+## Mejora: Permitir admin_financiero descargar reportes (27 Jul 2026)
+
+- [x] Agregar permiso de generación de reportes para admin_financiero en backend
+- [x] Frontend ya muestra botón para todos los roles (no necesita cambio)
 - [ ] Checkpoint y push a GitHub
