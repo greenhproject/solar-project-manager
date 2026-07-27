@@ -583,6 +583,151 @@ console.log("Nuevo progreso:", result.projectProgress + "%");`}
           </div>
         </section>
 
+        {/* SSO - Single Sign-On */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-6">SSO (Single Sign-On)</h2>
+          <p className="text-gray-300 mb-4">
+            El sistema SSO permite autenticar usuarios desde aplicaciones externas (como GHP Center/Hub) 
+            sin requerir login adicional. Utiliza tokens temporales firmados con un secreto compartido.
+          </p>
+
+          <div className="space-y-6">
+            {/* Flujo SSO */}
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <h3 className="text-lg font-semibold text-white mb-3">Flujo de Autenticación SSO</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-300">
+                <li>La aplicación externa genera un token JWT firmado con el <code className="text-orange-300">CRM_SSO_SECRET</code> compartido</li>
+                <li>El token incluye: <code className="text-orange-300">email</code>, <code className="text-orange-300">name</code>, <code className="text-orange-300">role</code> (opcional), y <code className="text-orange-300">redirectTo</code> (opcional)</li>
+                <li>El usuario es redirigido a <code className="text-orange-300">{baseUrl}/api/sso/callback?token=JWT_TOKEN</code></li>
+                <li>SPM verifica la firma, busca/crea el usuario, establece sesión (cookie JWT) y redirige según rol</li>
+              </ol>
+            </div>
+
+            {/* Endpoint: SSO Callback */}
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 rounded text-xs font-bold bg-green-500/20 text-green-400">GET</span>
+                <code className="text-sm text-white">/api/sso/callback</code>
+              </div>
+              <p className="text-sm text-gray-400 mb-3">Recibe el token JWT del sistema externo, autentica al usuario y establece sesión.</p>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Query Parameters</h4>
+              <div className="space-y-1 text-sm mb-4">
+                <div className="flex gap-2"><code className="text-orange-300">token</code><span className="text-gray-400">— JWT firmado con CRM_SSO_SECRET (requerido)</span></div>
+              </div>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Payload del JWT</h4>
+              <pre className="bg-gray-950 border border-gray-800 rounded p-3 text-xs overflow-x-auto mb-4">
+                <code className="text-gray-300">{`{
+  "email": "usuario@empresa.com",  // Requerido
+  "name": "Nombre del Usuario",    // Opcional
+  "role": "engineer",              // Opcional (admin|engineer|ingeniero_tramites|admin_financiero|client)
+  "redirectTo": "/dashboard",      // Opcional (ruta post-login)
+  "iat": 1700000000,               // Issued at (automático)
+  "exp": 1700000300                // Expira en 5 min (recomendado)
+}`}</code>
+              </pre>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Comportamiento</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                <li>Si el usuario existe: inicia sesión sin modificar su rol actual</li>
+                <li>Si el usuario NO existe: lo crea con rol <code className="text-orange-300">client</code> por defecto</li>
+                <li>Establece cookie JWT de sesión (7 días de duración)</li>
+                <li>Redirige a <code className="text-orange-300">/dashboard</code> (admin/engineer) o <code className="text-orange-300">/portal</code> (client)</li>
+              </ul>
+            </div>
+
+            {/* Endpoint: SSO Token (API) */}
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 rounded text-xs font-bold bg-yellow-500/20 text-yellow-400">POST</span>
+                <code className="text-sm text-white">/api/sso/token</code>
+              </div>
+              <p className="text-sm text-gray-400 mb-3">Genera un token SSO temporal para autenticar un usuario externo. Requiere API Key de admin.</p>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Headers</h4>
+              <div className="space-y-1 text-sm mb-4">
+                <div className="flex gap-2"><code className="text-orange-300">X-API-Key</code><span className="text-gray-400">— API Key con permisos de admin</span></div>
+              </div>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Body (JSON)</h4>
+              <pre className="bg-gray-950 border border-gray-800 rounded p-3 text-xs overflow-x-auto mb-4">
+                <code className="text-gray-300">{`{
+  "email": "cliente@empresa.com",
+  "name": "Nombre Cliente",
+  "role": "client"
+}`}</code>
+              </pre>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Respuesta</h4>
+              <pre className="bg-gray-950 border border-gray-800 rounded p-3 text-xs overflow-x-auto">
+                <code className="text-gray-300">{`{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "loginUrl": "${baseUrl}/api/sso/login?token=eyJhbGci...",
+  "expiresIn": 300
+}`}</code>
+              </pre>
+            </div>
+
+            {/* Endpoint: SSO Validate */}
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="px-2 py-0.5 rounded text-xs font-bold bg-yellow-500/20 text-yellow-400">POST</span>
+                <code className="text-sm text-white">/api/sso/validate</code>
+              </div>
+              <p className="text-sm text-gray-400 mb-3">Verifica si una sesión SSO está activa. Útil para verificar estado de autenticación desde app externa.</p>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Headers</h4>
+              <div className="space-y-1 text-sm mb-4">
+                <div className="flex gap-2"><code className="text-orange-300">Cookie</code><span className="text-gray-400">— Cookie JWT de sesión (automática si same-origin)</span></div>
+              </div>
+              <h4 className="text-xs font-semibold text-gray-400 uppercase mb-2">Respuesta (sesión activa)</h4>
+              <pre className="bg-gray-950 border border-gray-800 rounded p-3 text-xs overflow-x-auto">
+                <code className="text-gray-300">{`{
+  "valid": true,
+  "user": {
+    "id": 42,
+    "email": "usuario@empresa.com",
+    "name": "Nombre",
+    "role": "client"
+  }
+}`}</code>
+              </pre>
+            </div>
+
+            {/* Ejemplo de integración */}
+            <div className="p-4 rounded-lg bg-gray-900 border border-gray-800">
+              <h3 className="text-lg font-semibold text-white mb-3">Ejemplo: Integración desde GHP Center</h3>
+              <pre className="bg-gray-950 border border-gray-800 rounded p-3 text-xs overflow-x-auto">
+                <code className="text-gray-300">{`// 1. Desde tu backend, generar token SSO
+const response = await fetch("${baseUrl}/api/sso/token", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "spm_tu_api_key_admin",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    email: "cliente@ejemplo.com",
+    name: "Juan Pérez",
+    role: "client"
+  })
+});
+
+const { loginUrl } = await response.json();
+
+// 2. Redirigir al usuario al loginUrl
+window.location.href = loginUrl;
+// El usuario será autenticado automáticamente en SPM`}</code>
+              </pre>
+            </div>
+
+            {/* Notas de seguridad */}
+            <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+              <h3 className="text-sm font-semibold text-yellow-400 mb-2">⚠️ Notas de Seguridad</h3>
+              <ul className="list-disc list-inside space-y-1 text-sm text-gray-300">
+                <li>El <code className="text-orange-300">CRM_SSO_SECRET</code> debe mantenerse seguro y nunca exponerse en el frontend</li>
+                <li>Los tokens SSO expiran en 5 minutos — generar uno nuevo para cada intento de login</li>
+                <li>El endpoint <code className="text-orange-300">/api/sso/callback</code> NUNCA modifica el rol de un usuario existente</li>
+                <li>El usuario maestro (<code className="text-orange-300">greenhproject@gmail.com</code>) siempre mantiene rol admin</li>
+                <li>Usar HTTPS en producción para proteger los tokens en tránsito</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
         <footer className="border-t border-gray-800 pt-6 pb-8">
           <p className="text-sm text-gray-500 text-center">

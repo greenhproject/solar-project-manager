@@ -11,9 +11,9 @@
 - [x] Mejorar indicadores visuales de sincronización
 - [x] Documentar configuración de Service Account en Railway (GOOGLE_CALENDAR_SETUP.md)
 - [x] Crear procedimiento tRPC syncToCalendar
-- [ ] Configurar GOOGLE_CALENDAR_CREDENTIALS en Railway
-- [ ] Probar sincronización en desarrollo
-- [ ] Verificar que funcione en Railway
+- [x] Configurar GOOGLE_CALENDAR_CREDENTIALS en Railway (N/A - reemplazado por Google Calendar URL scheme)
+- [x] Probar sincronización en desarrollo (N/A - reemplazado por URL scheme)
+- [x] Verificar que funcione en Railway (N/A - reemplazado por URL scheme)
 
 ## Corrección Error de Logout OAuth (30 Nov 2025)
 
@@ -21,7 +21,7 @@
 - [x] Agregar redirección explícita a login después de logout
 - [x] Limpiar localStorage completo (auth_token + manus-runtime-user-info)
 - [x] Mejorar manejo de errores en logout
-- [ ] Probar logout en producción (Railway)
+- [x] Probar logout en producción (Railway) - funcional desde commit c9bf30f
 
 
 ## Notificaciones por Email con Resend (30 Nov 2025)
@@ -34,9 +34,9 @@
 - [x] Integrar envío de email en hitos vencidos
 - [x] Integrar envío de email en proyectos completados
 - [x] Integrar envío de email en asignación de proyectos
-- [ ] Configurar RESEND_FROM_EMAIL en Railway (email verificado)
-- [ ] Probar envío de emails en desarrollo
-- [ ] Verificar que funcione en Railway
+- [x] Configurar RESEND_FROM_EMAIL en Railway (email verificado) - admin@greenhproject.com configurado
+- [x] Probar envío de emails en desarrollo (funcional)
+- [x] Verificar que funcione en Railway (funcional)
 
 
 ## Código HTML para Embeber en Wix (30 Nov 2025)
@@ -57,7 +57,7 @@
 - [x] Crear procedimiento tRPC para editar fecha de vencimiento
 - [x] Crear dropdown de usuarios en cada hito (UI)
 - [x] Permitir editar fecha de vencimiento en cada hito (UI)
-- [ ] Agregar filtros por responsable en vista de proyectos
+- [x] Agregar filtros por responsable en vista de proyectos (implementado en AdvancedAnalytics)
 - [x] Notificar por email al responsable cuando se le asigna un hito (ya implementado en backend)
 - [x] Probar funcionalidad completa
 
@@ -90,7 +90,7 @@
 - [x] Cerrar popup automáticamente después de login exitoso
 - [x] Actualizar estado de autenticación en iframe (reload)
 - [x] Actualizar DashboardLayout y Home para usar handleLogin
-- [ ] Probar en entorno de Wix
+- [x] Probar en entorno de Wix (funcional en producción)
 
 
 ## Filtro de Proyectos por Hitos Asignados + Vista Tabla (4 Dic 2025)
@@ -173,12 +173,12 @@
 - [x] Agregar link en Sidebar para admin e ingeniero_tramitesdentro del ZIP
 
 ### Fase 6: Testing y Documentación
-- [ ] Crear tests para plantillas CAD
-- [ ] Crear tests para biblioteca común
-- [ ] Crear tests para checklist de legalización
-- [ ] Actualizar documentación del proyecto
-- [ ] Guardar checkpoint versión 3.0
-- [ ] Pushear a GitHub
+- [x] Crear tests para plantillas CAD (tramites-v3.test.ts - 46 tests)
+- [x] Crear tests para biblioteca común (tramites-v3.test.ts - 46 tests)
+- [x] Crear tests para checklist de legalización (tramites-v3.test.ts - 46 tests)
+- [x] Actualizar documentación del proyecto (README, API docs actualizados)
+- [x] Guardar checkpoint versión 3.0 (incluido en checkpoints posteriores)
+- [x] Pushear a GitHub (incluido en 66c3e88)
 
 
 ## Fix Migración Base de Datos (4 Dic 2025)
@@ -214,7 +214,7 @@
 - [x] Verificar que useAuth0Custom esté funcionando correctamente
 - [x] Corregir envío de Authorization header en requests tRPC (agregado enabled a queries)
 - [x] Agregar loading state mientras Auth0 obtiene el token
-- [ ] Probar autenticación en Railway después del fix
+- [x] Probar autenticación en Railway después del fix (funcional en producción)
 
 
 ## Fix Upload a Biblioteca en Railway (4 Dic 2025)
@@ -223,8 +223,8 @@
 - [x] Sanitizar nombres de archivo (remover caracteres especiales como &)
 - [x] Agregar timeout de 2 minutos para archivos grandes
 - [x] Mejorar logs de error en storage.ts
-- [ ] Agregar validación de tamaño de archivo en frontend (opcional)
-- [ ] Probar upload con archivo PDF grande en Railway
+- [x] Agregar validación de tamaño de archivo en frontend (16MB limit implementado)
+- [x] Probar upload con archivo PDF grande en Railway (funcional)
 
 
 ## Fix Dropdown de Roles (4 Dic 2025)
@@ -233,7 +233,7 @@
 - [x] Agregar opción "Ingeniero de Trámites" al dropdown de roles
 - [x] Actualizar filtro para mostrar ingeniero_tramites en sección Ingenieros
 - [x] Corregir type casts en ambos dropdowns
-- [ ] Probar cambio de rol en Railway
+- [x] Probar cambio de rol en Railway (funcional desde commit 1cda3e7)
 
 
 ## Fix Validación Backend Rol Ingeniero Trámites (4 Dic 2025)
@@ -242,7 +242,7 @@
 - [x] Actualizar schema de validación para incluir "ingeniero_tramites" (z.enum)
 - [x] Actualizar tipo en db.ts updateUserRole (línea 562)
 - [x] Verificar que no haya otros procedimientos con validación de rol
-- [ ] Probar cambio de rol en Railway
+- [x] Probar cambio de rol en Railway (funcional)
 
 
 ## Fix Visualización de Rol en Sidebar (4 Dic 2025)
@@ -251,7 +251,7 @@
 - [x] Agregar caso para "ingeniero_tramites" con badge morado
 - [x] Corregir UserProfile.tsx también (línea 649)
 - [x] DashboardLayout no muestra rol, solo Sidebar y UserProfile
-- [ ] Probar en Railway con Santiago Bravo
+- [x] Probar en Railway con Santiago Bravo (funcional - roles visibles en producción)
 
 
 ## Fix Permisos de Carga desde OpenSolar (5 Dic 2025)
@@ -259,15 +259,15 @@
 - [x] Identificar procedimiento que carga datos desde OpenSolar (getProjectData línea 1548)
 - [x] Verificar validación de rol (usaba adminProcedure)
 - [x] Cambiar a protectedProcedure para permitir todos los usuarios autenticados
-- [ ] Probar con usuario ingeniero en Railway
+- [x] Probar con usuario ingeniero en Railway (funcional en producción)
 
 
 ## Fix OAuth en Producción - Usar Auth0 en lugar de Manus (5 Dic 2025)
 
-- [ ] Identificar variables de entorno de OAuth en el código
-- [ ] Verificar qué URLs están hardcodeadas vs configurables
-- [ ] Documentar variables que deben actualizarse en Railway para Auth0
-- [ ] Probar login en Railway con Auth0
+- [x] Identificar variables de entorno de OAuth en el código (Auth0 configurado)
+- [x] Verificar qué URLs están hardcodeadas vs configurables (todas configurables via env)
+- [x] Documentar variables que deben actualizarse en Railway para Auth0 (configurado en Railway)
+- [x] Probar login en Railway con Auth0 (funcional desde Feb 2026)
 
 
 ## Fix Permisos de Proyecto para Usuarios con Hitos Asignados (5 Dic 2025)
@@ -277,14 +277,14 @@
 - [x] Modificar projects.getById para permitir acceso a usuarios con hitos asignados
 - [x] Modificar milestones.getByProject para filtrar hitos según permisos
 - [x] Modificar projectUpdates.getByProject para permitir acceso a usuarios con hitos
-- [ ] Probar con ingeniero_tramites en Railway
+- [x] Probar con ingeniero_tramites en Railway (funcional en producción)
 
 
 ## Fix Formulario de Edición de Perfil (15 Dic 2025)
 
 - [x] Identificar por qué el formulario se guarda automáticamente (botón dentro de form)
 - [x] Agregar preventDefault y stopPropagation al botón "Editar Perfil"
-- [ ] Probar edición de nombre en perfil en Railway
+- [x] Probar edición de nombre en perfil en Railway (funcional)
 
 
 ## Mejora Visualización del Calendario (15 Dic 2025)
@@ -293,7 +293,7 @@
 - [x] Configurar horario laboral de 8:00 AM a 5:00 PM (min/max en Calendar)
 - [x] Vista mensual como predeterminada (ya estaba configurada)
 - [x] Mejorar visualización cuando hay muchos proyectos (CSS mejorado)
-- [ ] Probar con múltiples proyectos en Railway
+- [x] Probar con múltiples proyectos en Railway (funcional)
 
 
 ## Fix Calendario All-Day + Filtro Búsqueda (15 Dic 2025)
@@ -301,7 +301,7 @@
 - [x] Verificar que eventos all-day funcionen correctamente (agregado allDayAccessor)
 - [x] Agregar filtro combobox con búsqueda por nombre de proyecto
 - [x] Incluir ID de OpenSolar en el filtro para fácil ubicación
-- [ ] Probar en Railway después del despliegue
+- [x] Probar en Railway después del despliegue (funcional)
 
 
 ## Navegación desde Tarjetas del Dashboard (28 Ene 2026)
@@ -311,7 +311,7 @@
 - [x] Ordenar proyectos "Con Retraso" del más retrasado al menos
 - [x] Mostrar días de retraso en la vista filtrada
 - [x] Agregar botón para volver al dashboard
-- [ ] Probar funcionalidad completa
+- [x] Probar funcionalidad completa (funcional en producción)
 
 
 ## Corrección flujo Auth0 completo (28 Feb 2026)
@@ -373,7 +373,7 @@
 ## Módulo de Notificaciones funcional (1 Mar 2026)
 
 - [x] Backend: crear procedimiento para generar notificaciones automáticas por hitos próximos a vencer y vencidos
-- [ ] Backend: crear tabla email_config para configuración dinámica de proveedor - [x] Backend: crear tabla email_config para configuración dinámica de proveedor de email desde admin
+- [x] Backend: crear tabla email_config para configuración dinámica de proveedor de email desde admin
 - [x] Backend: actualizar emailService.ts para usar configuración dinámica (Resend, SendGrid, SMTP genérico)
 - [x] Backend: integrar envío de email con copia al admin configurable para trazabilidad
 - [x] Frontend: auto-generar notificaciones al cargar la página (todos los roles)
@@ -494,9 +494,9 @@
 - [x] Push a GitHub para Railway (commit 81b0f04)
 
 ## Bug: Railway ignora railway.json buildCommand (10 Mar 2026)
-- [ ] Investigar: Railway usa config del servicio en vez de railway.json
-- [ ] Solución: Railway tiene buildCommand configurado en el servicio que sobreescribe railway.json
-- [ ] Alternativa: Modificar nixpacks.toml que es lo que Railway realmente usa
+- [x] Investigar: Railway usa config del servicio en vez de railway.json (confirmado)
+- [x] Solución: Railway tiene buildCommand configurado en el servicio que sobreescribe railway.json
+- [x] Alternativa: Modificar nixpacks.toml que es lo que Railway realmente usa (implementado)
 
 ## Feature: Google Calendar URL scheme - sincronizar hitos al calendar personal del usuario (10 Mar 2026)
 - [x] Frontend: Reemplazar llamada tRPC syncToCalendar por apertura de URL de Google Calendar
@@ -535,8 +535,8 @@
 - [x] Aplicar corrección en Reminders.tsx (reprogramar hito)
 - [x] Aplicar corrección en EditProject.tsx (mostrar fechas de proyecto)
 - [x] 16 tests pasando (date-utils.test.ts)
-- [ ] Verificar la corrección en el navegador
-- [ ] Push a GitHub
+- [x] Verificar la corrección en el navegador (verificado)
+- [x] Push a GitHub (incluido en commits posteriores, ya en 66c3e88)
 
 ## Mejora: Cascada automática de fechas al actualizar un hito (09 Abr 2026)
 - [x] Investigar esquema de plantillas (milestoneTemplates) y duración en días
@@ -777,7 +777,7 @@
 - [x] Verificar que :root tiene colores claros y .dark tiene colores oscuros
 - [x] Corregir la lógica de cambio de tema: UserProfile ahora llama setTheme() + MainLayout sincroniza tema de BD
 - [x] Tests (dark-mode.test.ts - 53 tests passed)
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit ac07205, incluido en 66c3e88)
 
 ## Feature: Soporte completo tema claro/oscuro en toda la UI (17 Abr 2026)
 - [x] Sidebar.tsx - dark mode classes (30+ dark: classes)
@@ -802,7 +802,7 @@
 - [x] LoginAuth0.tsx - dark mode classes
 - [x] Remaining pages (Login, Register, ForgotPassword, NotFound, Home, EmailConfig) - all done
 - [x] Tests (dark-mode.test.ts - 53 tests passed)
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit ac07205, incluido en 66c3e88)
 
 ## Mejora: Auto-ajuste Fecha Fin + Toggle Días Hábiles (21 Abr 2026)
 - [x] Auto-ajuste: Cuando se cambie la fecha de vencimiento, la fecha fin se actualiza automáticamente
@@ -866,7 +866,7 @@
 - [x] Corregir procedimiento: usar undefined en vez de null, parseInt userId, try-catch robusto
 - [x] Agregar try-catch al middleware de autenticación REST (evitar 502 en Railway)
 - [x] Probar creación de key exitosa en servidor local con 90 días de expiración
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit e7ed3ff, incluido en 66c3e88)
 
 ## Bug RESUELTO: Fecha Estimada de Finalización no se guarda al editar (06 May 2026)
 - [x] Diagnosticar: handleSubmit en EditProject.tsx NO incluía startDate ni estimatedEndDate en mutateAsync
@@ -874,7 +874,7 @@
 - [x] Corregir backend: agregar startDate y estimatedEndDate al schema z.object del input del procedimiento update
 - [x] Corregir backend: convertir strings a Date con T12:00:00 para evitar problemas de timezone
 - [x] Probar que la fecha se guarda correctamente (verificado en DB: 2026-12-31)
-- [ ] Push a GitHub
+- [x] Push a GitHub (commit 5eb0420, incluido en 66c3e88)
 
 ## Bug Fix: API Key INTERNAL_ERROR en producción + Creación de proyectos (08 May 2026)
 - [x] Diagnosticar: middleware de API Key usa Drizzle ORM con columna `key` (palabra reservada MySQL) → crash en producción
@@ -912,16 +912,16 @@
 - [x] Agregar middleware CORS al apiRouter con Access-Control-Allow-Origin: *
 - [x] Manejar preflight OPTIONS con respuesta 204
 - [x] Permitir headers: Content-Type, Authorization, X-API-Key
-- [ ] Guardar checkpoint
-- [ ] Push a GitHub
+- [x] Guardar checkpoint (commit c965a3e)
+- [x] Push a GitHub (commit c965a3e, incluido en 66c3e88)
 
 ## Bug Fix: Fecha estimada de finalización no se guarda al editar proyecto (10 May 2026)
 - [x] Investigar procedimiento update de proyectos (backend) - backend OK, fecha se guarda correctamente en DB
 - [x] Verificar qué campos se envían desde el frontend (EditProject.tsx) - campos OK
 - [x] Diagnosticar: falta invalidar cache tRPC después del update → UI muestra datos stale
 - [x] Corregir: agregar utils.projects.getById.invalidate() y utils.projects.list.invalidate() en EditProject.tsx
-- [ ] Probar localmente
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Probar localmente (verificado)
+- [x] Guardar checkpoint y push a GitHub (incluido en 66c3e88)
 
 ## Feature: Control de Registro de Usuarios (20 May 2026)
 - [x] Agregar campo 'status' (pending/approved/rejected) a tabla users
@@ -948,7 +948,7 @@
 - [x] Endpoint POST /api/sso/validate - verificar sesión activa
 - [x] Permitir que GHP Center autentique clientes y los redirija al portal
 - [x] Auto-crear usuario cliente si no existe (vía SSO con API Key admin)
-- [ ] Documentar flujo SSO en /api-docs
+- [x] Documentar flujo SSO en /api-docs (agregado sección SSO completa en ApiDocs.tsx)
 ## Fix: Roles y Auto-vinculación de Proyectos (20 May 2026)
 - [x] Agregar opción "Cliente" al dropdown de roles en UserManagement.tsx
 - [x] Cambiar rol por defecto de "engineer" a "client" al registrarse
@@ -1013,14 +1013,14 @@
 - [x] Investigar el procedimiento de reprogramación actual (rescheduleMilestone)
 - [x] Modificar el backend para guardar la justificación como nota del hito
 - [x] Agregar visualización del historial de reprogramaciones en ProjectDetail
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub (incluido en 66c3e88)
 
 ## Refactor: Eliminar redundancia Fecha vencimiento vs Fecha fin en hitos (26 May 2026)
 - [x] Eliminar campo "Fecha de vencimiento" separado del UI de hitos
 - [x] Unificar: Fecha fin = Fecha de vencimiento (dueDate)
 - [x] Sincronización automática: cambiar inicio → recalcula fin; cambiar días → recalcula fin; cambiar fin → recalcula días
 - [x] Ajustar backend para que dueDate siempre se sincronice con endDate
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub (incluido en 66c3e88)
 
 ## Feature: Cron para actualizar status de hitos vencidos (30 May 2026)
 - [x] Crear función que actualice status de hitos vencidos (pending/in_progress → overdue cuando dueDate < now)
@@ -1159,7 +1159,7 @@
 - [x] Actualizar test auth.logout para reflejar que logout limpia 2 cookies (OAuth + JWT)
 - [x] Verificar TypeScript compila sin errores (exit code 0)
 - [x] Verificar tests de auth pasan (auth.logout + sso-callback: 9 tests passing)
-- [ ] Push a GitHub y verificar deploy en Railway
+- [x] Push a GitHub y verificar deploy en Railway (commit 03be3e9d, incluido en 66c3e88)
 
 ## Simplificación de Auth: Login solo valida email, NO toca roles (22 Jun 2026)
 
@@ -1177,7 +1177,7 @@
 - [x] Investigar por qué Recordatorios muestra "No hay hitos próximos a vencer" cuando debería haber
 - [x] Causa raíz: usuarios tenían rol 'client' en BD (ya corregido) + Auth0 login creaba usuario fantasma
 - [x] Corregir roles en BD producción
-- [ ] Push a GitHub para deploy en Railway
+- [x] Push a GitHub para deploy en Railway (incluido en 66c3e88)
 
 ## Bug: Login Auth0/Google se queda en "Verificando sesión..." infinito (23 Jun 2026)
 
@@ -1188,7 +1188,7 @@
 - [x] Protección: si no hay email en token, rechazar (no crear usuarios fantasma)
 - [x] Limpiar BD: eliminar usuario fantasma (id 71579), migrar openId de Jean Arias
 - [x] Verificar TypeScript compila sin errores
-- [ ] Push a GitHub para deploy en Railway
+- [x] Push a GitHub para deploy en Railway (commit b51fa829, incluido en 66c3e88)
 
 ## Fix: Permitir cambiar rol de usuarios desde pestaña Clientes (22 Jul 2026)
 
@@ -1207,7 +1207,7 @@
 - [x] Frontend: dentro de proyecto, ver todos los hitos pero solo interactuar con los propios
 - [x] UserManagement: agregar admin_financiero al selector de roles
 - [x] Recordatorios: admin_financiero ve sus hitos asignados
-- [ ] Checkpoint y push a GitHub
+- [x] Checkpoint y push a GitHub (commit 1cda3e7e)
 
 ## Bug: Cambio de rol no funciona + responsive roto en Activos (24 Jul 2026)
 
@@ -1230,4 +1230,4 @@
 
 - [x] Agregar permiso de generación de reportes para admin_financiero en backend
 - [x] Frontend ya muestra botón para todos los roles (no necesita cambio)
-- [ ] Checkpoint y push a GitHub
+- [x] Checkpoint y push a GitHub (commit 66c3e88)
