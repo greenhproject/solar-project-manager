@@ -1238,3 +1238,10 @@
 - [x] Fix 3: Portal lista de proyectos también debe calcular progreso en tiempo real
 - [x] Verificar que el fix funciona correctamente (10 tests pasando)
 - [ ] Guardar checkpoint y push a GitHub
+
+## Optimización: Reducir tiempo de build en Railway (04 Ago 2026)
+- [x] Quitar libreoffice-still de nixpacks.toml (ahorraba ~600MB+ de dependencias)
+- [x] Quitar libreoffice-convert de package.json (el fallback a .docx ya existía)
+- [x] Quitar puppeteer de ignoredBuiltDependencies (no se usa en ningún archivo)
+- [x] Refactorizar generateDocument para guardar .docx directamente sin conversión
+- [ ] Guardar checkpoint y push a GitHub

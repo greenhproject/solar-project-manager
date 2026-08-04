@@ -3778,31 +3778,12 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
           cmdDelimiter: ["{{", "}}"],
         });
 
-        // Convertir el documento Word generado a PDF usando LibreOffice
+        // Guardar el documento Word generado directamente (sin conversión a PDF)
         const { storagePut } = await import("./storage");
         const timestamp = Date.now();
-        let finalBuffer: Buffer;
-        let outputFileName: string;
-        let mimeType: string;
-
-        try {
-          const libre = await import("libreoffice-convert");
-          const pdfBuffer = await new Promise<Buffer>((resolve, reject) => {
-            libre.convert(Buffer.from(generatedBuffer), ".pdf", undefined, (err: Error | null, result: Buffer) => {
-              if (err) reject(err);
-              else resolve(result);
-            });
-          });
-          finalBuffer = pdfBuffer;
-          outputFileName = `${template.name.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.pdf`;
-          mimeType = "application/pdf";
-        } catch (conversionError) {
-          // Fallback: si LibreOffice no está disponible, guardar como Word
-          console.warn("LibreOffice no disponible, guardando como Word:", conversionError);
-          finalBuffer = Buffer.from(generatedBuffer);
-          outputFileName = `${template.name.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
-          mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-        }
+        const finalBuffer = Buffer.from(generatedBuffer);
+        const outputFileName = `${template.name.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
+        const mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
         const fileKey = `dynamic-docs/generated/${input.projectId}/${outputFileName}`;
         const { url } = await storagePut(fileKey, finalBuffer, mimeType);
