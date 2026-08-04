@@ -108,7 +108,47 @@ async function migrate() {
       console.log('[migrate] Tabla company_settings ya existe, saltando.');
     }
 
-    console.log('[migrate] Migración completada exitosamente.');
+    // 5. CORRECCIÓN DE DATOS: Normalizar hitos con completedDate pero status incorrecto
+    // Esto arregla el bug donde el portal muestra 0% a pesar de hitos completados
+    console.log('[migrate] Normalizando estado de hitos inconsistentes...');
+    const [fixResult] = await connection.query(`
+      UPDATE milestones 
+      SET status = 'completed' 
+      WHERE completed_date IS NOT NULL 
+        AND status != 'completed'
+    `);
+    console.log(`[migrate] Hitos corregidos (completedDate sin status completed): ${fixResult.affectedRows || 0}`);
+
+    // También recalcular progressPercentage de todos los proyectos afectados
+    const [projectsToFix] = await connection.query(`
+      SELECT DISTINCT p.id 
+      FROM projects p 
+      JOIN milestones m ON m.project_id = p.id 
+      WHERE m.status = 'completed'
+    `);
+    
+    for (const proj of projectsToFix) {
+      const [totalResult] = await connection.query(
+        'SELECT COUNT(*) as total FROM milestones WHERE project_id = ?', [proj.id]
+      );
+      const [completedResult] = await connection.query(
+        'SELECT COUNT(*) as completed FROM milestones WHERE project_id = ? AND (status = ? OR completed_date IS NOT NULL)', [proj.id, 'completed']
+      );
+      const total = totalResult[0].total;
+      const completed = completedResult[0].completed;
+      const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+      let newStatus = 'planning';
+      if (progress === 100) newStatus = 'completed';
+      else if (progress > 0) newStatus = 'in_progress';
+      
+      await connection.query(
+        'UPDATE projects SET progress_percentage = ?, status = ? WHERE id = ?',
+        [progress, newStatus, proj.id]
+      );
+    }
+    console.log(`[migrate] Progreso recalculado para ${projectsToFix.length} proyectos.`);
+
+    console.log('[migrate] Migraci\u00f3n completada exitosamente.');
   } catch (error) {
     console.error('[migrate] Error durante la migración:', error.message);
     // No hacer exit(1) para no bloquear el deploy si hay errores menores

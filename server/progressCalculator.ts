@@ -25,8 +25,9 @@ export async function recalculateProjectProgress(
   const previousProgress = project?.progressPercentage || 0;
 
   // Contar hitos completados
+  // Un hito se considera completado si status === "completed" O si completedDate no es null
   const completedMilestones = milestones.filter(
-    m => m.status === "completed"
+    m => m.status === "completed" || m.completedDate !== null
   ).length;
 
   console.log(

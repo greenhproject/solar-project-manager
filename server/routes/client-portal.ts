@@ -28,6 +28,7 @@ export const clientPortalRouter = router({
     if (!dbInst) return [];
 
     // Helper: recalcular progreso en tiempo real desde hitos
+    // Un hito se considera completado si status === "completed" O si completedDate no es null
     async function enrichWithRealProgress(projectList: any[]) {
       const enriched = [];
       for (const project of projectList) {
@@ -35,6 +36,7 @@ export const clientPortalRouter = router({
           id: milestones.id,
           status: milestones.status,
           weight: milestones.weight,
+          completedDate: milestones.completedDate,
         }).from(milestones).where(eq(milestones.projectId, project.id));
 
         let realProgress = project.progressPercentage || 0;
@@ -42,7 +44,8 @@ export const clientPortalRouter = router({
 
         if (projectMilestones.length > 0) {
           const totalWeight = projectMilestones.reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
-          const completedWeight = projectMilestones.filter((m: any) => m.status === "completed")
+          const completedWeight = projectMilestones
+            .filter((m: any) => m.status === "completed" || m.completedDate !== null)
             .reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
           realProgress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
 
@@ -204,12 +207,14 @@ export const clientPortalRouter = router({
         .orderBy(milestones.orderIndex);
 
       // Recalcular progreso en tiempo real desde los hitos
+      // Un hito se considera completado si status === "completed" O si completedDate no es null
       let realProgress = project.progressPercentage || 0;
       let realStatus = project.status || "planning";
 
       if (projectMilestones.length > 0) {
         const totalWeight = projectMilestones.reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
-        const completedWeight = projectMilestones.filter((m: any) => m.status === "completed")
+        const completedWeight = projectMilestones
+          .filter((m: any) => m.status === "completed" || m.completedDate !== null)
           .reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
         realProgress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
 

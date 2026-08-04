@@ -1237,11 +1237,20 @@
 - [x] Fix 2: API v1 PATCH /milestones/:id debe actualizar projects.status además de progressPercentage
 - [x] Fix 3: Portal lista de proyectos también debe calcular progreso en tiempo real
 - [x] Verificar que el fix funciona correctamente (10 tests pasando)
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub (commit 6e373cba)
 
 ## Optimización: Reducir tiempo de build en Railway (04 Ago 2026)
 - [x] Quitar libreoffice-still de nixpacks.toml (ahorraba ~600MB+ de dependencias)
 - [x] Quitar libreoffice-convert de package.json (el fallback a .docx ya existía)
 - [x] Quitar puppeteer de ignoredBuiltDependencies (no se usa en ningún archivo)
 - [x] Refactorizar generateDocument para guardar .docx directamente sin conversión
+- [x] Guardar checkpoint y push a GitHub (commit 6e373cba)
+
+## Fix Robusto: Progreso 0% en Portal - Electrolinera Villa del Prado (04 Ago 2026)
+- [x] Paso 1: Considerar completedDate como señal de completado en client-portal.ts
+- [x] Paso 1b: Considerar completedDate en progressCalculator.ts
+- [x] Paso 2: Migración de datos en scripts/migrate-production.mjs
+- [x] Paso 3: Normalización centralizada en server/db.ts (normalizeMilestoneState)
+- [x] Paso 3b: Aplicar normalización en routers.ts y api-v1.ts (ya usa db.updateMilestone que normaliza)
+- [x] Paso 4: Tests unitarios (13 tests normalización + 10 tests portal)
 - [ ] Guardar checkpoint y push a GitHub

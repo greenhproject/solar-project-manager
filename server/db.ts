@@ -510,13 +510,44 @@ export async function getAllMilestones() {
   return await db.select().from(milestones).orderBy(asc(milestones.dueDate));
 }
 
+/**
+ * Normaliza el estado de un hito para mantener coherencia entre status y completedDate.
+ * Reglas:
+ * - Si completedDate está presente y status !== "completed" → forzar status = "completed"
+ * - Si status === "completed" y completedDate es null/undefined → llenar completedDate = new Date()
+ * - Si status es "pending" o "in_progress" → limpiar completedDate = null
+ */
+export function normalizeMilestoneState(data: Partial<InsertMilestone>): Partial<InsertMilestone> {
+  const normalized = { ...data };
+
+  // Regla 1: Si status se está poniendo explícitamente a pending/in_progress → limpiar completedDate
+  if (normalized.status === "pending" || normalized.status === "in_progress") {
+    normalized.completedDate = null;
+    return normalized;
+  }
+
+  // Regla 2: Si completedDate está presente y status no es completed → forzar completed
+  if (normalized.completedDate !== undefined && normalized.completedDate !== null && normalized.status !== "completed") {
+    normalized.status = "completed";
+  }
+
+  // Regla 3: Si status es completed pero no hay completedDate → llenar con fecha actual
+  if (normalized.status === "completed" && (normalized.completedDate === undefined || normalized.completedDate === null)) {
+    normalized.completedDate = new Date();
+  }
+
+  return normalized;
+}
+
 export async function updateMilestone(
   id: number,
   data: Partial<InsertMilestone>
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(milestones).set(data).where(eq(milestones.id, id));
+  // Aplicar normalización para garantizar coherencia status/completedDate
+  const normalizedData = normalizeMilestoneState(data);
+  await db.update(milestones).set(normalizedData).where(eq(milestones.id, id));
 }
 
 /**
