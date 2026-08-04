@@ -1231,3 +1231,10 @@
 - [x] Agregar permiso de generación de reportes para admin_financiero en backend
 - [x] Frontend ya muestra botón para todos los roles (no necesita cambio)
 - [x] Checkpoint y push a GitHub (commit 66c3e88)
+
+## Bug: Portal del cliente muestra 0% progreso y "Planificación" aunque hay hitos completados (04 Ago 2026)
+- [x] Fix 1: Portal calcula progreso en tiempo real desde hitos (no confiar en campo almacenado)
+- [x] Fix 2: API v1 PATCH /milestones/:id debe actualizar projects.status además de progressPercentage
+- [x] Fix 3: Portal lista de proyectos también debe calcular progreso en tiempo real
+- [x] Verificar que el fix funciona correctamente (10 tests pasando)
+- [ ] Guardar checkpoint y push a GitHub

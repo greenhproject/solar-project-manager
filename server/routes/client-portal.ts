@@ -27,6 +27,45 @@ export const clientPortalRouter = router({
     const dbInst = await db.getDb();
     if (!dbInst) return [];
 
+    // Helper: recalcular progreso en tiempo real desde hitos
+    async function enrichWithRealProgress(projectList: any[]) {
+      const enriched = [];
+      for (const project of projectList) {
+        const projectMilestones = await dbInst!.select({
+          id: milestones.id,
+          status: milestones.status,
+          weight: milestones.weight,
+        }).from(milestones).where(eq(milestones.projectId, project.id));
+
+        let realProgress = project.progressPercentage || 0;
+        let realStatus = project.status || "planning";
+
+        if (projectMilestones.length > 0) {
+          const totalWeight = projectMilestones.reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
+          const completedWeight = projectMilestones.filter((m: any) => m.status === "completed")
+            .reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
+          realProgress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
+
+          // Derivar status real
+          if (realProgress === 0) {
+            const hasInProgress = projectMilestones.some((m: any) => m.status === "in_progress" || m.status === "overdue");
+            realStatus = hasInProgress ? "in_progress" : "planning";
+          } else if (realProgress === 100) {
+            realStatus = "completed";
+          } else {
+            realStatus = "in_progress";
+          }
+        }
+
+        enriched.push({
+          ...project,
+          progressPercentage: realProgress,
+          status: realStatus,
+        });
+      }
+      return enriched;
+    }
+
     // Si es admin, puede ver todos (para testing)
     if (ctx.user.role === "admin") {
       const allProjects = await dbInst.select({
@@ -41,7 +80,7 @@ export const clientPortalRouter = router({
         clientName: projects.clientName,
         projectTypeId: projects.projectTypeId,
       }).from(projects).orderBy(desc(projects.createdAt)).limit(10);
-      return allProjects;
+      return enrichWithRealProgress(allProjects);
     }
 
     // Para clientes: buscar por tabla client_project_access Y por email directo en proyectos
@@ -83,7 +122,7 @@ export const clientPortalRouter = router({
       sql`${projects.id} IN (${sql.raw(allProjectIds.join(","))})`
     ).orderBy(desc(projects.createdAt));
 
-    return clientProjects;
+    return enrichWithRealProgress(clientProjects);
   }),
 
   // Obtener detalle de un proyecto (solo si tiene acceso)
@@ -164,9 +203,32 @@ export const clientPortalRouter = router({
         .where(eq(milestones.projectId, input.projectId))
         .orderBy(milestones.orderIndex);
 
+      // Recalcular progreso en tiempo real desde los hitos
+      let realProgress = project.progressPercentage || 0;
+      let realStatus = project.status || "planning";
+
+      if (projectMilestones.length > 0) {
+        const totalWeight = projectMilestones.reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
+        const completedWeight = projectMilestones.filter((m: any) => m.status === "completed")
+          .reduce((sum: number, m: any) => sum + (m.weight || 1), 0);
+        realProgress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
+
+        // Derivar status real
+        if (realProgress === 0) {
+          const hasInProgress = projectMilestones.some((m: any) => m.status === "in_progress" || m.status === "overdue");
+          realStatus = hasInProgress ? "in_progress" : "planning";
+        } else if (realProgress === 100) {
+          realStatus = "completed";
+        } else {
+          realStatus = "in_progress";
+        }
+      }
+
       return {
         project: {
           ...project,
+          progressPercentage: realProgress,
+          status: realStatus,
           projectTypeName: projectType?.name || "Sin tipo",
           projectTypeColor: projectType?.color || "#FF6B35",
         },

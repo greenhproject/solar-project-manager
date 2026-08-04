@@ -347,16 +347,9 @@ apiRouter.patch("/milestones/:id", async (req: AuthenticatedRequest, res: Respon
 
   await db.update(milestones).set(updateData).where(eq(milestones.id, milestoneId));
 
-  // Recalcular progreso del proyecto
-  const projectMilestones = await db.select().from(milestones).where(eq(milestones.projectId, existing.projectId));
-  const totalWeight = projectMilestones.reduce((sum, m) => sum + m.weight, 0);
-  const completedWeight = projectMilestones.reduce((sum, m) => {
-    if (m.id === milestoneId && status === "completed") return sum + m.weight;
-    if (m.id !== milestoneId && m.status === "completed") return sum + m.weight;
-    return sum;
-  }, 0);
-  const newProgress = totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
-  await db.update(projects).set({ progressPercentage: newProgress }).where(eq(projects.id, existing.projectId));
+  // Recalcular progreso del proyecto (incluye status y progressPercentage)
+  const { recalculateProjectProgress } = await import("../progressCalculator");
+  const newProgress = await recalculateProjectProgress(existing.projectId);
 
   const [updated] = await db.select().from(milestones).where(eq(milestones.id, milestoneId)).limit(1);
 
