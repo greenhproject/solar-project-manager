@@ -1266,4 +1266,4 @@
 - [x] Enviar resolved cuando se completa un hito
 - [x] Tests unitarios para formato de evento y firma HMAC (13 tests)
 - [x] Crear documentación de integración para el equipo del Hub (docs/integracion-ghp-notification-hub.md)
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub (commit 90c90efb)

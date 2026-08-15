@@ -114,7 +114,7 @@ async function migrate() {
     const [fixResult] = await connection.query(`
       UPDATE milestones 
       SET status = 'completed' 
-      WHERE completed_date IS NOT NULL 
+      WHERE completedDate IS NOT NULL 
         AND status != 'completed'
     `);
     console.log(`[migrate] Hitos corregidos (completedDate sin status completed): ${fixResult.affectedRows || 0}`);
@@ -123,16 +123,16 @@ async function migrate() {
     const [projectsToFix] = await connection.query(`
       SELECT DISTINCT p.id 
       FROM projects p 
-      JOIN milestones m ON m.project_id = p.id 
+      JOIN milestones m ON m.projectId = p.id 
       WHERE m.status = 'completed'
     `);
     
     for (const proj of projectsToFix) {
       const [totalResult] = await connection.query(
-        'SELECT COUNT(*) as total FROM milestones WHERE project_id = ?', [proj.id]
+        'SELECT COUNT(*) as total FROM milestones WHERE projectId = ?', [proj.id]
       );
       const [completedResult] = await connection.query(
-        'SELECT COUNT(*) as completed FROM milestones WHERE project_id = ? AND (status = ? OR completed_date IS NOT NULL)', [proj.id, 'completed']
+        'SELECT COUNT(*) as completed FROM milestones WHERE projectId = ? AND (status = ? OR completedDate IS NOT NULL)', [proj.id, 'completed']
       );
       const total = totalResult[0].total;
       const completed = completedResult[0].completed;
@@ -142,7 +142,7 @@ async function migrate() {
       else if (progress > 0) newStatus = 'in_progress';
       
       await connection.query(
-        'UPDATE projects SET progress_percentage = ?, status = ? WHERE id = ?',
+        'UPDATE projects SET progressPercentage = ?, status = ? WHERE id = ?',
         [progress, newStatus, proj.id]
       );
     }
