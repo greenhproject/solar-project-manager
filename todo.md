@@ -1274,4 +1274,4 @@
 - [x] Registrar resultado de envío al Hub para diagnóstico y reintentos
 - [x] Añadir prueba controlada de entrega y tests de regresión (15 tests)
 - [x] Actualizar documentación de integración con observabilidad y activación
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub (commit 714fd551)
