@@ -724,6 +724,23 @@ export const appRouter = router({
               console.error('[Project Create] Error sending email:', error);
             }
           }
+
+          // ─── GHP Hub: Notificar proyecto asignado ───
+          if (input.assignedEngineerId) {
+            try {
+              const hubEngineer = await db.getUserById(input.assignedEngineerId);
+              if (hubEngineer?.email) {
+                const { notifyProjectAssigned } = await import("./ghpNotificationHub");
+                await notifyProjectAssigned({
+                  projectId,
+                  projectName: input.name,
+                  recipientEmail: hubEngineer.email,
+                });
+              }
+            } catch (e) {
+              console.warn("[GHP Hub] Error notificando proyecto asignado:", e);
+            }
+          }
         }
 
         return { success: true, projectId };
@@ -1208,6 +1225,25 @@ export const appRouter = router({
           }
         }
 
+        // ─── GHP Hub: Notificar hito asignado ───
+        if (milestoneId > 0 && project.assignedEngineerId) {
+          try {
+            const engineer = await db.getUserById(project.assignedEngineerId);
+            if (engineer?.email) {
+              const { notifyMilestoneAssigned } = await import("./ghpNotificationHub");
+              await notifyMilestoneAssigned({
+                milestoneId,
+                milestoneName: input.name,
+                projectId: input.projectId,
+                projectName: project.name,
+                recipientEmail: engineer.email,
+              });
+            }
+          } catch (e) {
+            console.warn("[GHP Hub] Error notificando hito asignado:", e);
+          }
+        }
+
         return result;
       }),
 
@@ -1321,6 +1357,24 @@ export const appRouter = router({
 
         // Si se completó el hito, crear actualización
         if (data.status === "completed") {
+          // ─── GHP Hub: Resolver pendiente del hito ───
+          try {
+            const assignedUser2 = milestone.assignedUserId ? await db.getUserById(milestone.assignedUserId) : null;
+            const proj2 = await db.getProjectById(milestone.projectId);
+            if (assignedUser2?.email) {
+              const { notifyMilestoneCompleted } = await import("./ghpNotificationHub");
+              await notifyMilestoneCompleted({
+                milestoneId: id,
+                milestoneName: milestone.name,
+                projectId: milestone.projectId,
+                projectName: proj2?.name || "Proyecto",
+                recipientEmail: assignedUser2.email,
+              });
+            }
+          } catch (e) {
+            console.warn("[GHP Hub] Error notificando hito completado:", e);
+          }
+
           await db.createProjectUpdate({
             projectId: milestone.projectId,
             updateType: "milestone_completed",
@@ -1544,6 +1598,28 @@ export const appRouter = router({
             }
           } catch (error) {
             console.error("[Reschedule] Error enviando notificación al responsable:", error);
+          }
+        }
+
+        // ─── GHP Hub: Notificar reprogramación al responsable ───
+        if (milestone.assignedUserId) {
+          try {
+            const hubAssignedUser = await db.getUserById(milestone.assignedUserId);
+            if (hubAssignedUser?.email) {
+              const { notifyMilestoneRescheduled } = await import("./ghpNotificationHub");
+              const hubNewDate = input.newDueDate.toLocaleDateString('es-CO', { timeZone: tz });
+              await notifyMilestoneRescheduled({
+                milestoneId: input.milestoneId,
+                milestoneName: milestone.name,
+                projectId: milestone.projectId,
+                projectName: project?.name || "Proyecto",
+                recipientEmail: hubAssignedUser.email,
+                newDueDate: hubNewDate,
+                reason: input.justification,
+              });
+            }
+          } catch (e) {
+            console.warn("[GHP Hub] Error notificando reprogramación:", e);
           }
         }
 

@@ -1253,4 +1253,17 @@
 - [x] Paso 3: Normalización centralizada en server/db.ts (normalizeMilestoneState)
 - [x] Paso 3b: Aplicar normalización en routers.ts y api-v1.ts (ya usa db.updateMilestone que normaliza)
 - [x] Paso 4: Tests unitarios (13 tests normalización + 10 tests portal)
+- [x] Guardar checkpoint y push a GitHub (commit b64946ee)
+
+## Integración: Centro de Notificaciones GHP Hub (14 Ago 2026)
+- [x] Crear adaptador server/ghpNotificationHub.ts con firma HMAC-SHA256
+- [x] Agregar variables de entorno (GHP_NOTIFICATION_HUB_URL, GHP_NOTIFICATION_SOURCE_KEY, GHP_NOTIFICATION_SIGNING_SECRET)
+- [x] Integrar en milestone.create (milestone.assigned)
+- [x] Integrar en milestone.complete (milestone.completed → resolved)
+- [x] Integrar en milestone.reschedule (milestone.rescheduled)
+- [x] Integrar en cron de recordatorios (milestone.overdue)
+- [x] Integrar en project.assign (project.assigned)
+- [x] Enviar resolved cuando se completa un hito
+- [x] Tests unitarios para formato de evento y firma HMAC (13 tests)
+- [x] Crear documentación de integración para el equipo del Hub (docs/integracion-ghp-notification-hub.md)
 - [ ] Guardar checkpoint y push a GitHub

@@ -165,6 +165,20 @@ export async function processMilestoneReminders(): Promise<{ ok: boolean; summar
       })
       .where(eq(milestoneReminderLogs.id, logId));
 
+    // ─── GHP Hub: Notificar hito vencido ───
+    try {
+      const { notifyMilestoneOverdue } = await import("../ghpNotificationHub");
+      await notifyMilestoneOverdue({
+        milestoneId: milestone.id,
+        milestoneName: milestone.name,
+        projectId: project.id,
+        projectName: project.name,
+        recipientEmail: recipientEmail!,
+      });
+    } catch (e) {
+      console.warn("[GHP Hub] Error notificando hito vencido:", e);
+    }
+
     if (sent) {
       sentCount++;
     } else {
