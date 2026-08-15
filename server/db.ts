@@ -36,6 +36,8 @@ import {
   InsertGeneratedDynamicDoc,
   milestoneComments,
   InsertMilestoneComment,
+  ghpNotificationDeliveryLogs,
+  InsertGhpNotificationDeliveryLog,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 import { getNowInConfiguredTimezone } from "./timezone";
@@ -1787,6 +1789,28 @@ export async function getWebhookLogs(limit = 50) {
     .select()
     .from(webhookLogs)
     .orderBy(desc(webhookLogs.receivedAt))
+    .limit(limit);
+}
+
+// ============================================
+// GHP NOTIFICATION HUB DELIVERY LOGS
+// ============================================
+
+/** Registra un intento de entrega al Centro de Notificaciones GHP Hub. */
+export async function createGhpNotificationDeliveryLog(data: InsertGhpNotificationDeliveryLog) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.insert(ghpNotificationDeliveryLogs).values(data);
+}
+
+/** Obtiene los intentos de entrega más recientes para diagnóstico administrativo. */
+export async function getGhpNotificationDeliveryLogs(limit = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db
+    .select()
+    .from(ghpNotificationDeliveryLogs)
+    .orderBy(desc(ghpNotificationDeliveryLogs.createdAt))
     .limit(limit);
 }
 

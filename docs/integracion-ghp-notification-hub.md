@@ -104,11 +104,13 @@ Si alguna de estas variables no está configurada, el adaptador omite silenciosa
 
 | Archivo | Línea aprox. | Evento emitido |
 |---|---|---|
-| `server/routers.ts` — `milestones.create` | ~1210 | `milestone.assigned` |
+| `server/routers.ts` — `milestones.create` | ~1210 | `milestone.assigned` para el responsable del hito o, como respaldo, el ingeniero del proyecto. |
+| `server/routers.ts` — `milestones.assignResponsible` | ~1810 | `milestone.assigned` para el responsable seleccionado. Es el punto principal de asignación manual. |
 | `server/routers.ts` — `milestones.update` (status=completed) | ~1340 | `milestone.completed` (resolved) |
 | `server/routers.ts` — `milestones.requestReschedule` | ~1590 | `milestone.rescheduled` |
 | `server/routers.ts` — `projects.create` | ~730 | `project.assigned` |
-| `server/routes/milestone-reminders.ts` — cron diario | ~170 | `milestone.overdue` |
+| `server/routers.ts` — `notifications.checkAndCreateAutoNotifications` | ~2930 | `milestone.due_soon` y `milestone.overdue`, junto con la alerta local. |
+| `server/routes/milestone-reminders.ts` — cron diario | ~170 | `milestone.overdue`, independiente del resultado del email. |
 
 ---
 
@@ -144,7 +146,7 @@ Para activar la integración en producción:
    - `GHP_NOTIFICATION_SOURCE_KEY=<valor del paso 2>`
    - `GHP_NOTIFICATION_SIGNING_SECRET=<valor del paso 2>`
 4. Redeplegar SPM en Railway.
-5. Probar creando un proyecto con ingeniero asignado y verificar que aparezca el badge en el Hub.
+5. En SPM, abrir **Configuración → Notificaciones Automáticas** y pulsar **Enviar prueba**. El resultado debe indicar HTTP 2xx y aparecer en el Hub.
 
 ---
 
@@ -152,11 +154,11 @@ Para activar la integración en producción:
 
 | Paso | Acción | Resultado esperado |
 |---|---|---|
-| 1 | Crear proyecto con ingeniero asignado | Hub muestra badge en tarjeta SPM |
-| 2 | Crear hito en ese proyecto | Hub muestra "Nuevo hito asignado" |
-| 3 | Esperar a que el cron detecte hito vencido | Hub escala a severity critical |
-| 4 | Completar el hito | Hub retira el pendiente (badge -1) |
-| 5 | Reprogramar otro hito | Hub muestra "Hito reprogramado" con severity warning |
+| 1 | En Configuración → Notificaciones Automáticas, pulsar **Enviar prueba** | SPM muestra el HTTP de aceptación y el Hub recibe la prueba para el correo del admin. |
+| 2 | Asignar responsable a un hito | Hub muestra "Nuevo hito asignado" al correo del responsable. |
+| 3 | Ejecutar **Verificación** para un hito próximo | SPM crea la alerta local y envía `milestone.due_soon` al Hub. |
+| 4 | Completar el hito | Hub retira el pendiente (badge -1). |
+| 5 | Reprogramar otro hito | Hub muestra "Hito reprogramado" con severity warning. |
 
 ---
 
@@ -168,23 +170,32 @@ Para activar la integración en producción:
 | `401 Unauthorized` en logs | Secreto incorrecto o rotado | Regenerar clave en Hub y actualizar en Railway |
 | Eventos duplicados | Se está generando un eventId diferente | Verificar que se usa `buildMilestoneEventId(id)` |
 | El badge no baja al completar | No se envía `status: "resolved"` | Verificar que `milestone.completed` usa `resolved` |
-| Logs muestran `[GHP Hub] Integración no configurada` | Falta alguna variable de entorno | Configurar las 3 variables |
+| Estado **no configurado** en SPM | Falta alguna variable de entorno | La pantalla indica exactamente cuál de las 3 variables falta. |
+| Último intento `skipped` | Configuración incompleta | Corregir las variables en Railway y repetir la prueba controlada. |
+| Último intento `failed` | El Hub rechazó el evento o no fue alcanzable | Revisar código HTTP y error en Configuración → Notificaciones Automáticas. |
+| No hay registro de entrega | El flujo local no estaba conectado al Hub | Usar la versión que emite desde `assignResponsible` y la verificación automática. |
 
 ---
 
 ## 12. Tests
 
-Los tests unitarios se encuentran en `server/ghpNotificationHub.test.ts` (13 tests):
+Los tests unitarios se encuentran en `server/ghpNotificationHub.test.ts` (15 tests):
 
 ```bash
 npx vitest run server/ghpNotificationHub.test.ts
 ```
 
-Cubren: generación de firma HMAC-SHA256, estabilidad de eventIds, formato de eventos según contrato.
+Cubren: generación de firma HMAC-SHA256, estabilidad de eventIds, formato de eventos y diagnóstico de variables de configuración.
+
+## 13. Observabilidad y auditoría
+
+Cada intento de envío se registra en la tabla `ghp_notification_delivery_logs`, sin almacenar secretos ni firmas. Se conserva el tipo de evento, correo destinatario, resultado (`sent`, `failed` o `skipped`), código HTTP, mensaje de error, duración y payload enviado.
+
+La vista administrativa **Configuración → Notificaciones Automáticas** consulta los últimos 15 registros y ofrece una prueba controlada. Esta trazabilidad permite diferenciar una falla de configuración, conectividad, firma o validación en el Hub sin depender de logs efímeros de Railway.
 
 ---
 
-## 13. Receptor en el Hub
+## 14. Receptor en el Hub
 
 Para que el Hub procese los eventos de SPM, debe implementar:
 

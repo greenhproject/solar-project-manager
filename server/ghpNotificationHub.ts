@@ -11,6 +11,7 @@
  * Se ejecuta después del commit y falla silenciosamente si el Hub no está disponible.
  */
 import crypto from "crypto";
+import * as db from "./db";
 
 // Tipos del evento según el contrato del Hub
 export type HubEventSeverity = "info" | "warning" | "critical";
@@ -28,6 +29,15 @@ export type HubEvent = {
   actionUrl?: string;
   occurredAt?: string;
   metadata?: Record<string, unknown>;
+};
+
+export type HubDeliveryResult = {
+  success: boolean;
+  deliveryStatus: "sent" | "failed" | "skipped";
+  configured: boolean;
+  responseStatus?: number;
+  error?: string;
+  durationMs: number;
 };
 
 // Tipos de eventos que emite SPM
@@ -73,17 +83,64 @@ export function buildProjectEventId(projectId: number): string {
  * Retorna true si el Hub aceptó el evento (202), false en caso contrario.
  * NUNCA lanza excepciones — falla silenciosamente para no bloquear la operación de negocio.
  */
-export async function notifyGhpHub(event: HubEvent): Promise<boolean> {
+export function getGhpHubConfigurationStatus() {
   const baseUrl = process.env.GHP_NOTIFICATION_HUB_URL?.replace(/\/+$/, "");
   const sourceKey = process.env.GHP_NOTIFICATION_SOURCE_KEY;
   const secret = process.env.GHP_NOTIFICATION_SIGNING_SECRET;
+  const missing = [
+    !baseUrl && "GHP_NOTIFICATION_HUB_URL",
+    !sourceKey && "GHP_NOTIFICATION_SOURCE_KEY",
+    !secret && "GHP_NOTIFICATION_SIGNING_SECRET",
+  ].filter(Boolean) as string[];
+  return { configured: missing.length === 0, missing };
+}
+
+async function recordHubDelivery(
+  event: HubEvent,
+  body: string,
+  result: Omit<HubDeliveryResult, "configured">,
+) {
+  try {
+    await db.createGhpNotificationDeliveryLog({
+      eventId: event.eventId,
+      eventType: event.eventType,
+      recipientEmail: event.recipientEmail.toLowerCase(),
+      payload: body,
+      deliveryStatus: result.deliveryStatus,
+      responseStatus: result.responseStatus ?? null,
+      responseBody: null,
+      error: result.error ?? null,
+      durationMs: result.durationMs,
+    });
+  } catch (logError) {
+    console.warn("[GHP Hub] No se pudo guardar la auditoría de entrega:", (logError as Error).message);
+  }
+}
+
+/**
+ * Entrega un evento y retorna el resultado detallado para diagnóstico y pruebas.
+ * Nunca lanza una excepción, para no bloquear operaciones de negocio.
+ */
+export async function deliverGhpHubEvent(event: HubEvent): Promise<HubDeliveryResult> {
+  const baseUrl = process.env.GHP_NOTIFICATION_HUB_URL?.replace(/\/+$/, "");
+  const sourceKey = process.env.GHP_NOTIFICATION_SOURCE_KEY;
+  const secret = process.env.GHP_NOTIFICATION_SIGNING_SECRET;
+  const startedAt = Date.now();
+  const body = JSON.stringify(event);
 
   if (!baseUrl || !sourceKey || !secret) {
-    // Integración no configurada — omitir silenciosamente
-    return false;
+    const missing = getGhpHubConfigurationStatus().missing.join(", ");
+    const result = {
+      success: false,
+      deliveryStatus: "skipped" as const,
+      error: `Integración no configurada. Faltan: ${missing}`,
+      durationMs: Date.now() - startedAt,
+    };
+    console.warn(`[GHP Hub] ${result.error}`);
+    await recordHubDelivery(event, body, result);
+    return { ...result, configured: false };
   }
 
-  const body = JSON.stringify(event);
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const signature = generateSignature(secret, timestamp, body);
 
@@ -100,17 +157,48 @@ export async function notifyGhpHub(event: HubEvent): Promise<boolean> {
       signal: AbortSignal.timeout(10_000),
     });
 
+    const responseStatus = response.status;
+    const responseBody = (await response.text()).slice(0, 2_000);
+    const durationMs = Date.now() - startedAt;
+
     if (!response.ok) {
-      console.warn(`[GHP Hub] Evento rechazado: ${response.status} — eventId: ${event.eventId}`);
-      return false;
+      const result = {
+        success: false,
+        deliveryStatus: "failed" as const,
+        responseStatus,
+        error: `Hub respondió HTTP ${responseStatus}${responseBody ? `: ${responseBody}` : ""}`,
+        durationMs,
+      };
+      console.warn(`[GHP Hub] Evento rechazado: ${responseStatus} — eventId: ${event.eventId}`);
+      await recordHubDelivery(event, body, result);
+      return { ...result, configured: true };
     }
 
+    const result = {
+      success: true,
+      deliveryStatus: "sent" as const,
+      responseStatus,
+      durationMs,
+    };
     console.info(`[GHP Hub] Evento enviado: ${event.eventType} → ${event.recipientEmail} (${event.eventId})`);
-    return true;
+    await recordHubDelivery(event, body, result);
+    return { ...result, configured: true };
   } catch (error) {
-    console.warn("[GHP Hub] No se pudo enviar el evento:", (error as Error).message);
-    return false;
+    const result = {
+      success: false,
+      deliveryStatus: "failed" as const,
+      error: (error as Error).message,
+      durationMs: Date.now() - startedAt,
+    };
+    console.warn("[GHP Hub] No se pudo enviar el evento:", result.error);
+    await recordHubDelivery(event, body, result);
+    return { ...result, configured: true };
   }
+}
+
+/** Mantiene compatibilidad con los helpers existentes que solo necesitan éxito/fallo. */
+export async function notifyGhpHub(event: HubEvent): Promise<boolean> {
+  return (await deliverGhpHubEvent(event)).success;
 }
 
 // ─── Helpers de alto nivel para SPM ───────────────────────────────────────────

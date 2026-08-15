@@ -844,6 +844,30 @@ export const outgoingWebhookLogs = mysqlTable("outgoing_webhook_logs", {
 export type OutgoingWebhookLog = typeof outgoingWebhookLogs.$inferSelect;
 
 /**
+ * Auditoría de entregas al Centro de Notificaciones GHP Hub.
+ * Mantiene trazabilidad de cada intento sin exponer secretos ni firmas.
+ */
+export const ghpNotificationDeliveryLogs = mysqlTable("ghp_notification_delivery_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 160 }).notNull(),
+  eventType: varchar("eventType", { length: 100 }).notNull(),
+  recipientEmail: varchar("recipientEmail", { length: 320 }).notNull(),
+  payload: text("payload").notNull(),
+  deliveryStatus: mysqlEnum("deliveryStatus", ["sent", "failed", "skipped"]).notNull(),
+  responseStatus: int("responseStatus"),
+  responseBody: text("responseBody"),
+  error: text("error"),
+  durationMs: int("durationMs"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, table => ({
+  eventIdx: index("ghp_delivery_event_idx").on(table.eventId),
+  recipientIdx: index("ghp_delivery_recipient_idx").on(table.recipientEmail),
+  createdIdx: index("ghp_delivery_created_idx").on(table.createdAt),
+}));
+export type GhpNotificationDeliveryLog = typeof ghpNotificationDeliveryLogs.$inferSelect;
+export type InsertGhpNotificationDeliveryLog = typeof ghpNotificationDeliveryLogs.$inferInsert;
+
+/**
  * Acceso de clientes a proyectos
  * Vincula usuarios con rol 'client' a los proyectos que pueden ver
  */

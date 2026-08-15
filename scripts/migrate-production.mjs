@@ -148,6 +148,28 @@ async function migrate() {
     }
     console.log(`[migrate] Progreso recalculado para ${projectsToFix.length} proyectos.`);
 
+    // 6. Auditoría de entregas al Centro de Notificaciones GHP Hub
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS ghp_notification_delivery_logs (
+        id int AUTO_INCREMENT NOT NULL,
+        eventId varchar(160) NOT NULL,
+        eventType varchar(100) NOT NULL,
+        recipientEmail varchar(320) NOT NULL,
+        payload text NOT NULL,
+        deliveryStatus enum('sent','failed','skipped') NOT NULL,
+        responseStatus int NULL,
+        responseBody text NULL,
+        error text NULL,
+        durationMs int NULL,
+        createdAt timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT ghp_notification_delivery_logs_id PRIMARY KEY(id),
+        INDEX ghp_delivery_event_idx (eventId),
+        INDEX ghp_delivery_recipient_idx (recipientEmail),
+        INDEX ghp_delivery_created_idx (createdAt)
+      )
+    `);
+    console.log('[migrate] Tabla ghp_notification_delivery_logs lista.');
+
     console.log('[migrate] Migraci\u00f3n completada exitosamente.');
   } catch (error) {
     console.error('[migrate] Error durante la migración:', error.message);

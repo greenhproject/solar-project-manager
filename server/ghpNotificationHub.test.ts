@@ -3,6 +3,7 @@ import {
   generateSignature,
   buildMilestoneEventId,
   buildProjectEventId,
+  getGhpHubConfigurationStatus,
 } from "./ghpNotificationHub";
 import crypto from "crypto";
 
@@ -98,6 +99,60 @@ describe("GHP Notification Hub Adapter", () => {
   describe("buildProjectEventId", () => {
     it("should build correct format: spm:project:<id>:attention", () => {
       expect(buildProjectEventId(10)).toBe("spm:project:10:attention");
+    });
+  });
+
+  describe("getGhpHubConfigurationStatus", () => {
+    it("should explicitly identify each missing integration variable", () => {
+      const original = {
+        url: process.env.GHP_NOTIFICATION_HUB_URL,
+        source: process.env.GHP_NOTIFICATION_SOURCE_KEY,
+        secret: process.env.GHP_NOTIFICATION_SIGNING_SECRET,
+      };
+
+      try {
+        delete process.env.GHP_NOTIFICATION_HUB_URL;
+        delete process.env.GHP_NOTIFICATION_SOURCE_KEY;
+        delete process.env.GHP_NOTIFICATION_SIGNING_SECRET;
+
+        expect(getGhpHubConfigurationStatus()).toEqual({
+          configured: false,
+          missing: [
+            "GHP_NOTIFICATION_HUB_URL",
+            "GHP_NOTIFICATION_SOURCE_KEY",
+            "GHP_NOTIFICATION_SIGNING_SECRET",
+          ],
+        });
+      } finally {
+        if (original.url === undefined) delete process.env.GHP_NOTIFICATION_HUB_URL;
+        else process.env.GHP_NOTIFICATION_HUB_URL = original.url;
+        if (original.source === undefined) delete process.env.GHP_NOTIFICATION_SOURCE_KEY;
+        else process.env.GHP_NOTIFICATION_SOURCE_KEY = original.source;
+        if (original.secret === undefined) delete process.env.GHP_NOTIFICATION_SIGNING_SECRET;
+        else process.env.GHP_NOTIFICATION_SIGNING_SECRET = original.secret;
+      }
+    });
+
+    it("should report configured only when all required variables are present", () => {
+      const original = {
+        url: process.env.GHP_NOTIFICATION_HUB_URL,
+        source: process.env.GHP_NOTIFICATION_SOURCE_KEY,
+        secret: process.env.GHP_NOTIFICATION_SIGNING_SECRET,
+      };
+
+      try {
+        process.env.GHP_NOTIFICATION_HUB_URL = "https://ghp.center/";
+        process.env.GHP_NOTIFICATION_SOURCE_KEY = "solar-project-manager";
+        process.env.GHP_NOTIFICATION_SIGNING_SECRET = "test-secret";
+        expect(getGhpHubConfigurationStatus()).toEqual({ configured: true, missing: [] });
+      } finally {
+        if (original.url === undefined) delete process.env.GHP_NOTIFICATION_HUB_URL;
+        else process.env.GHP_NOTIFICATION_HUB_URL = original.url;
+        if (original.source === undefined) delete process.env.GHP_NOTIFICATION_SOURCE_KEY;
+        else process.env.GHP_NOTIFICATION_SOURCE_KEY = original.source;
+        if (original.secret === undefined) delete process.env.GHP_NOTIFICATION_SIGNING_SECRET;
+        else process.env.GHP_NOTIFICATION_SIGNING_SECRET = original.secret;
+      }
     });
   });
 

@@ -1267,3 +1267,11 @@
 - [x] Tests unitarios para formato de evento y firma HMAC (13 tests)
 - [x] Crear documentación de integración para el equipo del Hub (docs/integracion-ghp-notification-hub.md)
 - [x] Guardar checkpoint y push a GitHub (commit 90c90efb)
+
+## Bug: Eventos de SPM no aparecen en el Centro de Notificaciones GHP (15 Ago 2026)
+- [x] Diagnosticar hito de prueba, destinatario, configuración y punto de emisión
+- [x] Corregir la emisión al responsable real del hito y alertas próximas a vencer
+- [x] Registrar resultado de envío al Hub para diagnóstico y reintentos
+- [x] Añadir prueba controlada de entrega y tests de regresión (15 tests)
+- [x] Actualizar documentación de integración con observabilidad y activación
+- [ ] Guardar checkpoint y push a GitHub

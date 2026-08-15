@@ -1225,18 +1225,20 @@ export const appRouter = router({
           }
         }
 
-        // ─── GHP Hub: Notificar hito asignado ───
-        if (milestoneId > 0 && project.assignedEngineerId) {
+        // ─── GHP Hub: Notificar hito asignado al responsable real ───
+        if (milestoneId > 0) {
           try {
-            const engineer = await db.getUserById(project.assignedEngineerId);
-            if (engineer?.email) {
+            const createdMilestone = await db.getMilestoneById(milestoneId);
+            const recipientId = createdMilestone?.assignedUserId || project.assignedEngineerId;
+            const recipient = recipientId ? await db.getUserById(recipientId) : null;
+            if (recipient?.email) {
               const { notifyMilestoneAssigned } = await import("./ghpNotificationHub");
               await notifyMilestoneAssigned({
                 milestoneId,
                 milestoneName: input.name,
                 projectId: input.projectId,
                 projectName: project.name,
-                recipientEmail: engineer.email,
+                recipientEmail: recipient.email,
               });
             }
           } catch (e) {
@@ -1836,6 +1838,25 @@ export const appRouter = router({
           } catch (error) {
             console.error("[Milestone] Error sending assignment email:", error);
             // No fallar la asignación si falla el email
+          }
+        }
+
+        // ─── GHP Hub: La asignación directa es el punto de emisión principal ───
+        if (input.userId) {
+          try {
+            const hubAssignedUser = await db.getUserById(input.userId);
+            if (hubAssignedUser?.email) {
+              const { notifyMilestoneAssigned } = await import("./ghpNotificationHub");
+              await notifyMilestoneAssigned({
+                milestoneId: milestone.id,
+                milestoneName: milestone.name,
+                projectId: project.id,
+                projectName: project.name,
+                recipientEmail: hubAssignedUser.email,
+              });
+            }
+          } catch (error) {
+            console.warn("[GHP Hub] Error notificando asignación de responsable:", error);
           }
         }
 
@@ -2951,6 +2972,19 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
               milestone.projectName,
               new Date(milestone.dueDate)
             );
+            // La alerta local y el Hub se emiten desde el mismo flujo, al mismo responsable.
+            if (ctx.user.email) {
+              const { notifyMilestoneDueSoon } = await import("./ghpNotificationHub");
+              const timezone = await getConfiguredTimezone();
+              await notifyMilestoneDueSoon({
+                milestoneId: milestone.milestoneId,
+                milestoneName: milestone.milestoneName,
+                projectId: milestone.projectId,
+                projectName: milestone.projectName,
+                recipientEmail: ctx.user.email,
+                dueDate: new Date(milestone.dueDate).toLocaleDateString("es-CO", { timeZone: timezone }),
+              });
+            }
             upcomingCount++;
           }
 
@@ -2976,6 +3010,16 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
               milestone.projectName,
               new Date(milestone.dueDate)
             );
+            if (ctx.user.email) {
+              const { notifyMilestoneOverdue } = await import("./ghpNotificationHub");
+              await notifyMilestoneOverdue({
+                milestoneId: milestone.milestoneId,
+                milestoneName: milestone.milestoneName,
+                projectId: milestone.projectId,
+                projectName: milestone.projectName,
+                recipientEmail: ctx.user.email,
+              });
+            }
             overdueCount++;
           }
 
@@ -2994,6 +3038,44 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
         }
       }
     ),
+
+    // Diagnóstico administrativo del Centro de Notificaciones GHP.
+    // Muestra configuración sin revelar secretos y los últimos intentos de entrega.
+    getGhpHubStatus: adminProcedure.query(async () => {
+      const { getGhpHubConfigurationStatus } = await import("./ghpNotificationHub");
+      const configuration = getGhpHubConfigurationStatus();
+      const logs = await db.getGhpNotificationDeliveryLogs(15);
+      return { configuration, logs };
+    }),
+
+    // Envía un evento controlado al correo del administrador para comprobar ruta, firma y receptor.
+    sendGhpHubTest: adminProcedure
+      .input(z.object({ recipientEmail: z.string().email().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const recipientEmail = input.recipientEmail || ctx.user.email;
+        if (!recipientEmail) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No hay un correo disponible para recibir la prueba.",
+          });
+        }
+
+        const { deliverGhpHubEvent } = await import("./ghpNotificationHub");
+        const eventId = `spm:test:${Date.now()}:attention`;
+        return await deliverGhpHubEvent({
+          eventId,
+          recipientEmail,
+          eventType: "milestone.assigned",
+          severity: "info",
+          title: "Prueba de integración SPM → GHP Center",
+          body: "Evento de prueba enviado desde Solar Project Manager para validar la conexión con el Centro de Notificaciones GHP.",
+          status: "open",
+          externalEntityId: "test",
+          actionUrl: "https://spm.ghp.center/settings",
+          occurredAt: new Date().toISOString(),
+          metadata: { source: "manual_admin_test" },
+        });
+      }),
 
     // Enviar email de recordatorio para hitos próximos/vencidos
     sendEmailReminder: protectedProcedure
