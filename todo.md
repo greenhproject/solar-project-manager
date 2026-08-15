@@ -1275,3 +1275,9 @@
 - [x] Añadir prueba controlada de entrega y tests de regresión (15 tests)
 - [x] Actualizar documentación de integración con observabilidad y activación
 - [x] Guardar checkpoint y push a GitHub (commit 714fd551)
+
+## Documentación reutilizable: Integración con Centro de Notificaciones GHP (15 Ago 2026)
+- [x] Consolidar arquitectura, contrato de eventos y configuración de seguridad
+- [x] Documentar implementación reutilizable, auditoría y prueba de aceptación
+- [x] Documentar diagnóstico, operación y lista de verificación de replicación
+- [x] Entregar guía técnica reutilizable
