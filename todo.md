@@ -1287,4 +1287,4 @@
 - [x] Corregir el flujo de consulta del Asistente IA (modelo activo, fallback y límites de payload)
 - [x] Incluir contexto completo y filtrado por rol: proyectos, hitos, responsables, fechas, estados y métricas
 - [x] Añadir cobertura de regresión y verificar en entorno local (7 pruebas IA + build exitoso)
-- [ ] Guardar checkpoint y push a GitHub
+- [x] Guardar checkpoint y push a GitHub (commit c40816ce)
