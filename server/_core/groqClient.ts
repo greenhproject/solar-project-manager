@@ -1,15 +1,24 @@
 import Groq from "groq-sdk";
 
-// Validar que la API key esté configurada
-if (!process.env.GROQ_API_KEY) {
-  console.error("[Groq] GROQ_API_KEY no está configurada en las variables de entorno");
-  throw new Error("GROQ_API_KEY no configurada. Por favor, agrega la variable de entorno en Railway.");
-}
+// Catálogo validado contra la API de Groq el 19 de agosto de 2026.
+// Se usan alternativas para tolerar retiradas o cambios de acceso a modelos.
+export const DEFAULT_GROQ_MODELS = [
+  "groq/compound-mini",
+  "qwen/qwen3.6-27b",
+  "openai/gpt-oss-20b",
+] as const;
 
-// Inicializar cliente de Groq
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+let groq: Groq | null = null;
+
+function getGroqClient() {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error("GROQ_API_KEY no configurada. Configura la credencial del proveedor de IA.");
+  }
+  if (!groq) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY, timeout: 20_000 });
+  }
+  return groq;
+}
 
 export interface GroqMessage {
   role: "system" | "user" | "assistant";
@@ -33,24 +42,41 @@ export interface GroqChatOptions {
 export async function invokeGroq(options: GroqChatOptions): Promise<string> {
   const {
     messages,
-    model = "llama-3.3-70b-versatile",
     temperature = 0.7,
-    max_tokens = 4096,
+    max_tokens = 1_600,
   } = options;
+  const models = options.model
+    ? [options.model]
+    : [...DEFAULT_GROQ_MODELS];
+  let lastError: unknown;
 
-  try {
-    const completion = await groq.chat.completions.create({
-      messages,
-      model,
-      temperature,
-      max_tokens,
-    });
-
-    return completion.choices[0]?.message?.content || "";
-  } catch (error: any) {
-    console.error("[Groq] Error al invocar Groq AI:", error);
-    throw new Error(`Error al comunicarse con Groq AI: ${error.message}`);
+  for (const model of models) {
+    try {
+      const completion = await getGroqClient().chat.completions.create({
+        messages,
+        model,
+        temperature,
+        max_tokens,
+      });
+      const content = completion.choices[0]?.message?.content?.trim();
+      if (content) return content;
+      throw new Error(`El modelo ${model} respondió sin contenido.`);
+    } catch (error: any) {
+      lastError = error;
+      const canFallback =
+        error?.status === 404 ||
+        error?.status === 429 ||
+        error?.error?.error?.code === "model_not_found" ||
+        error?.error?.error?.code === "rate_limit_exceeded" ||
+        String(error?.message || "").includes("respondió sin contenido");
+      if (!canFallback || model === models[models.length - 1]) break;
+      console.warn(`[Groq] Modelo no disponible o sin respuesta visible (${model}); probando alternativa.`);
+    }
   }
+
+  const detail = lastError instanceof Error ? lastError.message : "Error desconocido";
+  console.error("[Groq] Error al invocar Groq AI:", detail);
+  throw new Error(`Error al comunicarse con Groq AI: ${detail}`);
 }
 
 /**
@@ -58,9 +84,11 @@ export async function invokeGroq(options: GroqChatOptions): Promise<string> {
  */
 export async function invokeLLM(options: {
   messages: Array<{ role: string; content: string }>;
+  max_tokens?: number;
 }): Promise<{ choices: Array<{ message: { content: string } }> }> {
   const content = await invokeGroq({
     messages: options.messages as GroqMessage[],
+    max_tokens: options.max_tokens,
   });
 
   return {

@@ -97,7 +97,7 @@ describe("AI Assistant", () => {
     expect(answerText.length).toBeGreaterThan(0);
     console.log("✅ Pregunta respondida correctamente");
     console.log(`💬 Respuesta: ${answerText.substring(0, 100)}...`);
-  });
+  }, 30_000);
 
   it(
     "should generate report successfully",
@@ -139,17 +139,12 @@ describe("AI Assistant", () => {
     30000
   ); // 30 segundos timeout
 
-  it("should handle empty question gracefully", async () => {
+  it("should reject an empty question before invoking the model", async () => {
     const ctx = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
-    // Intentar hacer una pregunta vacía
-    const result = await caller.ai.askQuestion({ question: "" });
-
-    // La IA debería responder algo, incluso con pregunta vacía
-    expect(result).toBeDefined();
-    expect(result.answer).toBeDefined();
-
-    console.log("✅ Manejo de pregunta vacía correcto");
+    await expect(caller.ai.askQuestion({ question: "" })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
   });
 });

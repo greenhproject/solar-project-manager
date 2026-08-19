@@ -1281,3 +1281,10 @@
 - [x] Documentar implementación reutilizable, auditoría y prueba de aceptación
 - [x] Documentar diagnóstico, operación y lista de verificación de replicación
 - [x] Entregar guía técnica reutilizable
+
+## Bug: Asistente IA presenta errores recurrentes (15 Ago 2026)
+- [x] Diagnosticar error de frontend, backend y configuración del modelo (modelo Groq retirado devolvía 404)
+- [x] Corregir el flujo de consulta del Asistente IA (modelo activo, fallback y límites de payload)
+- [x] Incluir contexto completo y filtrado por rol: proyectos, hitos, responsables, fechas, estados y métricas
+- [x] Añadir cobertura de regresión y verificar en entorno local (7 pruebas IA + build exitoso)
+- [ ] Guardar checkpoint y push a GitHub

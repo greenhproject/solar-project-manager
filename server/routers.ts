@@ -27,6 +27,7 @@ import { appSettings, apiKeys, webhooks, outgoingWebhookLogs, users, clientProje
 import { eq, desc, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
+import { buildAiAssistantContext } from "./aiAssistantContext";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -2294,41 +2295,8 @@ export const appRouter = router({
   ai: router({
     // Analizar todos los proyectos
     analyzeProjects: protectedProcedure.query(async ({ ctx }) => {
-      const projects = await db.getAllProjects();
-      const stats = await db.getProjectStats();
-
-      // Preparar contexto para el LLM
-      const context = `
-Análisis de Proyectos Solares - Green House Project
-
-Estadísticas Generales:
-- Total de proyectos: ${stats.total}
-- Proyectos activos: ${stats.active}
-- Proyectos completados: ${stats.completed}
-- Proyectos con retraso: ${stats.overdue}
-
-Proyectos:
-${projects
-  .map(
-    p => `
-- ${p.name} (${p.location})
-  Estado: ${p.status}
-  Estado: ${p.status}
-  Tipo: ${p.projectTypeId}
-  Ingeniero: ${p.assignedEngineerId}
-  Fecha inicio: ${p.startDate}
-  Fecha fin estimada: ${p.estimatedEndDate}
-`
-  )
-  .join("")}
-
-Por favor, proporciona:
-1. Un análisis general del estado de los proyectos
-2. Identificación de problemas o cuellos de botella
-3. Sugerencias específicas de mejora
-4. Recomendaciones para optimizar recursos y tiempos
-5. Predicción de riesgos potenciales
-`;
+      const assistantContext = await buildAiAssistantContext(ctx.user, "análisis general");
+      const context = `Datos operativos autorizados para analizar:\n${assistantContext.context}`;
 
       const { invokeLLM } = await import("./_core/groqClient");
 
@@ -2344,6 +2312,7 @@ Por favor, proporciona:
             content: context,
           },
         ],
+        max_tokens: 1_400,
       });
 
       return {
@@ -2355,19 +2324,10 @@ Por favor, proporciona:
 
     // Responder preguntas sobre proyectos
     askQuestion: protectedProcedure
-      .input(z.object({ question: z.string() }))
+      .input(z.object({ question: z.string().trim().min(1).max(4_000) }))
       .mutation(async ({ input, ctx }) => {
-        const projects = await db.getAllProjects();
-        const stats = await db.getProjectStats();
-
-        const context = `
-Contexto de Proyectos Solares:
-- Total: ${stats.total}, Activos: ${stats.active}, Completados: ${stats.completed}, Retrasados: ${stats.overdue}
-
-Proyectos: ${projects.map(p => `${p.name} (${p.status})`).join(", ")}
-
-Pregunta del usuario: ${input.question}
-`;
+        const assistantContext = await buildAiAssistantContext(ctx.user, input.question);
+        const context = `Datos operativos autorizados:\n${assistantContext.context}\n\nPregunta del usuario: ${input.question}`;
 
         const { invokeLLM } = await import("./_core/groqClient");
 
@@ -2383,6 +2343,7 @@ Pregunta del usuario: ${input.question}
               content: context,
             },
           ],
+          max_tokens: 1_000,
         });
 
         return {
@@ -2394,48 +2355,8 @@ Pregunta del usuario: ${input.question}
 
     // Generar informe PDF descargable
     generateReport: protectedProcedure.mutation(async ({ ctx }) => {
-      const projects = await db.getAllProjects();
-      const stats = await db.getProjectStats();
-      const milestones = await db.getUpcomingMilestones(7);
-      const overdueMilestones = await db.getOverdueMilestones();
-
-      // Generar análisis con IA
-      const context = `
-Análisis de Proyectos Solares - Green House Project
-
-Estadísticas Generales:
-- Total de proyectos: ${stats.total}
-- Proyectos activos: ${stats.active}
-- Proyectos completados: ${stats.completed}
-- Proyectos con retraso: ${stats.overdue}
-
-Proyectos:
-${projects
-  .map(
-    p => `
-- ${p.name} (${p.location})
-  Estado: ${p.status}
-  Tipo: ${p.projectTypeId}
-  Fecha inicio: ${p.startDate}
-  Fecha fin estimada: ${p.estimatedEndDate}
-`
-  )
-  .join("")}
-
-Hitos próximos a vencer (7 días):
-${milestones.map(m => `- ${m.milestoneName} (${m.projectName}) - Vence: ${m.dueDate}`).join("\n")}
-
-Hitos vencidos:
-${overdueMilestones.map(m => `- ${m.milestoneName} (${m.projectName}) - Venció: ${m.dueDate}`).join("\n")}
-
-Por favor, genera un informe ejecutivo profesional en formato Markdown con:
-1. Resumen Ejecutivo
-2. Estado General de Proyectos
-3. Análisis de Riesgos
-4. Hitos Críticos
-5. Recomendaciones Prioritarias
-6. Plan de Acción
-`;
+      const assistantContext = await buildAiAssistantContext(ctx.user, "informe ejecutivo");
+      const context = `Datos operativos autorizados:\n${assistantContext.context}\n\nGenera un informe ejecutivo profesional en Markdown con resumen ejecutivo, estado de proyectos, riesgos, hitos críticos, recomendaciones y plan de acción.`;
 
       const { invokeLLM } = await import("./_core/groqClient");
 
@@ -2451,6 +2372,7 @@ Por favor, genera un informe ejecutivo profesional en formato Markdown con:
             content: context,
           },
         ],
+        max_tokens: 1_600,
       });
 
       const reportContent =
