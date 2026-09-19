@@ -57,6 +57,10 @@ La sección separada **“Claves de integración”**, con alcance `tickets.read
 
 La prueba conserva la misma regla de privacidad que la pantalla de proyecto: aun cuando la ejecute un administrador, Soporte solo devuelve tickets activos asignados a su propio correo corporativo. Antes de probar, se debe guardar el estado y elegir un proyecto existente con `openSolarId`.
 
+## Resumen personal en dashboard
+
+El dashboard muestra **Mis tickets de servicio** debajo de las métricas cuando existen tickets activos para el correo de la sesión. El panel muestra hasta cinco tickets recientes, su prioridad, estado, proyecto autorizado y un enlace directo para resolverlos en GHP Soporte. El conteo corresponde únicamente a los tickets cuyos `projectExternalId` coinciden con proyectos que el usuario puede ver en Solar Project Manager; ningún ticket de otro proyecto o responsable llega a la interfaz.
+
 ## Comportamiento ante problemas
 
 Si el proyecto no tiene `openSolarId`, faltan variables, la firma es rechazada o Soporte está temporalmente indisponible, el detalle de proyecto continúa cargando sin interrupción. En ese caso simplemente no muestra la tarjeta de tickets. Esta decisión evita bloquear la gestión del proyecto y evita una apertura insegura ante errores.

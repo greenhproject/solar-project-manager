@@ -29,6 +29,7 @@ import crypto from "crypto";
 import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
 import { buildAiAssistantContext } from "./aiAssistantContext";
 import {
+  getSupportTicketsDashboardSummary,
   getSupportTicketSummary,
   getSupportTicketsConfigurationStatus,
   normalizeSupportTicketsApiUrl,
@@ -40,6 +41,7 @@ import {
   isEncryptedSupportTicketCredential,
   isSupportTicketCredentialsVaultReady,
 } from "./supportTicketsCredentialsVault";
+import { mergeSupportTicketsAuthorizedProjects } from "./supportTicketsDashboardAccess";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -155,6 +157,48 @@ export const appRouter = router({
   // entre servidores y solo devuelve tickets asignados al correo del usuario
   // autenticado que ya tiene permiso para abrir este proyecto.
   supportTickets: router({
+    // Dashboard personal: Soporte ya filtra por correo; Solar vuelve a filtrar
+    // por la visibilidad efectiva de proyectos antes de responder al navegador.
+    dashboardSummary: protectedProcedure.query(async ({ ctx }) => {
+      const runtimeConfiguration = await getSupportTicketsRuntimeConfiguration();
+      const externalSummary = await getSupportTicketsDashboardSummary({
+        recipientEmail: ctx.user.email,
+        runtimeConfiguration,
+      });
+      if (!externalSummary.available) {
+        return { available: false, activeTicketCount: 0, tickets: [], truncated: false };
+      }
+
+      const visibleProjects = (ctx.user.role === "admin" || ctx.user.role === "admin_financiero")
+        ? await db.getAllProjects()
+        : mergeSupportTicketsAuthorizedProjects(...(await Promise.all([
+            db.getProjectsByEngineerId(ctx.user.id),
+            db.getProjectsWithAssignedMilestones(ctx.user.id),
+          ])));
+      const projectsByExternalId = new Map(
+        visibleProjects
+          .filter(project => Boolean(project.openSolarId))
+          .map(project => [String(project.openSolarId).trim(), project]),
+      );
+      const authorizedTickets = externalSummary.tickets
+        .map(ticket => {
+          const project = projectsByExternalId.get(ticket.projectExternalId);
+          return project ? {
+            ...ticket,
+            project: { id: project.id, name: project.name },
+          } : null;
+        })
+        .filter((ticket): ticket is NonNullable<typeof ticket> => ticket !== null);
+      const tickets = authorizedTickets.slice(0, 5);
+
+      return {
+        available: true,
+        activeTicketCount: authorizedTickets.length,
+        tickets,
+        truncated: authorizedTickets.length > tickets.length,
+      };
+    }),
+
     // Estado seguro para la pantalla de administración. Las claves HMAC nunca
     // salen del servidor; solo se informa si Railway las tiene configuradas.
     getConfiguration: adminProcedure.query(async () => {

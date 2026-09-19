@@ -18,6 +18,17 @@ export type SupportTicketSummary = {
   tickets: SupportTicketSummaryItem[];
 };
 
+export type SupportDashboardTicketItem = SupportTicketSummaryItem & {
+  projectExternalId: string;
+};
+
+export type SupportTicketsDashboardSummary = {
+  available: boolean;
+  activeTicketCount: number;
+  tickets: SupportDashboardTicketItem[];
+  truncated: boolean;
+};
+
 /** Configuración resuelta exclusivamente dentro del backend. */
 export type SupportTicketsRuntimeConfiguration = {
   enabled: boolean;
@@ -104,6 +115,14 @@ function parseTicket(value: unknown): SupportTicketSummaryItem | null {
     priority: ticket.priority as SupportTicketSummaryItem["priority"],
     actionUrl: ticket.actionUrl,
   };
+}
+
+function parseDashboardTicket(value: unknown): SupportDashboardTicketItem | null {
+  const ticket = parseTicket(value);
+  if (!ticket || !value || typeof value !== "object") return null;
+  const projectExternalId = String((value as Record<string, unknown>).projectExternalId || "").trim();
+  if (!isValidProjectExternalId(projectExternalId)) return null;
+  return { ...ticket, projectExternalId };
 }
 
 /**
@@ -241,5 +260,77 @@ export async function getSupportTicketSummary(params: {
   } catch (error) {
     console.warn("[Support Tickets] Error de consulta:", (error as Error).name);
     return unavailableSummary(projectExternalId);
+  }
+}
+/**
+ * Obtiene tickets activos del propio usuario para el dashboard. La respuesta
+ * todavía se cruza en routers.ts con los proyectos autorizados antes de llegar
+ * al navegador.
+ */
+export async function getSupportTicketsDashboardSummary(params: {
+  recipientEmail: string | null | undefined;
+  runtimeConfiguration?: Partial<SupportTicketsRuntimeConfiguration>;
+}): Promise<SupportTicketsDashboardSummary> {
+  const unavailableDashboardSummary = (): SupportTicketsDashboardSummary => ({
+    available: false,
+    activeTicketCount: 0,
+    tickets: [],
+    truncated: false,
+  });
+  const recipientEmail = normalizeEmail(params.recipientEmail);
+  if (!recipientEmail) return unavailableDashboardSummary();
+
+  const configuration = getSupportTicketsConfigurationStatus(params.runtimeConfiguration);
+  if (!configuration.enabled || !configuration.configured) {
+    return unavailableDashboardSummary();
+  }
+
+  const path = "/api/integrations/spm/dashboard/tickets-summary";
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const signature = buildSupportTicketsRequestSignature({
+    secret: configuration.signingSecret,
+    timestamp,
+    method: "GET",
+    path,
+    recipientEmail,
+  });
+
+  try {
+    const response = await fetch(`${configuration.apiUrl}${path}`, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "X-GHP-Source": configuration.sourceKey,
+        "X-GHP-Timestamp": timestamp,
+        "X-GHP-Recipient-Email": recipientEmail,
+        "X-GHP-Signature": signature,
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      console.warn(`[Support Tickets] Dashboard no disponible: HTTP ${response.status}`);
+      return unavailableDashboardSummary();
+    }
+
+    const payload = await response.json() as Record<string, unknown>;
+    if (!payload || !Array.isArray(payload.tickets)) {
+      console.warn("[Support Tickets] Contrato de dashboard inválido");
+      return unavailableDashboardSummary();
+    }
+    const tickets = payload.tickets
+      .map(parseDashboardTicket)
+      .filter((ticket): ticket is SupportDashboardTicketItem => ticket !== null);
+    const activeTicketCount = typeof payload.activeTicketCount === "number" && payload.activeTicketCount >= 0
+      ? payload.activeTicketCount
+      : tickets.length;
+    return {
+      available: true,
+      activeTicketCount,
+      tickets,
+      truncated: payload.truncated === true,
+    };
+  } catch (error) {
+    console.warn("[Support Tickets] Error de dashboard:", (error as Error).name);
+    return unavailableDashboardSummary();
   }
 }

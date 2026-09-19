@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildSupportTicketsRequestSignature,
   getSupportTicketSummary,
+  getSupportTicketsDashboardSummary,
   getSupportTicketsConfigurationStatus,
   normalizeSupportTicketsApiUrl,
 } from "./supportTicketsIntegration";
@@ -147,6 +148,54 @@ describe("Support ticket integration", () => {
     });
 
     expect(fetchMock.mock.calls[0][1].headers["X-GHP-Source"]).toBe("vault-resolved-source");
+  });
+
+  it("requests the personal dashboard summary and strips malformed or unsafe tickets", async () => {
+    process.env.SUPPORT_TICKETS_API_URL = "https://soporte-backend-ghp-production.up.railway.app";
+    process.env.SUPPORT_TICKETS_SOURCE_KEY = "spm-test-source";
+    process.env.SUPPORT_TICKETS_SIGNING_SECRET = "spm-test-secret";
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      activeTicketCount: 2,
+      truncated: false,
+      tickets: [
+        {
+          ticketId: "9255866-001",
+          projectExternalId: "9255866",
+          status: "in_progress",
+          priority: "high",
+          actionUrl: "https://soporte.ghp.center/tickets/9255866-001",
+        },
+        {
+          ticketId: "invalid-project",
+          projectExternalId: "not-an-opensolar-id",
+          status: "new",
+          priority: "critical",
+          actionUrl: "javascript:alert(1)",
+        },
+      ],
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await getSupportTicketsDashboardSummary({
+      recipientEmail: "Tecnico@GreenHProject.com",
+    });
+
+    expect(result).toEqual({
+      available: true,
+      activeTicketCount: 2,
+      truncated: false,
+      tickets: [{
+        ticketId: "9255866-001",
+        projectExternalId: "9255866",
+        status: "in_progress",
+        priority: "high",
+        actionUrl: "https://soporte.ghp.center/tickets/9255866-001",
+      }],
+    });
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "https://soporte-backend-ghp-production.up.railway.app/api/integrations/spm/dashboard/tickets-summary",
+    );
+    expect(fetchMock.mock.calls[0][1].headers["X-GHP-Recipient-Email"]).toBe("tecnico@greenhproject.com");
   });
 
   it("fails closed when the remote service rejects the request", async () => {

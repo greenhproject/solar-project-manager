@@ -23,6 +23,8 @@ import {
   Loader2,
   LogIn,
   ShieldAlert,
+  TicketCheck,
+  ExternalLink,
 } from "lucide-react";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
@@ -44,6 +46,12 @@ export default function Dashboard() {
   const { data: projects, isLoading: projectsLoading } =
     trpc.projects.list.useQuery();
   const { data: reminders } = trpc.reminders.unread.useQuery();
+  const { data: supportTickets, isLoading: supportTicketsLoading } =
+    trpc.supportTickets.dashboardSummary.useQuery(undefined, {
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+      retry: false,
+    });
 
   // MainLayout se encarga de mostrar sesión expirada.
   // Dashboard solo muestra un skeleton de carga breve mientras se obtiene el usuario.
@@ -89,6 +97,24 @@ export default function Dashboard() {
       new Date(estimatedEndDate) < new Date()
     );
   };
+
+  const ticketPriority = (priority: string) => {
+    const config = {
+      critical: { label: "Crítica", className: "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300" },
+      high: { label: "Alta", className: "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900/60 dark:bg-orange-950/30 dark:text-orange-300" },
+      medium: { label: "Media", className: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-300" },
+      low: { label: "Baja", className: "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-300" },
+    };
+    return config[priority as keyof typeof config] || config.medium;
+  };
+
+  const ticketStatus = (status: string) => ({
+    new: "Nuevo",
+    assigned: "Asignado",
+    in_progress: "En progreso",
+    waiting: "En espera",
+    escalated: "Escalado",
+  }[status] || status);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -211,6 +237,67 @@ export default function Dashboard() {
             </Card>
           </Link>
         </div>
+
+        {/* Tickets de servicio: solo tickets del correo actual y proyectos autorizados */}
+        {supportTicketsLoading ? (
+          <Card className="border-primary/15">
+            <CardContent className="flex items-center gap-3 py-5">
+              <Skeleton className="h-9 w-9 rounded-lg" />
+              <div className="space-y-2"><Skeleton className="h-4 w-48" /><Skeleton className="h-3 w-72" /></div>
+            </CardContent>
+          </Card>
+        ) : supportTickets?.available && supportTickets.activeTicketCount > 0 ? (
+          <Card className="overflow-hidden border-primary/20 shadow-apple">
+            <CardHeader className="border-b bg-gradient-to-r from-primary/10 via-amber-50/70 to-background py-4 dark:from-primary/15 dark:via-amber-950/10">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-primary/10 p-2 text-primary"><TicketCheck className="h-5 w-5" /></div>
+                  <div>
+                    <CardTitle className="text-lg">Mis tickets de servicio</CardTitle>
+                    <CardDescription>Tickets activos asociados a tus proyectos autorizados</CardDescription>
+                  </div>
+                </div>
+                <Badge className="w-fit bg-primary text-primary-foreground">
+                  {supportTickets.activeTicketCount} {supportTickets.activeTicketCount === 1 ? "activo" : "activos"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+                {supportTickets.tickets.map(ticket => {
+                  const priority = ticketPriority(ticket.priority);
+                  return (
+                    <div key={ticket.ticketId} className="rounded-xl border bg-card p-3 transition-shadow hover:shadow-md">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold leading-tight">{ticket.ticketId}</p>
+                          <Link href={`/projects/${ticket.project.id}`} className="mt-1 block truncate text-xs text-muted-foreground hover:text-primary hover:underline">
+                            {ticket.project.name}
+                          </Link>
+                        </div>
+                        <Badge variant="outline" className={`shrink-0 ${priority.className}`}>{priority.label}</Badge>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground">{ticketStatus(ticket.status)}</span>
+                        <a
+                          href={ticket.actionUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                        >
+                          Resolver <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {supportTickets.truncated && (
+                <p className="mt-3 text-xs text-muted-foreground">Se muestran los 5 tickets más recientes; resuelve los pendientes desde los accesos directos.</p>
+              )}
+            </CardContent>
+          </Card>
+        ) : null}
 
         {/* Recordatorios Pendientes */}
         {reminders && reminders.length > 0 && (
