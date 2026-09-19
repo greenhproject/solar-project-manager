@@ -6,7 +6,7 @@
 - [x] Emitir una clave de origen y secreto HMAC desde Soporte sin persistirlos en texto plano
 - [x] Guiar a Solar Project Manager como consumidor que configura solo sus secretos de Railway
 - [x] Explicar rotación, visualización única y activación segura en ambos servicios
-- [ ] Validar seguridad, compilación y publicar la mejora
+- [x] Validar seguridad, compilación y publicar la mejora
 
 ## Integración privada de tickets de Soporte por proyecto OpenSolar (19 Sep 2026)
 
