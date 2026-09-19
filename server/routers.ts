@@ -28,6 +28,7 @@ import { eq, desc, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
 import { buildAiAssistantContext } from "./aiAssistantContext";
+import { getSupportTicketSummary } from "./supportTicketsIntegration";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -57,6 +58,41 @@ export const appRouter = router({
   adminTools: adminToolsRouter,
   clientPortal: clientPortalRouter,
   milestoneReminders: milestoneReminderConfigRouter,
+
+  // Resumen de tickets de GHP Soporte. La consulta se realiza exclusivamente
+  // entre servidores y solo devuelve tickets asignados al correo del usuario
+  // autenticado que ya tiene permiso para abrir este proyecto.
+  supportTickets: router({
+    forProject: protectedProcedure
+      .input(z.object({ projectId: z.number().int().positive() }))
+      .query(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Proyecto no encontrado",
+          });
+        }
+
+        const hasAssignedMilestones = await db.userHasAssignedMilestones(ctx.user.id, input.projectId);
+        if (
+          ctx.user.role !== "admin" &&
+          ctx.user.role !== "admin_financiero" &&
+          project.assignedEngineerId !== ctx.user.id &&
+          !hasAssignedMilestones
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "No tienes permiso para consultar tickets de este proyecto",
+          });
+        }
+
+        return getSupportTicketSummary({
+          projectExternalId: project.openSolarId,
+          recipientEmail: ctx.user.email,
+        });
+      }),
+  }),
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

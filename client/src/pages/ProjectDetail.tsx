@@ -159,6 +159,98 @@ function downloadPdfFromBase64(pdfBase64: string, fileName: string) {
   document.body.removeChild(a);
 }
 
+type SupportTicketNoticeItem = {
+  ticketId: string;
+  status: "new" | "assigned" | "in_progress" | "waiting" | "escalated";
+  priority: "low" | "medium" | "high" | "critical";
+  actionUrl: string;
+};
+
+/**
+ * Muestra únicamente el resumen que el backend ya filtró por el correo del
+ * usuario autenticado. Nunca recibe descripciones, comentarios ni adjuntos de
+ * Soporte y conserva los permisos propios de esa plataforma al abrir el enlace.
+ */
+function SupportTicketNotice({ tickets }: { tickets: SupportTicketNoticeItem[] }) {
+  if (tickets.length === 0) return null;
+
+  const statusLabels: Record<SupportTicketNoticeItem["status"], string> = {
+    new: "Nuevo",
+    assigned: "Asignado",
+    in_progress: "En proceso",
+    waiting: "En espera",
+    escalated: "Escalado",
+  };
+  const priorityLabels: Record<SupportTicketNoticeItem["priority"], string> = {
+    low: "Baja",
+    medium: "Media",
+    high: "Alta",
+    critical: "Crítica",
+  };
+
+  return (
+    <Card
+      className="border-amber-200 bg-gradient-to-br from-amber-50 via-background to-background shadow-sm dark:border-amber-900/60 dark:from-amber-950/20"
+      aria-label="Tickets de servicio asignados"
+    >
+      <CardContent className="p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+            <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-semibold text-amber-950 dark:text-amber-100">
+                  {tickets.length === 1
+                    ? "Tienes un ticket de servicio pendiente de atención"
+                    : `Tienes ${tickets.length} tickets de servicio pendientes de atención`}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Estos casos están asignados a tu cuenta y pertenecen a este proyecto.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit border-amber-300 bg-amber-100/70 text-amber-800 dark:border-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                Soporte GHP
+              </Badge>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {tickets.map(ticket => {
+                const urgent = ticket.priority === "high" || ticket.priority === "critical";
+                return (
+                  <div
+                    key={ticket.ticketId}
+                    className="flex flex-col gap-3 rounded-lg border border-amber-200/80 bg-background/80 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-amber-900/60"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-mono text-sm font-semibold text-foreground">#{ticket.ticketId}</p>
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        <Badge variant="secondary" className="text-xs">
+                          {statusLabels[ticket.status]}
+                        </Badge>
+                        <Badge variant={urgent ? "destructive" : "outline"} className="text-xs">
+                          Prioridad {priorityLabels[ticket.priority]}
+                        </Badge>
+                      </div>
+                    </div>
+                    <Button asChild variant="outline" size="sm" className="w-full shrink-0 gap-2 border-amber-300 text-amber-800 hover:bg-amber-100 hover:text-amber-900 sm:w-auto dark:border-amber-800 dark:text-amber-200 dark:hover:bg-amber-900/40">
+                      <a href={ticket.actionUrl} target="_blank" rel="noopener noreferrer">
+                        Abrir en Soporte
+                        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ProjectDetail() {
   const { formatDate: tzFormatDate, toDateInputValue } = useTimezone();
   const meQuery = trpc.auth.me.useQuery(undefined, {
@@ -182,6 +274,14 @@ export default function ProjectDetail() {
   });
   const { data: syncLogs } = trpc.sync.logs.useQuery({ projectId });
   const { data: allUsers } = trpc.users.list.useQuery(); // Obtener todos los usuarios
+  const { data: supportTicketSummary } = trpc.supportTickets.forProject.useQuery(
+    { projectId },
+    {
+      enabled: Boolean(project?.openSolarId) && projectId > 0,
+      refetchOnWindowFocus: false,
+      staleTime: 60_000,
+    }
+  );
 
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -538,6 +638,8 @@ export default function ProjectDetail() {
             )}
           </div>
         </div>
+
+        <SupportTicketNotice tickets={(supportTicketSummary?.tickets || []) as SupportTicketNoticeItem[]} />
 
         {/* Información General */}
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">

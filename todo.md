@@ -1,5 +1,15 @@
 # Solar Project Manager - Lista de Tareas
 
+## Integración privada de tickets de Soporte por proyecto OpenSolar (19 Sep 2026)
+
+- [x] Definir contrato servidor a servidor firmado mediante HMAC-SHA256
+- [x] Consultar tickets activos por `projects.openSolarId` sin usar el ID interno del proyecto
+- [x] Filtrar el resumen por correo normalizado del técnico asignado y usuario autenticado
+- [x] Agregar aviso responsive en el detalle del proyecto con acceso seguro a Soporte
+- [x] Manejar integración no disponible sin bloquear Solar Project Manager
+- [x] Probar firma, privacidad, estados activos y compilación
+- [ ] Publicar, configurar secretos privados en Railway y validar en producción
+
 ## Integración Google Calendar para Railway (30 Nov 2025)
 
 - [x] Instalar googleapis package para acceso directo a Google Calendar API
