@@ -7,7 +7,7 @@
 - [x] Filtrar tickets por la visibilidad real del proyecto en Solar Project Manager
 - [x] Mostrar un panel compacto, prioritario y con enlaces directos en el dashboard
 - [x] Alinear el filtro con proyectos de ingeniería asignada e hitos asignados
-- [ ] Validar privacidad, pruebas, compilación y publicación
+- [x] Validar privacidad, pruebas, compilación y publicación
 
 ## Claridad al configurar credenciales emitidas por Soporte (19 Sep 2026)
 
