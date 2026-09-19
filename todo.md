@@ -8,7 +8,8 @@
 - [x] Agregar aviso responsive en el detalle del proyecto con acceso seguro a Soporte
 - [x] Manejar integración no disponible sin bloquear Solar Project Manager
 - [x] Probar firma, privacidad, estados activos y compilación
-- [ ] Publicar, configurar secretos privados en Railway y validar en producción
+- [x] Incorporar administración segura de activación, URL aprobada y prueba controlada
+- [ ] Publicar los cambios y documentar el requisito de secretos privados para activación en Railway
 
 ## Integración Google Calendar para Railway (30 Nov 2025)
 

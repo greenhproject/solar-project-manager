@@ -4,12 +4,14 @@ import {
   buildSupportTicketsRequestSignature,
   getSupportTicketSummary,
   getSupportTicketsConfigurationStatus,
+  normalizeSupportTicketsApiUrl,
 } from "./supportTicketsIntegration";
 
 const envKeys = [
   "SUPPORT_TICKETS_API_URL",
   "SUPPORT_TICKETS_SOURCE_KEY",
   "SUPPORT_TICKETS_SIGNING_SECRET",
+  "SUPPORT_TICKETS_ALLOWED_HOSTS",
 ] as const;
 const originalEnv = Object.fromEntries(envKeys.map(key => [key, process.env[key]]));
 
@@ -37,6 +39,20 @@ describe("Support ticket integration", () => {
       .digest("hex");
 
     expect(signature).toBe(expected);
+  });
+
+  it("accepts only an HTTPS base URL configured by an administrator", () => {
+    expect(normalizeSupportTicketsApiUrl(" https://soporte-backend-ghp-production.up.railway.app/ "))
+      .toBe("https://soporte-backend-ghp-production.up.railway.app");
+    expect(normalizeSupportTicketsApiUrl("http://soporte.ghp.center")).toBeNull();
+    expect(normalizeSupportTicketsApiUrl("https://user:pass@soporte.ghp.center")).toBeNull();
+    expect(normalizeSupportTicketsApiUrl("https://soporte.ghp.center/api/tickets")).toBeNull();
+    expect(normalizeSupportTicketsApiUrl("https://soporte.ghp.center?debug=true")).toBeNull();
+    expect(normalizeSupportTicketsApiUrl("https://untrusted.example.com")).toBeNull();
+
+    process.env.SUPPORT_TICKETS_ALLOWED_HOSTS = "soporte-api-staging.ghp.center";
+    expect(normalizeSupportTicketsApiUrl("https://soporte-api-staging.ghp.center"))
+      .toBe("https://soporte-api-staging.ghp.center");
   });
 
   it("reports missing configuration without attempting a remote request", async () => {
@@ -122,5 +138,27 @@ describe("Support ticket integration", () => {
       activeTicketCount: 0,
       tickets: [],
     });
+  });
+
+  it("does not call Soporte while the administrator keeps the integration disabled", async () => {
+    process.env.SUPPORT_TICKETS_SOURCE_KEY = "spm-test-source";
+    process.env.SUPPORT_TICKETS_SIGNING_SECRET = "spm-test-secret";
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getSupportTicketSummary({
+      projectExternalId: "9255866",
+      recipientEmail: "tecnico@greenhproject.com",
+      runtimeConfiguration: {
+        enabled: false,
+        apiUrl: "https://soporte-backend-ghp-production.up.railway.app",
+      },
+    })).resolves.toEqual({
+      available: false,
+      projectExternalId: "9255866",
+      activeTicketCount: 0,
+      tickets: [],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

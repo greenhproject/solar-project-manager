@@ -28,7 +28,12 @@ import { eq, desc, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
 import { buildAiAssistantContext } from "./aiAssistantContext";
-import { getSupportTicketSummary } from "./supportTicketsIntegration";
+import {
+  getSupportTicketSummary,
+  getSupportTicketsConfigurationStatus,
+  normalizeSupportTicketsApiUrl,
+  type SupportTicketsRuntimeConfiguration,
+} from "./supportTicketsIntegration";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -52,6 +57,34 @@ const tramitesProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+const SUPPORT_TICKETS_ENABLED_SETTING = "support_tickets_integration_enabled";
+const SUPPORT_TICKETS_API_URL_SETTING = "support_tickets_integration_api_url";
+
+/**
+ * La interfaz administrativa solo gestiona el interruptor y la URL. Las
+ * credenciales se leen siempre desde Railway y no se guardan en appSettings.
+ */
+async function getSupportTicketsRuntimeConfiguration(): Promise<SupportTicketsRuntimeConfiguration> {
+  const dbInst = await db.getDb();
+  if (!dbInst) return { enabled: false, apiUrl: process.env.SUPPORT_TICKETS_API_URL || "" };
+
+  const [enabledRow] = await dbInst
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.settingKey, SUPPORT_TICKETS_ENABLED_SETTING))
+    .limit(1);
+  const [apiUrlRow] = await dbInst
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.settingKey, SUPPORT_TICKETS_API_URL_SETTING))
+    .limit(1);
+
+  return {
+    enabled: enabledRow?.settingValue === "true",
+    apiUrl: apiUrlRow?.settingValue || process.env.SUPPORT_TICKETS_API_URL || "",
+  };
+}
+
 export const appRouter = router({
   system: systemRouter,
   analytics: metricsRouter,
@@ -63,6 +96,95 @@ export const appRouter = router({
   // entre servidores y solo devuelve tickets asignados al correo del usuario
   // autenticado que ya tiene permiso para abrir este proyecto.
   supportTickets: router({
+    // Estado seguro para la pantalla de administración. Las claves HMAC nunca
+    // salen del servidor; solo se informa si Railway las tiene configuradas.
+    getConfiguration: adminProcedure.query(async () => {
+      const runtimeConfiguration = await getSupportTicketsRuntimeConfiguration();
+      const serverConfiguration = getSupportTicketsConfigurationStatus(runtimeConfiguration);
+      return {
+        enabled: runtimeConfiguration.enabled,
+        apiUrl: runtimeConfiguration.apiUrl,
+        credentialsConfigured: serverConfiguration.configured,
+        missingServerVariables: serverConfiguration.missing,
+      };
+    }),
+
+    // Actualiza parámetros operativos no sensibles. La URL se limita a HTTPS
+    // base para evitar SSRF hacia redes internas o endpoints arbitrarios.
+    saveConfiguration: adminProcedure
+      .input(z.object({
+        enabled: z.boolean(),
+        apiUrl: z.string().max(500),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const apiUrl = normalizeSupportTicketsApiUrl(input.apiUrl);
+        if (!apiUrl) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Ingresa una URL HTTPS base válida para el backend de Soporte",
+          });
+        }
+
+        const dbInst = await db.getDb();
+        if (!dbInst) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Base de datos no disponible" });
+        }
+
+        await dbInst.insert(appSettings).values({
+          settingKey: SUPPORT_TICKETS_ENABLED_SETTING,
+          settingValue: input.enabled ? "true" : "false",
+          description: "Activa la consulta privada de tickets de GHP Soporte por proyecto OpenSolar",
+          updatedBy: ctx.user.id,
+        }).onDuplicateKeyUpdate({
+          set: { settingValue: input.enabled ? "true" : "false", updatedBy: ctx.user.id },
+        });
+        await dbInst.insert(appSettings).values({
+          settingKey: SUPPORT_TICKETS_API_URL_SETTING,
+          settingValue: apiUrl,
+          description: "URL HTTPS del backend de GHP Soporte para el resumen privado de tickets",
+          updatedBy: ctx.user.id,
+        }).onDuplicateKeyUpdate({
+          set: { settingValue: apiUrl, updatedBy: ctx.user.id },
+        });
+
+        const serverConfiguration = getSupportTicketsConfigurationStatus({ enabled: input.enabled, apiUrl });
+        return {
+          success: true,
+          enabled: input.enabled,
+          apiUrl,
+          credentialsConfigured: serverConfiguration.configured,
+          missingServerVariables: serverConfiguration.missing,
+        };
+      }),
+
+    // Prueba controlada: el administrador elige un proyecto existente para
+    // comprobar firma y contrato, pero la respuesta continúa filtrada por su
+    // propio correo corporativo como en la consulta normal.
+    testConfiguration: adminProcedure
+      .input(z.object({ projectId: z.number().int().positive() }))
+      .mutation(async ({ input, ctx }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Proyecto de prueba no encontrado" });
+        }
+        const runtimeConfiguration = await getSupportTicketsRuntimeConfiguration();
+        if (!runtimeConfiguration.enabled) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Activa la integración antes de ejecutar una prueba" });
+        }
+        const serverConfiguration = getSupportTicketsConfigurationStatus(runtimeConfiguration);
+        if (!serverConfiguration.configured) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: `Faltan variables privadas en Railway: ${serverConfiguration.missing.join(", ")}`,
+          });
+        }
+        return getSupportTicketSummary({
+          projectExternalId: project.openSolarId,
+          recipientEmail: ctx.user.email,
+          runtimeConfiguration,
+        });
+      }),
+
     forProject: protectedProcedure
       .input(z.object({ projectId: z.number().int().positive() }))
       .query(async ({ input, ctx }) => {
@@ -90,6 +212,7 @@ export const appRouter = router({
         return getSupportTicketSummary({
           projectExternalId: project.openSolarId,
           recipientEmail: ctx.user.email,
+          runtimeConfiguration: await getSupportTicketsRuntimeConfiguration(),
         });
       }),
   }),

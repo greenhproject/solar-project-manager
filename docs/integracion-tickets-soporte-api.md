@@ -33,8 +33,17 @@ Configure los siguientes valores como secretos en el backend de Solar Project Ma
 | `SUPPORT_TICKETS_API_URL` | `https://soporte-backend-ghp-production.up.railway.app` |
 | `SUPPORT_TICKETS_SOURCE_KEY` | Mismo valor que `SPM_TICKETS_SOURCE_KEY` en GHP Soporte. |
 | `SUPPORT_TICKETS_SIGNING_SECRET` | Mismo valor que `SPM_TICKETS_SIGNING_SECRET` en GHP Soporte. |
+| `SUPPORT_TICKETS_ALLOWED_HOSTS` | Opcional. Lista separada por comas de hosts HTTPS aprobados adicionalmente, para por ejemplo un entorno de staging. |
 
 El backend de Soporte requiere sus equivalentes `SPM_TICKETS_SOURCE_KEY` y `SPM_TICKETS_SIGNING_SECRET`. Ambos servicios deben compartir exactamente los mismos valores. Se recomienda generar un secreto aleatorio de al menos 32 bytes y rotarlo como una credencial de integración independiente.
+
+## Administración desde la interfaz
+
+Un administrador de Solar Project Manager encuentra el panel en **Configuración → Integración de Tickets de Soporte**. Desde allí puede activar o desactivar la consulta, actualizar la URL HTTPS base del backend de Soporte y ejecutar una prueba controlada con un proyecto que tenga ID de OpenSolar.
+
+La interfaz muestra si las credenciales de servidor están listas, pero **nunca muestra, solicita ni almacena** `SUPPORT_TICKETS_SOURCE_KEY` ni `SUPPORT_TICKETS_SIGNING_SECRET`. Estas variables se mantienen exclusivamente en Railway. La URL se valida como un origen HTTPS sin ruta, parámetros, usuario ni contraseña y su host debe estar aprobado en la lista privada del servidor. Por defecto solo se acepta el backend de Soporte de producción; agregue un host de staging mediante `SUPPORT_TICKETS_ALLOWED_HOSTS` antes de seleccionarlo en la UI.
+
+La prueba conserva la misma regla de privacidad que la pantalla de proyecto: aun cuando la ejecute un administrador, Soporte solo devuelve tickets activos asignados a su propio correo corporativo. Antes de probar, se debe guardar el estado y elegir un proyecto existente con `openSolarId`.
 
 ## Comportamiento ante problemas
 

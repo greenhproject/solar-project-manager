@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings as SettingsIcon, Wrench, Bell, Mail, ChevronRight, Globe, Webhook, Key, Shield } from "lucide-react";
+import { Settings as SettingsIcon, Wrench, Bell, Mail, ChevronRight, Globe, Webhook, Key, Shield, PlugZap } from "lucide-react";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { SystemConfiguration } from "@/components/SystemConfiguration";
 import { AutoNotificationsManager } from "@/components/AutoNotificationsManager";
@@ -15,10 +15,13 @@ import { WebhookLogs } from "@/components/WebhookLogs";
 import { ApiKeysSettings } from "@/components/ApiKeysSettings";
 import { WebhookSettings } from "@/components/WebhookSettings";
 import { SsoSettings } from "@/components/SsoSettings";
+import { SupportTicketsIntegrationSettings } from "@/components/SupportTicketsIntegrationSettings";
 import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
 
 export default function Settings() {
   const [, navigate] = useLocation();
+  const { data: currentUser } = trpc.auth.me.useQuery();
 
   return (
     <div className="container py-4 sm:py-6 lg:py-8 space-y-6">
@@ -87,6 +90,17 @@ export default function Settings() {
         </h2>
         <SsoSettings />
       </div>
+
+      {/* Integración de Tickets de Soporte: solo administración. */}
+      {currentUser?.role === "admin" && (
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+            <PlugZap className="h-5 w-5 text-primary shrink-0" />
+            Integración de Tickets de Soporte
+          </h2>
+          <SupportTicketsIntegrationSettings />
+        </div>
+      )}
 
       {/* API Keys */}
       <div>

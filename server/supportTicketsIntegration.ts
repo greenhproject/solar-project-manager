@@ -18,15 +18,53 @@ export type SupportTicketSummary = {
   tickets: SupportTicketSummaryItem[];
 };
 
+/** Parámetros que el administrador puede gestionar sin conocer secretos. */
+export type SupportTicketsRuntimeConfiguration = {
+  enabled: boolean;
+  apiUrl: string;
+};
+
 const MAX_PROJECT_EXTERNAL_ID_LENGTH = 50;
 const REQUEST_TIMEOUT_MS = 8_000;
+const DEFAULT_SUPPORT_TICKETS_HOST = "soporte-backend-ghp-production.up.railway.app";
 
 function normalizeEmail(value: string | null | undefined): string {
   return (value || "").trim().toLowerCase();
 }
 
 function isValidProjectExternalId(value: string): boolean {
-  return /^\d{1,50}$/.test(value);
+  return /^\d+$/.test(value) && value.length <= MAX_PROJECT_EXTERNAL_ID_LENGTH;
+}
+
+function getAllowedSupportTicketsHosts(): Set<string> {
+  const configuredHosts = (process.env.SUPPORT_TICKETS_ALLOWED_HOSTS || "")
+    .split(",")
+    .map(host => host.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set([DEFAULT_SUPPORT_TICKETS_HOST, ...configuredHosts]);
+}
+
+/** Normaliza únicamente URL HTTPS de backend, sin rutas, query ni fragmentos. */
+export function normalizeSupportTicketsApiUrl(value: string | null | undefined): string | null {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    if (
+      parsed.protocol !== "https:" ||
+      parsed.username ||
+      parsed.password ||
+      parsed.pathname !== "/" ||
+      parsed.search ||
+      parsed.hash ||
+      !getAllowedSupportTicketsHosts().has(parsed.hostname.toLowerCase())
+    ) {
+      return null;
+    }
+    return parsed.origin;
+  } catch {
+    return null;
+  }
 }
 
 function isSafeActionUrl(value: unknown): value is string {
@@ -88,17 +126,32 @@ export function buildSupportTicketsRequestSignature(params: {
     .digest("hex");
 }
 
-export function getSupportTicketsConfigurationStatus() {
-  const baseUrl = process.env.SUPPORT_TICKETS_API_URL?.replace(/\/+$/, "") || "";
+/**
+ * Solo la URL y el interruptor se obtienen de la configuración administrativa.
+ * Las dos credenciales se conservan exclusivamente en variables de Railway.
+ */
+export function getSupportTicketsConfigurationStatus(
+  runtimeConfiguration?: Partial<SupportTicketsRuntimeConfiguration>,
+) {
+  const apiUrl = normalizeSupportTicketsApiUrl(
+    runtimeConfiguration?.apiUrl ?? process.env.SUPPORT_TICKETS_API_URL,
+  ) || "";
   const sourceKey = process.env.SUPPORT_TICKETS_SOURCE_KEY || "";
   const signingSecret = process.env.SUPPORT_TICKETS_SIGNING_SECRET || "";
   const missing = [
-    !baseUrl && "SUPPORT_TICKETS_API_URL",
+    !apiUrl && "SUPPORT_TICKETS_API_URL",
     !sourceKey && "SUPPORT_TICKETS_SOURCE_KEY",
     !signingSecret && "SUPPORT_TICKETS_SIGNING_SECRET",
   ].filter(Boolean) as string[];
 
-  return { configured: missing.length === 0, missing, baseUrl, sourceKey, signingSecret };
+  return {
+    configured: missing.length === 0,
+    missing,
+    enabled: runtimeConfiguration?.enabled ?? true,
+    apiUrl,
+    sourceKey,
+    signingSecret,
+  };
 }
 
 function unavailableSummary(projectExternalId: string | null): SupportTicketSummary {
@@ -118,6 +171,7 @@ function unavailableSummary(projectExternalId: string | null): SupportTicketSumm
 export async function getSupportTicketSummary(params: {
   projectExternalId: string | null | undefined;
   recipientEmail: string | null | undefined;
+  runtimeConfiguration?: Partial<SupportTicketsRuntimeConfiguration>;
 }): Promise<SupportTicketSummary> {
   const projectExternalId = String(params.projectExternalId || "").trim();
   const recipientEmail = normalizeEmail(params.recipientEmail);
@@ -125,7 +179,10 @@ export async function getSupportTicketSummary(params: {
     return unavailableSummary(projectExternalId || null);
   }
 
-  const configuration = getSupportTicketsConfigurationStatus();
+  const configuration = getSupportTicketsConfigurationStatus(params.runtimeConfiguration);
+  if (!configuration.enabled) {
+    return unavailableSummary(projectExternalId);
+  }
   if (!configuration.configured) {
     console.warn("[Support Tickets] Integración no configurada:", configuration.missing.join(", "));
     return unavailableSummary(projectExternalId);
@@ -143,7 +200,7 @@ export async function getSupportTicketSummary(params: {
   });
 
   try {
-    const response = await fetch(`${configuration.baseUrl}${path}`, {
+    const response = await fetch(`${configuration.apiUrl}${path}`, {
       method: "GET",
       headers: {
         "Accept": "application/json",
