@@ -641,9 +641,11 @@ export async function getOverdueMilestones() {
       projectLocation: projects.location,
       assignedEngineerId: projects.assignedEngineerId,
       assignedUserId: milestones.assignedUserId,
+      assignedUserName: users.name,
     })
     .from(milestones)
     .innerJoin(projects, eq(milestones.projectId, projects.id))
+    .leftJoin(users, eq(milestones.assignedUserId, users.id))
     .where(
       and(
         lt(milestones.dueDate, startOfToday),
@@ -682,9 +684,11 @@ export async function getUpcomingMilestones(daysAhead: number = 7) {
       projectLocation: projects.location,
       assignedEngineerId: projects.assignedEngineerId,
       assignedUserId: milestones.assignedUserId,
+      assignedUserName: users.name,
     })
     .from(milestones)
     .innerJoin(projects, eq(milestones.projectId, projects.id))
+    .leftJoin(users, eq(milestones.assignedUserId, users.id))
     .where(
       and(
         gte(milestones.dueDate, startOfToday),

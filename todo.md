@@ -1,5 +1,13 @@
 # Solar Project Manager - Lista de Tareas
 
+## Claridad de recordatorios propios y del equipo para administradores (19 Sep 2026)
+
+- [x] Revisar las fuentes y reglas de acceso de recordatorios
+- [x] Separar recordatorios propios de recordatorios del equipo sin cambiar permisos
+- [x] Crear una interfaz superior, clara y responsive para los pendientes personales
+- [x] Validar acciones y pruebas de clasificación, permisos y compilación
+- [ ] Publicar la mejora y verificar la página autenticada de recordatorios
+
 ## Resumen personal de tickets de Soporte en el dashboard (19 Sep 2026)
 
 - [x] Definir una consulta agregada privada por correo y proyectos autorizados

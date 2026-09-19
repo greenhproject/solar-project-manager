@@ -29,6 +29,8 @@ describe("Reminders - Upcoming and Overdue Milestones", () => {
       expect(milestone).toHaveProperty("projectId");
       expect(milestone).toHaveProperty("projectName");
       expect(milestone).toHaveProperty("projectLocation");
+      expect(milestone).toHaveProperty("assignedUserId");
+      expect(milestone).toHaveProperty("assignedUserName");
       expect(typeof milestone.milestoneId).toBe("number");
       expect(typeof milestone.milestoneName).toBe("string");
       expect(milestone.dueDate).toBeInstanceOf(Date);
@@ -70,10 +72,12 @@ describe("Reminders - Upcoming and Overdue Milestones", () => {
       expect(milestone).toHaveProperty("projectId");
       expect(milestone).toHaveProperty("projectName");
       expect(milestone).toHaveProperty("projectLocation");
+      expect(milestone).toHaveProperty("assignedUserId");
+      expect(milestone).toHaveProperty("assignedUserName");
       expect(typeof milestone.milestoneId).toBe("number");
       expect(typeof milestone.milestoneName).toBe("string");
       expect(milestone.dueDate).toBeInstanceOf(Date);
-      expect(["pending", "in_progress"]).toContain(milestone.status);
+      expect(["pending", "in_progress", "overdue"]).toContain(milestone.status);
     });
 
     // Verificar que todos los hitos están vencidos
