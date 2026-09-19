@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
   KeyRound,
+  LockKeyhole,
   PlugZap,
   RefreshCw,
   Save,
@@ -19,9 +20,9 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 /**
- * Solar Project Manager consume las credenciales emitidas por GHP Soporte. La
- * clave y el secreto permanecen exclusivamente como variables privadas de
- * Railway y nunca se guardan en la base de datos ni se escriben en la UI.
+ * Solar Project Manager recibe una pareja emitida por GHP Soporte. Los valores
+ * se pueden pegar una vez desde esta pantalla administrativa; el backend los
+ * cifra antes de persistirlos y jamás los vuelve a entregar al navegador.
  */
 export function SupportTicketsIntegrationSettings() {
   const utils = trpc.useUtils();
@@ -29,6 +30,8 @@ export function SupportTicketsIntegrationSettings() {
   const { data: projects = [] } = trpc.projects.list.useQuery();
   const [enabled, setEnabled] = useState(false);
   const [apiUrl, setApiUrl] = useState("");
+  const [sourceKey, setSourceKey] = useState("");
+  const [signingSecret, setSigningSecret] = useState("");
   const [testProjectId, setTestProjectId] = useState("");
 
   useEffect(() => {
@@ -39,8 +42,10 @@ export function SupportTicketsIntegrationSettings() {
 
   const saveConfiguration = trpc.supportTickets.saveConfiguration.useMutation({
     onSuccess: () => {
+      setSourceKey("");
+      setSigningSecret("");
       utils.supportTickets.getConfiguration.invalidate();
-      toast.success("Configuración de tickets de Soporte guardada");
+      toast.success("Configuración de tickets de Soporte guardada de forma cifrada");
     },
     onError: error => toast.error(error.message || "No fue posible guardar la configuración"),
   });
@@ -56,15 +61,44 @@ export function SupportTicketsIntegrationSettings() {
     onError: error => toast.error(error.message || "La prueba de conexión no fue exitosa"),
   });
 
+  const hasCredentialInput = Boolean(sourceKey.trim() || signingSecret.trim());
   const hasUnsavedChanges = configuration
-    ? enabled !== configuration.enabled || apiUrl.trim() !== configuration.apiUrl
-    : false;
+    ? enabled !== configuration.enabled || apiUrl.trim() !== configuration.apiUrl || hasCredentialInput
+    : hasCredentialInput;
   const projectsWithOpenSolar = projects.filter(project => Boolean(project.openSolarId));
   const canTest = Boolean(
     configuration?.enabled &&
     configuration?.credentialsConfigured &&
     Number(testProjectId) > 0,
   );
+  const credentialStatus = useMemo(() => {
+    if (configuration?.credentialsSource === "encrypted_database") {
+      return { label: "Guardadas con cifrado", className: "text-emerald-700 dark:text-emerald-300" };
+    }
+    if (configuration?.credentialsSource === "railway") {
+      return { label: "Configuradas en Railway", className: "text-emerald-700 dark:text-emerald-300" };
+    }
+    if (configuration?.credentialsSource === "invalid") {
+      return { label: "Credenciales cifradas no válidas", className: "text-destructive" };
+    }
+    return { label: "Pendientes de configurar", className: "text-amber-700 dark:text-amber-300" };
+  }, [configuration?.credentialsSource]);
+
+  function handleSave() {
+    const normalizedSourceKey = sourceKey.trim();
+    const normalizedSigningSecret = signingSecret.trim();
+    if (Boolean(normalizedSourceKey) !== Boolean(normalizedSigningSecret)) {
+      toast.error("Pega la clave de origen y el secreto HMAC juntos");
+      return;
+    }
+    saveConfiguration.mutate({
+      enabled,
+      apiUrl: apiUrl.trim(),
+      ...(normalizedSourceKey && normalizedSigningSecret
+        ? { sourceKey: normalizedSourceKey, signingSecret: normalizedSigningSecret }
+        : {}),
+    });
+  }
 
   if (isLoading) {
     return <div className="text-sm text-muted-foreground">Cargando integración de tickets…</div>;
@@ -95,36 +129,70 @@ export function SupportTicketsIntegrationSettings() {
       </CardHeader>
 
       <CardContent className="space-y-5">
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+        <section className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5" aria-labelledby="support-credentials-title">
           <div className="flex gap-3">
             <div className="rounded-lg bg-primary/10 p-2 text-primary">
               <KeyRound className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <h3 className="font-semibold">Credenciales emitidas por GHP Soporte</h3>
+              <h3 id="support-credentials-title" className="font-semibold">Credenciales emitidas por GHP Soporte</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                GHP Soporte protege la API de tickets y es el único emisor de la clave de origen y el secreto HMAC. Solar Project Manager solo los consume desde variables privadas de Railway.
+                Genera la pareja en <strong>GHP Soporte → Configuración → Integraciones</strong> y pega aquí el bloque de Solar Project Manager. Al guardar, los valores se cifran con AES-256-GCM antes de llegar a la base de datos.
               </p>
             </div>
           </div>
-          <ol className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <li className="flex gap-2"><span className="font-semibold text-primary">1.</span><span>En GHP Soporte abre <strong>Configuración → Integraciones</strong> y genera las credenciales de Solar Project Manager.</span></li>
-            <li className="flex gap-2"><span className="font-semibold text-primary">2.</span><span>Copia el bloque <strong>Solar Project Manager</strong> en las variables privadas de Railway de este servicio.</span></li>
-            <li className="flex gap-2"><span className="font-semibold text-primary">3.</span><span>Guarda la URL, activa esta integración y ejecuta la prueba controlada.</span></li>
-          </ol>
-          <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs dark:border-amber-900/60 dark:bg-amber-950/20">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
-            <p className="text-muted-foreground">
-              No pegues secretos en esta interfaz ni los guardes en la base de datos. Tras una rotación, reemplaza simultáneamente los valores en Railway de ambos servicios.
-            </p>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="support-tickets-source-key">Clave de origen</Label>
+              <Input
+                id="support-tickets-source-key"
+                value={sourceKey}
+                onChange={event => setSourceKey(event.target.value)}
+                placeholder="spm_…"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <p className="text-xs text-muted-foreground">Solo se usa para actualizar la configuración; no se vuelve a mostrar.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="support-tickets-signing-secret">Secreto HMAC</Label>
+              <Input
+                id="support-tickets-signing-secret"
+                type="password"
+                value={signingSecret}
+                onChange={event => setSigningSecret(event.target.value)}
+                placeholder="Pega el secreto emitido por Soporte"
+                autoComplete="new-password"
+                spellCheck={false}
+              />
+              <p className="text-xs text-muted-foreground">Debe pegarse junto con la clave de origen; se cifra antes de persistir.</p>
+            </div>
           </div>
-        </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-background/80 px-3 py-2 text-xs">
+            <span className="flex items-center gap-1.5 text-muted-foreground"><LockKeyhole className="h-3.5 w-3.5" /> Estado:</span>
+            <strong className={credentialStatus.className}>{credentialStatus.label}</strong>
+            {configuration?.credentialsUpdatedAt && configuration?.credentialsSource === "encrypted_database" && (
+              <span className="text-muted-foreground">Actualizadas: {new Date(configuration.credentialsUpdatedAt).toLocaleString()}</span>
+            )}
+          </div>
+
+          {!configuration?.credentialsVaultReady && (
+            <div className="mt-3 flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+              <p className="text-muted-foreground">
+                Antes de guardar, configura <code>SUPPORT_TICKETS_CREDENTIAL_ENCRYPTION_KEY</code> como secreto privado de Railway para este backend.
+              </p>
+            </div>
+          )}
+        </section>
 
         <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-sm dark:border-amber-900/60 dark:bg-amber-950/20">
           <div className="flex gap-2">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
             <p className="text-muted-foreground">
-              La URL y el estado se administran aquí. La clave de origen y el secreto HMAC permanecen exclusivamente en Railway y nunca se guardan ni se muestran en esta pantalla.
+              Los secretos guardados nunca se muestran ni se devuelven al navegador. Para rotarlos, genera una nueva pareja en GHP Soporte y pega ambos valores de nuevo.
             </p>
           </div>
         </div>
@@ -163,7 +231,7 @@ export function SupportTicketsIntegrationSettings() {
           <div className="flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
             <p className="text-muted-foreground">
-              Genera las credenciales en GHP Soporte y configura sus variables privadas en Railway antes de activar la integración. No pegues secretos en esta interfaz.
+              Pega los dos valores emitidos por GHP Soporte y guarda los cambios antes de activar la integración.
             </p>
           </div>
         )}
@@ -204,7 +272,7 @@ export function SupportTicketsIntegrationSettings() {
             Probar conexión
           </Button>
           <Button
-            onClick={() => saveConfiguration.mutate({ enabled, apiUrl: apiUrl.trim() })}
+            onClick={handleSave}
             disabled={saveConfiguration.isPending || !hasUnsavedChanges}
             className="gap-2"
           >

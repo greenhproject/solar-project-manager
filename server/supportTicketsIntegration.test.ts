@@ -123,6 +123,32 @@ describe("Support ticket integration", () => {
     expect(options.headers["X-GHP-Signature"]).toMatch(/^[a-f0-9]{64}$/);
   });
 
+  it("uses runtime credentials resolved by the encrypted vault instead of exposing them to clients", async () => {
+    process.env.SUPPORT_TICKETS_API_URL = "https://soporte-backend-ghp-production.up.railway.app";
+    process.env.SUPPORT_TICKETS_SOURCE_KEY = "railway-fallback-source";
+    process.env.SUPPORT_TICKETS_SIGNING_SECRET = "railway-fallback-secret";
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      projectExternalId: "9255866",
+      activeTicketCount: 0,
+      tickets: [],
+    }), { status: 200, headers: { "Content-Type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getSupportTicketSummary({
+      projectExternalId: "9255866",
+      recipientEmail: "tecnico@greenhproject.com",
+      runtimeConfiguration: {
+        enabled: true,
+        apiUrl: "https://soporte-backend-ghp-production.up.railway.app",
+        sourceKey: "vault-resolved-source",
+        signingSecret: "vault-resolved-secret",
+        credentialsSource: "encrypted_database",
+      },
+    });
+
+    expect(fetchMock.mock.calls[0][1].headers["X-GHP-Source"]).toBe("vault-resolved-source");
+  });
+
   it("fails closed when the remote service rejects the request", async () => {
     process.env.SUPPORT_TICKETS_API_URL = "https://soporte-backend-ghp-production.up.railway.app";
     process.env.SUPPORT_TICKETS_SOURCE_KEY = "spm-test-source";

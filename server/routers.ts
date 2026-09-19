@@ -24,7 +24,7 @@ import { milestoneReminderConfigRouter } from "./routes/milestone-reminder-confi
 import { ssoManagementRouter } from "./routes/sso-management";
 import { getConfiguredTimezone, saveTimezone, invalidateTimezoneCache, LATIN_AMERICA_TIMEZONES, getNowInConfiguredTimezone } from "./timezone";
 import { appSettings, apiKeys, webhooks, outgoingWebhookLogs, users, clientProjectAccess } from "../drizzle/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { eq, desc, inArray, sql } from "drizzle-orm";
 import crypto from "crypto";
 import { triggerMilestoneStatusChanged, triggerMilestoneCompleted, triggerProjectCompleted, triggerProjectStatusChanged } from "./webhookService";
 import { buildAiAssistantContext } from "./aiAssistantContext";
@@ -34,6 +34,12 @@ import {
   normalizeSupportTicketsApiUrl,
   type SupportTicketsRuntimeConfiguration,
 } from "./supportTicketsIntegration";
+import {
+  decryptSupportTicketCredential,
+  encryptSupportTicketCredential,
+  isEncryptedSupportTicketCredential,
+  isSupportTicketCredentialsVaultReady,
+} from "./supportTicketsCredentialsVault";
 
 // Procedimiento solo para administradores
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -59,29 +65,82 @@ const tramitesProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 const SUPPORT_TICKETS_ENABLED_SETTING = "support_tickets_integration_enabled";
 const SUPPORT_TICKETS_API_URL_SETTING = "support_tickets_integration_api_url";
+const SUPPORT_TICKETS_SOURCE_KEY_SETTING = "support_tickets_integration_source_key_encrypted";
+const SUPPORT_TICKETS_SIGNING_SECRET_SETTING = "support_tickets_integration_signing_secret_encrypted";
 
 /**
- * La interfaz administrativa solo gestiona el interruptor y la URL. Las
- * credenciales se leen siempre desde Railway y no se guardan en appSettings.
+ * Las credenciales emitidas por Soporte pueden almacenarse en appSettings solo
+ * en formato AES-256-GCM. Se descifran en memoria para firmar la consulta y no
+ * se retornan a los procedimientos que alimentan la interfaz.
  */
 async function getSupportTicketsRuntimeConfiguration(): Promise<SupportTicketsRuntimeConfiguration> {
   const dbInst = await db.getDb();
-  if (!dbInst) return { enabled: false, apiUrl: process.env.SUPPORT_TICKETS_API_URL || "" };
+  const envSourceKey = process.env.SUPPORT_TICKETS_SOURCE_KEY || "";
+  const envSigningSecret = process.env.SUPPORT_TICKETS_SIGNING_SECRET || "";
+  if (!dbInst) {
+    return {
+      enabled: false,
+      apiUrl: process.env.SUPPORT_TICKETS_API_URL || "",
+      sourceKey: envSourceKey,
+      signingSecret: envSigningSecret,
+      credentialsSource: envSourceKey && envSigningSecret ? "railway" : "missing",
+    };
+  }
 
-  const [enabledRow] = await dbInst
+  const settings = await dbInst
     .select()
     .from(appSettings)
-    .where(eq(appSettings.settingKey, SUPPORT_TICKETS_ENABLED_SETTING))
-    .limit(1);
-  const [apiUrlRow] = await dbInst
-    .select()
-    .from(appSettings)
-    .where(eq(appSettings.settingKey, SUPPORT_TICKETS_API_URL_SETTING))
-    .limit(1);
+    .where(inArray(appSettings.settingKey, [
+      SUPPORT_TICKETS_ENABLED_SETTING,
+      SUPPORT_TICKETS_API_URL_SETTING,
+      SUPPORT_TICKETS_SOURCE_KEY_SETTING,
+      SUPPORT_TICKETS_SIGNING_SECRET_SETTING,
+    ]));
+  const settingByKey = new Map(settings.map(setting => [setting.settingKey, setting]));
+  const enabledRow = settingByKey.get(SUPPORT_TICKETS_ENABLED_SETTING);
+  const apiUrlRow = settingByKey.get(SUPPORT_TICKETS_API_URL_SETTING);
+  const encryptedSourceKey = settingByKey.get(SUPPORT_TICKETS_SOURCE_KEY_SETTING)?.settingValue;
+  const encryptedSigningSecret = settingByKey.get(SUPPORT_TICKETS_SIGNING_SECRET_SETTING)?.settingValue;
+
+  let sourceKey = envSourceKey;
+  let signingSecret = envSigningSecret;
+  let credentialsSource: SupportTicketsRuntimeConfiguration["credentialsSource"] = (
+    sourceKey && signingSecret ? "railway" : "missing"
+  );
+
+  if (encryptedSourceKey || encryptedSigningSecret) {
+    if (
+      encryptedSourceKey &&
+      encryptedSigningSecret &&
+      isEncryptedSupportTicketCredential(encryptedSourceKey) &&
+      isEncryptedSupportTicketCredential(encryptedSigningSecret)
+    ) {
+      try {
+        sourceKey = decryptSupportTicketCredential(encryptedSourceKey);
+        signingSecret = decryptSupportTicketCredential(encryptedSigningSecret);
+        credentialsSource = "encrypted_database";
+      } catch {
+        // No incluir valores ni detalles criptográficos en logs o respuestas.
+        console.error("[Support Tickets] No fue posible descifrar las credenciales configuradas");
+        sourceKey = "";
+        signingSecret = "";
+        credentialsSource = "invalid";
+      }
+    } else {
+      console.error("[Support Tickets] Se detectó una credencial no cifrada o incompleta; se ignorará");
+      sourceKey = "";
+      signingSecret = "";
+      credentialsSource = "invalid";
+    }
+  }
 
   return {
     enabled: enabledRow?.settingValue === "true",
     apiUrl: apiUrlRow?.settingValue || process.env.SUPPORT_TICKETS_API_URL || "",
+    sourceKey,
+    signingSecret,
+    credentialsSource,
+    credentialsUpdatedAt: settingByKey.get(SUPPORT_TICKETS_SIGNING_SECRET_SETTING)?.updatedAt?.toISOString() || null,
   };
 }
 
@@ -106,6 +165,9 @@ export const appRouter = router({
         apiUrl: runtimeConfiguration.apiUrl,
         credentialsConfigured: serverConfiguration.configured,
         missingServerVariables: serverConfiguration.missing,
+        credentialsSource: runtimeConfiguration.credentialsSource || "missing",
+        credentialsUpdatedAt: runtimeConfiguration.credentialsUpdatedAt || null,
+        credentialsVaultReady: isSupportTicketCredentialsVaultReady(),
       };
     }),
 
@@ -115,6 +177,16 @@ export const appRouter = router({
       .input(z.object({
         enabled: z.boolean(),
         apiUrl: z.string().max(500),
+        sourceKey: z.string().trim().min(12).max(255).optional(),
+        signingSecret: z.string().trim().min(32).max(512).optional(),
+      }).superRefine((input, context) => {
+        if (Boolean(input.sourceKey) !== Boolean(input.signingSecret)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "La clave de origen y el secreto HMAC deben ingresarse juntos",
+            path: input.sourceKey ? ["signingSecret"] : ["sourceKey"],
+          });
+        }
       }))
       .mutation(async ({ input, ctx }) => {
         const apiUrl = normalizeSupportTicketsApiUrl(input.apiUrl);
@@ -147,13 +219,46 @@ export const appRouter = router({
           set: { settingValue: apiUrl, updatedBy: ctx.user.id },
         });
 
-        const serverConfiguration = getSupportTicketsConfigurationStatus({ enabled: input.enabled, apiUrl });
+        // Se escribe únicamente una pareja completa; ambos valores llegan
+        // cifrados a appSettings y nunca se incluyen en una respuesta tRPC.
+        if (input.sourceKey && input.signingSecret) {
+          if (!isSupportTicketCredentialsVaultReady()) {
+            throw new TRPCError({
+              code: "PRECONDITION_FAILED",
+              message: "Configura SUPPORT_TICKETS_CREDENTIAL_ENCRYPTION_KEY en Railway antes de guardar credenciales",
+            });
+          }
+          const encryptedSourceKey = encryptSupportTicketCredential(input.sourceKey);
+          const encryptedSigningSecret = encryptSupportTicketCredential(input.signingSecret);
+          await dbInst.insert(appSettings).values({
+            settingKey: SUPPORT_TICKETS_SOURCE_KEY_SETTING,
+            settingValue: encryptedSourceKey,
+            description: "Clave de origen de Soporte cifrada con AES-256-GCM",
+            updatedBy: ctx.user.id,
+          }).onDuplicateKeyUpdate({
+            set: { settingValue: encryptedSourceKey, updatedBy: ctx.user.id },
+          });
+          await dbInst.insert(appSettings).values({
+            settingKey: SUPPORT_TICKETS_SIGNING_SECRET_SETTING,
+            settingValue: encryptedSigningSecret,
+            description: "Secreto HMAC de Soporte cifrado con AES-256-GCM",
+            updatedBy: ctx.user.id,
+          }).onDuplicateKeyUpdate({
+            set: { settingValue: encryptedSigningSecret, updatedBy: ctx.user.id },
+          });
+        }
+
+        const runtimeConfiguration = await getSupportTicketsRuntimeConfiguration();
+        const serverConfiguration = getSupportTicketsConfigurationStatus(runtimeConfiguration);
         return {
           success: true,
           enabled: input.enabled,
           apiUrl,
           credentialsConfigured: serverConfiguration.configured,
           missingServerVariables: serverConfiguration.missing,
+          credentialsSource: runtimeConfiguration.credentialsSource || "missing",
+          credentialsUpdatedAt: runtimeConfiguration.credentialsUpdatedAt || null,
+          credentialsVaultReady: isSupportTicketCredentialsVaultReady(),
         };
       }),
 

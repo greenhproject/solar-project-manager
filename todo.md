@@ -1,5 +1,13 @@
 # Solar Project Manager - Lista de Tareas
 
+## Configuración cifrada de credenciales emitidas por Soporte (19 Sep 2026)
+
+- [x] Cifrar clave de origen y secreto HMAC con AES-256-GCM antes de persistirlos
+- [x] Permitir a administradores pegar ambos valores emitidos por Soporte y actualizarlos juntos
+- [x] Mostrar solo estado, origen y fecha; nunca revelar nuevamente los secretos guardados
+- [x] Usar secretos descifrados únicamente en memoria para la consulta firmada
+- [ ] Validar permisos administrativos, cifrado, compilación y publicar la mejora
+
 ## Asistente de credenciales de integración de Soporte (19 Sep 2026)
 
 - [x] Definir a Soporte como emisor y custodio de la credencial de integración

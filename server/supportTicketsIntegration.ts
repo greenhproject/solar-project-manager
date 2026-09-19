@@ -18,10 +18,14 @@ export type SupportTicketSummary = {
   tickets: SupportTicketSummaryItem[];
 };
 
-/** Parámetros que el administrador puede gestionar sin conocer secretos. */
+/** Configuración resuelta exclusivamente dentro del backend. */
 export type SupportTicketsRuntimeConfiguration = {
   enabled: boolean;
   apiUrl: string;
+  sourceKey?: string;
+  signingSecret?: string;
+  credentialsSource?: "railway" | "encrypted_database" | "missing" | "invalid";
+  credentialsUpdatedAt?: string | null;
 };
 
 const MAX_PROJECT_EXTERNAL_ID_LENGTH = 50;
@@ -127,8 +131,9 @@ export function buildSupportTicketsRequestSignature(params: {
 }
 
 /**
- * Solo la URL y el interruptor se obtienen de la configuración administrativa.
- * Las dos credenciales se conservan exclusivamente en variables de Railway.
+ * La URL e interruptor pueden provenir de la configuración administrativa.
+ * Las credenciales se resuelven desde Railway o desde el vault cifrado, pero
+ * jamás se devuelven a procedimientos tRPC ni a la interfaz.
  */
 export function getSupportTicketsConfigurationStatus(
   runtimeConfiguration?: Partial<SupportTicketsRuntimeConfiguration>,
@@ -136,8 +141,8 @@ export function getSupportTicketsConfigurationStatus(
   const apiUrl = normalizeSupportTicketsApiUrl(
     runtimeConfiguration?.apiUrl ?? process.env.SUPPORT_TICKETS_API_URL,
   ) || "";
-  const sourceKey = process.env.SUPPORT_TICKETS_SOURCE_KEY || "";
-  const signingSecret = process.env.SUPPORT_TICKETS_SIGNING_SECRET || "";
+  const sourceKey = runtimeConfiguration?.sourceKey ?? process.env.SUPPORT_TICKETS_SOURCE_KEY ?? "";
+  const signingSecret = runtimeConfiguration?.signingSecret ?? process.env.SUPPORT_TICKETS_SIGNING_SECRET ?? "";
   const missing = [
     !apiUrl && "SUPPORT_TICKETS_API_URL",
     !sourceKey && "SUPPORT_TICKETS_SOURCE_KEY",
