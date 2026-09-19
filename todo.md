@@ -1,5 +1,13 @@
 # Solar Project Manager - Lista de Tareas
 
+## Asistente de credenciales de integración de Soporte (19 Sep 2026)
+
+- [x] Definir a Soporte como emisor y custodio de la credencial de integración
+- [x] Emitir una clave de origen y secreto HMAC desde Soporte sin persistirlos en texto plano
+- [x] Guiar a Solar Project Manager como consumidor que configura solo sus secretos de Railway
+- [x] Explicar rotación, visualización única y activación segura en ambos servicios
+- [ ] Validar seguridad, compilación y publicar la mejora
+
 ## Integración privada de tickets de Soporte por proyecto OpenSolar (19 Sep 2026)
 
 - [x] Definir contrato servidor a servidor firmado mediante HMAC-SHA256

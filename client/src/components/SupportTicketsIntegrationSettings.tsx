@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, PlugZap, RefreshCw, Save, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  KeyRound,
+  PlugZap,
+  RefreshCw,
+  Save,
+  ShieldCheck,
+} from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,8 +19,9 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 /**
- * Administración de parámetros no sensibles de la integración. El origen y el
- * secreto HMAC nunca llegan a la interfaz; solo se muestran sus estados.
+ * Solar Project Manager consume las credenciales emitidas por GHP Soporte. La
+ * clave y el secreto permanecen exclusivamente como variables privadas de
+ * Railway y nunca se guardan en la base de datos ni se escriben en la UI.
  */
 export function SupportTicketsIntegrationSettings() {
   const utils = trpc.useUtils();
@@ -86,6 +95,31 @@ export function SupportTicketsIntegrationSettings() {
       </CardHeader>
 
       <CardContent className="space-y-5">
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
+          <div className="flex gap-3">
+            <div className="rounded-lg bg-primary/10 p-2 text-primary">
+              <KeyRound className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold">Credenciales emitidas por GHP Soporte</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                GHP Soporte protege la API de tickets y es el único emisor de la clave de origen y el secreto HMAC. Solar Project Manager solo los consume desde variables privadas de Railway.
+              </p>
+            </div>
+          </div>
+          <ol className="mt-4 space-y-2 text-sm text-muted-foreground">
+            <li className="flex gap-2"><span className="font-semibold text-primary">1.</span><span>En GHP Soporte abre <strong>Configuración → Integraciones</strong> y genera las credenciales de Solar Project Manager.</span></li>
+            <li className="flex gap-2"><span className="font-semibold text-primary">2.</span><span>Copia el bloque <strong>Solar Project Manager</strong> en las variables privadas de Railway de este servicio.</span></li>
+            <li className="flex gap-2"><span className="font-semibold text-primary">3.</span><span>Guarda la URL, activa esta integración y ejecuta la prueba controlada.</span></li>
+          </ol>
+          <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs dark:border-amber-900/60 dark:bg-amber-950/20">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
+            <p className="text-muted-foreground">
+              No pegues secretos en esta interfaz ni los guardes en la base de datos. Tras una rotación, reemplaza simultáneamente los valores en Railway de ambos servicios.
+            </p>
+          </div>
+        </div>
+
         <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 text-sm dark:border-amber-900/60 dark:bg-amber-950/20">
           <div className="flex gap-2">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
@@ -129,7 +163,7 @@ export function SupportTicketsIntegrationSettings() {
           <div className="flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
             <p className="text-muted-foreground">
-              Configura en Railway las variables privadas indicadas en la guía antes de activar la integración. No pegues secretos en esta interfaz.
+              Genera las credenciales en GHP Soporte y configura sus variables privadas en Railway antes de activar la integración. No pegues secretos en esta interfaz.
             </p>
           </div>
         )}

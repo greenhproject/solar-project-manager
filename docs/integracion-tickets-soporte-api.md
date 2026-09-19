@@ -35,11 +35,15 @@ Configure los siguientes valores como secretos en el backend de Solar Project Ma
 | `SUPPORT_TICKETS_SIGNING_SECRET` | Mismo valor que `SPM_TICKETS_SIGNING_SECRET` en GHP Soporte. |
 | `SUPPORT_TICKETS_ALLOWED_HOSTS` | Opcional. Lista separada por comas de hosts HTTPS aprobados adicionalmente, para por ejemplo un entorno de staging. |
 
-El backend de Soporte requiere sus equivalentes `SPM_TICKETS_SOURCE_KEY` y `SPM_TICKETS_SIGNING_SECRET`. Ambos servicios deben compartir exactamente los mismos valores. Se recomienda generar un secreto aleatorio de al menos 32 bytes y rotarlo como una credencial de integración independiente.
+El backend de Soporte requiere sus equivalentes `SPM_TICKETS_SOURCE_KEY` y `SPM_TICKETS_SIGNING_SECRET`. Ambos servicios deben compartir exactamente los mismos valores. **GHP Soporte es el emisor y custodio** de esta pareja porque protege la API que Solar Project Manager consulta. Solar Project Manager es solo el consumidor.
 
 ## Administración desde la interfaz
 
 Un administrador de Solar Project Manager encuentra el panel en **Configuración → Integración de Tickets de Soporte**. Desde allí puede activar o desactivar la consulta, actualizar la URL HTTPS base del backend de Soporte y ejecutar una prueba controlada con un proyecto que tenga ID de OpenSolar.
+
+Las credenciales se emiten en **GHP Soporte → Configuración → Integraciones → Solar Project Manager — credenciales de acceso**. El administrador genera allí una clave de origen y un secreto HMAC criptográficamente aleatorios y recibe dos bloques listos para Railway: uno para Soporte y otro para Solar Project Manager.
+
+> Las credenciales emitidas se devuelven una sola vez y solo viven en la memoria de la pantalla actual de GHP Soporte. No se guardan en las bases de datos, los logs ni la configuración de ninguna de las aplicaciones. Copie los dos bloques antes de cerrar o recargar. Para rotar, genere una pareja nueva en GHP Soporte y reemplace los valores en **ambos** servicios de Railway antes de probar la integración.
 
 La interfaz muestra si las credenciales de servidor están listas, pero **nunca muestra, solicita ni almacena** `SUPPORT_TICKETS_SOURCE_KEY` ni `SUPPORT_TICKETS_SIGNING_SECRET`. Estas variables se mantienen exclusivamente en Railway. La URL se valida como un origen HTTPS sin ruta, parámetros, usuario ni contraseña y su host debe estar aprobado en la lista privada del servidor. Por defecto solo se acepta el backend de Soporte de producción; agregue un host de staging mediante `SUPPORT_TICKETS_ALLOWED_HOSTS` antes de seleccionarlo en la UI.
 
