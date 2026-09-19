@@ -6,7 +6,7 @@
 - [x] Permitir a administradores pegar ambos valores emitidos por Soporte y actualizarlos juntos
 - [x] Mostrar solo estado, origen y fecha; nunca revelar nuevamente los secretos guardados
 - [x] Usar secretos descifrados únicamente en memoria para la consulta firmada
-- [ ] Validar permisos administrativos, cifrado, compilación y publicar la mejora
+- [x] Validar permisos administrativos, cifrado, compilación y publicar la mejora
 
 ## Asistente de credenciales de integración de Soporte (19 Sep 2026)
 
