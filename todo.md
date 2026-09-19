@@ -5,7 +5,7 @@
 - [x] Distinguir la llave externa `ghps_live_…` de la pareja HMAC de Solar Project Manager
 - [x] Permitir pegar el bloque completo de Solar Project Manager y completar sus campos automáticamente
 - [x] Validar el formato sin guardar ni mostrar secretos innecesariamente
-- [ ] Publicar la mejora de claridad y verificar el commit remoto
+- [x] Publicar la mejora de claridad y verificar el commit remoto
 
 ## Configuración cifrada de credenciales emitidas por Soporte (19 Sep 2026)
 
