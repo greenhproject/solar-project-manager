@@ -33,7 +33,11 @@ describe("Support ticket credentials vault", () => {
   it("rejects tampered ciphertext and does not expose a partial value", () => {
     process.env.SUPPORT_TICKETS_CREDENTIAL_ENCRYPTION_KEY = "vault-test-key-with-sufficient-entropy";
     const encrypted = encryptSupportTicketCredential("secret-value-that-must-not-leak");
-    const tampered = `${encrypted.slice(0, -1)}${encrypted.endsWith("A") ? "B" : "A"}`;
+    const [version, iv, tag, ciphertext] = encrypted.split(":");
+    // Modifica el primer carácter de un byte significativo del ciphertext,
+    // no el último carácter Base64 que puede contener bits de relleno.
+    const tamperedCiphertext = `${ciphertext[0] === "A" ? "B" : "A"}${ciphertext.slice(1)}`;
+    const tampered = [version, iv, tag, tamperedCiphertext].join(":");
 
     expect(() => decryptSupportTicketCredential(tampered)).toThrow("No fue posible descifrar");
   });

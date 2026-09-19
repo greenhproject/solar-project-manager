@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  ClipboardPaste,
   CheckCircle2,
   KeyRound,
   LockKeyhole,
@@ -17,7 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { parseSupportTicketsCredentialBlock } from "@/lib/supportTicketsCredentialBlock";
 
 /**
  * Solar Project Manager recibe una pareja emitida por GHP Soporte. Los valores
@@ -32,6 +35,7 @@ export function SupportTicketsIntegrationSettings() {
   const [apiUrl, setApiUrl] = useState("");
   const [sourceKey, setSourceKey] = useState("");
   const [signingSecret, setSigningSecret] = useState("");
+  const [credentialBlock, setCredentialBlock] = useState("");
   const [testProjectId, setTestProjectId] = useState("");
 
   useEffect(() => {
@@ -87,6 +91,10 @@ export function SupportTicketsIntegrationSettings() {
   function handleSave() {
     const normalizedSourceKey = sourceKey.trim();
     const normalizedSigningSecret = signingSecret.trim();
+    if (normalizedSourceKey.startsWith("ghps_live_")) {
+      toast.error("La llave ghps_live_ es de la API externa tickets.read; pega el bloque HMAC de Solar Project Manager");
+      return;
+    }
     if (Boolean(normalizedSourceKey) !== Boolean(normalizedSigningSecret)) {
       toast.error("Pega la clave de origen y el secreto HMAC juntos");
       return;
@@ -98,6 +106,24 @@ export function SupportTicketsIntegrationSettings() {
         ? { sourceKey: normalizedSourceKey, signingSecret: normalizedSigningSecret }
         : {}),
     });
+  }
+
+  function applyCredentialBlock() {
+    const parsed = parseSupportTicketsCredentialBlock(credentialBlock);
+    if (parsed.kind === "external_api_key") {
+      toast.error(parsed.message);
+      return;
+    }
+    if (parsed.kind === "incomplete") {
+      toast.error(`El bloque no incluye: ${parsed.missing.join(", ")}`);
+      return;
+    }
+
+    setSourceKey(parsed.sourceKey);
+    setSigningSecret(parsed.signingSecret);
+    if (parsed.apiUrl) setApiUrl(parsed.apiUrl);
+    setCredentialBlock("");
+    toast.success("Bloque HMAC reconocido. Revisa y guarda los cambios.");
   }
 
   if (isLoading) {
@@ -137,9 +163,33 @@ export function SupportTicketsIntegrationSettings() {
             <div className="min-w-0">
               <h3 id="support-credentials-title" className="font-semibold">Credenciales emitidas por GHP Soporte</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Genera la pareja en <strong>GHP Soporte → Configuración → Integraciones</strong> y pega aquí el bloque de Solar Project Manager. Al guardar, los valores se cifran con AES-256-GCM antes de llegar a la base de datos.
+                Usa exclusivamente la tarjeta superior <strong>“Solar Project Manager — credenciales de acceso”</strong> de GHP Soporte. No uses una llave <code>ghps_live_…</code>: pertenece a la API externa <code>tickets.read</code> y no contiene el secreto HMAC.
               </p>
             </div>
+          </div>
+
+          <div className="mt-4 rounded-lg border bg-background/80 p-3 sm:p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="min-w-0 flex-1 space-y-2">
+                <Label htmlFor="support-tickets-credential-block">Pegar bloque completo de Solar Project Manager</Label>
+                <Textarea
+                  id="support-tickets-credential-block"
+                  value={credentialBlock}
+                  onChange={event => setCredentialBlock(event.target.value)}
+                  rows={4}
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={"SUPPORT_TICKETS_API_URL=https://…\nSUPPORT_TICKETS_SOURCE_KEY=spm_…\nSUPPORT_TICKETS_SIGNING_SECRET=…"}
+                />
+              </div>
+              <Button type="button" variant="outline" onClick={applyCredentialBlock} disabled={!credentialBlock.trim()} className="gap-2 sm:shrink-0">
+                <ClipboardPaste className="h-4 w-4" />
+                Completar campos
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Copia el bloque negro marcado <strong>“2. Solar Project Manager”</strong>. Al aplicarlo se completa la clave de origen y el secreto HMAC, y el bloque pegado se limpia de esta pantalla.
+            </p>
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
@@ -169,6 +219,9 @@ export function SupportTicketsIntegrationSettings() {
               <p className="text-xs text-muted-foreground">Debe pegarse junto con la clave de origen; se cifra antes de persistir.</p>
             </div>
           </div>
+          <p className="mt-3 text-xs font-medium text-amber-800 dark:text-amber-200">
+            No pegues <code>ghps_live_…</code> ni una clave creada en “Claves de integración / tickets.read”; esas credenciales son para otra API y no pueden firmar esta consulta privada.
+          </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border bg-background/80 px-3 py-2 text-xs">
             <span className="flex items-center gap-1.5 text-muted-foreground"><LockKeyhole className="h-3.5 w-3.5" /> Estado:</span>
